@@ -3,5 +3,6 @@
 .vscode/c_cpp_properties.json
 .vscode/launch.json
 .vscode/ipch
-Dream/~Dream.kicad_pcb.lck
 cad/.history
+.DS_Store
+cad/.DS_Store
