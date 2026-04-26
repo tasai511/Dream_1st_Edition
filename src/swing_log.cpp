@@ -4,8 +4,8 @@
 
 namespace {
 
-const uint16_t kMagic = 0x5347;
-const uint8_t kCapacity = 16;
+const uint16_t kMagic = 0x534D;
+const uint8_t kCapacity = 8;
 
 struct SwingLogHeader {
   uint16_t magic;
@@ -78,9 +78,7 @@ void append(const SwingLogRecord& record) {
 
 void dumpToSerial() {
   loadHeader();
-  Serial.println("# swing log");
   if (header.count == 0) {
-    Serial.println("# empty");
     return;
   }
 
@@ -92,14 +90,54 @@ void dumpToSerial() {
 
     Serial.print('#');
     Serial.print(record.index);
-    Serial.print(" gx=");
-    Serial.print(record.maxGyroX);
-    Serial.print(" gy=");
-    Serial.print(record.maxGyroY);
-    Serial.print(" gz=");
-    Serial.print(record.maxGyroZ);
+    Serial.print(" axis=");
+    Serial.print(static_cast<int>(record.axis));
+    Serial.print(" sign=");
+    Serial.print(static_cast<int>(record.sign));
+    Serial.print(" end=");
+    Serial.print(record.endReason);
+    Serial.print(" dur=");
+    Serial.print(record.durationMs);
+    Serial.print(" n=");
+    Serial.print(record.sampleCount);
+    Serial.print(" g=");
+    Serial.print(record.maxGyroMagnitudeRaw);
+    Serial.print(" axisMax=");
+    Serial.print(record.maxAxisGyroRaw);
     Serial.print(" acc=");
-    Serial.println(record.maxDynamicAccelMg);
+    Serial.print(record.maxDynamicAccelMg);
+    Serial.print(" base=");
+    Serial.print(record.baselineGyroX);
+    Serial.print(',');
+    Serial.print(record.baselineGyroY);
+    Serial.print(',');
+    Serial.print(record.baselineGyroZ);
+    Serial.print(" gpk=");
+    Serial.print(record.gyroPeakMs);
+    Serial.print(" apk=");
+    Serial.print(record.accelPeakMs);
+    Serial.print(" fg=");
+    Serial.print(record.firstAxisOver500Ms);
+    Serial.print(" fa=");
+    Serial.print(record.firstAccel300Ms);
+    Serial.print(" same=");
+    Serial.print(record.sameSignSamples);
+    Serial.print(" opp=");
+    Serial.print(record.oppositeSignSamples);
+    Serial.print(" weak=");
+    Serial.print(record.weakAfterPeakSamples);
+    Serial.print(" sG=");
+    Serial.print(record.signedAxisEnergyDiv16);
+    Serial.print(" eG=");
+    Serial.print(record.axisEnergyDiv16);
+    Serial.print(" dir=");
+    Serial.print(record.directionRatioPct);
+    Serial.print(" sc=");
+    Serial.print(record.signChanges);
+    Serial.print(" eA=");
+    Serial.print(record.accelEnergyDiv16);
+    Serial.print(" ac=");
+    Serial.println(record.accelOver300Samples);
   }
 }
 

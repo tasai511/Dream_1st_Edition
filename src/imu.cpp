@@ -18,7 +18,7 @@ const uint8_t kRegOutXL = 0x28;
 const uint8_t kWhoAmI = 0x73;
 const uint8_t kCtrl1Accel480Hz = 0x08;
 const uint8_t kCtrl2Gyro480Hz = 0x08;
-const uint8_t kCtrl6Gyro2000dps = 0x08;
+const uint8_t kCtrl6Gyro4000dps = 0x0D;
 const uint8_t kCtrl8Accel16g = 0x03;
 
 bool ready = false;
@@ -76,6 +76,11 @@ int32_t rawToMg(int16_t raw) {
   return (static_cast<int32_t>(raw) * 488L) / 1000L;
 }
 
+uint32_t squareInt16(int16_t value) {
+  const int32_t wideValue = value;
+  return static_cast<uint32_t>(wideValue * wideValue);
+}
+
 }  // namespace
 
 namespace Imu {
@@ -94,7 +99,7 @@ void begin() {
 
   writeRegister(kRegCtrl8, kCtrl8Accel16g);
   writeRegister(kRegCtrl1, kCtrl1Accel480Hz);
-  writeRegister(kRegCtrl6, kCtrl6Gyro2000dps);
+  writeRegister(kRegCtrl6, kCtrl6Gyro4000dps);
   writeRegister(kRegCtrl2, kCtrl2Gyro480Hz);
   delay(5);
 }
@@ -123,9 +128,9 @@ uint16_t readAccelMagnitudeMg() {
   readAccelAxesMg(x, y, z);
 
   const uint32_t sumSquares =
-      static_cast<uint32_t>(x * x) +
-      static_cast<uint32_t>(y * y) +
-      static_cast<uint32_t>(z * z);
+      squareInt16(x) +
+      squareInt16(y) +
+      squareInt16(z);
   return isqrt(sumSquares);
 }
 
@@ -149,9 +154,9 @@ uint16_t readGyroMagnitudeRaw() {
   readGyroAxesRaw(x, y, z);
 
   const uint32_t sumSquares =
-      static_cast<uint32_t>(x * x) +
-      static_cast<uint32_t>(y * y) +
-      static_cast<uint32_t>(z * z);
+      squareInt16(x) +
+      squareInt16(y) +
+      squareInt16(z);
   return isqrt(sumSquares);
 }
 

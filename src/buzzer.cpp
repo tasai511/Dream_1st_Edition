@@ -17,9 +17,6 @@ uint32_t nextToggleUs = 0;
 uint32_t phaseUntilUs = 0;
 
 void driveOff() {
-  if (!buzzerOn) {
-    return;
-  }
   digitalWrite(kBuzzerP, LOW);
   digitalWrite(kBuzzerN, LOW);
   buzzerOn = false;
@@ -38,6 +35,23 @@ void startGap(uint32_t nowMicros) {
   phaseUntilUs = nowMicros + kBeepGapUs;
 }
 
+void driveToneBlocking(uint32_t durationUs) {
+  const uint32_t startedUs = micros();
+  uint32_t nextToggleUs = startedUs;
+  bool phase = false;
+
+  while (static_cast<int32_t>(micros() - startedUs) < static_cast<int32_t>(durationUs)) {
+    const uint32_t nowUs = micros();
+    if (static_cast<int32_t>(nowUs - nextToggleUs) >= 0) {
+      phase = !phase;
+      digitalWrite(kBuzzerP, phase ? HIGH : LOW);
+      digitalWrite(kBuzzerN, phase ? LOW : HIGH);
+      nextToggleUs += kHalfPeriodUs;
+    }
+  }
+  driveOff();
+}
+
 }  // namespace
 
 namespace Buzzer {
@@ -49,12 +63,19 @@ void begin() {
 }
 
 void beep(uint8_t count, uint32_t nowMicros) {
-  if (remainingBeeps != 0 || continuousTone) {
+  (void)nowMicros;
+  if (continuousTone) {
     return;
   }
-  continuousTone = false;
-  remainingBeeps = count;
-  startTone(nowMicros);
+
+  remainingBeeps = 0;
+  toneActive = false;
+  for (uint8_t i = 0; i < count; ++i) {
+    driveToneBlocking(kBeepDurationUs);
+    if (i + 1 < count) {
+      delay(kBeepGapUs / 1000);
+    }
+  }
 }
 
 void toneOn(uint32_t nowMicros) {
@@ -115,7 +136,7 @@ void off() {
 }
 
 bool isActive() {
-  return remainingBeeps != 0;
+  return remainingBeeps != 0 || continuousTone;
 }
 
 }  // namespace Buzzer
