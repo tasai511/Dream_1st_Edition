@@ -14,12 +14,15 @@ const uint8_t kRegCtrl6 = 0x15;
 const uint8_t kRegCtrl8 = 0x17;
 const uint8_t kRegOutXG = 0x22;
 const uint8_t kRegOutXL = 0x28;
+const uint8_t kRegOutXHg = 0x34;
+const uint8_t kRegCtrl1Hg = 0x4E;
 
 const uint8_t kWhoAmI = 0x73;
 const uint8_t kCtrl1Accel480Hz = 0x08;
 const uint8_t kCtrl2Gyro480Hz = 0x08;
 const uint8_t kCtrl6Gyro4000dps = 0x0D;
 const uint8_t kCtrl8Accel16g = 0x03;
+const uint8_t kCtrl1HighGAccel480Hz64g = 0x66;
 
 bool ready = false;
 
@@ -76,6 +79,11 @@ int32_t rawToMg(int16_t raw) {
   return (static_cast<int32_t>(raw) * 488L) / 1000L;
 }
 
+int32_t highGRawToMg(int16_t raw) {
+  // High-g accelerometer at +/-64 g is 1.953 mg/LSB.
+  return (static_cast<int32_t>(raw) * 1953L) / 1000L;
+}
+
 uint32_t squareInt16(int16_t value) {
   const int32_t wideValue = value;
   return static_cast<uint32_t>(wideValue * wideValue);
@@ -99,6 +107,7 @@ void begin() {
 
   writeRegister(kRegCtrl8, kCtrl8Accel16g);
   writeRegister(kRegCtrl1, kCtrl1Accel480Hz);
+  writeRegister(kRegCtrl1Hg, kCtrl1HighGAccel480Hz64g);
   writeRegister(kRegCtrl6, kCtrl6Gyro4000dps);
   writeRegister(kRegCtrl2, kCtrl2Gyro480Hz);
   delay(5);
@@ -116,9 +125,9 @@ void readAccelAxesMg(int16_t& x, int16_t& y, int16_t& z) {
     return;
   }
 
-  x = static_cast<int16_t>(rawToMg(readInt16(kRegOutXL)));
-  y = static_cast<int16_t>(rawToMg(readInt16(kRegOutXL + 2)));
-  z = static_cast<int16_t>(rawToMg(readInt16(kRegOutXL + 4)));
+  x = static_cast<int16_t>(highGRawToMg(readInt16(kRegOutXHg)));
+  y = static_cast<int16_t>(highGRawToMg(readInt16(kRegOutXHg + 2)));
+  z = static_cast<int16_t>(highGRawToMg(readInt16(kRegOutXHg + 4)));
 }
 
 uint16_t readAccelMagnitudeMg() {
