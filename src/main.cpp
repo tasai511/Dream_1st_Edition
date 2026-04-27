@@ -8,20 +8,22 @@ namespace {
 
 enum class RunMode : uint8_t {
   Calibrate,
-  StartCue,
+  WaitingForLift,
   Measuring,
   ShowingScore,
 };
 
 const uint16_t kGyroCalibrationWindowMs = 600;
 const uint16_t kStartWindowMs = 1000;
-const uint16_t kPostStartMeasureMs = 3000;
-const uint16_t kScoreDisplayMs = 3000;
+const uint16_t kPostStartMeasureMs = 1400;
+const uint16_t kScoreDisplayMs = 2000;
 const uint16_t kBaselineTrackDeltaMg = 120;
 
+const uint16_t kLiftStartStrength = 600;
 const uint16_t kSwingStartStrength = 1400;
 const uint16_t kAccelRunThresholdMg = 350;
 const uint16_t kAccelRunScoreMaxMs = 450;
+const uint8_t kLiftRequiredSamples = 3;
 
 const uint16_t kGyroScoreOffsetRaw = 700;
 const uint16_t kAccelScoreOffsetMg = 300;
@@ -29,10 +31,12 @@ const uint8_t kGyroScoreScale = 3;
 const uint8_t kAccelScoreScale = 2;
 const uint8_t kAccelRunScoreDivisor = 3;
 const uint8_t kFinalScorePct = 85;
-const uint16_t kScoreCurveKnee = 500;
-const uint16_t kScoreCurveKneeOutput = 300;
-const uint8_t kScoreCurveLowPct = 60;
-const uint8_t kScoreCurveHighPct = 160;
+const uint16_t kDisplayCurveLightInput = 300;
+const uint16_t kDisplayCurveLightOutput = 160;
+const uint16_t kDisplayCurveStrongInput = 400;
+const uint16_t kDisplayCurveStrongOutput = 600;
+const uint16_t kDisplayCurveProInput = 700;
+const uint16_t kDisplayCurveProOutput = 999;
 
 RunMode runMode = RunMode::Calibrate;
 uint32_t calibrationUntilMs = 0;
@@ -56,6 +60,7 @@ uint16_t accelPeakMg = 0;
 uint16_t accelRunMs = 0;
 uint16_t maxAccelRunMs = 0;
 uint32_t lastMeasureSampleMs = 0;
+uint8_t liftSampleCount = 0;
 bool swingStarted = false;
 
 uint32_t squareInt16(int16_t value) {
@@ -92,6 +97,28 @@ uint16_t absDiff16(uint16_t a, uint16_t b) {
   return a > b ? a - b : b - a;
 }
 
+uint16_t displayScoreFromMotionScore(uint32_t score) {
+  if (score <= kDisplayCurveLightInput) {
+    return static_cast<uint16_t>(
+        (score * kDisplayCurveLightOutput) / kDisplayCurveLightInput);
+  }
+  if (score <= kDisplayCurveStrongInput) {
+    const uint32_t inputSpan = kDisplayCurveStrongInput - kDisplayCurveLightInput;
+    const uint32_t outputSpan = kDisplayCurveStrongOutput - kDisplayCurveLightOutput;
+    return static_cast<uint16_t>(
+        kDisplayCurveLightOutput +
+        ((score - kDisplayCurveLightInput) * outputSpan) / inputSpan);
+  }
+  if (score <= kDisplayCurveProInput) {
+    const uint32_t inputSpan = kDisplayCurveProInput - kDisplayCurveStrongInput;
+    const uint32_t outputSpan = kDisplayCurveProOutput - kDisplayCurveStrongOutput;
+    return static_cast<uint16_t>(
+        kDisplayCurveStrongOutput +
+        ((score - kDisplayCurveStrongInput) * outputSpan) / inputSpan);
+  }
+  return kDisplayCurveProOutput;
+}
+
 void resetCalibration() {
   gyroXSum = 0;
   gyroYSum = 0;
@@ -108,7 +135,8 @@ void finishCalibration() {
     accelBaselineMg = static_cast<uint16_t>(accelSumMg / calibrationSamples);
   }
   Display::off();
-  runMode = RunMode::StartCue;
+  liftSampleCount = 0;
+  runMode = RunMode::WaitingForLift;
 }
 
 void resetMeasurement() {
@@ -124,6 +152,7 @@ void resetMeasurement() {
 void startMeasurementCue() {
   Display::off();
   Buzzer::beep(2, micros());
+  liftSampleCount = 0;
   resetMeasurement();
   measureStartedMs = millis();
   startWindowUntilMs = measureStartedMs + kStartWindowMs;
@@ -151,16 +180,10 @@ uint16_t scoreFromPeaks() {
   uint32_t score = gyroScore + accelScore;
   score += accelRunScore;
   score = (score * kFinalScorePct) / 100UL;
-  if (score <= kScoreCurveKnee) {
-    score = (score * kScoreCurveLowPct) / 100UL;
-  } else {
-    score = kScoreCurveKneeOutput +
-            ((score - kScoreCurveKnee) * kScoreCurveHighPct) / 100UL;
-  }
   if (score > 999) {
     score = 999;
   }
-  return static_cast<uint16_t>(score);
+  return displayScoreFromMotionScore(score);
 }
 
 void finishMeasurement(uint32_t nowMs) {
@@ -168,6 +191,12 @@ void finishMeasurement(uint32_t nowMs) {
   Display::showNumber(score, nowMs, kScoreDisplayMs);
   scoreUntilMs = nowMs + kScoreDisplayMs;
   runMode = RunMode::ShowingScore;
+}
+
+void finishNoSwing() {
+  Display::off();
+  liftSampleCount = 0;
+  runMode = RunMode::WaitingForLift;
 }
 
 }  // namespace
@@ -192,18 +221,6 @@ void loop() {
     return;
   }
   Display::update(nowMs);
-
-  if (runMode == RunMode::StartCue) {
-    startMeasurementCue();
-    return;
-  }
-
-  if (runMode == RunMode::ShowingScore) {
-    if (static_cast<int32_t>(nowMs - scoreUntilMs) >= 0) {
-      runMode = RunMode::StartCue;
-    }
-    return;
-  }
 
   const uint16_t accelMagnitudeMg = Imu::readAccelMagnitudeMg();
 
@@ -240,13 +257,46 @@ void loop() {
         static_cast<int32_t>(accelBaselineMg) + (baselineDeltaMg >> 5));
   }
 
-  if (runMode != RunMode::Measuring) {
-    return;
-  }
-
   const uint32_t strength =
       static_cast<uint32_t>(gyroMagnitudeRaw) +
       static_cast<uint32_t>(dynamicAccelMg) * 4UL;
+
+  if (runMode == RunMode::ShowingScore) {
+    if (strength >= kLiftStartStrength) {
+      if (liftSampleCount < 255) {
+        ++liftSampleCount;
+      }
+      if (liftSampleCount >= kLiftRequiredSamples) {
+        startMeasurementCue();
+      }
+    } else {
+      liftSampleCount = 0;
+    }
+    if (static_cast<int32_t>(nowMs - scoreUntilMs) >= 0) {
+      Display::off();
+      liftSampleCount = 0;
+      runMode = RunMode::WaitingForLift;
+    }
+    return;
+  }
+
+  if (runMode == RunMode::WaitingForLift) {
+    if (strength >= kLiftStartStrength) {
+      if (liftSampleCount < 255) {
+        ++liftSampleCount;
+      }
+      if (liftSampleCount >= kLiftRequiredSamples) {
+        startMeasurementCue();
+      }
+    } else {
+      liftSampleCount = 0;
+    }
+    return;
+  }
+
+  if (runMode != RunMode::Measuring) {
+    return;
+  }
 
   if (!swingStarted && strength >= kSwingStartStrength) {
     swingStarted = true;
@@ -255,8 +305,7 @@ void loop() {
   }
 
   if (!swingStarted && static_cast<int32_t>(nowMs - startWindowUntilMs) >= 0) {
-    Buzzer::beep(1, micros());
-    finishMeasurement(nowMs);
+    finishNoSwing();
     return;
   }
 
