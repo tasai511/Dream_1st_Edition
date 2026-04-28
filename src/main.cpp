@@ -35,7 +35,10 @@ const uint16_t kTapReleaseStrength = 450;
 const uint16_t kAccelRunThresholdMg = 350;
 const uint16_t kAccelRunScoreMaxMs = 450;
 const uint8_t kLiftRequiredSamples = 3;
-const uint16_t kTapMaxDurationMs = 140;
+const uint16_t kLiftSpinSustainedGyroRaw = 520;
+const uint16_t kLiftSpinSustainedAccelMg = 90;
+const uint16_t kLiftSpinSustainedMs = 140;
+const uint16_t kTapMaxDurationMs = 90;
 const uint16_t kDoubleTapWindowMs = 650;
 
 const uint16_t kGyroScoreOffsetRaw = 700;
@@ -81,7 +84,9 @@ uint16_t maxAccelRunMs = 0;
 uint16_t bestScore = 0;
 uint16_t swingCount = 0;
 uint32_t lastMeasureSampleMs = 0;
+uint32_t liftSpinLastSampleMs = 0;
 uint8_t liftSampleCount = 0;
+uint16_t liftSpinSustainedMs = 0;
 bool liftStartPending = false;
 bool swingStarted = false;
 bool tapCandidate = false;
@@ -171,6 +176,8 @@ void resetCalibration() {
 
 void resetLiftStart() {
   liftSampleCount = 0;
+  liftSpinSustainedMs = 0;
+  liftSpinLastSampleMs = 0;
   liftStartPending = false;
 }
 
@@ -209,6 +216,24 @@ void startMeasurementCue() {
   resetMeasurement();
   startWindowUntilMs = millis() + kStartWindowMs;
   runMode = RunMode::Measuring;
+}
+
+bool updateLiftSpinRejection(
+    uint16_t gyroMagnitudeRaw, uint16_t dynamicAccelMg, uint32_t nowMs) {
+  if (gyroMagnitudeRaw >= kLiftSpinSustainedGyroRaw &&
+      dynamicAccelMg <= kLiftSpinSustainedAccelMg) {
+    if (liftSpinLastSampleMs != 0) {
+      const uint16_t deltaMs = static_cast<uint16_t>(nowMs - liftSpinLastSampleMs);
+      const uint32_t nextMs = static_cast<uint32_t>(liftSpinSustainedMs) + deltaMs;
+      liftSpinSustainedMs = nextMs > 65535 ? 65535 : static_cast<uint16_t>(nextMs);
+    }
+    liftSpinLastSampleMs = nowMs;
+  } else {
+    liftSpinSustainedMs = 0;
+    liftSpinLastSampleMs = nowMs;
+  }
+
+  return liftSpinSustainedMs >= kLiftSpinSustainedMs;
 }
 
 uint16_t scoreFromPeaks() {
@@ -435,9 +460,19 @@ void loop() {
 
   if (runMode == RunMode::WaitingForLift) {
     if (liftStartPending) {
+      if (strength >= kLiftStartStrength &&
+          updateLiftSpinRejection(gyroMagnitudeRaw, dynamicAccelMg, nowMs)) {
+        return;
+      }
       if (static_cast<int32_t>(nowMs - liftStartAtMs) >= 0) {
         startMeasurementCue();
       }
+      return;
+    }
+
+    if (strength >= kLiftStartStrength &&
+        updateLiftSpinRejection(gyroMagnitudeRaw, dynamicAccelMg, nowMs)) {
+      resetLiftStart();
       return;
     }
 
@@ -452,6 +487,8 @@ void loop() {
       }
     } else {
       liftSampleCount = 0;
+      liftSpinSustainedMs = 0;
+      liftSpinLastSampleMs = 0;
     }
     return;
   }
