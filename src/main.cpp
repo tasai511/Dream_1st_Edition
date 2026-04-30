@@ -4,44 +4,36 @@
 #include "buzzer.h"
 #include "display.h"
 #include "imu.h"
-#include "tap.h"
 
 namespace {
 
 enum class RunMode : uint8_t {
   Calibrate,
-  WaitingForLift,
-  Measuring,
+  Monitor,
+  Capturing,
   ShowingScore,
+  Cooldown,
 };
 
 const uint16_t kGyroCalibrationWindowMs = 1000;
-const uint16_t kStartWindowMs = 1000;
-const uint16_t kPostStartMeasureMs = 1400;
-const uint16_t kScoreDisplayMs = 1500;
-const uint16_t kTapDisplayMs = 1200;
+const uint16_t kCaptureMaxMs = 900;
+const uint16_t kCaptureMinMs = 80;
+const uint16_t kMinAcceptedSwingDurationMs = 160;
+const uint16_t kCaptureEndQuietMs = 40;
+const uint16_t kCaptureEndDropPct = 70;
+const uint16_t kCaptureDiscardCooldownMs = 120;
+const uint16_t kCaptureStartStrength = 900;
+const uint16_t kCaptureStartGyroRaw = 600;
+const uint16_t kCaptureRestartStrength = 1800;
+const uint16_t kMinAcceptedScore = 200;
+const uint16_t kMinDisplayedAcceptedScore = 100;
+const uint16_t kScoreDisplayMs = 2000;
 const uint8_t kMilestoneSwingInterval = 100;
 const uint16_t kBaselineTrackDeltaMg = 120;
 const uint16_t kBatteryFullMv = 3000;
 const uint16_t kBatteryEmptyMv = 2600;
 
-const uint16_t kLiftStartStrength = 520;
-const uint16_t kLiftSmallStartStrength = 480;
-const uint16_t kLiftSmallStartRise = 120;
-const uint16_t kLiftStartDelayMs = 400;
-const uint16_t kSwingStartStrength = 1400;
-const uint16_t kTapStartStrength = 450;
-const uint16_t kTapConfirmStrength = 900;
-const uint16_t kTapConfirmAccelMg = 120;
-const uint16_t kTapConfirmRise = 320;
-const uint16_t kTapReleaseStrength = 450;
 const uint16_t kAccelRunThresholdMg = 350;
-const uint8_t kLiftRequiredSamples = 3;
-const uint16_t kLiftSpinSustainedGyroRaw = 520;
-const uint16_t kLiftSpinSustainedAccelMg = 90;
-const uint16_t kLiftSpinSustainedMs = 140;
-const uint16_t kTapMaxDurationMs = 100;
-const uint16_t kDoubleTapWindowMs = 650;
 
 const uint16_t kNoTimeMs = 65535;
 const uint16_t kGyroRiseThresholdRaw = 900;
@@ -71,17 +63,9 @@ const uint16_t kDisplayCurveProOutput = 999;
 
 RunMode runMode = RunMode::Calibrate;
 uint32_t calibrationUntilMs = 0;
-uint32_t startWindowUntilMs = 0;
 uint32_t swingStartedMs = 0;
 uint32_t scoreUntilMs = 0;
-uint32_t liftStartAtMs = 0;
-uint32_t tapCandidateStartedMs = 0;
-uint32_t lastTapConfirmedMs = 0;
-uint16_t tapCandidatePeakStrength = 0;
-uint16_t tapCandidatePeakAccelMg = 0;
-uint16_t tapCandidatePeakRise = 0;
-uint16_t previousTapStrength = 0;
-uint16_t previousLiftStrength = 0;
+uint32_t cooldownUntilMs = 0;
 
 int32_t gyroXSum = 0;
 int32_t gyroYSum = 0;
@@ -104,15 +88,9 @@ uint16_t bestScore = 0;
 uint16_t swingCount = 0;
 uint32_t lastMeasureSampleMs = 0;
 uint32_t lastSwingMotionMs = 0;
-uint32_t liftSpinLastSampleMs = 0;
-uint8_t liftSampleCount = 0;
-uint16_t liftSpinSustainedMs = 0;
-bool liftStartPending = false;
-bool liftMotionCandidate = false;
+uint16_t capturePeakStrength = 0;
+uint32_t captureQuietStartedMs = 0;
 bool swingStarted = false;
-bool tapCandidate = false;
-bool tapRejectedUntilRelease = false;
-bool waitingSecondTap = false;
 
 uint32_t squareInt16(int16_t value) {
   const int32_t wideValue = value;
@@ -216,20 +194,6 @@ void resetCalibration() {
   calibrationSamples = 0;
 }
 
-void resetLiftStart() {
-  liftSampleCount = 0;
-  liftSpinSustainedMs = 0;
-  liftSpinLastSampleMs = 0;
-  liftStartPending = false;
-  liftMotionCandidate = false;
-}
-
-void resetTapPeaks() {
-  tapCandidatePeakStrength = 0;
-  tapCandidatePeakAccelMg = 0;
-  tapCandidatePeakRise = 0;
-}
-
 void finishCalibration() {
   if (calibrationSamples != 0) {
     gyroBaselineX = static_cast<int16_t>(gyroXSum / calibrationSamples);
@@ -238,8 +202,7 @@ void finishCalibration() {
     accelBaselineMg = static_cast<uint16_t>(accelSumMg / calibrationSamples);
   }
   Display::off();
-  resetLiftStart();
-  runMode = RunMode::WaitingForLift;
+  runMode = RunMode::Monitor;
 }
 
 void resetMeasurement() {
@@ -252,35 +215,22 @@ void resetMeasurement() {
   firstGyroStrongTimeMs = kNoTimeMs;
   lastMeasureSampleMs = 0;
   lastSwingMotionMs = 0;
+  capturePeakStrength = 0;
+  captureQuietStartedMs = 0;
   swingStarted = false;
   swingStartedMs = 0;
 }
 
-void startMeasurementCue() {
+void startCapture(uint32_t nowMs, uint16_t strength) {
   Display::off();
-  Buzzer::beep(2, micros());
-  resetLiftStart();
   resetMeasurement();
-  startWindowUntilMs = millis() + kStartWindowMs;
-  runMode = RunMode::Measuring;
-}
-
-bool updateLiftSpinRejection(
-    uint16_t gyroMagnitudeRaw, uint16_t dynamicAccelMg, uint32_t nowMs) {
-  if (gyroMagnitudeRaw >= kLiftSpinSustainedGyroRaw &&
-      dynamicAccelMg <= kLiftSpinSustainedAccelMg) {
-    if (liftSpinLastSampleMs != 0) {
-      const uint16_t deltaMs = static_cast<uint16_t>(nowMs - liftSpinLastSampleMs);
-      const uint32_t nextMs = static_cast<uint32_t>(liftSpinSustainedMs) + deltaMs;
-      liftSpinSustainedMs = nextMs > 65535 ? 65535 : static_cast<uint16_t>(nextMs);
-    }
-    liftSpinLastSampleMs = nowMs;
-  } else {
-    liftSpinSustainedMs = 0;
-    liftSpinLastSampleMs = nowMs;
-  }
-
-  return liftSpinSustainedMs >= kLiftSpinSustainedMs;
+  swingStarted = true;
+  swingStartedMs = nowMs;
+  lastMeasureSampleMs = nowMs;
+  lastSwingMotionMs = nowMs;
+  capturePeakStrength = strength;
+  captureQuietStartedMs = 0;
+  runMode = RunMode::Capturing;
 }
 
 uint16_t scoreFromRange(
@@ -397,6 +347,17 @@ uint16_t scoreFromPeaks(uint16_t swingDurationMs) {
   return displayScoreFromMotionScore(score);
 }
 
+uint16_t displayedAcceptedScore(uint16_t score) {
+  if (score <= kMinAcceptedScore) {
+    return kMinDisplayedAcceptedScore;
+  }
+  const uint32_t inputSpan = kDisplayCurveProOutput - kMinAcceptedScore;
+  const uint32_t outputSpan = kDisplayCurveProOutput - kMinDisplayedAcceptedScore;
+  return static_cast<uint16_t>(
+      kMinDisplayedAcceptedScore +
+      ((static_cast<uint32_t>(score) - kMinAcceptedScore) * outputSpan) / inputSpan);
+}
+
 void finishMeasurement(uint32_t nowMs, uint16_t score) {
   Display::showNumber(score, nowMs, kScoreDisplayMs);
   scoreUntilMs = nowMs + kScoreDisplayMs;
@@ -405,104 +366,102 @@ void finishMeasurement(uint32_t nowMs, uint16_t score) {
 
 void finishNoSwing() {
   Display::off();
-  resetLiftStart();
-  runMode = RunMode::WaitingForLift;
+  cooldownUntilMs = millis() + kCaptureDiscardCooldownMs;
+  runMode = RunMode::Cooldown;
 }
 
-void showUiValue(uint16_t value, uint32_t nowMs) {
-  Display::showNumber(value, nowMs, kTapDisplayMs);
-  scoreUntilMs = nowMs + kTapDisplayMs;
-  resetLiftStart();
-  runMode = RunMode::ShowingScore;
+bool isCaptureStartMotion(
+    uint32_t strength, uint16_t gyroMagnitudeRaw, uint16_t dynamicAccelMg) {
+  return strength >= kCaptureStartStrength &&
+         (gyroMagnitudeRaw >= kCaptureStartGyroRaw ||
+          dynamicAccelMg >= kAccelRunThresholdMg);
 }
 
-void handleTapEvent(TapEvent event, uint32_t nowMs) {
-  if (event == TapEvent::Single) {
-    showUiValue(bestScore, nowMs);
-  } else if (event == TapEvent::Double) {
-    showUiValue(swingCount, nowMs);
+void updateCapturePeaks(
+    uint16_t gyroMagnitudeRaw,
+    uint16_t dynamicAccelMg,
+    uint16_t strength,
+    uint32_t nowMs) {
+  const uint16_t elapsedMs = static_cast<uint16_t>(nowMs - swingStartedMs);
+  const uint16_t sampleDeltaMs =
+      lastMeasureSampleMs == 0 ? 0 : static_cast<uint16_t>(nowMs - lastMeasureSampleMs);
+  lastMeasureSampleMs = nowMs;
+
+  if (gyroMagnitudeRaw > gyroPeakRaw) {
+    gyroPeakRaw = gyroMagnitudeRaw;
+    gyroPeakTimeMs = elapsedMs;
+  }
+  if (gyroMagnitudeRaw >= kGyroRiseThresholdRaw && firstGyroStrongTimeMs == kNoTimeMs) {
+    firstGyroStrongTimeMs = elapsedMs;
+  }
+  if (dynamicAccelMg > accelPeakMg) {
+    accelPeakMg = dynamicAccelMg;
+    accelPeakTimeMs = elapsedMs;
+  }
+  if (dynamicAccelMg >= kAccelRunThresholdMg) {
+    lastSwingMotionMs = nowMs;
+    const uint32_t nextRunMs = static_cast<uint32_t>(accelRunMs) + sampleDeltaMs;
+    accelRunMs = nextRunMs > 65535 ? 65535 : static_cast<uint16_t>(nextRunMs);
+    if (accelRunMs > maxAccelRunMs) {
+      maxAccelRunMs = accelRunMs;
+    }
+  } else {
+    accelRunMs = 0;
+  }
+  if (strength >= kCaptureStartStrength) {
+    lastSwingMotionMs = nowMs;
   }
 }
 
-TapEvent updateTapGesture(uint32_t strength, uint16_t dynamicAccelMg, uint32_t nowMs) {
-  const uint16_t strength16 = saturateToUint16(strength);
-  const uint16_t strengthRise =
-      strength16 > previousTapStrength ? strength16 - previousTapStrength : 0;
-  previousTapStrength = strength16;
-
-  if (tapRejectedUntilRelease) {
-    if (strength <= kTapReleaseStrength) {
-      tapRejectedUntilRelease = false;
-    }
-    return TapEvent::None;
+bool isCaptureFinished(uint16_t strength, uint32_t nowMs) {
+  const uint16_t elapsedMs = static_cast<uint16_t>(nowMs - swingStartedMs);
+  if (elapsedMs >= kCaptureMaxMs) {
+    return true;
+  }
+  if (elapsedMs < kCaptureMinMs) {
+    return false;
   }
 
-  if (tapCandidate) {
-    if (strength > tapCandidatePeakStrength) {
-      tapCandidatePeakStrength = strength16;
+  const uint32_t endThreshold =
+      (static_cast<uint32_t>(capturePeakStrength) * kCaptureEndDropPct) / 100UL;
+  if (strength <= endThreshold) {
+    if (captureQuietStartedMs == 0) {
+      captureQuietStartedMs = nowMs;
     }
-    if (dynamicAccelMg > tapCandidatePeakAccelMg) {
-      tapCandidatePeakAccelMg = dynamicAccelMg;
-    }
-    if (strengthRise > tapCandidatePeakRise) {
-      tapCandidatePeakRise = strengthRise;
-    }
-
-    if (strength <= kTapReleaseStrength) {
-      tapCandidate = false;
-      const bool strongAccelTap = tapCandidatePeakAccelMg >= kTapConfirmAccelMg;
-      const bool sharpStrengthTap = tapCandidatePeakStrength >= kTapConfirmStrength &&
-                                    tapCandidatePeakRise >= kTapConfirmRise;
-      if (!strongAccelTap && !sharpStrengthTap) {
-        return TapEvent::None;
-      }
-      if (waitingSecondTap &&
-          static_cast<int32_t>(nowMs - (lastTapConfirmedMs + kDoubleTapWindowMs)) <= 0) {
-        waitingSecondTap = false;
-        lastTapConfirmedMs = nowMs;
-        return TapEvent::Double;
-      }
-      waitingSecondTap = true;
-      lastTapConfirmedMs = nowMs;
-      return TapEvent::None;
-    }
-
-    if (static_cast<int32_t>(nowMs - (tapCandidateStartedMs + kTapMaxDurationMs)) >= 0) {
-      tapCandidate = false;
-      waitingSecondTap = false;
-      tapRejectedUntilRelease = true;
-    }
-    return TapEvent::None;
+    return static_cast<uint16_t>(nowMs - captureQuietStartedMs) >= kCaptureEndQuietMs;
   }
 
-  if (waitingSecondTap) {
-    if (static_cast<int32_t>(nowMs - (lastTapConfirmedMs + kDoubleTapWindowMs)) >= 0) {
-      waitingSecondTap = false;
-      return TapEvent::Single;
-    }
-  }
-
-  if (strength >= kTapStartStrength) {
-    tapCandidate = true;
-    tapCandidateStartedMs = nowMs;
-    tapCandidatePeakStrength = strength16;
-    tapCandidatePeakAccelMg = dynamicAccelMg;
-    tapCandidatePeakRise = strengthRise;
-  }
-
-  return TapEvent::None;
+  captureQuietStartedMs = 0;
+  return false;
 }
 
-bool isTapGestureBusy() {
-  return tapCandidate || waitingSecondTap;
-}
+void finishCapture(uint32_t nowMs) {
+  const uint16_t swingDurationMs = activeSwingDurationMs(nowMs);
+  if (swingDurationMs < kMinAcceptedSwingDurationMs) {
+    finishNoSwing();
+    return;
+  }
 
-void resetTapGesture() {
-  tapCandidate = false;
-  tapRejectedUntilRelease = false;
-  waitingSecondTap = false;
-  resetTapPeaks();
-  previousTapStrength = 0;
+  const uint16_t score = scoreFromPeaks(swingDurationMs);
+  if (score <= kMinAcceptedScore) {
+    finishNoSwing();
+    return;
+  }
+
+  const uint16_t displayScore = displayedAcceptedScore(score);
+  const bool newBest = displayScore > bestScore;
+  if (newBest) {
+    bestScore = displayScore;
+  }
+  if (swingCount < 999) {
+    ++swingCount;
+  }
+  if (swingCount % kMilestoneSwingInterval == 0) {
+    Buzzer::milestoneBeep(micros());
+  } else {
+    Buzzer::beep(newBest ? 3 : 1, micros());
+  }
+  finishMeasurement(nowMs, displayScore);
 }
 
 }  // namespace
@@ -568,141 +527,45 @@ void loop() {
       static_cast<uint32_t>(gyroMagnitudeRaw) +
       static_cast<uint32_t>(dynamicAccelMg) * 4UL;
   const uint16_t liftStrength = saturateToUint16(strength);
-  const uint16_t liftStrengthRise =
-      liftStrength > previousLiftStrength ? liftStrength - previousLiftStrength : 0;
-  previousLiftStrength = liftStrength;
-
-  const bool tapInputActive = runMode == RunMode::WaitingForLift ||
-                              runMode == RunMode::ShowingScore;
-  if (tapInputActive) {
-    const TapEvent tapEvent = updateTapGesture(strength, dynamicAccelMg, nowMs);
-    if (tapEvent != TapEvent::None) {
-      handleTapEvent(tapEvent, nowMs);
-      return;
-    }
-    if (isTapGestureBusy()) {
-      resetLiftStart();
-      return;
-    }
-  } else {
-    resetTapGesture();
-  }
 
   if (runMode == RunMode::ShowingScore) {
     if (static_cast<int32_t>(nowMs - scoreUntilMs) >= 0) {
-      resetLiftStart();
-      runMode = RunMode::WaitingForLift;
+      runMode = RunMode::Monitor;
     }
     return;
   }
 
-  if (runMode == RunMode::WaitingForLift) {
-    if (liftStartPending) {
-      if (strength >= kLiftStartStrength &&
-          updateLiftSpinRejection(gyroMagnitudeRaw, dynamicAccelMg, nowMs)) {
-        return;
-      }
-      if (static_cast<int32_t>(nowMs - liftStartAtMs) >= 0) {
-        startMeasurementCue();
-      }
-      return;
+  if (runMode == RunMode::Cooldown) {
+    if (static_cast<int32_t>(nowMs - cooldownUntilMs) >= 0) {
+      runMode = RunMode::Monitor;
     }
+    return;
+  }
 
-    if (strength >= kLiftStartStrength &&
-        updateLiftSpinRejection(gyroMagnitudeRaw, dynamicAccelMg, nowMs)) {
-      resetLiftStart();
-      return;
+  if (runMode == RunMode::Monitor) {
+    if (isCaptureStartMotion(strength, gyroMagnitudeRaw, dynamicAccelMg)) {
+      startCapture(nowMs, liftStrength);
+      updateCapturePeaks(gyroMagnitudeRaw, dynamicAccelMg, liftStrength, nowMs);
     }
+    return;
+  }
 
-    const bool strongLiftStart = strength >= kLiftStartStrength;
-    const bool smallLiftStart =
-        strength >= kLiftSmallStartStrength && liftStrengthRise >= kLiftSmallStartRise;
-    if (strongLiftStart || smallLiftStart) {
-      liftMotionCandidate = true;
-    }
+  if (runMode != RunMode::Capturing) {
+    return;
+  }
 
-    if (liftMotionCandidate && strength >= kLiftSmallStartStrength) {
-      if (liftSampleCount < 255) {
-        ++liftSampleCount;
-      }
-      if (liftSampleCount >= kLiftRequiredSamples) {
-        liftStartPending = true;
-        liftStartAtMs = nowMs + kLiftStartDelayMs;
-        liftSampleCount = 0;
-      }
+  const uint16_t strength16 = liftStrength;
+  if (strength16 > capturePeakStrength) {
+    if (static_cast<uint32_t>(strength16) >=
+        static_cast<uint32_t>(capturePeakStrength) + kCaptureRestartStrength) {
+      startCapture(nowMs, strength16);
     } else {
-      liftSampleCount = 0;
-      liftMotionCandidate = false;
-      liftSpinSustainedMs = 0;
-      liftSpinLastSampleMs = 0;
+      capturePeakStrength = strength16;
     }
-    return;
   }
+  updateCapturePeaks(gyroMagnitudeRaw, dynamicAccelMg, strength16, nowMs);
 
-  if (runMode != RunMode::Measuring) {
-    return;
-  }
-
-  if (!swingStarted && strength >= kSwingStartStrength) {
-    swingStarted = true;
-    swingStartedMs = nowMs;
-    lastMeasureSampleMs = nowMs;
-    lastSwingMotionMs = nowMs;
-  }
-
-  if (!swingStarted && static_cast<int32_t>(nowMs - startWindowUntilMs) >= 0) {
-    finishNoSwing();
-    return;
-  }
-
-  if (!swingStarted) {
-    return;
-  }
-
-  const uint16_t elapsedMs = static_cast<uint16_t>(nowMs - swingStartedMs);
-  const uint16_t sampleDeltaMs =
-      lastMeasureSampleMs == 0 ? 0 : static_cast<uint16_t>(nowMs - lastMeasureSampleMs);
-  lastMeasureSampleMs = nowMs;
-
-  if (gyroMagnitudeRaw > gyroPeakRaw) {
-    gyroPeakRaw = gyroMagnitudeRaw;
-    gyroPeakTimeMs = elapsedMs;
-  }
-  if (gyroMagnitudeRaw >= kGyroRiseThresholdRaw && firstGyroStrongTimeMs == kNoTimeMs) {
-    firstGyroStrongTimeMs = elapsedMs;
-  }
-  if (dynamicAccelMg > accelPeakMg) {
-    accelPeakMg = dynamicAccelMg;
-    accelPeakTimeMs = elapsedMs;
-  }
-  if (dynamicAccelMg >= kAccelRunThresholdMg) {
-    lastSwingMotionMs = nowMs;
-    const uint32_t nextRunMs = static_cast<uint32_t>(accelRunMs) + sampleDeltaMs;
-    accelRunMs = nextRunMs > 65535 ? 65535 : static_cast<uint16_t>(nextRunMs);
-    if (accelRunMs > maxAccelRunMs) {
-      maxAccelRunMs = accelRunMs;
-    }
-  } else {
-    accelRunMs = 0;
-  }
-  if (strength >= kSwingStartStrength) {
-    lastSwingMotionMs = nowMs;
-  }
-
-  if (elapsedMs >= kPostStartMeasureMs) {
-    const uint16_t score = scoreFromPeaks(activeSwingDurationMs(nowMs));
-    const bool newBest = score > bestScore;
-    if (newBest) {
-      bestScore = score;
-    }
-    if (swingCount < 999) {
-      ++swingCount;
-    }
-    if (swingCount % kMilestoneSwingInterval == 0) {
-      Buzzer::milestoneBeep(micros());
-    } else {
-      Buzzer::beep(newBest ? 3 : 1, micros());
-    }
-    finishMeasurement(nowMs, score);
+  if (isCaptureFinished(strength16, nowMs)) {
+    finishCapture(nowMs);
   }
 }
