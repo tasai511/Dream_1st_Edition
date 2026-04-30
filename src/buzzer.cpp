@@ -6,6 +6,7 @@ const uint8_t kBuzzerP = PIN_PA6;
 const uint8_t kBuzzerN = PIN_PA7;
 const uint16_t kHalfPeriodUs = 125;
 const uint32_t kBeepDurationUs = 50000;
+const uint32_t kLongBeepDurationUs = 250000;
 const uint32_t kBeepGapUs = 90000;
 
 uint8_t remainingBeeps = 0;
@@ -76,6 +77,21 @@ void beep(uint8_t count, uint32_t nowMicros) {
       delay(kBeepGapUs / 1000);
     }
   }
+}
+
+void milestoneBeep(uint32_t nowMicros) {
+  (void)nowMicros;
+  if (continuousTone) {
+    return;
+  }
+
+  remainingBeeps = 0;
+  toneActive = false;
+  driveToneBlocking(kBeepDurationUs);
+  delay(kBeepGapUs / 1000);
+  driveToneBlocking(kBeepDurationUs);
+  delay(kBeepGapUs / 1000);
+  driveToneBlocking(kLongBeepDurationUs);
 }
 
 void toneOn(uint32_t nowMicros) {

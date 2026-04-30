@@ -20,6 +20,7 @@ const uint16_t kStartWindowMs = 1000;
 const uint16_t kPostStartMeasureMs = 1400;
 const uint16_t kScoreDisplayMs = 1500;
 const uint16_t kTapDisplayMs = 1200;
+const uint8_t kMilestoneSwingInterval = 100;
 const uint16_t kBaselineTrackDeltaMg = 120;
 const uint16_t kBatteryFullMv = 3000;
 const uint16_t kBatteryEmptyMv = 2600;
@@ -697,7 +698,11 @@ void loop() {
     if (swingCount < 999) {
       ++swingCount;
     }
-    Buzzer::beep(newBest ? 3 : 1, micros());
+    if (swingCount % kMilestoneSwingInterval == 0) {
+      Buzzer::milestoneBeep(micros());
+    } else {
+      Buzzer::beep(newBest ? 3 : 1, micros());
+    }
     finishMeasurement(nowMs, score);
   }
 }
