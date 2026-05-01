@@ -13,20 +13,47 @@ const uint8_t kRegCtrl2 = 0x11;
 const uint8_t kRegCtrl3 = 0x12;
 const uint8_t kRegCtrl6 = 0x15;
 const uint8_t kRegCtrl8 = 0x17;
+const uint8_t kRegTapSrc = 0x46;
 const uint8_t kRegOutXG = 0x22;
 const uint8_t kRegOutXL = 0x28;
 const uint8_t kRegOutXHg = 0x34;
 const uint8_t kRegCtrl1Hg = 0x4E;
+const uint8_t kRegFunctionsEnable = 0x50;
+const uint8_t kRegWakeUpSrc = 0x45;
+const uint8_t kRegTapCfg0 = 0x56;
+const uint8_t kRegTapCfg1 = 0x57;
+const uint8_t kRegTapCfg2 = 0x58;
+const uint8_t kRegTapThs6d = 0x59;
+const uint8_t kRegTapDur = 0x5A;
+const uint8_t kRegWakeUpThs = 0x5B;
+const uint8_t kRegWakeUpDur = 0x5C;
+const uint8_t kRegMd1Cfg = 0x5E;
 
 const uint8_t kWhoAmI = 0x73;
 const uint8_t kCtrl1Accel480Hz = 0x08;
+const uint8_t kCtrl1Accel60Hz = 0x04;
 const uint8_t kCtrl2Gyro480Hz = 0x08;
+const uint8_t kCtrl2GyroPowerDown = 0x00;
 const uint8_t kCtrl3BduIfInc = 0x44;
 const uint8_t kCtrl6Gyro4000dps = 0x0D;
-const uint8_t kCtrl8Accel16g = 0x03;
+const uint8_t kCtrl8Accel8g = 0x02;
 const uint8_t kCtrl1HighGAccel480Hz64g = 0x66;
+const uint8_t kCtrl1HighGAccelPowerDown = 0x00;
+
+const uint8_t kInt1Pin = PIN_PA5;
+const uint8_t kTapCfg0EnableZLatched = 0x03;
+const uint8_t kTapThreshold = 0x01;
+const uint8_t kTapDurDoubleTap = 0x46;
+const uint8_t kWakeUpThsSingleDoubleTap = 0x80;
+const uint8_t kWakeUpThsMotion = 0x82;
+const uint8_t kWakeUpDurNoDuration = 0x00;
+const uint8_t kFunctionsEnableInterrupts = 0x80;
+const uint8_t kMd1CfgTapWakeOnInt1 = 0x68;
+const uint8_t kTapSrcSingleTap = 0x20;
+const uint8_t kTapSrcDoubleTap = 0x10;
 
 bool ready = false;
+volatile bool tapInterruptPending = false;
 
 SPISettings spiSettings(1000000, MSBFIRST, SPI_MODE3);
 
@@ -104,6 +131,32 @@ uint32_t squareInt16(int16_t value) {
   return static_cast<uint32_t>(wideValue * wideValue);
 }
 
+void onTapInterrupt() {
+  tapInterruptPending = true;
+}
+
+void configureTapDetection() {
+  writeRegister(kRegTapCfg0, kTapCfg0EnableZLatched);
+  writeRegister(kRegTapCfg1, 0x00);
+  writeRegister(kRegTapCfg2, 0x00);
+  writeRegister(kRegTapThs6d, kTapThreshold);
+  writeRegister(kRegTapDur, kTapDurDoubleTap);
+  writeRegister(kRegWakeUpThs, kWakeUpThsSingleDoubleTap);
+  writeRegister(kRegWakeUpDur, kWakeUpDurNoDuration);
+  writeRegister(kRegFunctionsEnable, kFunctionsEnableInterrupts);
+  writeRegister(kRegMd1Cfg, kMd1CfgTapWakeOnInt1);
+  readRegister(kRegWakeUpSrc);
+  readRegister(kRegTapSrc);
+}
+
+void configureFullRateSensors() {
+  writeRegister(kRegCtrl8, kCtrl8Accel8g);
+  writeRegister(kRegCtrl1, kCtrl1Accel480Hz);
+  writeRegister(kRegCtrl1Hg, kCtrl1HighGAccel480Hz64g);
+  writeRegister(kRegCtrl6, kCtrl6Gyro4000dps);
+  writeRegister(kRegCtrl2, kCtrl2Gyro480Hz);
+}
+
 }  // namespace
 
 namespace Imu {
@@ -111,6 +164,7 @@ namespace Imu {
 void begin() {
   pinMode(kCsPin, OUTPUT);
   digitalWrite(kCsPin, HIGH);
+  pinMode(kInt1Pin, INPUT);
 
   SPI.begin();
   delay(10);
@@ -121,16 +175,62 @@ void begin() {
   }
 
   writeRegister(kRegCtrl3, kCtrl3BduIfInc);
-  writeRegister(kRegCtrl8, kCtrl8Accel16g);
-  writeRegister(kRegCtrl1, kCtrl1Accel480Hz);
-  writeRegister(kRegCtrl1Hg, kCtrl1HighGAccel480Hz64g);
-  writeRegister(kRegCtrl6, kCtrl6Gyro4000dps);
-  writeRegister(kRegCtrl2, kCtrl2Gyro480Hz);
+  configureFullRateSensors();
+  configureTapDetection();
+  attachInterrupt(digitalPinToInterrupt(kInt1Pin), onTapInterrupt, RISING);
   delay(5);
 }
 
 bool isReady() {
   return ready;
+}
+
+TapEvent readTapEvent() {
+  if (!ready) {
+    return TapEvent::None;
+  }
+
+  if (tapInterruptPending) {
+    noInterrupts();
+    tapInterruptPending = false;
+    interrupts();
+  }
+
+  const uint8_t tapSrc = readRegister(kRegTapSrc);
+  if ((tapSrc & kTapSrcDoubleTap) != 0) {
+    return TapEvent::Double;
+  }
+  if ((tapSrc & kTapSrcSingleTap) != 0) {
+    return TapEvent::Single;
+  }
+  return TapEvent::None;
+}
+
+void enterSleepMode() {
+  if (!ready) {
+    return;
+  }
+
+  writeRegister(kRegCtrl2, kCtrl2GyroPowerDown);
+  writeRegister(kRegCtrl1Hg, kCtrl1HighGAccelPowerDown);
+  writeRegister(kRegWakeUpThs, kWakeUpThsSingleDoubleTap | kWakeUpThsMotion);
+  writeRegister(kRegCtrl1, kCtrl1Accel60Hz);
+  readRegister(kRegWakeUpSrc);
+  readRegister(kRegTapSrc);
+
+  noInterrupts();
+  tapInterruptPending = false;
+  interrupts();
+}
+
+void exitSleepMode() {
+  if (!ready) {
+    return;
+  }
+
+  configureFullRateSensors();
+  configureTapDetection();
+  delay(5);
 }
 
 void readAccelAxesMg(int16_t& x, int16_t& y, int16_t& z) {

@@ -1,9 +1,11 @@
 #include <Arduino.h>
+#include <avr/sleep.h>
 #include <megaTinyCore.h>
 
 #include "buzzer.h"
 #include "display.h"
 #include "imu.h"
+#include "tap.h"
 
 namespace {
 
@@ -22,18 +24,23 @@ const uint16_t kMinAcceptedSwingDurationMs = 160;
 const uint16_t kCaptureEndQuietMs = 40;
 const uint16_t kCaptureEndDropPct = 70;
 const uint16_t kCaptureDiscardCooldownMs = 120;
+const uint16_t kTapMuteAfterScoreMs = 250;
+const uint16_t kTapMuteAfterStartupMs = 1000;
 const uint16_t kCaptureStartStrength = 900;
 const uint16_t kCaptureStartGyroRaw = 600;
 const uint16_t kCaptureRestartStrength = 1800;
 const uint16_t kMinAcceptedScore = 200;
 const uint16_t kMinDisplayedAcceptedScore = 100;
 const uint16_t kScoreDisplayMs = 2000;
-const uint8_t kMilestoneSwingInterval = 100;
+const uint16_t kTapDisplayMs = 1400;
+const uint8_t kMilestoneSwingInterval = 50;
 const uint16_t kBaselineTrackDeltaMg = 120;
 const uint16_t kBatteryFullMv = 3000;
 const uint16_t kBatteryEmptyMv = 2600;
+const uint32_t kAutoSleepIdleMs = 180000UL;
 
 const uint16_t kAccelRunThresholdMg = 350;
+const uint16_t kActivityStrengthThreshold = 650;
 
 const uint16_t kNoTimeMs = 65535;
 const uint16_t kGyroRiseThresholdRaw = 900;
@@ -66,6 +73,8 @@ uint32_t calibrationUntilMs = 0;
 uint32_t swingStartedMs = 0;
 uint32_t scoreUntilMs = 0;
 uint32_t cooldownUntilMs = 0;
+uint32_t tapMutedUntilMs = 0;
+uint32_t lastActivityMs = 0;
 
 int32_t gyroXSum = 0;
 int32_t gyroYSum = 0;
@@ -84,13 +93,42 @@ uint16_t maxAccelRunMs = 0;
 uint16_t gyroPeakTimeMs = 0;
 uint16_t accelPeakTimeMs = 0;
 uint16_t firstGyroStrongTimeMs = kNoTimeMs;
+uint16_t latestScore = 0;
 uint16_t bestScore = 0;
 uint16_t swingCount = 0;
+uint32_t scoreTotal = 0;
+uint16_t scoreSampleCount = 0;
+bool hasLatestScore = false;
 uint32_t lastMeasureSampleMs = 0;
 uint32_t lastSwingMotionMs = 0;
 uint16_t capturePeakStrength = 0;
 uint32_t captureQuietStartedMs = 0;
 bool swingStarted = false;
+
+void resetCalibration();
+
+void enterAutoSleep(uint32_t nowMs) {
+  Display::off();
+  Buzzer::off();
+  Buzzer::beep(1, micros());
+  Imu::enterSleepMode();
+
+  set_sleep_mode(SLEEP_MODE_STANDBY);
+  sleep_enable();
+  noInterrupts();
+  interrupts();
+  sleep_cpu();
+  sleep_disable();
+
+  Imu::exitSleepMode();
+  Buzzer::beep(2, micros());
+  resetCalibration();
+  calibrationUntilMs = millis() + kGyroCalibrationWindowMs;
+  tapMutedUntilMs = calibrationUntilMs + kTapMuteAfterStartupMs;
+  lastActivityMs = millis();
+  runMode = RunMode::Calibrate;
+  (void)nowMs;
+}
 
 uint32_t squareInt16(int16_t value) {
   const int32_t wideValue = value;
@@ -202,6 +240,8 @@ void finishCalibration() {
     accelBaselineMg = static_cast<uint16_t>(accelSumMg / calibrationSamples);
   }
   Display::off();
+  tapMutedUntilMs = millis() + kTapMuteAfterStartupMs;
+  lastActivityMs = millis();
   runMode = RunMode::Monitor;
 }
 
@@ -359,8 +399,11 @@ uint16_t displayedAcceptedScore(uint16_t score) {
 }
 
 void finishMeasurement(uint32_t nowMs, uint16_t score) {
+  latestScore = score;
+  hasLatestScore = true;
   Display::showNumber(score, nowMs, kScoreDisplayMs);
   scoreUntilMs = nowMs + kScoreDisplayMs;
+  tapMutedUntilMs = scoreUntilMs + kTapMuteAfterScoreMs;
   runMode = RunMode::ShowingScore;
 }
 
@@ -449,6 +492,12 @@ void finishCapture(uint32_t nowMs) {
   }
 
   const uint16_t displayScore = displayedAcceptedScore(score);
+  const uint16_t averageScore =
+      scoreSampleCount != 0
+          ? static_cast<uint16_t>((scoreTotal + (scoreSampleCount / 2UL)) /
+                                  scoreSampleCount)
+          : displayScore;
+  const bool aboveAverage = displayScore >= averageScore;
   const bool newBest = displayScore > bestScore;
   if (newBest) {
     bestScore = displayScore;
@@ -456,10 +505,18 @@ void finishCapture(uint32_t nowMs) {
   if (swingCount < 999) {
     ++swingCount;
   }
+  if (scoreSampleCount < 65535) {
+    ++scoreSampleCount;
+    scoreTotal += displayScore;
+  }
   if (swingCount % kMilestoneSwingInterval == 0) {
     Buzzer::milestoneBeep(micros());
+  } else if (newBest) {
+    Buzzer::beep(3, micros());
+  } else if (aboveAverage) {
+    Buzzer::beep(1, micros());
   } else {
-    Buzzer::beep(newBest ? 3 : 1, micros());
+    Buzzer::beep(2, micros());
   }
   finishMeasurement(nowMs, displayScore);
 }
@@ -527,6 +584,9 @@ void loop() {
       static_cast<uint32_t>(gyroMagnitudeRaw) +
       static_cast<uint32_t>(dynamicAccelMg) * 4UL;
   const uint16_t liftStrength = saturateToUint16(strength);
+  if (strength >= kActivityStrengthThreshold) {
+    lastActivityMs = nowMs;
+  }
 
   if (runMode == RunMode::ShowingScore) {
     if (static_cast<int32_t>(nowMs - scoreUntilMs) >= 0) {
@@ -543,9 +603,34 @@ void loop() {
   }
 
   if (runMode == RunMode::Monitor) {
+    if (static_cast<int32_t>(nowMs - tapMutedUntilMs) < 0) {
+      Imu::readTapEvent();
+      return;
+    }
+    const TapEvent tapEvent = Imu::readTapEvent();
+    if (tapEvent == TapEvent::Double && scoreSampleCount != 0) {
+      lastActivityMs = nowMs;
+      const uint16_t averageScore = static_cast<uint16_t>(
+          (scoreTotal + (scoreSampleCount / 2UL)) / scoreSampleCount);
+      Display::showNumber(averageScore, nowMs, kTapDisplayMs);
+      scoreUntilMs = nowMs + kTapDisplayMs;
+      runMode = RunMode::ShowingScore;
+      return;
+    }
+    if (tapEvent == TapEvent::Single) {
+      lastActivityMs = nowMs;
+      Display::showNumber(swingCount, nowMs, kTapDisplayMs);
+      scoreUntilMs = nowMs + kTapDisplayMs;
+      runMode = RunMode::ShowingScore;
+      return;
+    }
+
     if (isCaptureStartMotion(strength, gyroMagnitudeRaw, dynamicAccelMg)) {
+      lastActivityMs = nowMs;
       startCapture(nowMs, liftStrength);
       updateCapturePeaks(gyroMagnitudeRaw, dynamicAccelMg, liftStrength, nowMs);
+    } else if (static_cast<int32_t>(nowMs - (lastActivityMs + kAutoSleepIdleMs)) >= 0) {
+      enterAutoSleep(nowMs);
     }
     return;
   }
