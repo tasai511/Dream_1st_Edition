@@ -93,41 +93,28 @@ uint16_t maxAccelRunMs = 0;
 uint16_t gyroPeakTimeMs = 0;
 uint16_t accelPeakTimeMs = 0;
 uint16_t firstGyroStrongTimeMs = kNoTimeMs;
-uint16_t latestScore = 0;
 uint16_t bestScore = 0;
 uint16_t swingCount = 0;
 uint32_t scoreTotal = 0;
 uint16_t scoreSampleCount = 0;
-bool hasLatestScore = false;
 uint32_t lastMeasureSampleMs = 0;
 uint32_t lastSwingMotionMs = 0;
 uint16_t capturePeakStrength = 0;
 uint32_t captureQuietStartedMs = 0;
 bool swingStarted = false;
 
-void resetCalibration();
-
 void enterAutoSleep(uint32_t nowMs) {
   Display::off();
   Buzzer::off();
-  Buzzer::beep(1, micros());
   Imu::enterSleepMode();
 
-  set_sleep_mode(SLEEP_MODE_STANDBY);
+  set_sleep_mode(SLEEP_MODE_PWR_DOWN);
   sleep_enable();
-  noInterrupts();
-  interrupts();
-  sleep_cpu();
-  sleep_disable();
-
-  Imu::exitSleepMode();
-  Buzzer::beep(2, micros());
-  resetCalibration();
-  calibrationUntilMs = millis() + kGyroCalibrationWindowMs;
-  tapMutedUntilMs = calibrationUntilMs + kTapMuteAfterStartupMs;
-  lastActivityMs = millis();
-  runMode = RunMode::Calibrate;
   (void)nowMs;
+  noInterrupts();
+  for (;;) {
+    sleep_cpu();
+  }
 }
 
 uint32_t squareInt16(int16_t value) {
@@ -399,8 +386,6 @@ uint16_t displayedAcceptedScore(uint16_t score) {
 }
 
 void finishMeasurement(uint32_t nowMs, uint16_t score) {
-  latestScore = score;
-  hasLatestScore = true;
   Display::showNumber(score, nowMs, kScoreDisplayMs);
   scoreUntilMs = nowMs + kScoreDisplayMs;
   tapMutedUntilMs = scoreUntilMs + kTapMuteAfterScoreMs;
@@ -514,9 +499,9 @@ void finishCapture(uint32_t nowMs) {
   } else if (newBest) {
     Buzzer::beep(3, micros());
   } else if (aboveAverage) {
-    Buzzer::beep(1, micros());
-  } else {
     Buzzer::beep(2, micros());
+  } else {
+    Buzzer::beep(1, micros());
   }
   finishMeasurement(nowMs, displayScore);
 }

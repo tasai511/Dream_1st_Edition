@@ -19,7 +19,6 @@ const uint8_t kRegOutXL = 0x28;
 const uint8_t kRegOutXHg = 0x34;
 const uint8_t kRegCtrl1Hg = 0x4E;
 const uint8_t kRegFunctionsEnable = 0x50;
-const uint8_t kRegWakeUpSrc = 0x45;
 const uint8_t kRegTapCfg0 = 0x56;
 const uint8_t kRegTapCfg1 = 0x57;
 const uint8_t kRegTapCfg2 = 0x58;
@@ -31,7 +30,7 @@ const uint8_t kRegMd1Cfg = 0x5E;
 
 const uint8_t kWhoAmI = 0x73;
 const uint8_t kCtrl1Accel480Hz = 0x08;
-const uint8_t kCtrl1Accel60Hz = 0x04;
+const uint8_t kCtrl1AccelPowerDown = 0x00;
 const uint8_t kCtrl2Gyro480Hz = 0x08;
 const uint8_t kCtrl2GyroPowerDown = 0x00;
 const uint8_t kCtrl3BduIfInc = 0x44;
@@ -45,10 +44,9 @@ const uint8_t kTapCfg0EnableZLatched = 0x03;
 const uint8_t kTapThreshold = 0x01;
 const uint8_t kTapDurDoubleTap = 0x46;
 const uint8_t kWakeUpThsSingleDoubleTap = 0x80;
-const uint8_t kWakeUpThsMotion = 0x82;
 const uint8_t kWakeUpDurNoDuration = 0x00;
 const uint8_t kFunctionsEnableInterrupts = 0x80;
-const uint8_t kMd1CfgTapWakeOnInt1 = 0x68;
+const uint8_t kMd1CfgTapOnInt1 = 0x48;
 const uint8_t kTapSrcSingleTap = 0x20;
 const uint8_t kTapSrcDoubleTap = 0x10;
 
@@ -144,8 +142,7 @@ void configureTapDetection() {
   writeRegister(kRegWakeUpThs, kWakeUpThsSingleDoubleTap);
   writeRegister(kRegWakeUpDur, kWakeUpDurNoDuration);
   writeRegister(kRegFunctionsEnable, kFunctionsEnableInterrupts);
-  writeRegister(kRegMd1Cfg, kMd1CfgTapWakeOnInt1);
-  readRegister(kRegWakeUpSrc);
+  writeRegister(kRegMd1Cfg, kMd1CfgTapOnInt1);
   readRegister(kRegTapSrc);
 }
 
@@ -213,24 +210,14 @@ void enterSleepMode() {
 
   writeRegister(kRegCtrl2, kCtrl2GyroPowerDown);
   writeRegister(kRegCtrl1Hg, kCtrl1HighGAccelPowerDown);
-  writeRegister(kRegWakeUpThs, kWakeUpThsSingleDoubleTap | kWakeUpThsMotion);
-  writeRegister(kRegCtrl1, kCtrl1Accel60Hz);
-  readRegister(kRegWakeUpSrc);
+  writeRegister(kRegCtrl1, kCtrl1AccelPowerDown);
+  writeRegister(kRegMd1Cfg, 0x00);
   readRegister(kRegTapSrc);
+  detachInterrupt(digitalPinToInterrupt(kInt1Pin));
 
   noInterrupts();
   tapInterruptPending = false;
   interrupts();
-}
-
-void exitSleepMode() {
-  if (!ready) {
-    return;
-  }
-
-  configureFullRateSensors();
-  configureTapDetection();
-  delay(5);
 }
 
 void readAccelAxesMg(int16_t& x, int16_t& y, int16_t& z) {

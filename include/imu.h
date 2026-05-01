@@ -10,7 +10,6 @@ void begin();
 bool isReady();
 TapEvent readTapEvent();
 void enterSleepMode();
-void exitSleepMode();
 void readAccelAxesMg(int16_t& x, int16_t& y, int16_t& z);
 uint16_t readAccelMagnitudeMg();
 void readGyroAxesRaw(int16_t& x, int16_t& y, int16_t& z);
