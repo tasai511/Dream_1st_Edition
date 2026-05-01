@@ -26,6 +26,7 @@ const uint16_t kCaptureEndDropPct = 70;
 const uint16_t kCaptureDiscardCooldownMs = 120;
 const uint16_t kTapMuteAfterScoreMs = 250;
 const uint16_t kTapMuteAfterStartupMs = 1000;
+const uint16_t kSingleTapConfirmMs = 260;
 const uint16_t kCaptureStartStrength = 900;
 const uint16_t kCaptureStartGyroRaw = 600;
 const uint16_t kCaptureRestartStrength = 1800;
@@ -37,7 +38,7 @@ const uint8_t kMilestoneSwingInterval = 50;
 const uint16_t kBaselineTrackDeltaMg = 120;
 const uint16_t kBatteryFullMv = 3000;
 const uint16_t kBatteryEmptyMv = 2600;
-const uint32_t kAutoSleepIdleMs = 180000UL;
+const uint32_t kAutoSleepIdleMs = 300000UL;
 
 const uint16_t kAccelRunThresholdMg = 350;
 const uint16_t kActivityStrengthThreshold = 650;
@@ -74,6 +75,7 @@ uint32_t swingStartedMs = 0;
 uint32_t scoreUntilMs = 0;
 uint32_t cooldownUntilMs = 0;
 uint32_t tapMutedUntilMs = 0;
+uint32_t singleTapConfirmAtMs = 0;
 uint32_t lastActivityMs = 0;
 
 int32_t gyroXSum = 0;
@@ -103,18 +105,34 @@ uint16_t capturePeakStrength = 0;
 uint32_t captureQuietStartedMs = 0;
 bool swingStarted = false;
 
-void enterAutoSleep(uint32_t nowMs) {
+void enterFinalSleep() {
   Display::off();
   Buzzer::off();
   Imu::enterSleepMode();
 
   set_sleep_mode(SLEEP_MODE_PWR_DOWN);
   sleep_enable();
-  (void)nowMs;
   noInterrupts();
   for (;;) {
     sleep_cpu();
   }
+}
+
+bool isIdleTimedOut(uint32_t nowMs) {
+  return static_cast<int32_t>(nowMs - (lastActivityMs + kAutoSleepIdleMs)) >= 0;
+}
+
+void clearPendingSingleTap() {
+  singleTapConfirmAtMs = 0;
+}
+
+void queueSingleTap(uint32_t nowMs) {
+  singleTapConfirmAtMs = nowMs + kSingleTapConfirmMs;
+}
+
+bool isSingleTapConfirmed(uint32_t nowMs) {
+  return singleTapConfirmAtMs != 0 &&
+         static_cast<int32_t>(nowMs - singleTapConfirmAtMs) >= 0;
 }
 
 uint32_t squareInt16(int16_t value) {
@@ -250,6 +268,7 @@ void resetMeasurement() {
 
 void startCapture(uint32_t nowMs, uint16_t strength) {
   Display::off();
+  clearPendingSingleTap();
   resetMeasurement();
   swingStarted = true;
   swingStartedMs = nowMs;
@@ -530,6 +549,20 @@ void loop() {
   }
   Display::update(nowMs);
 
+  if (runMode == RunMode::ShowingScore) {
+    if (static_cast<int32_t>(nowMs - scoreUntilMs) >= 0) {
+      runMode = RunMode::Monitor;
+    }
+    return;
+  }
+
+  if (runMode == RunMode::Cooldown) {
+    if (static_cast<int32_t>(nowMs - cooldownUntilMs) >= 0) {
+      runMode = RunMode::Monitor;
+    }
+    return;
+  }
+
   const uint16_t accelMagnitudeMg = Imu::readAccelMagnitudeMg();
 
   int16_t gyroXRaw = 0;
@@ -573,20 +606,6 @@ void loop() {
     lastActivityMs = nowMs;
   }
 
-  if (runMode == RunMode::ShowingScore) {
-    if (static_cast<int32_t>(nowMs - scoreUntilMs) >= 0) {
-      runMode = RunMode::Monitor;
-    }
-    return;
-  }
-
-  if (runMode == RunMode::Cooldown) {
-    if (static_cast<int32_t>(nowMs - cooldownUntilMs) >= 0) {
-      runMode = RunMode::Monitor;
-    }
-    return;
-  }
-
   if (runMode == RunMode::Monitor) {
     if (static_cast<int32_t>(nowMs - tapMutedUntilMs) < 0) {
       Imu::readTapEvent();
@@ -594,6 +613,7 @@ void loop() {
     }
     const TapEvent tapEvent = Imu::readTapEvent();
     if (tapEvent == TapEvent::Double && scoreSampleCount != 0) {
+      clearPendingSingleTap();
       lastActivityMs = nowMs;
       const uint16_t averageScore = static_cast<uint16_t>(
           (scoreTotal + (scoreSampleCount / 2UL)) / scoreSampleCount);
@@ -603,6 +623,11 @@ void loop() {
       return;
     }
     if (tapEvent == TapEvent::Single) {
+      queueSingleTap(nowMs);
+      return;
+    }
+    if (isSingleTapConfirmed(nowMs)) {
+      clearPendingSingleTap();
       lastActivityMs = nowMs;
       Display::showNumber(swingCount, nowMs, kTapDisplayMs);
       scoreUntilMs = nowMs + kTapDisplayMs;
@@ -614,8 +639,8 @@ void loop() {
       lastActivityMs = nowMs;
       startCapture(nowMs, liftStrength);
       updateCapturePeaks(gyroMagnitudeRaw, dynamicAccelMg, liftStrength, nowMs);
-    } else if (static_cast<int32_t>(nowMs - (lastActivityMs + kAutoSleepIdleMs)) >= 0) {
-      enterAutoSleep(nowMs);
+    } else if (isIdleTimedOut(nowMs)) {
+      enterFinalSleep();
     }
     return;
   }

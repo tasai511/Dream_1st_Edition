@@ -45,13 +45,12 @@ const uint8_t kTapThreshold = 0x01;
 const uint8_t kTapDurDoubleTap = 0x46;
 const uint8_t kWakeUpThsSingleDoubleTap = 0x80;
 const uint8_t kWakeUpDurNoDuration = 0x00;
-const uint8_t kFunctionsEnableInterrupts = 0x80;
+const uint8_t kFunctionsEnableEmbeddedFunctions = 0x80;
 const uint8_t kMd1CfgTapOnInt1 = 0x48;
 const uint8_t kTapSrcSingleTap = 0x20;
 const uint8_t kTapSrcDoubleTap = 0x10;
 
 bool ready = false;
-volatile bool tapInterruptPending = false;
 
 SPISettings spiSettings(1000000, MSBFIRST, SPI_MODE3);
 
@@ -129,10 +128,6 @@ uint32_t squareInt16(int16_t value) {
   return static_cast<uint32_t>(wideValue * wideValue);
 }
 
-void onTapInterrupt() {
-  tapInterruptPending = true;
-}
-
 void configureTapDetection() {
   writeRegister(kRegTapCfg0, kTapCfg0EnableZLatched);
   writeRegister(kRegTapCfg1, 0x00);
@@ -141,7 +136,7 @@ void configureTapDetection() {
   writeRegister(kRegTapDur, kTapDurDoubleTap);
   writeRegister(kRegWakeUpThs, kWakeUpThsSingleDoubleTap);
   writeRegister(kRegWakeUpDur, kWakeUpDurNoDuration);
-  writeRegister(kRegFunctionsEnable, kFunctionsEnableInterrupts);
+  writeRegister(kRegFunctionsEnable, kFunctionsEnableEmbeddedFunctions);
   writeRegister(kRegMd1Cfg, kMd1CfgTapOnInt1);
   readRegister(kRegTapSrc);
 }
@@ -161,7 +156,6 @@ namespace Imu {
 void begin() {
   pinMode(kCsPin, OUTPUT);
   digitalWrite(kCsPin, HIGH);
-  pinMode(kInt1Pin, INPUT);
 
   SPI.begin();
   delay(10);
@@ -174,7 +168,6 @@ void begin() {
   writeRegister(kRegCtrl3, kCtrl3BduIfInc);
   configureFullRateSensors();
   configureTapDetection();
-  attachInterrupt(digitalPinToInterrupt(kInt1Pin), onTapInterrupt, RISING);
   delay(5);
 }
 
@@ -185,12 +178,6 @@ bool isReady() {
 TapEvent readTapEvent() {
   if (!ready) {
     return TapEvent::None;
-  }
-
-  if (tapInterruptPending) {
-    noInterrupts();
-    tapInterruptPending = false;
-    interrupts();
   }
 
   const uint8_t tapSrc = readRegister(kRegTapSrc);
@@ -213,11 +200,6 @@ void enterSleepMode() {
   writeRegister(kRegCtrl1, kCtrl1AccelPowerDown);
   writeRegister(kRegMd1Cfg, 0x00);
   readRegister(kRegTapSrc);
-  detachInterrupt(digitalPinToInterrupt(kInt1Pin));
-
-  noInterrupts();
-  tapInterruptPending = false;
-  interrupts();
 }
 
 void readAccelAxesMg(int16_t& x, int16_t& y, int16_t& z) {
