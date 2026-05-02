@@ -28,9 +28,10 @@ const uint16_t kCaptureDiscardCooldownMs = 120;
 const uint16_t kTapMuteAfterScoreMs = 250;
 const uint16_t kTapMuteAfterStartupMs = 1000;
 const uint16_t kTapAcceptMuteMs = 80;
+const uint8_t kTapPollMs = 50;
 const uint8_t kIntStallClearMs = 25;
-const uint16_t kSingleTapConfirmMs = 200;
-const uint16_t kDoubleTapMinGapMs = 90;
+const uint16_t kSingleTapConfirmMs = 300;
+const uint16_t kDoubleTapMinGapMs = 30;
 const uint16_t kCaptureStartStrength = 2400;
 const uint16_t kCaptureStartGyroRaw = 900;
 const uint16_t kCaptureRestartStrength = 1800;
@@ -83,6 +84,7 @@ uint32_t swingStartedMs = 0;
 uint32_t scoreUntilMs = 0;
 uint32_t cooldownUntilMs = 0;
 uint32_t tapMutedUntilMs = 0;
+uint32_t lastTapPollMs = 0;
 uint32_t singleTapConfirmAtMs = 0;
 uint32_t lastSingleTapEventMs = 0;
 uint32_t motionCandidateStartedMs = 0;
@@ -131,6 +133,15 @@ void enterFinalSleep() {
   }
 }
 
+void enterIdleSleep() {
+  set_sleep_mode(SLEEP_MODE_IDLE);
+  sleep_enable();
+  noInterrupts();
+  interrupts();
+  sleep_cpu();
+  sleep_disable();
+}
+
 bool isIdleTimedOut(uint32_t nowMs) {
   return static_cast<int32_t>(nowMs - (lastActivityMs + kAutoSleepIdleMs)) >= 0;
 }
@@ -143,6 +154,10 @@ void clearPendingSingleTap() {
 void clearPendingTapEvents() {
   singleTapConfirmAtMs = 0;
   lastSingleTapEventMs = 0;
+}
+
+bool isTapPollDue(uint32_t nowMs) {
+  return static_cast<uint16_t>(nowMs - lastTapPollMs) >= kTapPollMs;
 }
 
 void queueSingleTap(uint32_t nowMs) {
@@ -710,7 +725,12 @@ void loop() {
   Display::update(nowMs);
 
   if (runMode == RunMode::ShowingScore) {
-    Imu::readTapEvent();
+    if (isTapPollDue(nowMs)) {
+      lastTapPollMs = nowMs;
+      Imu::readTapEvent();
+    } else {
+      enterIdleSleep();
+    }
     if (static_cast<int32_t>(nowMs - scoreUntilMs) >= 0) {
       runMode = RunMode::Monitor;
     }
@@ -718,7 +738,12 @@ void loop() {
   }
 
   if (runMode == RunMode::Cooldown) {
-    Imu::readTapEvent();
+    if (isTapPollDue(nowMs)) {
+      lastTapPollMs = nowMs;
+      Imu::readTapEvent();
+    } else {
+      enterIdleSleep();
+    }
     if (static_cast<int32_t>(nowMs - cooldownUntilMs) >= 0) {
       runMode = RunMode::Monitor;
     }
@@ -727,8 +752,12 @@ void loop() {
 
   if (runMode == RunMode::Monitor) {
     if (static_cast<int32_t>(nowMs - tapMutedUntilMs) < 0) {
-      Imu::readTapEvent();
-    } else {
+      if (isTapPollDue(nowMs)) {
+        lastTapPollMs = nowMs;
+        Imu::readTapEvent();
+      }
+    } else if (isTapPollDue(nowMs)) {
+      lastTapPollMs = nowMs;
       const TapEvent tapEvent = Imu::readTapEvent();
       handleMonitorTapEvent(tapEvent, latestGyroMagnitudeRaw, nowMs);
       if (tapEvent != TapEvent::None) {
@@ -751,6 +780,7 @@ void loop() {
       if (isIdleTimedOut(nowMs)) {
         enterFinalSleep();
       }
+      enterIdleSleep();
     }
     return;
   }
