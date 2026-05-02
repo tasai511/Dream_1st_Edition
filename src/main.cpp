@@ -828,9 +828,6 @@ void loop() {
       static_cast<uint32_t>(gyroMagnitudeRaw) +
       static_cast<uint32_t>(dynamicAccelMg) * 4UL;
   const uint16_t liftStrength = saturateToUint16(strength);
-  if (strength >= kActivityStrengthThreshold) {
-    lastActivityMs = nowMs;
-  }
 
   if (runMode == RunMode::Monitor) {
     updateMotionCandidate(strength, nowMs);
