@@ -21,15 +21,21 @@ const uint16_t kGyroCalibrationWindowMs = 1000;
 const uint16_t kCaptureMaxMs = 900;
 const uint16_t kCaptureMinMs = 80;
 const uint16_t kMinAcceptedSwingDurationMs = 160;
+const uint16_t kShortSwingDurationMs = 80;
 const uint16_t kCaptureEndQuietMs = 40;
 const uint16_t kCaptureEndDropPct = 70;
 const uint16_t kCaptureDiscardCooldownMs = 120;
 const uint16_t kTapMuteAfterScoreMs = 250;
 const uint16_t kTapMuteAfterStartupMs = 1000;
 const uint16_t kSingleTapConfirmMs = 260;
+const uint16_t kDoubleTapConfirmMs = 140;
 const uint16_t kCaptureStartStrength = 900;
 const uint16_t kCaptureStartGyroRaw = 600;
 const uint16_t kCaptureRestartStrength = 1800;
+const uint16_t kSwingContextMinMs = 25;
+const uint16_t kPreCaptureQuietMs = 70;
+const uint8_t kMinSwingEvidence = 4;
+const uint8_t kStrongSwingEvidence = 7;
 const uint16_t kMinAcceptedScore = 200;
 const uint16_t kMinDisplayedAcceptedScore = 100;
 const uint16_t kScoreDisplayMs = 2000;
@@ -76,6 +82,9 @@ uint32_t scoreUntilMs = 0;
 uint32_t cooldownUntilMs = 0;
 uint32_t tapMutedUntilMs = 0;
 uint32_t singleTapConfirmAtMs = 0;
+uint32_t doubleTapConfirmAtMs = 0;
+uint32_t motionCandidateStartedMs = 0;
+uint32_t motionCandidateLastMs = 0;
 uint32_t lastActivityMs = 0;
 
 int32_t gyroXSum = 0;
@@ -126,13 +135,27 @@ void clearPendingSingleTap() {
   singleTapConfirmAtMs = 0;
 }
 
+void clearPendingTapEvents() {
+  singleTapConfirmAtMs = 0;
+  doubleTapConfirmAtMs = 0;
+}
+
 void queueSingleTap(uint32_t nowMs) {
   singleTapConfirmAtMs = nowMs + kSingleTapConfirmMs;
+}
+
+void queueDoubleTap(uint32_t nowMs) {
+  doubleTapConfirmAtMs = nowMs + kDoubleTapConfirmMs;
 }
 
 bool isSingleTapConfirmed(uint32_t nowMs) {
   return singleTapConfirmAtMs != 0 &&
          static_cast<int32_t>(nowMs - singleTapConfirmAtMs) >= 0;
+}
+
+bool isDoubleTapConfirmed(uint32_t nowMs) {
+  return doubleTapConfirmAtMs != 0 &&
+         static_cast<int32_t>(nowMs - doubleTapConfirmAtMs) >= 0;
 }
 
 uint32_t squareInt16(int16_t value) {
@@ -264,18 +287,22 @@ void resetMeasurement() {
   captureQuietStartedMs = 0;
   swingStarted = false;
   swingStartedMs = 0;
+  motionCandidateStartedMs = 0;
+  motionCandidateLastMs = 0;
 }
 
-void startCapture(uint32_t nowMs, uint16_t strength) {
+void startCapture(uint32_t nowMs, uint16_t strength, uint32_t startedMs) {
   Display::off();
-  clearPendingSingleTap();
+  clearPendingTapEvents();
   resetMeasurement();
   swingStarted = true;
-  swingStartedMs = nowMs;
+  swingStartedMs = startedMs;
   lastMeasureSampleMs = nowMs;
   lastSwingMotionMs = nowMs;
   capturePeakStrength = strength;
   captureQuietStartedMs = 0;
+  motionCandidateStartedMs = 0;
+  motionCandidateLastMs = 0;
   runMode = RunMode::Capturing;
 }
 
@@ -424,6 +451,75 @@ bool isCaptureStartMotion(
           dynamicAccelMg >= kAccelRunThresholdMg);
 }
 
+void updateMotionCandidate(uint32_t strength, uint32_t nowMs) {
+  if (strength >= kActivityStrengthThreshold) {
+    if (motionCandidateStartedMs == 0) {
+      motionCandidateStartedMs = nowMs;
+    }
+    motionCandidateLastMs = nowMs;
+    return;
+  }
+
+  if (motionCandidateLastMs != 0 &&
+      static_cast<uint16_t>(nowMs - motionCandidateLastMs) >= kPreCaptureQuietMs) {
+    motionCandidateStartedMs = 0;
+    motionCandidateLastMs = 0;
+  }
+}
+
+uint32_t captureStartTimeFor(uint32_t nowMs) {
+  return motionCandidateStartedMs != 0 ? motionCandidateStartedMs : nowMs;
+}
+
+bool hasSwingMotionContext(uint32_t nowMs) {
+  return motionCandidateStartedMs != 0 &&
+         static_cast<uint16_t>(nowMs - motionCandidateStartedMs) >= kSwingContextMinMs;
+}
+
+uint8_t swingEvidence(uint16_t swingDurationMs) {
+  uint8_t evidence = 0;
+
+  if (swingDurationMs >= kMinAcceptedSwingDurationMs) {
+    evidence += 2;
+  } else if (swingDurationMs >= kShortSwingDurationMs) {
+    evidence += 1;
+  }
+
+  if (gyroPeakRaw >= kGyroRiseThresholdRaw) {
+    evidence += 2;
+  } else if (gyroPeakRaw >= kGyroPeakScoreOffsetRaw) {
+    evidence += 1;
+  }
+
+  if (accelPeakMg >= kAccelAreaScoreOffsetMg * 2U) {
+    evidence += 2;
+  } else if (accelPeakMg >= kAccelAreaScoreOffsetMg) {
+    evidence += 1;
+  }
+
+  if (maxAccelRunMs >= kGyroRiseGoodMs) {
+    evidence += 2;
+  } else if (maxAccelRunMs >= kGyroRiseTooFastMs) {
+    evidence += 1;
+  }
+
+  if (firstGyroStrongTimeMs != kNoTimeMs) {
+    evidence += 1;
+  }
+
+  if (capturePeakStrength >= kCaptureRestartStrength) {
+    evidence += 1;
+  }
+
+  const int16_t peakDeltaMs =
+      static_cast<int16_t>(accelPeakTimeMs) - static_cast<int16_t>(gyroPeakTimeMs);
+  if (peakDeltaMs >= 0 && peakDeltaMs <= 180) {
+    evidence += 1;
+  }
+
+  return evidence;
+}
+
 void updateCapturePeaks(
     uint16_t gyroMagnitudeRaw,
     uint16_t dynamicAccelMg,
@@ -484,13 +580,14 @@ bool isCaptureFinished(uint16_t strength, uint32_t nowMs) {
 
 void finishCapture(uint32_t nowMs) {
   const uint16_t swingDurationMs = activeSwingDurationMs(nowMs);
-  if (swingDurationMs < kMinAcceptedSwingDurationMs) {
+  const uint8_t evidence = swingEvidence(swingDurationMs);
+  if (evidence < kMinSwingEvidence) {
     finishNoSwing();
     return;
   }
 
   const uint16_t score = scoreFromPeaks(swingDurationMs);
-  if (score <= kMinAcceptedScore) {
+  if (score <= kMinAcceptedScore && evidence < kStrongSwingEvidence) {
     finishNoSwing();
     return;
   }
@@ -611,8 +708,24 @@ void loop() {
       Imu::readTapEvent();
       return;
     }
+
+    updateMotionCandidate(strength, nowMs);
+
+    if (isCaptureStartMotion(strength, gyroMagnitudeRaw, dynamicAccelMg)) {
+      Imu::readTapEvent();
+      lastActivityMs = nowMs;
+      startCapture(nowMs, liftStrength, captureStartTimeFor(nowMs));
+      updateCapturePeaks(gyroMagnitudeRaw, dynamicAccelMg, liftStrength, nowMs);
+      return;
+    }
+
     const TapEvent tapEvent = Imu::readTapEvent();
-    if (tapEvent == TapEvent::Double && scoreSampleCount != 0) {
+    if (tapEvent == TapEvent::None && isDoubleTapConfirmed(nowMs)) {
+      if (gyroMagnitudeRaw >= kCaptureStartGyroRaw && hasSwingMotionContext(nowMs)) {
+        clearPendingTapEvents();
+        return;
+      }
+      doubleTapConfirmAtMs = 0;
       clearPendingSingleTap();
       lastActivityMs = nowMs;
       const uint16_t averageScore = static_cast<uint16_t>(
@@ -622,8 +735,16 @@ void loop() {
       runMode = RunMode::ShowingScore;
       return;
     }
+
+    if (tapEvent == TapEvent::Double && scoreSampleCount != 0) {
+      clearPendingSingleTap();
+      queueDoubleTap(nowMs);
+      return;
+    }
     if (tapEvent == TapEvent::Single) {
-      queueSingleTap(nowMs);
+      if (doubleTapConfirmAtMs == 0) {
+        queueSingleTap(nowMs);
+      }
       return;
     }
     if (isSingleTapConfirmed(nowMs)) {
@@ -635,11 +756,7 @@ void loop() {
       return;
     }
 
-    if (isCaptureStartMotion(strength, gyroMagnitudeRaw, dynamicAccelMg)) {
-      lastActivityMs = nowMs;
-      startCapture(nowMs, liftStrength);
-      updateCapturePeaks(gyroMagnitudeRaw, dynamicAccelMg, liftStrength, nowMs);
-    } else if (isIdleTimedOut(nowMs)) {
+    if (isIdleTimedOut(nowMs)) {
       enterFinalSleep();
     }
     return;
@@ -653,7 +770,7 @@ void loop() {
   if (strength16 > capturePeakStrength) {
     if (static_cast<uint32_t>(strength16) >=
         static_cast<uint32_t>(capturePeakStrength) + kCaptureRestartStrength) {
-      startCapture(nowMs, strength16);
+      startCapture(nowMs, strength16, nowMs);
     } else {
       capturePeakStrength = strength16;
     }
