@@ -27,15 +27,17 @@ const uint16_t kCaptureEndDropPct = 70;
 const uint16_t kCaptureDiscardCooldownMs = 120;
 const uint16_t kTapMuteAfterScoreMs = 250;
 const uint16_t kTapMuteAfterStartupMs = 1000;
-const uint16_t kSingleTapConfirmMs = 260;
-const uint16_t kDoubleTapConfirmMs = 140;
-const uint16_t kCaptureStartStrength = 900;
-const uint16_t kCaptureStartGyroRaw = 600;
+const uint16_t kTapAcceptMuteMs = 80;
+const uint8_t kIntStallClearMs = 25;
+const uint16_t kSingleTapConfirmMs = 200;
+const uint16_t kDoubleTapMinGapMs = 90;
+const uint16_t kCaptureStartStrength = 2400;
+const uint16_t kCaptureStartGyroRaw = 900;
 const uint16_t kCaptureRestartStrength = 1800;
 const uint16_t kSwingContextMinMs = 25;
 const uint16_t kPreCaptureQuietMs = 70;
-const uint8_t kMinSwingEvidence = 4;
-const uint8_t kStrongSwingEvidence = 7;
+const uint8_t kMinSwingEvidence = 6;
+const uint8_t kStrongSwingEvidence = 8;
 const uint16_t kMinAcceptedScore = 200;
 const uint16_t kMinDisplayedAcceptedScore = 100;
 const uint16_t kScoreDisplayMs = 2000;
@@ -46,7 +48,7 @@ const uint16_t kBatteryFullMv = 3000;
 const uint16_t kBatteryEmptyMv = 2600;
 const uint32_t kAutoSleepIdleMs = 300000UL;
 
-const uint16_t kAccelRunThresholdMg = 350;
+const uint16_t kAccelRunThresholdMg = 1800;
 const uint16_t kActivityStrengthThreshold = 650;
 
 const uint16_t kNoTimeMs = 65535;
@@ -57,11 +59,11 @@ const uint16_t kGyroRiseLateMs = 180;
 const uint16_t kGyroRiseSlowMs = 320;
 const uint16_t kGyroRiseScoreWeak = 60;
 const uint16_t kGyroRiseScoreGood = 150;
-const uint16_t kGyroPeakScoreOffsetRaw = 700;
-const uint8_t kGyroPeakScoreScale = 5;
-const uint16_t kAccelAreaScoreOffsetMg = 250;
-const uint8_t kAccelAreaScoreScale = 2;
-const uint8_t kFinalScorePct = 90;
+const uint16_t kGyroPeakScoreOffsetRaw = 1000;
+const uint8_t kGyroPeakScoreScale = 4;
+const uint16_t kAccelAreaScoreOffsetMg = 3800;
+const uint8_t kAccelAreaScoreScale = 1;
+const uint8_t kFinalScorePct = 78;
 const uint16_t kDisplayCurveLowInput = 250;
 const uint16_t kDisplayCurveLowOutput = 120;
 const uint16_t kDisplayCurveMidInput = 350;
@@ -82,10 +84,12 @@ uint32_t scoreUntilMs = 0;
 uint32_t cooldownUntilMs = 0;
 uint32_t tapMutedUntilMs = 0;
 uint32_t singleTapConfirmAtMs = 0;
-uint32_t doubleTapConfirmAtMs = 0;
+uint32_t lastSingleTapEventMs = 0;
 uint32_t motionCandidateStartedMs = 0;
 uint32_t motionCandidateLastMs = 0;
 uint32_t lastActivityMs = 0;
+uint32_t lastImuInterruptMs = 0;
+uint16_t latestGyroMagnitudeRaw = 0;
 
 int32_t gyroXSum = 0;
 int32_t gyroYSum = 0;
@@ -133,19 +137,16 @@ bool isIdleTimedOut(uint32_t nowMs) {
 
 void clearPendingSingleTap() {
   singleTapConfirmAtMs = 0;
+  lastSingleTapEventMs = 0;
 }
 
 void clearPendingTapEvents() {
   singleTapConfirmAtMs = 0;
-  doubleTapConfirmAtMs = 0;
+  lastSingleTapEventMs = 0;
 }
 
 void queueSingleTap(uint32_t nowMs) {
   singleTapConfirmAtMs = nowMs + kSingleTapConfirmMs;
-}
-
-void queueDoubleTap(uint32_t nowMs) {
-  doubleTapConfirmAtMs = nowMs + kDoubleTapConfirmMs;
 }
 
 bool isSingleTapConfirmed(uint32_t nowMs) {
@@ -153,9 +154,28 @@ bool isSingleTapConfirmed(uint32_t nowMs) {
          static_cast<int32_t>(nowMs - singleTapConfirmAtMs) >= 0;
 }
 
-bool isDoubleTapConfirmed(uint32_t nowMs) {
-  return doubleTapConfirmAtMs != 0 &&
-         static_cast<int32_t>(nowMs - doubleTapConfirmAtMs) >= 0;
+void showAverageScore(uint32_t nowMs) {
+  clearPendingTapEvents();
+  lastActivityMs = nowMs;
+  const uint16_t averageScore = static_cast<uint16_t>(
+      (scoreTotal + (scoreSampleCount / 2UL)) / scoreSampleCount);
+  Display::showNumber(averageScore, nowMs, kTapDisplayMs);
+  scoreUntilMs = nowMs + kTapDisplayMs;
+  tapMutedUntilMs = scoreUntilMs + kTapAcceptMuteMs;
+  runMode = RunMode::ShowingScore;
+}
+
+void showSwingCount(uint32_t nowMs) {
+  clearPendingTapEvents();
+  lastActivityMs = nowMs;
+  Display::showNumber(swingCount, nowMs, kTapDisplayMs);
+  scoreUntilMs = nowMs + kTapDisplayMs;
+  tapMutedUntilMs = scoreUntilMs + kTapAcceptMuteMs;
+  runMode = RunMode::ShowingScore;
+}
+
+bool isInterruptStalled(uint32_t nowMs) {
+  return static_cast<uint16_t>(nowMs - lastImuInterruptMs) >= kIntStallClearMs;
 }
 
 uint32_t squareInt16(int16_t value) {
@@ -269,6 +289,7 @@ void finishCalibration() {
   }
   Display::off();
   tapMutedUntilMs = millis() + kTapMuteAfterStartupMs;
+  lastImuInterruptMs = millis();
   lastActivityMs = millis();
   runMode = RunMode::Monitor;
 }
@@ -476,6 +497,48 @@ bool hasSwingMotionContext(uint32_t nowMs) {
          static_cast<uint16_t>(nowMs - motionCandidateStartedMs) >= kSwingContextMinMs;
 }
 
+void handleMonitorTapEvent(TapEvent tapEvent, uint16_t gyroMagnitudeRaw, uint32_t nowMs) {
+  if (tapEvent == TapEvent::Double) {
+    clearPendingTapEvents();
+    if (scoreSampleCount != 0) {
+      showAverageScore(nowMs);
+    } else {
+      showSwingCount(nowMs);
+    }
+    return;
+  }
+
+  if (tapEvent == TapEvent::Single) {
+    if (lastSingleTapEventMs != 0 &&
+        static_cast<uint16_t>(nowMs - lastSingleTapEventMs) < kDoubleTapMinGapMs) {
+      return;
+    }
+    lastSingleTapEventMs = nowMs;
+
+    if (singleTapConfirmAtMs != 0 &&
+        static_cast<int32_t>(singleTapConfirmAtMs - nowMs) > 0) {
+      clearPendingTapEvents();
+      if (scoreSampleCount != 0) {
+        showAverageScore(nowMs);
+      } else {
+        showSwingCount(nowMs);
+      }
+      return;
+    }
+
+    if (isSingleTapConfirmed(nowMs)) {
+      clearPendingTapEvents();
+    }
+    queueSingleTap(nowMs);
+    return;
+  }
+
+  if (isSingleTapConfirmed(nowMs)) {
+    clearPendingSingleTap();
+    showSwingCount(nowMs);
+  }
+}
+
 uint8_t swingEvidence(uint16_t swingDurationMs) {
   uint8_t evidence = 0;
 
@@ -647,6 +710,7 @@ void loop() {
   Display::update(nowMs);
 
   if (runMode == RunMode::ShowingScore) {
+    Imu::readTapEvent();
     if (static_cast<int32_t>(nowMs - scoreUntilMs) >= 0) {
       runMode = RunMode::Monitor;
     }
@@ -654,18 +718,51 @@ void loop() {
   }
 
   if (runMode == RunMode::Cooldown) {
+    Imu::readTapEvent();
     if (static_cast<int32_t>(nowMs - cooldownUntilMs) >= 0) {
       runMode = RunMode::Monitor;
     }
     return;
   }
 
-  const uint16_t accelMagnitudeMg = Imu::readAccelMagnitudeMg();
+  if (runMode == RunMode::Monitor) {
+    if (static_cast<int32_t>(nowMs - tapMutedUntilMs) < 0) {
+      Imu::readTapEvent();
+    } else {
+      const TapEvent tapEvent = Imu::readTapEvent();
+      handleMonitorTapEvent(tapEvent, latestGyroMagnitudeRaw, nowMs);
+      if (tapEvent != TapEvent::None) {
+        return;
+      }
+      if (runMode != RunMode::Monitor) {
+        return;
+      }
+    }
+  }
 
+  const bool imuInterrupted = Imu::consumeInterruptCount() != 0;
+  if (imuInterrupted) {
+    lastImuInterruptMs = nowMs;
+  }
+  const bool forceImuRead =
+      !imuInterrupted && runMode != RunMode::Calibrate && isInterruptStalled(nowMs);
+  if (!imuInterrupted && runMode != RunMode::Calibrate && !forceImuRead) {
+    if (runMode == RunMode::Monitor) {
+      if (isIdleTimedOut(nowMs)) {
+        enterFinalSleep();
+      }
+    }
+    return;
+  }
+  if (forceImuRead) {
+    lastImuInterruptMs = nowMs;
+  }
+
+  uint16_t accelMagnitudeMg = 0;
   int16_t gyroXRaw = 0;
   int16_t gyroYRaw = 0;
   int16_t gyroZRaw = 0;
-  Imu::readGyroAxesRaw(gyroXRaw, gyroYRaw, gyroZRaw);
+  Imu::readMotionSample(accelMagnitudeMg, gyroXRaw, gyroYRaw, gyroZRaw);
 
   if (runMode == RunMode::Calibrate) {
     if (calibrationSamples < 32767) {
@@ -678,6 +775,7 @@ void loop() {
     if (static_cast<int32_t>(nowMs - calibrationUntilMs) >= 0) {
       finishCalibration();
     }
+    Imu::drainFifo();
     return;
   }
 
@@ -686,6 +784,7 @@ void loop() {
   const int16_t dynamicGyroZRaw = static_cast<int16_t>(gyroZRaw - gyroBaselineZ);
   const uint16_t gyroMagnitudeRaw =
       magnitudeRaw(dynamicGyroXRaw, dynamicGyroYRaw, dynamicGyroZRaw);
+  latestGyroMagnitudeRaw = gyroMagnitudeRaw;
 
   const uint16_t dynamicAccelMg = absDiff16(accelMagnitudeMg, accelBaselineMg);
   if (dynamicAccelMg < kBaselineTrackDeltaMg) {
@@ -704,11 +803,6 @@ void loop() {
   }
 
   if (runMode == RunMode::Monitor) {
-    if (static_cast<int32_t>(nowMs - tapMutedUntilMs) < 0) {
-      Imu::readTapEvent();
-      return;
-    }
-
     updateMotionCandidate(strength, nowMs);
 
     if (isCaptureStartMotion(strength, gyroMagnitudeRaw, dynamicAccelMg)) {
@@ -716,55 +810,23 @@ void loop() {
       lastActivityMs = nowMs;
       startCapture(nowMs, liftStrength, captureStartTimeFor(nowMs));
       updateCapturePeaks(gyroMagnitudeRaw, dynamicAccelMg, liftStrength, nowMs);
-      return;
-    }
-
-    const TapEvent tapEvent = Imu::readTapEvent();
-    if (tapEvent == TapEvent::None && isDoubleTapConfirmed(nowMs)) {
-      if (gyroMagnitudeRaw >= kCaptureStartGyroRaw && hasSwingMotionContext(nowMs)) {
-        clearPendingTapEvents();
-        return;
-      }
-      doubleTapConfirmAtMs = 0;
-      clearPendingSingleTap();
-      lastActivityMs = nowMs;
-      const uint16_t averageScore = static_cast<uint16_t>(
-          (scoreTotal + (scoreSampleCount / 2UL)) / scoreSampleCount);
-      Display::showNumber(averageScore, nowMs, kTapDisplayMs);
-      scoreUntilMs = nowMs + kTapDisplayMs;
-      runMode = RunMode::ShowingScore;
-      return;
-    }
-
-    if (tapEvent == TapEvent::Double && scoreSampleCount != 0) {
-      clearPendingSingleTap();
-      queueDoubleTap(nowMs);
-      return;
-    }
-    if (tapEvent == TapEvent::Single) {
-      if (doubleTapConfirmAtMs == 0) {
-        queueSingleTap(nowMs);
-      }
-      return;
-    }
-    if (isSingleTapConfirmed(nowMs)) {
-      clearPendingSingleTap();
-      lastActivityMs = nowMs;
-      Display::showNumber(swingCount, nowMs, kTapDisplayMs);
-      scoreUntilMs = nowMs + kTapDisplayMs;
-      runMode = RunMode::ShowingScore;
+      Imu::drainFifo();
       return;
     }
 
     if (isIdleTimedOut(nowMs)) {
       enterFinalSleep();
     }
+    Imu::drainFifo();
     return;
   }
 
   if (runMode != RunMode::Capturing) {
+    Imu::drainFifo();
     return;
   }
+
+  Imu::readTapEvent();
 
   const uint16_t strength16 = liftStrength;
   if (strength16 > capturePeakStrength) {
@@ -780,4 +842,5 @@ void loop() {
   if (isCaptureFinished(strength16, nowMs)) {
     finishCapture(nowMs);
   }
+  Imu::drainFifo();
 }

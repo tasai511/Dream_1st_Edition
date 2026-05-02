@@ -8,14 +8,21 @@ const uint8_t kCsPin = PIN_PA4;
 const uint8_t kReadBit = 0x80;
 
 const uint8_t kRegWhoAmI = 0x0F;
+const uint8_t kRegFifoCtrl1 = 0x07;
+const uint8_t kRegFifoCtrl2 = 0x08;
+const uint8_t kRegFifoCtrl3 = 0x09;
+const uint8_t kRegFifoCtrl4 = 0x0A;
+const uint8_t kRegCounterBdr1 = 0x0B;
+const uint8_t kRegInt1Ctrl = 0x0D;
 const uint8_t kRegCtrl1 = 0x10;
 const uint8_t kRegCtrl2 = 0x11;
 const uint8_t kRegCtrl3 = 0x12;
 const uint8_t kRegCtrl6 = 0x15;
 const uint8_t kRegCtrl8 = 0x17;
+const uint8_t kRegFifoStatus1 = 0x1B;
+const uint8_t kRegFifoStatus2 = 0x1C;
 const uint8_t kRegTapSrc = 0x46;
 const uint8_t kRegOutXG = 0x22;
-const uint8_t kRegOutXL = 0x28;
 const uint8_t kRegOutXHg = 0x34;
 const uint8_t kRegCtrl1Hg = 0x4E;
 const uint8_t kRegFunctionsEnable = 0x50;
@@ -27,6 +34,7 @@ const uint8_t kRegTapDur = 0x5A;
 const uint8_t kRegWakeUpThs = 0x5B;
 const uint8_t kRegWakeUpDur = 0x5C;
 const uint8_t kRegMd1Cfg = 0x5E;
+const uint8_t kRegFifoDataOutTag = 0x78;
 
 const uint8_t kWhoAmI = 0x73;
 const uint8_t kCtrl1Accel480Hz = 0x08;
@@ -47,12 +55,31 @@ const uint8_t kWakeUpThsSingleDoubleTap = 0x80;
 const uint8_t kWakeUpDurNoDuration = 0x00;
 const uint8_t kFunctionsEnableEmbeddedFunctions = 0x80;
 const uint8_t kMd1CfgTapOnInt1 = 0x48;
+const uint8_t kInt1CtrlFifoWatermark = 0x08;
 const uint8_t kTapSrcSingleTap = 0x20;
 const uint8_t kTapSrcDoubleTap = 0x10;
+const uint8_t kFifoWatermarkEntries = 8;
+const uint8_t kFifoBdrGyro480Hz = 0x80;
+const uint8_t kCounterBdrHighGAccelBatch = 0x08;
+const uint8_t kFifoModeBypass = 0x00;
+const uint8_t kFifoModeContinuous = 0x06;
+const uint8_t kFifoEntrySizeBytes = 7;
+const uint8_t kFifoStatus2DiffFifoHighMask = 0x03;
+const uint16_t kFifoDrainMaxEntries = 96;
+const uint8_t kFifoTagSensorShift = 3;
+const uint8_t kFifoTagGyro = 0x01;
+const uint8_t kFifoTagHighGAccel = 0x1D;
 
 bool ready = false;
+volatile uint8_t int1Count = 0;
 
 SPISettings spiSettings(1000000, MSBFIRST, SPI_MODE3);
+
+void onInt1() {
+  if (int1Count < 255) {
+    ++int1Count;
+  }
+}
 
 uint8_t readRegister(uint8_t reg) {
   SPI.beginTransaction(spiSettings);
@@ -113,11 +140,6 @@ uint16_t isqrt(uint32_t value) {
   return static_cast<uint16_t>(result);
 }
 
-int32_t rawToMg(int16_t raw) {
-  // Low-g accelerometer at +/-16 g is 0.488 mg/LSB.
-  return (static_cast<int32_t>(raw) * 488L) / 1000L;
-}
-
 int32_t highGRawToMg(int16_t raw) {
   // High-g accelerometer at +/-64 g is 1.953 mg/LSB.
   return (static_cast<int32_t>(raw) * 1953L) / 1000L;
@@ -149,6 +171,27 @@ void configureFullRateSensors() {
   writeRegister(kRegCtrl2, kCtrl2Gyro480Hz);
 }
 
+uint16_t fifoEntryCount() {
+  const uint8_t status1 = readRegister(kRegFifoStatus1);
+  const uint8_t status2 = readRegister(kRegFifoStatus2);
+  return static_cast<uint16_t>(
+      status1 |
+      ((static_cast<uint16_t>(status2 & kFifoStatus2DiffFifoHighMask)) << 8));
+}
+
+void configureFifo() {
+  writeRegister(kRegFifoCtrl4, kFifoModeBypass);
+  writeRegister(kRegCounterBdr1, kCounterBdrHighGAccelBatch);
+  writeRegister(kRegFifoCtrl1, kFifoWatermarkEntries);
+  writeRegister(kRegFifoCtrl2, 0x00);
+  writeRegister(kRegFifoCtrl3, kFifoBdrGyro480Hz);
+  writeRegister(kRegFifoCtrl4, kFifoModeContinuous);
+}
+
+void configureFifoInterrupt() {
+  writeRegister(kRegInt1Ctrl, kInt1CtrlFifoWatermark);
+}
+
 }  // namespace
 
 namespace Imu {
@@ -165,14 +208,98 @@ void begin() {
     return;
   }
 
+  pinMode(kInt1Pin, INPUT);
+  const int interruptNumber = digitalPinToInterrupt(kInt1Pin);
+  if (interruptNumber != NOT_AN_INTERRUPT) {
+    attachInterrupt(interruptNumber, onInt1, RISING);
+  }
+
   writeRegister(kRegCtrl3, kCtrl3BduIfInc);
   configureFullRateSensors();
+  configureFifo();
   configureTapDetection();
+  configureFifoInterrupt();
   delay(5);
 }
 
 bool isReady() {
   return ready;
+}
+
+uint8_t consumeInterruptCount() {
+  noInterrupts();
+  const uint8_t count = int1Count;
+  int1Count = 0;
+  interrupts();
+  return count;
+}
+
+void drainFifo() {
+  if (!ready) {
+    return;
+  }
+
+  uint8_t entry[kFifoEntrySizeBytes] = {};
+  uint16_t entries = fifoEntryCount();
+  if (entries > kFifoDrainMaxEntries) {
+    entries = kFifoDrainMaxEntries;
+  }
+
+  while (entries-- > 0) {
+    readRegisters(kRegFifoDataOutTag, entry, sizeof(entry));
+  }
+}
+
+uint16_t highGAccelMagnitudeMgFromFifo(int16_t rawX, int16_t rawY, int16_t rawZ) {
+  const uint32_t rawSumSquares =
+      squareInt16(rawX) +
+      squareInt16(rawY) +
+      squareInt16(rawZ);
+  const uint16_t rawMagnitude = isqrt(rawSumSquares);
+  return static_cast<uint16_t>(
+      (static_cast<uint32_t>(rawMagnitude) * 1953UL) / 1000UL);
+}
+
+void readMotionSample(
+    uint16_t& accelMagnitudeMg,
+    int16_t& gyroXRaw,
+    int16_t& gyroYRaw,
+    int16_t& gyroZRaw) {
+  bool hasAccel = false;
+  uint16_t fifoAccelMagnitudeMg = 1000;
+  gyroXRaw = 0;
+  gyroYRaw = 0;
+  gyroZRaw = 0;
+
+  if (ready) {
+    uint8_t entry[kFifoEntrySizeBytes] = {};
+    uint16_t entries = fifoEntryCount();
+    if (entries > kFifoDrainMaxEntries) {
+      entries = kFifoDrainMaxEntries;
+    }
+
+    while (entries-- > 0) {
+      readRegisters(kRegFifoDataOutTag, entry, sizeof(entry));
+      const uint8_t tag = entry[0] >> kFifoTagSensorShift;
+      const int16_t x =
+          static_cast<int16_t>((static_cast<uint16_t>(entry[2]) << 8) | entry[1]);
+      const int16_t y =
+          static_cast<int16_t>((static_cast<uint16_t>(entry[4]) << 8) | entry[3]);
+      const int16_t z =
+          static_cast<int16_t>((static_cast<uint16_t>(entry[6]) << 8) | entry[5]);
+
+      if (tag == kFifoTagGyro) {
+        gyroXRaw = x;
+        gyroYRaw = y;
+        gyroZRaw = z;
+      } else if (tag == kFifoTagHighGAccel) {
+        fifoAccelMagnitudeMg = highGAccelMagnitudeMgFromFifo(x, y, z);
+        hasAccel = true;
+      }
+    }
+  }
+
+  accelMagnitudeMg = hasAccel ? fifoAccelMagnitudeMg : 1000;
 }
 
 TapEvent readTapEvent() {
