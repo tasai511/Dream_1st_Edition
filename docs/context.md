@@ -256,6 +256,7 @@ gyroMagnitudeRaw + dynamicAccelMg * 4
 ```cpp
 score = gyroRiseScore();
 score += gyroPeakScore();
+score += strengthScore();
 score += accelAreaScore();
 score = score * peakDeltaPct() / 100;
 score = score * smoothnessPct() / 100;
@@ -284,6 +285,15 @@ score = displayScoreFromMotionScore(score);
 - 閾値を超えた分を平方根でスコア化する
 
 ピーク角速度は重要だが、これだけで高得点になりすぎないようにしている。
+
+### strengthScore
+
+`capturePeakStrength` を見る。
+
+gyro magnitude と dynamic accel を合成した、スイング全体の強さに近い指標。  
+フォームに関わらず、思いっきり振ったことは基礎点として一定評価する。
+
+これは上限付きの救済ボーナスではなく、`gyroRiseScore`、`gyroPeakScore`、`accelAreaScore` と同じ基礎点の一部として扱う。
 
 ### accelAreaScore
 
@@ -328,8 +338,8 @@ delta < 0      75%
 スイング時間に対して加速がどの程度続いたかを見る。
 
 - 加速区間が短すぎると減点
-- 適度に加速が続くと標準
-- 十分な加速区間があると少し加点
+- 適度に短く鋭く加速が続くと少し加点
+- 長く回し続けるだけのスイングは減点
 
 ### swingQualityPct
 

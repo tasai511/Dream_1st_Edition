@@ -66,6 +66,8 @@ const uint16_t kGyroRiseScoreWeak = 60;
 const uint16_t kGyroRiseScoreGood = 150;
 const uint16_t kGyroPeakScoreOffsetRaw = 1000;
 const uint8_t kGyroPeakScoreScale = 4;
+const uint16_t kStrengthScoreOffset = 2500;
+const uint8_t kStrengthScoreScale = 1;
 const uint16_t kAccelAreaScoreOffsetMg = 3800;
 const uint8_t kAccelAreaScoreScale = 1;
 const uint8_t kFinalScorePct = 78;
@@ -426,6 +428,13 @@ uint16_t gyroPeakScore() {
   return isqrt32(gyroPeakRaw - kGyroPeakScoreOffsetRaw) * kGyroPeakScoreScale;
 }
 
+uint16_t strengthScore() {
+  if (capturePeakStrength <= kStrengthScoreOffset) {
+    return 0;
+  }
+  return isqrt32(capturePeakStrength - kStrengthScoreOffset) * kStrengthScoreScale;
+}
+
 uint16_t accelAreaScore() {
   if (accelPeakMg <= kAccelAreaScoreOffsetMg || maxAccelRunMs == 0) {
     return 0;
@@ -469,10 +478,13 @@ uint8_t smoothnessPct(uint16_t swingDurationMs) {
   if (accelRunRatioPct < 8) {
     return 85;
   }
-  if (accelRunRatioPct < 25) {
+  if (accelRunRatioPct < 22) {
+    return 108;
+  }
+  if (accelRunRatioPct <= 45) {
     return 100;
   }
-  return 108;
+  return 92;
 }
 
 uint8_t swingQualityPct() {
@@ -522,6 +534,7 @@ uint16_t activeSwingDurationMs(uint32_t nowMs) {
 uint16_t scoreFromPeaks(uint16_t swingDurationMs) {
   uint32_t score = gyroRiseScore();
   score += gyroPeakScore();
+  score += strengthScore();
   score += accelAreaScore();
   score = (score * peakDeltaPct()) / 100UL;
   score = (score * smoothnessPct(swingDurationMs)) / 100UL;
