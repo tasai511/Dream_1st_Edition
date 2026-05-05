@@ -42,7 +42,7 @@ const uint8_t kStrongSwingEvidence = 8;
 const uint16_t kLowScoreSwingMinStrength = 6500;
 const uint16_t kLowScoreSwingMinGyroPeakRaw = 1600;
 const uint16_t kLowScoreSwingMinAccelMg = 3800;
-const uint16_t kLowScoreSwingMinAccelRunMs = 35;
+const uint16_t kLowScoreSwingMinAccelRiseMs = 35;
 const uint16_t kMinAcceptedScore = 200;
 const uint16_t kMinDisplayedAcceptedScore = 100;
 const uint16_t kScoreDisplayMs = 2000;
@@ -53,10 +53,13 @@ const uint16_t kBatteryFullMv = 3000;
 const uint16_t kBatteryEmptyMv = 2600;
 const uint32_t kAutoSleepIdleMs = 300000UL;
 
-const uint16_t kAccelRunThresholdMg = 1800;
+const uint16_t kCaptureStartAccelMg = 1800;
 const uint16_t kActivityStrengthThreshold = 650;
 
 const uint16_t kNoTimeMs = 65535;
+const uint16_t kAccelRiseStartMg = 700;
+const uint16_t kAccelTrendNoiseMg = 140;
+const uint8_t kAccelTrendFallSamples = 2;
 const uint16_t kGyroRiseThresholdRaw = 900;
 const uint16_t kGyroRiseTooFastMs = 15;
 const uint16_t kGyroRiseGoodMs = 35;
@@ -119,8 +122,9 @@ uint16_t accelBaselineMg = 1000;
 
 uint16_t gyroPeakRaw = 0;
 uint16_t accelPeakMg = 0;
-uint16_t accelRunMs = 0;
-uint16_t maxAccelRunMs = 0;
+uint16_t accelRiseMs = 0;
+uint16_t maxAccelRiseMs = 0;
+uint16_t accelTrendPeakMg = 0;
 uint16_t gyroPeakTimeMs = 0;
 uint16_t accelPeakTimeMs = 0;
 uint16_t firstGyroStrongTimeMs = kNoTimeMs;
@@ -128,6 +132,7 @@ uint16_t gyroHighRunMs = 0;
 uint16_t maxGyroHighRunMs = 0;
 uint8_t lastStrongGyroAxis = 255;
 uint8_t strongGyroAxisChangeCount = 0;
+uint8_t accelTrendFallCount = 0;
 uint16_t bestScore = 0;
 uint16_t swingCount = 0;
 uint32_t scoreTotal = 0;
@@ -345,8 +350,9 @@ void finishCalibration() {
 void resetMeasurement() {
   gyroPeakRaw = 0;
   accelPeakMg = 0;
-  accelRunMs = 0;
-  maxAccelRunMs = 0;
+  accelRiseMs = 0;
+  maxAccelRiseMs = 0;
+  accelTrendPeakMg = 0;
   gyroPeakTimeMs = 0;
   accelPeakTimeMs = 0;
   firstGyroStrongTimeMs = kNoTimeMs;
@@ -354,6 +360,7 @@ void resetMeasurement() {
   maxGyroHighRunMs = 0;
   lastStrongGyroAxis = 255;
   strongGyroAxisChangeCount = 0;
+  accelTrendFallCount = 0;
   lastMeasureSampleMs = 0;
   lastSwingMotionMs = 0;
   capturePeakStrength = 0;
@@ -436,11 +443,11 @@ uint16_t strengthScore() {
 }
 
 uint16_t accelAreaScore() {
-  if (accelPeakMg <= kAccelAreaScoreOffsetMg || maxAccelRunMs == 0) {
+  if (accelPeakMg <= kAccelAreaScoreOffsetMg || maxAccelRiseMs == 0) {
     return 0;
   }
   const uint32_t effectiveAccelMg = accelPeakMg - kAccelAreaScoreOffsetMg;
-  const uint32_t area = effectiveAccelMg * maxAccelRunMs;
+  const uint32_t area = effectiveAccelMg * maxAccelRiseMs;
   return isqrt32(area) * kAccelAreaScoreScale;
 }
 
@@ -472,16 +479,16 @@ uint8_t smoothnessPct(uint16_t swingDurationMs) {
   if (swingDurationMs == 0) {
     return 85;
   }
-  const uint16_t accelRunRatioPct =
-      static_cast<uint16_t>((static_cast<uint32_t>(maxAccelRunMs) * 100UL) /
+  const uint16_t accelRiseRatioPct =
+      static_cast<uint16_t>((static_cast<uint32_t>(maxAccelRiseMs) * 100UL) /
                             swingDurationMs);
-  if (accelRunRatioPct < 8) {
+  if (accelRiseRatioPct < 8) {
     return 85;
   }
-  if (accelRunRatioPct < 22) {
+  if (accelRiseRatioPct < 22) {
     return 108;
   }
-  if (accelRunRatioPct <= 45) {
+  if (accelRiseRatioPct <= 45) {
     return 100;
   }
   return 92;
@@ -574,7 +581,7 @@ bool isCaptureStartMotion(
     uint32_t strength, uint16_t gyroMagnitudeRaw, uint16_t dynamicAccelMg) {
   return strength >= kCaptureStartStrength &&
          (gyroMagnitudeRaw >= kCaptureStartGyroRaw ||
-          dynamicAccelMg >= kAccelRunThresholdMg);
+          dynamicAccelMg >= kCaptureStartAccelMg);
 }
 
 void updateMotionCandidate(uint32_t strength, uint32_t nowMs) {
@@ -665,9 +672,9 @@ uint8_t swingEvidence(uint16_t swingDurationMs) {
     evidence += 1;
   }
 
-  if (maxAccelRunMs >= kGyroRiseGoodMs) {
+  if (maxAccelRiseMs >= kGyroRiseGoodMs) {
     evidence += 2;
-  } else if (maxAccelRunMs >= kGyroRiseTooFastMs) {
+  } else if (maxAccelRiseMs >= kGyroRiseTooFastMs) {
     evidence += 1;
   }
 
@@ -697,7 +704,44 @@ bool isIntentionalLowScoreSwing(uint16_t swingDurationMs) {
   }
   return gyroPeakRaw >= kLowScoreSwingMinGyroPeakRaw &&
          accelPeakMg >= kLowScoreSwingMinAccelMg &&
-         maxAccelRunMs >= kLowScoreSwingMinAccelRunMs;
+         maxAccelRiseMs >= kLowScoreSwingMinAccelRiseMs;
+}
+
+void updateAccelRise(uint16_t dynamicAccelMg, uint16_t sampleDeltaMs) {
+  if (dynamicAccelMg < kAccelRiseStartMg) {
+    accelRiseMs = 0;
+    accelTrendPeakMg = dynamicAccelMg;
+    accelTrendFallCount = 0;
+    return;
+  }
+
+  if (accelRiseMs == 0) {
+    accelTrendPeakMg = dynamicAccelMg;
+    accelTrendFallCount = 0;
+  } else if (dynamicAccelMg > accelTrendPeakMg + kAccelTrendNoiseMg) {
+    accelTrendPeakMg = dynamicAccelMg;
+    accelTrendFallCount = 0;
+  } else if (dynamicAccelMg + kAccelTrendNoiseMg < accelTrendPeakMg) {
+    if (accelTrendFallCount < 255) {
+      ++accelTrendFallCount;
+    }
+  } else {
+    accelTrendFallCount = 0;
+  }
+
+  const uint32_t nextRiseMs =
+      static_cast<uint32_t>(accelRiseMs) + sampleDeltaMs;
+  accelRiseMs =
+      nextRiseMs > 65535 ? 65535 : static_cast<uint16_t>(nextRiseMs);
+  if (accelRiseMs > maxAccelRiseMs) {
+    maxAccelRiseMs = accelRiseMs;
+  }
+
+  if (accelTrendFallCount >= kAccelTrendFallSamples) {
+    accelRiseMs = 0;
+    accelTrendPeakMg = dynamicAccelMg;
+    accelTrendFallCount = 0;
+  }
 }
 
 void updateCapturePeaks(
@@ -747,15 +791,9 @@ void updateCapturePeaks(
     accelPeakMg = dynamicAccelMg;
     accelPeakTimeMs = elapsedMs;
   }
-  if (dynamicAccelMg >= kAccelRunThresholdMg) {
+  updateAccelRise(dynamicAccelMg, sampleDeltaMs);
+  if (dynamicAccelMg >= kAccelRiseStartMg) {
     lastSwingMotionMs = nowMs;
-    const uint32_t nextRunMs = static_cast<uint32_t>(accelRunMs) + sampleDeltaMs;
-    accelRunMs = nextRunMs > 65535 ? 65535 : static_cast<uint16_t>(nextRunMs);
-    if (accelRunMs > maxAccelRunMs) {
-      maxAccelRunMs = accelRunMs;
-    }
-  } else {
-    accelRunMs = 0;
   }
   if (strength >= kCaptureStartStrength) {
     lastSwingMotionMs = nowMs;
@@ -793,7 +831,7 @@ void finishCapture(uint32_t nowMs) {
   }
 
   const uint16_t score = scoreFromPeaks(swingDurationMs);
-  if (score <= kMinAcceptedScore && evidence < kStrongSwingEvidence &&
+  if (score <= kMinAcceptedScore &&
       !isIntentionalLowScoreSwing(swingDurationMs)) {
     finishNoSwing();
     return;
