@@ -245,6 +245,9 @@ gyroMagnitudeRaw + dynamicAccelMg * 4
 - accel peak が十分ある
 - accel rise 時間が十分ある
 
+内部スコアが `kMinAcceptedScore` 以下の場合は、`isIntentionalLowScoreSwing()` を満たさない限り表示しない。  
+これにより、バットを軽く振っただけ、構えたときの揺れ、持ち替えなどで `100` が出ることを抑える。
+
 ---
 
 ## スコア計算
@@ -343,6 +346,9 @@ delta < 0      75%
 
 `maxAccelRiseMs` は固定閾値以上の時間ではなく、dynamic accel が立ち上がってからピーク後に減少へ転じるまでの時間として記録する。  
 ノイズで1サンプルだけ下がっても減少扱いにしないよう、小さい変化は無視し、連続した減少で判定する。
+
+加速上昇の開始は `kAccelRiseStartMg` 以上で見る。  
+これはスコア用の accel rise 判定であり、スイング開始判定用の `kCaptureStartAccelMg` とは別に扱う。
 
 ### swingQualityPct
 
