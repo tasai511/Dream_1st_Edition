@@ -38,7 +38,6 @@ const uint16_t kCaptureRestartStrength = 1800;
 const uint16_t kSwingContextMinMs = 25;
 const uint16_t kPreCaptureQuietMs = 70;
 const uint8_t kMinSwingEvidence = 6;
-const uint8_t kStrongSwingEvidence = 8;
 const uint16_t kMinDisplayScore = 100;
 const uint16_t kScoreDisplayMs = 2000;
 const uint16_t kTapDisplayMs = 1400;
@@ -64,8 +63,6 @@ const uint16_t kGyroPeakScoreMax = 500;
 const uint16_t kSwingAccelAreaScoreOffsetMg = 1000;
 const uint32_t kSwingAccelAreaFullMgMs = 300000UL;
 const uint16_t kSwingAccelAreaScoreMax = 500;
-const uint16_t kGyroPeakTimeUpdateMarginRaw = 250;
-const uint8_t kFinalScorePct = 100;
 const uint16_t kInternalScoreMax = 999;
 const uint16_t kMinScore = 100;
 
@@ -99,8 +96,6 @@ uint16_t accelPeakMg = 0;
 uint16_t accelRiseMs = 0;
 uint16_t maxAccelRiseMs = 0;
 uint16_t accelTrendPeakMg = 0;
-uint16_t gyroPeakTimeMs = 0;
-uint16_t accelPeakTimeMs = 0;
 uint16_t firstGyroStrongTimeMs = kNoTimeMs;
 uint32_t swingAccelAreaMgMs = 0;
 uint8_t accelTrendFallCount = 0;
@@ -266,8 +261,6 @@ void resetMeasurement() {
   accelRiseMs = 0;
   maxAccelRiseMs = 0;
   accelTrendPeakMg = 0;
-  gyroPeakTimeMs = 0;
-  accelPeakTimeMs = 0;
   firstGyroStrongTimeMs = kNoTimeMs;
   swingAccelAreaMgMs = 0;
   accelTrendFallCount = 0;
@@ -327,7 +320,6 @@ uint16_t activeSwingDurationMs(uint32_t nowMs) {
 uint16_t scoreFromComponents(uint16_t gyroScore, uint16_t accelScore) {
   uint32_t score = gyroScore;
   score += accelScore;
-  score = (score * kFinalScorePct) / 100UL;
   if (score > kInternalScoreMax) {
     score = kInternalScoreMax;
   }
@@ -511,20 +503,13 @@ void updateCapturePeaks(
   lastMeasureSampleMs = nowMs;
 
   if (gyroMagnitudeRaw > gyroPeakRaw) {
-    const bool updateGyroPeakTime =
-        gyroPeakRaw == 0 ||
-        gyroMagnitudeRaw >= gyroPeakRaw + kGyroPeakTimeUpdateMarginRaw;
     gyroPeakRaw = gyroMagnitudeRaw;
-    if (updateGyroPeakTime) {
-      gyroPeakTimeMs = elapsedMs;
-    }
   }
   if (gyroMagnitudeRaw >= kGyroRiseThresholdRaw && firstGyroStrongTimeMs == kNoTimeMs) {
     firstGyroStrongTimeMs = elapsedMs;
   }
   if (dynamicAccelMg > accelPeakMg) {
     accelPeakMg = dynamicAccelMg;
-    accelPeakTimeMs = elapsedMs;
   }
   if (dynamicAccelMg > kSwingAccelAreaScoreOffsetMg) {
     const uint16_t effectiveAccelMg =

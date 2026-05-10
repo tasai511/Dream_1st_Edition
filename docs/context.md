@@ -205,8 +205,6 @@ gyroMagnitudeRaw + dynamicAccelMg * 4
 
 - `gyroPeakRaw`
 - `accelPeakMg`
-- `gyroPeakTimeMs`
-- `accelPeakTimeMs`
 - `firstGyroStrongTimeMs`
 - `maxAccelRiseMs`
 - `swingAccelAreaMgMs`
@@ -247,7 +245,6 @@ gyroMagnitudeRaw + dynamicAccelMg * 4
 ```cpp
 score = gyroPeakScore();          // max 500
 score += swingAccelAreaScore();   // max 500
-score = score * kFinalScorePct / 100;
 score = min(score, 999);
 ```
 
@@ -298,7 +295,7 @@ score = area / fullArea * 500
 診断時には、かなり全力のスイングで `swingAccelAreaMgMs / 1000` が約 `216`、つまり約 `216000 mg*ms` 程度だった。  
 そのため、子供や一般ユーザーの強いスイングで飽和しにくく、上手い人なら上限に近づく余白を残す値として `300000 mg*ms` を採用している。
 
-今後、上手い選手や体格の大きいユーザーで簡単に Post 側が 500 点に張り付く場合は、`fullArea` を `450000〜600000 mg*ms` 程度へ上げる候補がある。
+今後、上手い選手や体格の大きいユーザーで簡単に SwingAccel 側が 500 点に張り付く場合は、`fullArea` を `450000〜600000 mg*ms` 程度へ上げる候補がある。
 
 ### 現在使わない評価要素
 
@@ -434,7 +431,8 @@ score = area / fullArea * 500
 
 - gyro/accel の開始閾値
 - `swingAccelAreaScore()` の offset
-- スコアリマップの入力下限 `200`
+- `gyroPeakScore()` の full dps
+- `swingAccelAreaScore()` の fullArea
 
 チューニング時の注意:
 
