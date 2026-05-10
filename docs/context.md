@@ -145,7 +145,9 @@ Dream-1 は、正確に測る装置ではなく、良い練習を増やす装置
 - スイング成立後、スコアを短時間表示する
 - 低スコアでもスイングとして成立していれば `100` 以上で表示する
 - 無効な動きは表示しない
-- タップ操作では平均スコアまたはスイング回数を表示する
+- Single tap ではスイング回数を表示する
+- Double tap では平均スコアを1秒表示し、その後ベストスコアを1秒表示する
+- Double tap の平均/ベスト表示中は表示の安定を優先し、スイング検出は受け付けない
 - 表示中やスコア直後はタップ誤検出を抑えるために mute 時間を設ける
 
 ### タップ
@@ -153,6 +155,7 @@ Dream-1 は、正確に測る装置ではなく、良い練習を増やす装置
 - タップはスコア計算には使わない
 - スイング検出とは別系統の入力として扱う
 - Single / Double のイベントを扱う
+- Double tap は平均表示からベスト表示への2段表示
 - 通常スイングのフォロースルーがタップ扱いになりにくいよう、表示直後やスコア直後はタップを抑制する
 
 ---
@@ -163,23 +166,18 @@ Dream-1 は、正確に測る装置ではなく、良い練習を増やす装置
 
 高くしたい動き:
 
-- 回転の立ち上がりが早い
 - 十分な角速度ピークがある
-- 加速度ピークが十分にある
-- 加速が一瞬だけでなく、ある程度続いている
-- gyro peak の後に accel peak が少し遅れて来る
-- 高速状態が長すぎず、鋭く抜ける
-- 強い区間で軸が大きくブレない
+- 一定以上の加速度がある程度続いている
+- 回転と加速度の両方が出ている
+- 同じ条件下で、より強く鋭く振れている
 
 低くしたい動き:
 
 - 弱い
 - 遅い
-- gyro と accel のピークが同時すぎる
-- accel peak が gyro peak より先に来る
-- accel peak が遅れすぎる
-- 高速状態がだらだら続く
-- 強い区間で dominant axis が何度も切り替わる
+- 回転だけ、または加速度だけに偏っている
+- 一瞬だけの衝撃
+- 小さい手振り
 - ランダムな持ち替え、振動、置いた衝撃
 
 ---
@@ -230,6 +228,9 @@ gyroMagnitudeRaw + dynamicAccelMg * 4
 - accel rise 時間
 - 強い gyro が出たか
 - capture peak strength
+
+`accel rise` はスコアには使わない。  
+加速度が一瞬の衝撃ではなく、ある程度立ち上がった動きかを確認するための evidence 専用指標として使う。
 
 低スコア救済は使わない。  
 最終スコアが `100` に届いた場合だけスコア表示する。  
@@ -297,7 +298,7 @@ score = area / fullArea * 500
 
 今後、上手い選手や体格の大きいユーザーで簡単に SwingAccel 側が 500 点に張り付く場合は、`fullArea` を `450000〜600000 mg*ms` 程度へ上げる候補がある。
 
-### 現在使わない評価要素
+### スコアに使わない評価要素
 
 以下は現在のスコア計算には使わない。
 
@@ -310,11 +311,13 @@ score = area / fullArea * 500
 - `accelAreaScore()`
 - `maxGyroHighRunMs`
 - `strongGyroAxisChangeCount`
+- `maxAccelRiseMs`
+- `firstGyroStrongTimeMs`
+- `capturePeakStrength`
 
-ただし、スイング成立判定として `swingEvidence()` は残す。
-`firstGyroStrongTimeMs`、`maxAccelRiseMs`、`capturePeakStrength` などは、構えや持ち替えを弾くための evidence 側で使う。
+ただし、`maxAccelRiseMs`、`firstGyroStrongTimeMs`、`capturePeakStrength` はスイング成立判定の evidence として使う。
 
-### accel rise 記録
+### accel rise
 
 スイング時間に対して加速度がピークへ向かって立ち上がった時間を見る。
 

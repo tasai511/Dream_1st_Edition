@@ -17,6 +17,12 @@ enum class RunMode : uint8_t {
   Cooldown,
 };
 
+enum class TapStatsStage : uint8_t {
+  None,
+  Average,
+  Best,
+};
+
 const uint16_t kGyroCalibrationWindowMs = 1000;
 const uint16_t kCaptureMaxMs = 900;
 const uint16_t kCaptureMinMs = 80;
@@ -35,11 +41,11 @@ const uint16_t kDoubleTapMinGapMs = 30;
 const uint16_t kCaptureStartStrength = 2400;
 const uint16_t kCaptureStartGyroRaw = 900;
 const uint16_t kCaptureRestartStrength = 1800;
-const uint16_t kSwingContextMinMs = 25;
 const uint16_t kPreCaptureQuietMs = 70;
 const uint8_t kMinSwingEvidence = 6;
 const uint16_t kMinDisplayScore = 100;
 const uint16_t kScoreDisplayMs = 2000;
+const uint16_t kTapStatsDisplayMs = 1000;
 const uint16_t kTapDisplayMs = 1400;
 const uint8_t kMilestoneSwingInterval = 50;
 const uint16_t kBaselineTrackDeltaMg = 120;
@@ -70,6 +76,7 @@ RunMode runMode = RunMode::Calibrate;
 uint32_t calibrationUntilMs = 0;
 uint32_t swingStartedMs = 0;
 uint32_t scoreUntilMs = 0;
+uint32_t tapStatsUntilMs = 0;
 uint32_t cooldownUntilMs = 0;
 uint32_t tapMutedUntilMs = 0;
 uint32_t lastTapPollMs = 0;
@@ -108,6 +115,7 @@ uint32_t lastSwingMotionMs = 0;
 uint16_t capturePeakStrength = 0;
 uint32_t captureQuietStartedMs = 0;
 bool swingStarted = false;
+TapStatsStage tapStatsStage = TapStatsStage::None;
 
 void enterFinalSleep() {
   Display::off();
@@ -145,6 +153,11 @@ void clearPendingTapEvents() {
   lastSingleTapEventMs = 0;
 }
 
+void clearTapStatsDisplay() {
+  tapStatsStage = TapStatsStage::None;
+  tapStatsUntilMs = 0;
+}
+
 bool isTapPollDue(uint32_t nowMs) {
   return static_cast<uint16_t>(nowMs - lastTapPollMs) >= kTapPollMs;
 }
@@ -158,19 +171,49 @@ bool isSingleTapConfirmed(uint32_t nowMs) {
          static_cast<int32_t>(nowMs - singleTapConfirmAtMs) >= 0;
 }
 
-void showAverageScore(uint32_t nowMs) {
+uint16_t averageScoreOrZero() {
+  if (scoreSampleCount == 0) {
+    return 0;
+  }
+  return static_cast<uint16_t>(
+      (scoreTotal + (scoreSampleCount / 2UL)) / scoreSampleCount);
+}
+
+void showAverageThenBest(uint32_t nowMs) {
   clearPendingTapEvents();
   lastActivityMs = nowMs;
-  const uint16_t averageScore = static_cast<uint16_t>(
-      (scoreTotal + (scoreSampleCount / 2UL)) / scoreSampleCount);
-  Display::showNumber(averageScore, nowMs, kTapDisplayMs);
-  scoreUntilMs = nowMs + kTapDisplayMs;
-  tapMutedUntilMs = scoreUntilMs + kTapAcceptMuteMs;
+  tapStatsStage = TapStatsStage::Average;
+  tapStatsUntilMs = nowMs + kTapStatsDisplayMs;
+  tapMutedUntilMs = nowMs + (kTapStatsDisplayMs * 2U) + kTapAcceptMuteMs;
+  scoreUntilMs = nowMs + (kTapStatsDisplayMs * 2U);
+  Display::showNumber(averageScoreOrZero(), nowMs, kTapStatsDisplayMs);
   runMode = RunMode::ShowingScore;
+}
+
+void updateTapStatsDisplay(uint32_t nowMs) {
+  if (tapStatsStage == TapStatsStage::Average &&
+      static_cast<int32_t>(nowMs - tapStatsUntilMs) >= 0) {
+    tapStatsStage = TapStatsStage::Best;
+    tapStatsUntilMs = nowMs + kTapStatsDisplayMs;
+    Display::showNumber(bestScore, nowMs, kTapStatsDisplayMs);
+    return;
+  }
+
+  if (tapStatsStage == TapStatsStage::Best &&
+      static_cast<int32_t>(nowMs - tapStatsUntilMs) >= 0) {
+    clearTapStatsDisplay();
+  }
+}
+
+void updateDisplayService() {
+  const uint32_t nowMs = millis();
+  updateTapStatsDisplay(nowMs);
+  Display::update(nowMs);
 }
 
 void showSwingCount(uint32_t nowMs) {
   clearPendingTapEvents();
+  clearTapStatsDisplay();
   lastActivityMs = nowMs;
   Display::showNumber(swingCount, nowMs, kTapDisplayMs);
   scoreUntilMs = nowMs + kTapDisplayMs;
@@ -277,6 +320,7 @@ void resetMeasurement() {
 void startCapture(uint32_t nowMs, uint16_t strength, uint32_t startedMs) {
   Display::off();
   clearPendingTapEvents();
+  clearTapStatsDisplay();
   resetMeasurement();
   swingStarted = true;
   swingStartedMs = startedMs;
@@ -334,6 +378,7 @@ uint16_t scoreFromPeaks(uint16_t swingDurationMs) {
 }
 
 void finishMeasurement(uint32_t nowMs, uint16_t score) {
+  clearTapStatsDisplay();
   Display::showNumber(score, nowMs, kScoreDisplayMs);
   scoreUntilMs = nowMs + kScoreDisplayMs;
   tapMutedUntilMs = scoreUntilMs + kTapMuteAfterScoreMs;
@@ -373,19 +418,9 @@ uint32_t captureStartTimeFor(uint32_t nowMs) {
   return motionCandidateStartedMs != 0 ? motionCandidateStartedMs : nowMs;
 }
 
-bool hasSwingMotionContext(uint32_t nowMs) {
-  return motionCandidateStartedMs != 0 &&
-         static_cast<uint16_t>(nowMs - motionCandidateStartedMs) >= kSwingContextMinMs;
-}
-
-void handleMonitorTapEvent(TapEvent tapEvent, uint16_t gyroMagnitudeRaw, uint32_t nowMs) {
+void handleMonitorTapEvent(TapEvent tapEvent, uint32_t nowMs) {
   if (tapEvent == TapEvent::Double) {
-    clearPendingTapEvents();
-    if (scoreSampleCount != 0) {
-      showAverageScore(nowMs);
-    } else {
-      showSwingCount(nowMs);
-    }
+    showAverageThenBest(nowMs);
     return;
   }
 
@@ -398,12 +433,7 @@ void handleMonitorTapEvent(TapEvent tapEvent, uint16_t gyroMagnitudeRaw, uint32_
 
     if (singleTapConfirmAtMs != 0 &&
         static_cast<int32_t>(singleTapConfirmAtMs - nowMs) > 0) {
-      clearPendingTapEvents();
-      if (scoreSampleCount != 0) {
-        showAverageScore(nowMs);
-      } else {
-        showSwingCount(nowMs);
-      }
+      showAverageThenBest(nowMs);
       return;
     }
 
@@ -614,7 +644,7 @@ void loop() {
   if (Buzzer::isActive()) {
     return;
   }
-  Display::update(nowMs);
+  updateDisplayService();
 
   if (runMode == RunMode::ShowingScore) {
     if (isTapPollDue(nowMs)) {
@@ -651,7 +681,7 @@ void loop() {
     } else if (isTapPollDue(nowMs)) {
       lastTapPollMs = nowMs;
       const TapEvent tapEvent = Imu::readTapEvent();
-      handleMonitorTapEvent(tapEvent, latestGyroMagnitudeRaw, nowMs);
+      handleMonitorTapEvent(tapEvent, nowMs);
       if (tapEvent != TapEvent::None) {
         return;
       }
@@ -698,6 +728,7 @@ void loop() {
       finishCalibration();
     }
     Imu::drainFifo();
+    updateDisplayService();
     return;
   }
 
@@ -734,6 +765,7 @@ void loop() {
           liftStrength,
           nowMs);
       Imu::drainFifo();
+      updateDisplayService();
       return;
     }
 
@@ -741,11 +773,13 @@ void loop() {
       enterFinalSleep();
     }
     Imu::drainFifo();
+    updateDisplayService();
     return;
   }
 
   if (runMode != RunMode::Capturing) {
     Imu::drainFifo();
+    updateDisplayService();
     return;
   }
 
@@ -770,4 +804,5 @@ void loop() {
     finishCapture(nowMs);
   }
   Imu::drainFifo();
+  updateDisplayService();
 }
