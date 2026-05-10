@@ -209,9 +209,8 @@ gyroMagnitudeRaw + dynamicAccelMg * 4
 - `accelPeakTimeMs`
 - `firstGyroStrongTimeMs`
 - `maxAccelRiseMs`
-- `maxGyroHighRunMs`
+- `postGyroAccelAreaMgMs`
 - `capturePeakStrength`
-- `strongGyroAxisChangeCount`
 
 ### 終了条件
 
@@ -226,6 +225,7 @@ gyroMagnitudeRaw + dynamicAccelMg * 4
 
 見ている要素:
 
+- capture peak strength の最低ライン
 - スイング時間
 - gyro peak
 - accel peak
@@ -234,19 +234,8 @@ gyroMagnitudeRaw + dynamicAccelMg * 4
 - capture peak strength
 - gyro peak と accel peak の時間差
 
-スコアが低くても、明らかにスイングらしい低スコア動作は表示する。  
-ただし、100点が連続しないように、低スコア救済は強めに絞る。
-
-低スコア救済の条件:
-
-- スイング時間が十分ある
-- `capturePeakStrength` が十分大きい
-- gyro peak が十分ある
-- accel peak が十分ある
-- accel rise 時間が十分ある
-
-内部スコアが `kMinAcceptedScore` 以下の場合は、`isIntentionalLowScoreSwing()` を満たさない限り表示しない。  
-これにより、バットを軽く振っただけ、構えたときの揺れ、持ち替えなどで `100` が出ることを抑える。
+低スコア救済は使わない。  
+最終スコアが `100` に届いた場合だけスコア表示する。  
 
 ---
 
@@ -257,131 +246,100 @@ gyroMagnitudeRaw + dynamicAccelMg * 4
 構成:
 
 ```cpp
-score = gyroRiseScore();
-score += gyroPeakScore();
-score += strengthScore();
-score += accelAreaScore();
-score = score * peakDeltaPct() / 100;
-score = score * smoothnessPct() / 100;
-score = score * swingQualityPct() / 100;
+score = gyroPeakScore();          // max 500
+score += postGyroAccelAreaScore(); // max 500
 score = score * kFinalScorePct / 100;
-score = displayScoreFromMotionScore(score);
+score = min(score, 999);
 ```
 
 整数演算中心で、float は使わない。
 
-### gyroRiseScore
+採点に入る条件:
 
-回転の立ち上がりを見る。
+- score が `100` 以上
 
-- 早すぎるものは衝撃やノイズ寄りとして弱める
-- 良い時間帯は高評価
-- 遅すぎる立ち上がりは低評価
-
-「一気に回転が立ち上がる」ことを評価するための項目。
+この条件を満たさない場合は no score。
 
 ### gyroPeakScore
 
 角速度ピークを見る。
 
-- 一定以下は 0
-- 閾値を超えた分を平方根でスコア化する
-
-ピーク角速度は重要だが、これだけで高得点になりすぎないようにしている。
-
-### strengthScore
-
-`capturePeakStrength` を見る。
-
-gyro magnitude と dynamic accel を合成した、スイング全体の強さに近い指標。  
-フォームに関わらず、思いっきり振ったことは基礎点として一定評価する。
-
-これは上限付きの救済ボーナスではなく、`gyroRiseScore`、`gyroPeakScore`、`accelAreaScore` と同じ基礎点の一部として扱う。
-
-### accelAreaScore
-
-加速度ピークと加速上昇時間を見る。
-
-```cpp
-sqrt((accelPeakMg - offset) * maxAccelRiseMs)
-```
-
-瞬間的な衝撃だけでなく、加速度が立ち上がってピークへ向かう流れがあるかを見る。  
-現在の Dream-1 ではかなり重要な項目。
-
-### peakDeltaPct
-
-gyro peak と accel peak の時間差を見る。
+- 最大 500 点
+- gyro full は実測に合わせて `7000 dps`
+- IMU の 4000 dps 設定に合わせて `140 mdps/LSB` として換算する
+- 7000 dps 以上は 500 点に clamp する
 
 考え方:
 
-- gyro peak が先に来る
-- その後、少し遅れて accel peak が来る
-- 同時すぎる場合は手元だけの入力や衝撃っぽい動きとして減点
-- accel が先行する場合も減点
-- 遅れすぎる場合も減点
+- MLB Statcast では 75 mph 以上を fast swing として扱う
+- MLB 上位選手の平均 bat speed は 80 mph 前後に達する
+- bat speed 80〜85 mph を sweet spot 半径およそ 0.75 m で角速度換算すると約 2700〜2900 dps
+- ただし Dream-1 は単一軸ではなく3軸合成の `gyroMagnitudeRaw` を使うため、単純な角速度換算より大きめに出る
+- 3000〜4500 dps では子供や軽めのスイングでも 500 点に届きやすかったため、Dream-1 の実測レンジに合わせて `7000 dps` を使う
+- 診断時には、7000 dps 満点でも強いスイングで Gyro 側が約400点まで出た
+- この値は実測ベースの仮置き。上手い人で Gyro 側が簡単に 500 点へ張り付く場合はさらに上げる候補がある
 
-現在の補正:
+### postGyroAccelAreaScore
 
-```text
-delta < 0      75%
-0..10ms        82%
-10..20ms       82% -> 90%
-20..70ms       110%
-70..140ms      102%
-140..220ms     95% -> 88%
-220ms以上      88%
+回転を伴うキャプチャ中に乗った dynamic accel の積算を見る。
+
+```cpp
+area = sum((dynamicAccelMg - offset) * dt)
+score = area / fullArea * 500
 ```
 
-この項目は Dream-1 の思想にかなり近い。  
-ただし個人差、バット長さ、装着位置で変わるため、補正幅は極端にしすぎない。
+手首だけの一瞬の入力ではなく、スイング中に加速度が乗って続いたかを見る。  
+当初は「最終 gyro peak 後のみ」を積算する方針だったが、実機では最終 gyro peak 後の加速度がほぼ残らず `0` になりやすかったため、現在はキャプチャ中の offset 超過分を積算する。
 
-### smoothnessPct
+`offset` は `1000 mg`。  
+小さい揺れ、構え、ぶらぶらを積算しにくくしつつ、普通のスイングが `0` になりにくい値として実測から置いている。
+
+`fullArea` は `300000 mg*ms`。  
+これは公開データから直接導いた物理定数ではなく、Dream-1 の実測ベースの仮置き。  
+診断時には、かなり全力のスイングで `postGyroAccelAreaMgMs / 1000` が約 `216`、つまり約 `216000 mg*ms` 程度だった。  
+そのため、子供や一般ユーザーの強いスイングで飽和しにくく、上手い人なら上限に近づく余白を残す値として `300000 mg*ms` を採用している。
+
+今後、上手い選手や体格の大きいユーザーで簡単に Post 側が 500 点に張り付く場合は、`fullArea` を `450000〜600000 mg*ms` 程度へ上げる候補がある。
+
+### 現在使わない評価要素
+
+以下は現在のスコア計算には使わない。
+
+- `gyroRiseScore()`
+- `strengthScore()`
+- `peakDeltaPct()`
+- `smoothnessPct()`
+- `swingQualityPct()`
+- `accelAreaScore()`
+- `maxGyroHighRunMs`
+- `strongGyroAxisChangeCount`
+
+ただし、スイング成立判定として `swingEvidence()` は残す。
+`firstGyroStrongTimeMs`、`maxAccelRiseMs`、`capturePeakStrength` などは、構えや持ち替えを弾くための evidence 側で使う。
+
+### accel rise 記録
 
 スイング時間に対して加速度がピークへ向かって立ち上がった時間を見る。
 
-- 加速上昇が短すぎると減点
-- 適度に鋭く立ち上がると少し加点
-- 上昇時間が長すぎるスイングは減点
+- スコア補正には使わない
+- `swingEvidence()` のために記録する
 
 `maxAccelRiseMs` は固定閾値以上の時間ではなく、dynamic accel が立ち上がってからピーク後に減少へ転じるまでの時間として記録する。  
 ノイズで1サンプルだけ下がっても減少扱いにしないよう、小さい変化は無視し、連続した減少で判定する。
 
 加速上昇の開始は `kAccelRiseStartMg` 以上で見る。  
-これはスコア用の accel rise 判定であり、スイング開始判定用の `kCaptureStartAccelMg` とは別に扱う。
-
-### swingQualityPct
-
-ドアスイングを直接検出するものではない。  
-「遠回り、長回し、軸ブレっぽい品質低下」を弱く補正する項目。
-
-見る値:
-
-- `gyroPeakTimeMs`
-- `maxGyroHighRunMs`
-- `strongGyroAxisChangeCount`
-
-意味:
-
-- gyro peak が遅すぎると減点
-- 高速状態が長く続きすぎると減点
-- 強い gyro 区間で dominant axis が何度も変わると減点
-
-補正下限は高めに保ち、子供が普通に振ったときに点が出にくくなりすぎないようにする。
+これはスイング成立判定用の accel rise 判定であり、スイング開始判定用の `kCaptureStartAccelMg` とは別に扱う。
 
 ---
 
-## 表示スコア
+## スコア下限
 
-内部スコアはそのまま表示せず、`displayScoreFromMotionScore()` で表示用カーブに通す。
+`scoreFromPeaks()` が返すスコアを、そのまま表示、平均、ベスト更新、ブザー判定に使う。
 
-目的:
+現在の下限:
 
-- 低〜中スコア帯でも変化が分かるようにする
-- 999 は簡単に出ないようにする
-- 子供が普通に振っても極端に点が出にくくならないようにする
-
-有効スイングとして扱うが内部スコアが低い場合は、`displayedAcceptedScore()` で最低表示を `100` にする。
+- score `100` 未満: no score
+- score `100` 以上: 採点成立
 
 ただし、無効な動きは表示しない。
 
@@ -475,10 +433,8 @@ delta < 0      75%
 まず触る候補:
 
 - gyro/accel の開始閾値
-- `peakDeltaPct()` の時間帯
-- `accelAreaScore()` の offset
-- `swingQualityPct()` の補正下限
-- 低スコア救済条件
+- `postGyroAccelAreaScore()` の offset
+- スコアリマップの入力下限 `200`
 
 チューニング時の注意:
 
