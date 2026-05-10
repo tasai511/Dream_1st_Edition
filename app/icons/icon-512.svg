@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="ドリーム1号">
+  <rect width="512" height="512" rx="112" fill="#2563eb"/>
+  <path d="M131 336c78-100 158-174 254-224 18-9 35 13 21 30-66 91-139 170-223 242-38 32-80-6-52-48Z" fill="#ffffff"/>
+  <circle cx="352" cy="168" r="32" fill="#f59e0b"/>
+  <path d="M132 371l-34 34" stroke="#f59e0b" stroke-width="40" stroke-linecap="round"/>
+</svg>
