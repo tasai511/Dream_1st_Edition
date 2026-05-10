@@ -61,9 +61,9 @@ const uint16_t kGyroRiseGoodMs = 35;
 const uint16_t kGyroMdpsPerLsb = 140;
 const uint16_t kGyroPeakFullDps = 7000;
 const uint16_t kGyroPeakScoreMax = 500;
-const uint16_t kPostGyroAccelAreaScoreOffsetMg = 1000;
-const uint32_t kPostGyroAccelAreaFullMgMs = 300000UL;
-const uint16_t kPostGyroAccelAreaScoreMax = 500;
+const uint16_t kSwingAccelAreaScoreOffsetMg = 1000;
+const uint32_t kSwingAccelAreaFullMgMs = 300000UL;
+const uint16_t kSwingAccelAreaScoreMax = 500;
 const uint16_t kGyroPeakTimeUpdateMarginRaw = 250;
 const uint8_t kFinalScorePct = 100;
 const uint16_t kInternalScoreMax = 999;
@@ -102,7 +102,7 @@ uint16_t accelTrendPeakMg = 0;
 uint16_t gyroPeakTimeMs = 0;
 uint16_t accelPeakTimeMs = 0;
 uint16_t firstGyroStrongTimeMs = kNoTimeMs;
-uint32_t postGyroAccelAreaMgMs = 0;
+uint32_t swingAccelAreaMgMs = 0;
 uint8_t accelTrendFallCount = 0;
 uint16_t bestScore = 0;
 uint16_t swingCount = 0;
@@ -269,7 +269,7 @@ void resetMeasurement() {
   gyroPeakTimeMs = 0;
   accelPeakTimeMs = 0;
   firstGyroStrongTimeMs = kNoTimeMs;
-  postGyroAccelAreaMgMs = 0;
+  swingAccelAreaMgMs = 0;
   accelTrendFallCount = 0;
   lastMeasureSampleMs = 0;
   lastSwingMotionMs = 0;
@@ -305,14 +305,14 @@ uint16_t gyroPeakScore() {
       (clampedDps * kGyroPeakScoreMax) / kGyroPeakFullDps);
 }
 
-uint16_t postGyroAccelAreaScore() {
+uint16_t swingAccelAreaScore() {
   const uint32_t clampedArea =
-      postGyroAccelAreaMgMs > kPostGyroAccelAreaFullMgMs
-          ? kPostGyroAccelAreaFullMgMs
-          : postGyroAccelAreaMgMs;
+      swingAccelAreaMgMs > kSwingAccelAreaFullMgMs
+          ? kSwingAccelAreaFullMgMs
+          : swingAccelAreaMgMs;
   return static_cast<uint16_t>(
-      (clampedArea * kPostGyroAccelAreaScoreMax) /
-      kPostGyroAccelAreaFullMgMs);
+      (clampedArea * kSwingAccelAreaScoreMax) /
+      kSwingAccelAreaFullMgMs);
 }
 
 uint16_t activeSwingDurationMs(uint32_t nowMs) {
@@ -337,7 +337,7 @@ uint16_t scoreFromComponents(uint16_t gyroScore, uint16_t accelScore) {
 uint16_t scoreFromPeaks(uint16_t swingDurationMs) {
   (void)swingDurationMs;
   const uint16_t score =
-      scoreFromComponents(gyroPeakScore(), postGyroAccelAreaScore());
+      scoreFromComponents(gyroPeakScore(), swingAccelAreaScore());
   return score >= kMinScore ? score : 0;
 }
 
@@ -440,9 +440,9 @@ uint8_t swingEvidence(uint16_t swingDurationMs) {
   if (gyroPeakRaw >= kGyroRiseThresholdRaw) {
     evidence += 2;
   }
-  if (accelPeakMg >= kPostGyroAccelAreaScoreOffsetMg * 2U) {
+  if (accelPeakMg >= kSwingAccelAreaScoreOffsetMg * 2U) {
     evidence += 2;
-  } else if (accelPeakMg >= kPostGyroAccelAreaScoreOffsetMg) {
+  } else if (accelPeakMg >= kSwingAccelAreaScoreOffsetMg) {
     evidence += 1;
   }
 
@@ -457,12 +457,6 @@ uint8_t swingEvidence(uint16_t swingDurationMs) {
   }
 
   if (capturePeakStrength >= kCaptureRestartStrength) {
-    evidence += 1;
-  }
-
-  const int16_t peakDeltaMs =
-      static_cast<int16_t>(accelPeakTimeMs) - static_cast<int16_t>(gyroPeakTimeMs);
-  if (peakDeltaMs >= 0 && peakDeltaMs <= 180) {
     evidence += 1;
   }
 
@@ -532,11 +526,11 @@ void updateCapturePeaks(
     accelPeakMg = dynamicAccelMg;
     accelPeakTimeMs = elapsedMs;
   }
-  if (dynamicAccelMg > kPostGyroAccelAreaScoreOffsetMg) {
+  if (dynamicAccelMg > kSwingAccelAreaScoreOffsetMg) {
     const uint16_t effectiveAccelMg =
-        dynamicAccelMg - kPostGyroAccelAreaScoreOffsetMg;
+        dynamicAccelMg - kSwingAccelAreaScoreOffsetMg;
     const uint16_t areaMs = sampleDeltaMs == 0 ? 1 : sampleDeltaMs;
-    postGyroAccelAreaMgMs +=
+    swingAccelAreaMgMs +=
         static_cast<uint32_t>(effectiveAccelMg) * areaMs;
   }
   updateAccelRise(dynamicAccelMg, sampleDeltaMs);
@@ -577,7 +571,6 @@ void finishCapture(uint32_t nowMs) {
     finishNoSwing();
     return;
   }
-
   const uint16_t score = scoreFromPeaks(swingDurationMs);
   if (score < kMinDisplayScore) {
     finishNoSwing();

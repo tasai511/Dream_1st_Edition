@@ -209,7 +209,7 @@ gyroMagnitudeRaw + dynamicAccelMg * 4
 - `accelPeakTimeMs`
 - `firstGyroStrongTimeMs`
 - `maxAccelRiseMs`
-- `postGyroAccelAreaMgMs`
+- `swingAccelAreaMgMs`
 - `capturePeakStrength`
 
 ### 終了条件
@@ -232,7 +232,6 @@ gyroMagnitudeRaw + dynamicAccelMg * 4
 - accel rise 時間
 - 強い gyro が出たか
 - capture peak strength
-- gyro peak と accel peak の時間差
 
 低スコア救済は使わない。  
 最終スコアが `100` に届いた場合だけスコア表示する。  
@@ -247,7 +246,7 @@ gyroMagnitudeRaw + dynamicAccelMg * 4
 
 ```cpp
 score = gyroPeakScore();          // max 500
-score += postGyroAccelAreaScore(); // max 500
+score += swingAccelAreaScore();   // max 500
 score = score * kFinalScorePct / 100;
 score = min(score, 999);
 ```
@@ -279,7 +278,7 @@ score = min(score, 999);
 - 診断時には、7000 dps 満点でも強いスイングで Gyro 側が約400点まで出た
 - この値は実測ベースの仮置き。上手い人で Gyro 側が簡単に 500 点へ張り付く場合はさらに上げる候補がある
 
-### postGyroAccelAreaScore
+### swingAccelAreaScore
 
 回転を伴うキャプチャ中に乗った dynamic accel の積算を見る。
 
@@ -296,7 +295,7 @@ score = area / fullArea * 500
 
 `fullArea` は `300000 mg*ms`。  
 これは公開データから直接導いた物理定数ではなく、Dream-1 の実測ベースの仮置き。  
-診断時には、かなり全力のスイングで `postGyroAccelAreaMgMs / 1000` が約 `216`、つまり約 `216000 mg*ms` 程度だった。  
+診断時には、かなり全力のスイングで `swingAccelAreaMgMs / 1000` が約 `216`、つまり約 `216000 mg*ms` 程度だった。  
 そのため、子供や一般ユーザーの強いスイングで飽和しにくく、上手い人なら上限に近づく余白を残す値として `300000 mg*ms` を採用している。
 
 今後、上手い選手や体格の大きいユーザーで簡単に Post 側が 500 点に張り付く場合は、`fullArea` を `450000〜600000 mg*ms` 程度へ上げる候補がある。
@@ -308,6 +307,7 @@ score = area / fullArea * 500
 - `gyroRiseScore()`
 - `strengthScore()`
 - `peakDeltaPct()`
+- `peakPositionPct()`
 - `smoothnessPct()`
 - `swingQualityPct()`
 - `accelAreaScore()`
@@ -433,7 +433,7 @@ score = area / fullArea * 500
 まず触る候補:
 
 - gyro/accel の開始閾値
-- `postGyroAccelAreaScore()` の offset
+- `swingAccelAreaScore()` の offset
 - スコアリマップの入力下限 `200`
 
 チューニング時の注意:
