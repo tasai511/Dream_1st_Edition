@@ -471,10 +471,14 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
         <div className="dashboard-controls">
           <label className="field-label bat-field">
             表示するバット
-            <select value={homeBat} onChange={(event) => setHomeBat(event.target.value)}>
-              <option value={ALL}>すべてのバット</option>
-              {db.bats.map((bat) => <option key={bat} value={bat}>{bat}</option>)}
-            </select>
+            <span className="select-shell">
+              <span className="select-leading"><SvgIcon type="bat" /></span>
+              <select value={homeBat} onChange={(event) => setHomeBat(event.target.value)}>
+                <option value={ALL}>すべてのバット</option>
+                {db.bats.map((bat) => <option key={bat} value={bat}>{bat}</option>)}
+              </select>
+              <span className="select-caret" aria-hidden="true">⌄</span>
+            </span>
           </label>
           <div className="range-field">
             <span>期間</span>
