@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 const STORAGE_KEY = "dream1-swing-tracker-v1";
 const ALL = "__all__";
 const RANGE_ALL = "all";
-const MAX_CHART_SCALE = 30;
+const kMinChartVisibleDays = 3;
 
 const defaultDb = {
   activeName: "遥太",
@@ -175,13 +175,20 @@ function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
 
-function constrainChartView(view, plotWidth, maxScale = MAX_CHART_SCALE) {
+function constrainChartView(view, plotWidth, maxScale = Infinity) {
   const scale = clamp(view.scale, 1, maxScale);
   const minOffset = plotWidth - (plotWidth * scale);
   return {
     scale,
     offset: scale === 1 ? 0 : clamp(view.offset, minOffset, 0),
   };
+}
+
+function maxChartScale(itemCount) {
+  if (itemCount <= 1) {
+    return 1;
+  }
+  return Math.max(1, (itemCount - 1) / (kMinChartVisibleDays - 1));
 }
 
 function initialChartView(itemCount, range, plotWidth) {
@@ -193,7 +200,7 @@ function initialChartView(itemCount, range, plotWidth) {
   return constrainChartView({
     scale,
     offset: plotWidth - (plotWidth * scale),
-  }, plotWidth, Math.max(MAX_CHART_SCALE, scale));
+  }, plotWidth, Math.max(maxChartScale(itemCount), scale));
 }
 
 function pointerDistance(first, second) {
@@ -220,7 +227,7 @@ function Chart({ data, initialRange }) {
   const pad = { left: 42, right: 18, top: 22, bottom: 42 };
   const plotW = width - pad.left - pad.right;
   const plotH = height - pad.top - pad.bottom;
-  const maxScale = Math.max(MAX_CHART_SCALE, initialChartView(data.length, initialRange, plotW).scale);
+  const maxScale = Math.max(maxChartScale(data.length), initialChartView(data.length, initialRange, plotW).scale);
   const chartView = constrainChartView(view, plotW, maxScale);
   const values = data.flatMap((item) => [item.avg, item.best]).filter((value) => Number.isFinite(value));
 
@@ -335,13 +342,31 @@ function Chart({ data, initialRange }) {
       startPanGesture(pointers[0]);
     }
   };
+  const nearestPointTo = (clientX) => {
+    const svgX = clientXToSvgX(clientX);
+    const candidates = [...avgDisplayPoints, ...bestDisplayPoints]
+      .filter((pointItem) => pointItem.x >= pad.left && pointItem.x <= width - pad.right);
+    if (!candidates.length) return null;
+    return candidates.reduce((nearest, pointItem) => (
+      Math.abs(pointItem.x - svgX) < Math.abs(nearest.x - svgX) ? pointItem : nearest
+    ));
+  };
   const handlePointerMove = (event) => {
-    if (!pointersRef.current.has(event.pointerId)) return;
+    if (!pointersRef.current.has(event.pointerId)) {
+      if (event.pointerType === "mouse") {
+        setHovered(nearestPointTo(event.clientX));
+      }
+      return;
+    }
     event.preventDefault();
     pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
     updateGesture();
   };
   const handlePointerEnd = (event) => {
+    const gesture = gestureRef.current;
+    const wasTap =
+      gesture?.type === "pan" &&
+      Math.abs(event.clientX - gesture.startX) < 8;
     try {
       event.currentTarget.releasePointerCapture?.(event.pointerId);
     } catch {
@@ -355,6 +380,12 @@ function Chart({ data, initialRange }) {
       startPanGesture(pointers[0]);
     } else {
       gestureRef.current = null;
+    }
+    if (wasTap) {
+      const nearest = nearestPointTo(event.clientX);
+      if (nearest) {
+        setHovered(nearest);
+      }
     }
   };
 

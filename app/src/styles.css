@@ -518,6 +518,7 @@ input::placeholder {
   stroke: transparent;
   stroke-width: 0;
   cursor: pointer;
+  pointer-events: all;
 }
 
 .chart-point:focus {
