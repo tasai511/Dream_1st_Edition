@@ -786,6 +786,23 @@ input::placeholder {
   gap: 8px;
 }
 
+.badge-groups {
+  display: grid;
+  gap: 14px;
+}
+
+.badge-group {
+  display: grid;
+  gap: 8px;
+}
+
+.badge-group h3 {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 950;
+}
+
 .record-list {
   display: grid;
   margin-top: 12px;
@@ -805,6 +822,21 @@ input::placeholder {
 .badge.hot {
   border-color: rgba(var(--hot-rgb), 0.48);
   background: rgba(var(--hot-rgb), 0.22);
+}
+
+.badge.count {
+  border-color: rgba(255, 179, 65, 0.34);
+  background: rgba(255, 179, 65, 0.14);
+}
+
+.badge.score {
+  border-color: rgba(var(--hot-rgb), 0.42);
+  background: rgba(var(--hot-rgb), 0.18);
+}
+
+.badge.streak {
+  border-color: rgba(68, 215, 168, 0.34);
+  background: rgba(68, 215, 168, 0.14);
 }
 
 .day-badges {

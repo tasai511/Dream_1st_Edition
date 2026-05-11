@@ -5,6 +5,11 @@ const ALL = "__all__";
 const RANGE_ALL = "all";
 const kMinChartVisibleDays = 7;
 const kMaxChartVisibleDays = 365;
+const BADGE_CATEGORIES = [
+  ["count", "回数系"],
+  ["score", "スコア系"],
+  ["streak", "連続系"],
+];
 
 const defaultDb = {
   activeName: "遥太",
@@ -152,10 +157,11 @@ function badgesFor(records) {
     if (streak === 7) add(day.date, "1週間連続");
     if (streak >= 30 && streak % 30 === 0) add(day.date, `${streak / 30}か月連続`);
 
-    for (let threshold = 100; threshold <= day.count; threshold += 100) {
-      const key = `${day.date}-${threshold}`;
+    const dailyThreshold = Math.floor(day.count / 100) * 100;
+    if (dailyThreshold >= 100) {
+      const key = `${day.date}-${dailyThreshold}`;
       if (!crossedDaily.has(key)) {
-        add(day.date, `1日${threshold.toLocaleString("ja-JP")}スイング`);
+        add(day.date, `1日${dailyThreshold.toLocaleString("ja-JP")}スイング`);
         crossedDaily.add(key);
       }
     }
@@ -167,10 +173,11 @@ function badgesFor(records) {
       weekTotal = 0;
     }
     weekTotal += day.count;
-    for (let threshold = 500; threshold <= weekTotal; threshold += 500) {
-      const key = `${weekStart}-${threshold}`;
+    const weekThreshold = Math.floor(weekTotal / 500) * 500;
+    if (weekThreshold >= 500) {
+      const key = `${weekStart}-${weekThreshold}`;
       if (!crossedWeek.has(key)) {
-        add(day.date, `週間${threshold.toLocaleString("ja-JP")}スイング`);
+        add(day.date, `週間${weekThreshold.toLocaleString("ja-JP")}スイング`);
         crossedWeek.add(key);
       }
     }
@@ -178,10 +185,11 @@ function badgesFor(records) {
     const monthKey = day.date.slice(0, 7);
     const monthTotal = (monthTotals.get(monthKey) || 0) + day.count;
     monthTotals.set(monthKey, monthTotal);
-    for (let threshold = 1000; threshold <= monthTotal; threshold += 1000) {
-      const key = `${monthKey}-${threshold}`;
+    const monthThreshold = Math.floor(monthTotal / 1000) * 1000;
+    if (monthThreshold >= 1000) {
+      const key = `${monthKey}-${monthThreshold}`;
       if (!crossedMonth.has(key)) {
-        add(day.date, `月間${threshold.toLocaleString("ja-JP")}スイング`);
+        add(day.date, `月間${monthThreshold.toLocaleString("ja-JP")}スイング`);
         crossedMonth.add(key);
       }
     }
@@ -856,6 +864,7 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
   const avg = total ? Math.round(daily.reduce((sum, day) => sum + day.avg * day.count, 0) / total) : 0;
   const best = daily.reduce((max, day) => Math.max(max, day.best), 0);
   const badgeCounts = collectBadgeCounts(allForName);
+  const groupedBadges = badgeGroups(badgeCounts);
   const chartData = filledChartExtent(chartDaily);
   const rangeOptions = [
     [7, "1週間"],
@@ -928,11 +937,20 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
           <h2>獲得バッジ</h2>
           <p>全期間</p>
         </div>
-        <div className="badge-list">
-          {badgeCounts.length ? badgeCounts.map(([label, count]) => (
-            <span className="badge" key={label}><Icon type="badge" />{label}{count > 1 ? ` x${count}` : ""}</span>
-          )) : <p className="empty">まだバッジはありません。</p>}
-        </div>
+        {badgeCounts.length ? (
+          <div className="badge-groups">
+            {groupedBadges.filter((group) => group.badges.length).map((group) => (
+              <section className={`badge-group ${group.key}`} key={group.key}>
+                <h3>{group.label}</h3>
+                <div className="badge-list">
+                  {group.badges.map(([label, count]) => (
+                    <span className={`badge ${group.key}`} key={label}><Icon type="badge" />{label}{count > 1 ? ` x${count}` : ""}</span>
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
+        ) : <p className="empty">まだバッジはありません。</p>}
       </section>
     </>
   );
@@ -986,6 +1004,21 @@ function collectBadgeCounts(records) {
     }
     return a.localeCompare(b, "ja");
   });
+}
+
+function badgeCategory(label) {
+  if (label.startsWith("1日") || label.startsWith("週間") || label.startsWith("月間")) return "count";
+  if (label.startsWith("平均スコア") || label.startsWith("ベストスコア")) return "score";
+  if (label.includes("連続")) return "streak";
+  return "count";
+}
+
+function badgeGroups(badgeCounts) {
+  const groups = new Map(BADGE_CATEGORIES.map(([key]) => [key, []]));
+  badgeCounts.forEach(([label, count]) => {
+    groups.get(badgeCategory(label))?.push([label, count]);
+  });
+  return BADGE_CATEGORIES.map(([key, label]) => ({ key, label, badges: groups.get(key) || [] }));
 }
 
 function RecordView({ db, allForName, badgeMap, selectedDate, setSelectedDate, month, setMonth, addRecord }) {
@@ -1157,7 +1190,9 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
         <div className="chip-list">
           {db.names.map((name) => (
             <span key={name} className={`chip ${name === currentName ? "active" : ""}`}>
-              <button type="button" onClick={() => setDb({ ...db, activeName: name })}>{name}</button>
+              <button type="button" onClick={() => setDb({ ...db, activeName: name })}>
+                {name}{name === currentName ? <small>選択中</small> : null}
+              </button>
               <button type="button" className="chip-delete" aria-label={`${name}を削除`} onClick={() => setPendingDelete({ type: "name", value: name })}><SvgIcon type="trash" /></button>
             </span>
           ))}
