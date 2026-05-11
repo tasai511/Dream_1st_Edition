@@ -658,12 +658,10 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
   const badgeCounts = collectBadgeCounts(allForName);
   const chartData = filledChartExtent(chartDaily);
   const rangeOptions = [
-    [7, "7日"],
-    [30, "30日"],
-    [90, "90日"],
+    [7, "1週間"],
+    [30, "1か月"],
     [180, "半年"],
     [365, "1年"],
-    [RANGE_ALL, "全期間"],
   ];
   const rangeLabel = rangeOptions.find(([value]) => value === range)?.[1] || `${range}日`;
 
