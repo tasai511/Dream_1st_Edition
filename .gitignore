@@ -6,3 +6,7 @@ cad/.DS_Store
 .history
 platformio.ini
 cad/kicad/.history
+node_modules
+dist
+.edge-profile-check
+.edge-shot.png
