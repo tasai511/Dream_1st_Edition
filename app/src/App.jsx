@@ -464,9 +464,9 @@ function Chart({ data, initialRange }) {
   };
   const visibleStartLabel = data[visibleIndexAt(0)]?.label || data[0].label;
   const visibleEndLabel = data[visibleIndexAt(plotW)]?.label || data.at(-1).label;
-  const hoverX = hovered ? Math.min(width - 162, Math.max(pad.left + 4, hovered.x + 10)) : 0;
-  const hoverY = hovered ? Math.max(8, hovered.y - 66) : 0;
   const hoveredInPlot = hovered && hovered.x >= pad.left && hovered.x <= width - pad.right;
+  const tooltipLeft = hovered ? `${(hovered.x / width) * 100}%` : "0%";
+  const tooltipTop = hovered ? `${(clamp(hovered.y - 74, 12, height - 80) / height) * 100}%` : "0%";
   const clientXToSvgX = (clientX) => {
     const rect = svgRef.current?.getBoundingClientRect();
     if (!rect || rect.width === 0) return pad.left;
@@ -650,13 +650,16 @@ function Chart({ data, initialRange }) {
         {hoveredInPlot && (
           <g className="chart-tooltip" pointerEvents="none">
             <line x1={hovered.x} y1={pad.top} x2={hovered.x} y2={height - pad.bottom} className="hover-line" />
-            <rect x={hoverX} y={hoverY} width="152" height="60" rx="7" />
-            <text x={hoverX + 9} y={hoverY + 16}>{hovered.item.label}</text>
-            <text x={hoverX + 9} y={hoverY + 34}>平均: {Number(hovered.item.avg || 0).toLocaleString("ja-JP")}点</text>
-            <text x={hoverX + 9} y={hoverY + 50}>ベスト: {Number(hovered.item.best || 0).toLocaleString("ja-JP")}点</text>
           </g>
         )}
       </svg>
+      {hoveredInPlot && (
+        <div className="chart-tooltip-card" style={{ "--tooltip-x": tooltipLeft, "--tooltip-y": tooltipTop }}>
+          <strong>{hovered.item.label}</strong>
+          <span>平均: {Number(hovered.item.avg || 0).toLocaleString("ja-JP")}点</span>
+          <span>ベスト: {Number(hovered.item.best || 0).toLocaleString("ja-JP")}点</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -798,9 +801,9 @@ export default function App() {
   return (
     <div className={`app theme-${db.theme || "red"}`}>
       <div className="phone-shell">
-        <header className="top-tabs-row">
-          <BottomNav tab={tab} setTab={setTab} />
+        <header className="app-header">
           <button className="active-player" type="button" onClick={() => setTab("settings")}><SvgIcon type="person" />{currentName || "未選択"}</button>
+          <img className="dream-logo" src="./images/dream-logo.png" alt="Dream" />
         </header>
 
         <main className="content">
@@ -840,6 +843,8 @@ export default function App() {
             />
           )}
         </main>
+
+        <BottomNav tab={tab} setTab={setTab} />
 
         {pendingDelete && <DeleteDialog pending={pendingDelete} onCancel={() => setPendingDelete(null)} onConfirm={confirmDelete} />}
       </div>
