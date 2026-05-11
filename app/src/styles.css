@@ -21,6 +21,7 @@
 html {
   min-height: 100%;
   background: var(--bg);
+  touch-action: manipulation;
 }
 
 body {
@@ -167,6 +168,10 @@ p {
   margin-bottom: 14px;
 }
 
+.section-row.tight {
+  margin-bottom: 10px;
+}
+
 .field-label {
   display: grid;
   gap: 8px;
@@ -199,6 +204,7 @@ input::placeholder {
 
 .segmented {
   display: flex;
+  flex-wrap: wrap;
   gap: 4px;
   border: 1px solid var(--line);
   border-radius: 999px;
@@ -210,7 +216,7 @@ input::placeholder {
   min-height: 32px;
   border: 0;
   border-radius: 999px;
-  padding: 0 10px;
+  padding: 0 11px;
   color: var(--muted);
   background: transparent;
   font-size: 0.76rem;
@@ -220,6 +226,48 @@ input::placeholder {
 .segmented button.selected {
   color: white;
   background: var(--hot);
+}
+
+.bat-dashboard {
+  display: grid;
+  gap: 14px;
+}
+
+.dashboard-controls {
+  display: grid;
+  gap: 12px;
+}
+
+.bat-field select {
+  min-height: 58px;
+  padding: 0 14px;
+  font-size: 1.02rem;
+  font-weight: 900;
+}
+
+.range-field {
+  display: grid;
+  gap: 8px;
+}
+
+.range-field > span {
+  color: var(--muted);
+  font-size: 0.77rem;
+  font-weight: 900;
+}
+
+.range-field .segmented {
+  border-radius: var(--radius);
+}
+
+.range-field .segmented button {
+  flex: 1 1 64px;
+  min-height: 40px;
+}
+
+.dashboard-section {
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .total-card,
@@ -336,6 +384,7 @@ input::placeholder {
 }
 
 .chart-wrap {
+  position: relative;
   overflow: hidden;
   border-radius: var(--radius);
   background: rgba(0, 0, 0, 0.13);
@@ -343,11 +392,17 @@ input::placeholder {
 
 .chart-wrap svg {
   width: 100%;
-  height: 260px;
+  height: 282px;
 }
 
 .grid-line {
   stroke: rgba(255, 255, 255, 0.08);
+  stroke-width: 0.55;
+}
+
+.axis-line {
+  stroke: rgba(255, 255, 255, 0.18);
+  stroke-width: 0.7;
 }
 
 .area {
@@ -363,23 +418,74 @@ input::placeholder {
 
 .avg-path {
   stroke: var(--hot);
-  stroke-width: 3.2;
+  stroke-width: 2.2;
 }
 
 .best-path {
   stroke: white;
-  stroke-width: 2.4;
+  stroke-width: 1.7;
 }
 
 .chart-note,
-.chart-date {
+.chart-date,
+.chart-axis-label {
   fill: rgba(255, 255, 255, 0.62);
-  font-size: 9px;
+  stroke: none;
+  font-size: 10px;
   font-weight: 800;
+}
+
+.chart-axis-label {
+  fill: rgba(255, 255, 255, 0.52);
+  font-size: 9px;
 }
 
 .chart-note.bright {
   fill: white;
+}
+
+.chart-point {
+  fill: transparent;
+  stroke: transparent;
+  stroke-width: 0;
+  cursor: pointer;
+}
+
+.chart-point:focus {
+  outline: none;
+}
+
+.chart-point.avg:hover,
+.chart-point.avg:focus {
+  fill: rgba(255, 48, 68, 0.18);
+  stroke: var(--hot);
+  stroke-width: 1.4;
+}
+
+.chart-point.best:hover,
+.chart-point.best:focus {
+  fill: rgba(255, 255, 255, 0.14);
+  stroke: white;
+  stroke-width: 1.2;
+}
+
+.hover-line {
+  stroke: rgba(255, 255, 255, 0.2);
+  stroke-width: 0.8;
+  stroke-dasharray: 3 3;
+}
+
+.chart-tooltip rect {
+  fill: rgba(17, 18, 24, 0.96);
+  stroke: rgba(255, 48, 68, 0.36);
+  stroke-width: 0.7;
+}
+
+.chart-tooltip text {
+  fill: white;
+  stroke: none;
+  font-size: 10px;
+  font-weight: 900;
 }
 
 .chart-empty,

@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 
 const STORAGE_KEY = "dream1-swing-tracker-v1";
 const ALL = "__all__";
+const RANGE_ALL = "all";
 
 const defaultDb = {
   activeName: "遥太",
@@ -178,46 +179,82 @@ function Metric({ icon, label, value, unit }) {
 }
 
 function Chart({ data }) {
+  const [hovered, setHovered] = useState(null);
   const width = 360;
-  const height = 232;
-  const pad = { left: 30, right: 18, top: 24, bottom: 38 };
+  const height = 250;
+  const pad = { left: 42, right: 18, top: 22, bottom: 42 };
   const plotW = width - pad.left - pad.right;
   const plotH = height - pad.top - pad.bottom;
   const values = data.flatMap((item) => [item.avg, item.best]).filter((value) => Number.isFinite(value));
 
   if (!values.length) return <div className="chart-empty">記録を入れるとグラフが表示されます。</div>;
 
-  const maxY = Math.max(800, ...values) * 1.08;
+  const maxY = Math.ceil((Math.max(800, ...values) * 1.08) / 100) * 100;
   const point = (item, index, key) => {
     if (!Number.isFinite(item[key])) return null;
     return {
       x: pad.left + (data.length <= 1 ? plotW / 2 : (plotW * index) / (data.length - 1)),
       y: pad.top + plotH - (item[key] / maxY) * plotH,
+      item,
+      key,
+      label: key === "avg" ? "平均" : "ベスト",
+      value: item[key],
     };
   };
   const avgPoints = data.map((item, index) => point(item, index, "avg")).filter(Boolean);
   const bestPoints = data.map((item, index) => point(item, index, "best")).filter(Boolean);
   const avgPath = pathFromPoints(avgPoints);
   const bestPath = pathFromPoints(bestPoints);
+  const yLabels = [0, 0.25, 0.5, 0.75, 1].map((ratio) => {
+    const value = Math.round((maxY * (1 - ratio)) / 100) * 100;
+    return { value, y: pad.top + plotH * ratio };
+  });
+  const hoverX = hovered ? Math.min(width - 118, Math.max(pad.left + 4, hovered.x + 10)) : 0;
+  const hoverY = hovered ? Math.max(8, hovered.y - 48) : 0;
 
   return (
     <div className="chart-wrap">
-      <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="スコア推移">
+      <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="スコア推移" onPointerLeave={() => setHovered(null)}>
         <defs>
           <linearGradient id="avgFill" x1="0" x2="0" y1="0" y2="1">
             <stop offset="0%" stopColor="rgba(255,48,68,.25)" />
             <stop offset="100%" stopColor="rgba(255,48,68,0)" />
           </linearGradient>
         </defs>
-        {[0, 1, 2, 3, 4].map((step) => {
-          const y = pad.top + (plotH * step) / 4;
-          return <line key={step} x1={pad.left} y1={y} x2={width - pad.right} y2={y} className="grid-line" />;
-        })}
+        {yLabels.map((tick) => (
+          <g key={tick.value}>
+            <line x1={pad.left} y1={tick.y} x2={width - pad.right} y2={tick.y} className="grid-line" />
+            <text x={pad.left - 9} y={tick.y + 3} textAnchor="end" className="chart-axis-label">{tick.value}</text>
+          </g>
+        ))}
+        <line x1={pad.left} y1={pad.top} x2={pad.left} y2={height - pad.bottom} className="axis-line" />
+        <line x1={pad.left} y1={height - pad.bottom} x2={width - pad.right} y2={height - pad.bottom} className="axis-line" />
         {avgPoints.length > 1 && <path className="area" d={`${avgPath} L ${avgPoints.at(-1).x} ${height - pad.bottom} L ${avgPoints[0].x} ${height - pad.bottom} Z`} />}
         <path className="avg-path" d={avgPath} />
         <path className="best-path" d={bestPath} />
+        {[...avgPoints, ...bestPoints].map((pointItem) => (
+          <circle
+            key={`${pointItem.key}-${pointItem.item.date}`}
+            className={`chart-point ${pointItem.key}`}
+            cx={pointItem.x}
+            cy={pointItem.y}
+            r="8"
+            tabIndex="0"
+            onPointerEnter={() => setHovered(pointItem)}
+            onFocus={() => setHovered(pointItem)}
+            onBlur={() => setHovered(null)}
+          />
+        ))}
         <text x={pad.left} y={height - 12} className="chart-date">{data[0].label}</text>
         <text x={width - pad.right} y={height - 12} textAnchor="end" className="chart-date">{data.at(-1).label}</text>
+        {hovered && (
+          <g className="chart-tooltip" pointerEvents="none">
+            <line x1={hovered.x} y1={pad.top} x2={hovered.x} y2={height - pad.bottom} className="hover-line" />
+            <rect x={hoverX} y={hoverY} width="108" height="42" rx="7" />
+            <text x={hoverX + 9} y={hoverY + 16}>{hovered.item.label}</text>
+            <text x={hoverX + 9} y={hoverY + 32}>{hovered.label} {hovered.value}点</text>
+          </g>
+        )}
       </svg>
     </div>
   );
@@ -408,10 +445,10 @@ export default function App() {
 }
 
 function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHomeBat }) {
-  const from = toISO(addDays(parseISO(todayISO()), -(range - 1)));
+  const from = range === RANGE_ALL ? null : toISO(addDays(parseISO(todayISO()), -(range - 1)));
   const filtered = db.records.filter((record) => (
     record.name === currentName &&
-    record.date >= from &&
+    (from === null || record.date >= from) &&
     record.date <= todayISO() &&
     (homeBat === ALL || record.bat === homeBat)
   ));
@@ -420,51 +457,69 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
   const avg = total ? Math.round(daily.reduce((sum, day) => sum + day.avg * day.count, 0) / total) : 0;
   const best = daily.reduce((max, day) => Math.max(max, day.best), 0);
   const badgeCounts = collectBadgeCounts(allForName);
-  const chartData = filledChart(daily, range);
+  const chartData = chartDataForRange(daily, range);
+  const rangeOptions = [
+    [7, "7日"],
+    [30, "30日"],
+    [90, "90日"],
+    [RANGE_ALL, "全期間"],
+  ];
 
   return (
     <>
-      <section className="panel compact">
-        <label className="field-label">
-          バット
-          <select value={homeBat} onChange={(event) => setHomeBat(event.target.value)}>
-            <option value={ALL}>すべてのバット</option>
-            {db.bats.map((bat) => <option key={bat} value={bat}>{bat}</option>)}
-          </select>
-        </label>
-      </section>
-
-      <section className="panel hero-card">
+      <section className="panel hero-card bat-dashboard">
         <div className="section-row">
           <div>
-            <h2>スコア</h2>
+            <h2>バット</h2>
             <p>{currentName || "選手"} / {homeBat === ALL ? "すべてのバット" : homeBat}</p>
           </div>
-          <div className="segmented">
-            {[7, 30, 90].map((days) => (
-              <button key={days} type="button" className={range === days ? "selected" : ""} onClick={() => setRange(days)}>{days}日</button>
-            ))}
-          </div>
         </div>
-        <div className="total-card">
-          <div className="metric-label"><Icon type="count" />総スイング</div>
-          <strong>{total.toLocaleString("ja-JP")}<span>回</span></strong>
-        </div>
-        <div className="metric-grid">
-          <Metric icon="best" label="ベスト" value={best} unit="点" />
-          <Metric icon="avg" label="平均" value={avg} unit="点" />
-        </div>
-      </section>
 
-      <section className="panel">
-        <div className="section-row">
-          <div>
-            <h2>スコア推移</h2>
-            <p>平均とベストの流れ</p>
+        <div className="dashboard-controls">
+          <label className="field-label bat-field">
+            表示するバット
+            <select value={homeBat} onChange={(event) => setHomeBat(event.target.value)}>
+              <option value={ALL}>すべてのバット</option>
+              {db.bats.map((bat) => <option key={bat} value={bat}>{bat}</option>)}
+            </select>
+          </label>
+          <div className="range-field">
+            <span>期間</span>
+            <div className="segmented">
+              {rangeOptions.map(([value, label]) => (
+                <button key={value} type="button" className={range === value ? "selected" : ""} onClick={() => setRange(value)}>{label}</button>
+              ))}
+            </div>
           </div>
-          <div className="legend"><span className="avg-line" />平均 <span className="best-line" />ベスト</div>
         </div>
-        <Chart data={chartData} />
+
+        <section className="dashboard-section">
+          <div className="section-row tight">
+            <div>
+              <h2>スコア</h2>
+              <p>{range === RANGE_ALL ? "全期間" : `直近${range}日`}</p>
+            </div>
+          </div>
+          <div className="total-card">
+            <div className="metric-label"><Icon type="count" />総スイング</div>
+            <strong>{total.toLocaleString("ja-JP")}<span>回</span></strong>
+          </div>
+          <div className="metric-grid">
+            <Metric icon="best" label="ベスト" value={best} unit="点" />
+            <Metric icon="avg" label="平均" value={avg} unit="点" />
+          </div>
+        </section>
+
+        <section className="dashboard-section">
+          <div className="section-row tight">
+            <div>
+              <h2>スコア推移</h2>
+              <p>平均とベストの流れ</p>
+            </div>
+            <div className="legend"><span className="avg-line" />平均 <span className="best-line" />ベスト</div>
+          </div>
+          <Chart data={chartData} />
+        </section>
       </section>
 
       <section className="panel">
@@ -480,6 +535,16 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
       </section>
     </>
   );
+}
+
+function chartDataForRange(daily, range) {
+  if (range === RANGE_ALL) {
+    return daily.map((day) => ({
+      ...day,
+      label: day.date.slice(5).replace("-", "/"),
+    }));
+  }
+  return filledChart(daily, range);
 }
 
 function filledChart(daily, range) {
