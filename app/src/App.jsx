@@ -3,12 +3,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 const STORAGE_KEY = "dream1-swing-tracker-v1";
 const ALL = "__all__";
 const RANGE_ALL = "all";
-const kMinChartVisibleDays = 3;
+const kMinChartVisibleDays = 7;
+const kMaxChartVisibleDays = 365;
 
 const defaultDb = {
   activeName: "遥太",
   names: ["遥太"],
   bats: ["赤バット", "黒バット"],
+  theme: "dark",
   records: [],
 };
 
@@ -20,7 +22,7 @@ function SvgIcon({ type }) {
   if (type === "count") return <svg {...props}><path d="M4 7h16M4 12h16M4 17h10" /></svg>;
   if (type === "avg") return <svg {...props}><path d="M4 17 9 12l4 4 7-9" /><path d="M16 7h4v4" /></svg>;
   if (type === "best") return <svg {...props}><path d="M12 3 9.5 8.5 4 9l4.2 3.8L7 18.5l5-3 5 3-1.2-5.7L20 9l-5.5-.5L12 3Z" /></svg>;
-  if (type === "bat") return <svg {...props}><path d="M4 13h11" /><path d="M15 10h1.8c2.1 0 3.8 1.2 3.8 3s-1.7 3-3.8 3H15Z" /><path d="M3.4 11.7v2.6" /><path d="M6 11.8v2.4" /></svg>;
+  if (type === "bat") return <svg {...props}><text x="12" y="17" textAnchor="middle">🏏</text></svg>;
   if (type === "badge") return <svg {...props}><circle cx="12" cy="8" r="4" /><path d="m9 12-2 8 5-3 5 3-2-8" /></svg>;
   if (type === "plus") return <svg {...props}><path d="M12 5v14M5 12h14" /></svg>;
   if (type === "trash") return <svg {...props}><path d="M4 7h16" /><path d="M10 11v6M14 11v6" /><path d="M6 7l1 14h10l1-14" /><path d="M9 7V4h6v3" /></svg>;
@@ -35,6 +37,20 @@ function Icon({ type }) {
 
 function ButtonIcon({ type }) {
   return <span className="button-icon"><SvgIcon type={type} /></span>;
+}
+
+function SwingSilhouette() {
+  return (
+    <svg className="swing-silhouette" viewBox="0 0 96 96" aria-hidden="true">
+      <path d="M66 12 42 38" />
+      <path d="M63 11 72 20" />
+      <circle cx="44" cy="28" r="7" />
+      <path d="M40 37 52 48 66 44" />
+      <path d="M50 48 42 64 28 77" />
+      <path d="M51 50 64 65 78 72" />
+      <path d="M32 43c-9 4-16 10-20 18" />
+    </svg>
+  );
 }
 
 function todayISO() {
@@ -73,6 +89,7 @@ function loadDb() {
       activeName: parsed.activeName || parsed.names?.[0] || "",
       names: Array.isArray(parsed.names) ? parsed.names : [],
       bats: Array.isArray(parsed.bats) ? parsed.bats : [],
+      theme: parsed.theme === "light" ? "light" : "dark",
       records: Array.isArray(parsed.records) ? parsed.records : [],
     };
   } catch {
@@ -175,36 +192,99 @@ function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
 
-function constrainChartView(view, plotWidth, maxScale = Infinity) {
-  const scale = clamp(view.scale, 1, maxScale);
+function scaleForVisibleDays(itemCount, visibleDays) {
+  if (itemCount <= 1) {
+    return 1;
+  }
+  const visibleCount = Math.max(2, Math.min(itemCount, visibleDays));
+  return Math.max(1, (itemCount - 1) / (visibleCount - 1));
+}
+
+function constrainChartView(view, plotWidth, minScale = 1, maxScale = Infinity) {
+  const scale = clamp(view.scale, minScale, maxScale);
   const minOffset = plotWidth - (plotWidth * scale);
   return {
     scale,
-    offset: scale === 1 ? 0 : clamp(view.offset, minOffset, 0),
+    offset: clamp(view.offset, minOffset, 0),
   };
 }
 
 function maxChartScale(itemCount) {
-  if (itemCount <= 1) {
-    return 1;
-  }
-  return Math.max(1, (itemCount - 1) / (kMinChartVisibleDays - 1));
+  return scaleForVisibleDays(itemCount, kMinChartVisibleDays);
+}
+
+function minChartScale(itemCount) {
+  return scaleForVisibleDays(itemCount, kMaxChartVisibleDays);
 }
 
 function initialChartView(itemCount, range, plotWidth) {
-  if (range === RANGE_ALL || itemCount <= 1) {
+  if (itemCount <= 1) {
     return { scale: 1, offset: 0 };
   }
-  const visibleCount = Math.max(2, Math.min(itemCount, range));
-  const scale = Math.max(1, (itemCount - 1) / (visibleCount - 1));
+  const scale = scaleForVisibleDays(itemCount, range === RANGE_ALL ? kMaxChartVisibleDays : range);
   return constrainChartView({
     scale,
     offset: plotWidth - (plotWidth * scale),
-  }, plotWidth, Math.max(maxChartScale(itemCount), scale));
+  }, plotWidth, minChartScale(itemCount), Math.max(maxChartScale(itemCount), scale));
 }
 
 function pointerDistance(first, second) {
   return Math.hypot(first.x - second.x, first.y - second.y);
+}
+
+function compareLabel(index, range) {
+  if (index === 0) {
+    if (range === 7) return "今週";
+    if (range === 30) return "今月";
+    if (range === 90) return "今期";
+    if (range === 180) return "今半期";
+    return "今年";
+  }
+  if (range === 7) return `${index}週前`;
+  if (range === 30) return `${index}か月前`;
+  if (range === 90) return `${index * 3}か月前`;
+  if (range === 180) return `${index}半期前`;
+  return `${index}年前`;
+}
+
+function comparisonBuckets(daily, range) {
+  if (!daily.length) {
+    return [];
+  }
+  const map = new Map(daily.map((day) => [day.date, day]));
+  const startDate = parseISO(daily[0].date);
+  const today = parseISO(todayISO());
+  const totalDays = Math.floor((today - startDate) / 86400000) + 1;
+  const bucketCount = Math.max(1, Math.ceil(totalDays / range));
+
+  return Array.from({ length: bucketCount }, (_, bucketIndex) => {
+    const end = addDays(today, -(bucketIndex * range));
+    const start = addDays(end, -(range - 1));
+    let count = 0;
+    let avgTotal = 0;
+    let avgDays = 0;
+    let best = 0;
+
+    for (let offset = 0; offset < range; offset += 1) {
+      const date = toISO(addDays(start, offset));
+      const day = map.get(date);
+      if (!day) continue;
+      count += day.count;
+      if (Number.isFinite(day.avg)) {
+        avgTotal += day.avg;
+        avgDays += 1;
+      }
+      best = Math.max(best, day.best || 0);
+    }
+
+    return {
+      label: compareLabel(bucketIndex, range),
+      rangeLabel: `${toISO(start).slice(5).replace("-", "/")}-${toISO(end).slice(5).replace("-", "/")}`,
+      avg: avgDays ? Math.round(avgTotal / avgDays) : 0,
+      best,
+      count,
+    };
+  });
 }
 
 function Metric({ icon, label, value, unit }) {
@@ -213,6 +293,53 @@ function Metric({ icon, label, value, unit }) {
       <div className="metric-label"><Icon type={icon} />{label}</div>
       <strong>{Number(value || 0).toLocaleString("ja-JP")}<span>{unit}</span></strong>
     </div>
+  );
+}
+
+function ScoreComparison({ daily, range }) {
+  const [mode, setMode] = useState("avg");
+  const buckets = useMemo(() => comparisonBuckets(daily, range), [daily, range]);
+  const modes = [
+    ["avg", "平均", "点"],
+    ["best", "ベスト", "点"],
+    ["count", "回数", "回"],
+  ];
+  const current = modes.find(([key]) => key === mode) || modes[0];
+  const values = buckets.map((bucket) => bucket[mode]);
+  const max = Math.max(1, ...values);
+
+  return (
+    <section className="dashboard-section comparison-section">
+      <div className="section-row tight">
+        <div>
+          <h2>スコア比較</h2>
+          <p>{current[1]}を期間ごとに比較</p>
+        </div>
+        <div className="compare-tabs" role="tablist" aria-label="比較する値">
+          {modes.map(([key, label]) => (
+            <button key={key} type="button" className={mode === key ? "selected" : ""} onClick={() => setMode(key)}>{label}</button>
+          ))}
+        </div>
+      </div>
+      {buckets.length ? (
+        <div className={`bar-scroll mode-${mode}`}>
+          {buckets.map((bucket) => {
+            const value = bucket[mode];
+            const height = Math.max(8, (value / max) * 100);
+            return (
+              <article className="bar-item" key={bucket.label}>
+                <div className="bar-track">
+                  <span className="bar-fill" style={{ height: `${height}%` }} />
+                </div>
+                <strong>{Number(value || 0).toLocaleString("ja-JP")}<small>{current[2]}</small></strong>
+                <span>{bucket.label}</span>
+                <em>{bucket.rangeLabel}</em>
+              </article>
+            );
+          })}
+        </div>
+      ) : <p className="empty compact-empty">比較できる記録がありません。</p>}
+    </section>
   );
 }
 
@@ -227,8 +354,9 @@ function Chart({ data, initialRange }) {
   const pad = { left: 42, right: 18, top: 22, bottom: 42 };
   const plotW = width - pad.left - pad.right;
   const plotH = height - pad.top - pad.bottom;
+  const minScale = minChartScale(data.length);
   const maxScale = Math.max(maxChartScale(data.length), initialChartView(data.length, initialRange, plotW).scale);
-  const chartView = constrainChartView(view, plotW, maxScale);
+  const chartView = constrainChartView(view, plotW, minScale, maxScale);
   const values = data.flatMap((item) => [item.avg, item.best]).filter((value) => Number.isFinite(value));
 
   useEffect(() => {
@@ -314,7 +442,7 @@ function Chart({ data, initialRange }) {
       setView(constrainChartView({
         scale: gesture.startScale,
         offset: gesture.startOffset + dx,
-      }, plotW, maxScale));
+      }, plotW, minScale, maxScale));
       return;
     }
 
@@ -322,12 +450,12 @@ function Chart({ data, initialRange }) {
       const [first, second] = pointers;
       const distance = pointerDistance(first, second);
       if (!gesture.startDistance) return;
-      const nextScale = clamp(gesture.startScale * (distance / gesture.startDistance), 1, maxScale);
+      const nextScale = clamp(gesture.startScale * (distance / gesture.startDistance), minScale, maxScale);
       const baseX = (gesture.originX - gesture.startOffset) / gesture.startScale;
       setView(constrainChartView({
         scale: nextScale,
         offset: gesture.originX - (baseX * nextScale),
-      }, plotW, maxScale));
+      }, plotW, minScale, maxScale));
     }
   };
   const handlePointerDown = (event) => {
@@ -430,13 +558,12 @@ function Chart({ data, initialRange }) {
               cx={pointItem.x}
               cy={pointItem.y}
               r="8"
-              tabIndex="0"
-              onPointerEnter={() => setHovered(pointItem)}
-              onFocus={() => setHovered(pointItem)}
-              onBlur={() => setHovered(null)}
             />
           ))}
         </g>
+        {hovered && (
+          <circle className={`chart-active-point ${hovered.key}`} cx={hovered.x} cy={hovered.y} r="4.5" />
+        )}
         <text x={pad.left} y={height - 12} className="chart-date">{visibleStartLabel}</text>
         <text x={width - pad.right} y={height - 12} textAnchor="end" className="chart-date">{visibleEndLabel}</text>
         {hovered && (
@@ -470,7 +597,7 @@ function demoDb() {
       records.push({ id: uid(), name, bat: bats[(ago + nameIndex) % bats.length], date, count, avg, best });
     });
   }
-  return { activeName: names[0], names, bats, records };
+  return { activeName: names[0], names, bats, theme: "dark", records };
 }
 
 export default function App() {
@@ -490,7 +617,6 @@ export default function App() {
   const currentName = db.activeName || db.names[0] || "";
   const allForName = useMemo(() => db.records.filter((record) => record.name === currentName), [db.records, currentName]);
   const badgeMap = useMemo(() => badgesFor(allForName), [allForName]);
-  const title = tab === "home" ? "ホーム" : tab === "record" ? "記録" : "設定";
 
   const addRecord = (event) => {
     event.preventDefault();
@@ -584,13 +710,10 @@ export default function App() {
   };
 
   return (
-    <div className="app">
+    <div className={`app theme-${db.theme || "dark"}`}>
       <div className="phone-shell">
-        <header className="topbar">
-          <div>
-            <p className="eyebrow">SWING LOG</p>
-            <h1>{title}</h1>
-          </div>
+        <header className="top-tabs-row">
+          <BottomNav tab={tab} setTab={setTab} />
           <button className="active-player" type="button" onClick={() => setTab("settings")}>{currentName || "未選択"}</button>
         </header>
 
@@ -632,7 +755,6 @@ export default function App() {
           )}
         </main>
 
-        <BottomNav tab={tab} setTab={setTab} />
         {pendingDelete && <DeleteDialog pending={pendingDelete} onCancel={() => setPendingDelete(null)} onConfirm={confirmDelete} />}
       </div>
     </div>
@@ -660,6 +782,7 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
   const rangeOptions = [
     [7, "1週間"],
     [30, "1か月"],
+    [90, "3か月"],
     [180, "半年"],
     [365, "1年"],
   ];
@@ -698,6 +821,7 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
             </div>
           </div>
           <div className="total-card">
+            <SwingSilhouette />
             <div className="metric-label"><Icon type="count" />総スイング</div>
             <strong>{total.toLocaleString("ja-JP")}<span>回</span></strong>
           </div>
@@ -706,6 +830,8 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
             <Metric icon="avg" label="平均" value={avg} unit="点" />
           </div>
         </section>
+
+        <ScoreComparison daily={chartData} range={range} />
 
         <section className="dashboard-section">
           <div className="section-row tight">
@@ -760,14 +886,29 @@ function collectBadgeCounts(records) {
   [...badgesFor(records).values()].flat().forEach((badge) => {
     counts[badge] = (counts[badge] || 0) + 1;
   });
-  return Object.entries(counts);
+  const order = ["3日連続", "1週間連続", "1日300スイング"];
+  return Object.entries(counts).sort(([a], [b]) => {
+    const aIndex = order.findIndex((label) => a.startsWith(label));
+    const bIndex = order.findIndex((label) => b.startsWith(label));
+    if (aIndex !== bIndex) {
+      return (aIndex === -1 ? 99 : aIndex) - (bIndex === -1 ? 99 : bIndex);
+    }
+    return a.localeCompare(b, "ja");
+  });
 }
 
 function RecordView({ db, allForName, badgeMap, selectedDate, setSelectedDate, month, setMonth, addRecord }) {
+  const [isEditing, setIsEditing] = useState(false);
   const selectedRecords = allForName.filter((record) => record.date === selectedDate);
   const selectedAgg = aggregate(selectedRecords)[0] || { count: 0, avg: 0, best: 0, bats: [] };
   const selectedByBat = aggregateByBat(selectedRecords);
   const isToday = selectedDate === todayISO();
+  const canEdit = selectedDate <= todayISO();
+  const selectedDateLabel = `${parseISO(selectedDate).getMonth() + 1}月${parseISO(selectedDate).getDate()}日の記録`;
+
+  useEffect(() => {
+    setIsEditing(false);
+  }, [selectedDate]);
 
   return (
     <>
@@ -780,13 +921,24 @@ function RecordView({ db, allForName, badgeMap, selectedDate, setSelectedDate, m
         <Calendar records={allForName} badgeMap={badgeMap} month={month} selectedDate={selectedDate} setSelectedDate={setSelectedDate} />
       </section>
 
+      <section className={`panel input-panel ${isEditing ? "open" : ""}`} aria-hidden={!isEditing}>
+        <div className="section-row">
+          <h2>スイング入力</h2>
+          <p>{isToday ? "今日の記録を入力" : "選択日の記録を修正"}</p>
+        </div>
+        <SwingForm bats={db.bats} onSubmit={addRecord} submitLabel={isToday ? "記録する" : "修正を保存"} />
+      </section>
+
       <section className="panel">
         <div className="section-row">
           <div>
-            <h2>{isToday ? "今日の記録" : "選択日の記録"}</h2>
-            <p>{selectedDate}</p>
+            <h2>{isToday ? "今日の記録" : selectedDateLabel}</h2>
           </div>
-          <span className="status-pill">{isToday ? "INPUT" : "VIEW"}</span>
+          {canEdit && (
+            <button type="button" className="ghost edit-toggle" onClick={() => setIsEditing((value) => !value)}>
+              {isEditing ? "閉じる" : isToday ? "入力" : "修正"}
+            </button>
+          )}
         </div>
         <div className="metric-grid four">
           <Metric icon="count" label="合計回数" value={selectedAgg.count} unit="回" />
@@ -801,21 +953,19 @@ function RecordView({ db, allForName, badgeMap, selectedDate, setSelectedDate, m
           {(badgeMap.get(selectedDate) || []).map((badge) => <span className="badge hot" key={badge}><Icon type="badge" />{badge}</span>)}
         </div>
       </section>
-
-      <section className="panel">
-        <div className="section-row">
-          <h2>スイング入力</h2>
-          <p>{isToday ? "今日の記録を追加" : "選択日に追加"}</p>
-        </div>
-        <form className="input-grid" onSubmit={addRecord}>
-          <label className="field-label">バット<select name="bat" required>{db.bats.map((bat) => <option key={bat}>{bat}</option>)}</select></label>
-          <label className="field-label">回数<input name="count" type="number" inputMode="numeric" min="1" step="1" placeholder="50" required /></label>
-          <label className="field-label">平均<input name="avg" type="number" inputMode="numeric" min="0" max="999" step="1" placeholder="520" required /></label>
-          <label className="field-label">ベスト<input name="best" type="number" inputMode="numeric" min="0" max="999" step="1" placeholder="710" required /></label>
-          <button className="primary wide" type="submit"><ButtonIcon type="plus" />記録する</button>
-        </form>
-      </section>
     </>
+  );
+}
+
+function SwingForm({ bats, onSubmit, submitLabel }) {
+  return (
+    <form className="input-grid swing-form" onSubmit={onSubmit}>
+      <label className="field-label">バット<select name="bat" required>{bats.map((bat) => <option key={bat}>{bat}</option>)}</select></label>
+      <label className="field-label">回数<input name="count" type="number" inputMode="numeric" min="1" step="1" placeholder="50" required /></label>
+      <label className="field-label">平均<input name="avg" type="number" inputMode="numeric" min="0" max="999" step="1" placeholder="520" required /></label>
+      <label className="field-label">ベスト<input name="best" type="number" inputMode="numeric" min="0" max="999" step="1" placeholder="710" required /></label>
+      <button className="primary wide" type="submit"><ButtonIcon type="plus" />{submitLabel}</button>
+    </form>
   );
 }
 
@@ -844,7 +994,7 @@ function Calendar({ records, badgeMap, month, selectedDate, setSelectedDate }) {
             >
               <span>{day}</span>
               {hasRecord && <small>{daily.get(date).count}回</small>}
-              {hasBadge && <i aria-hidden="true">★</i>}
+              {hasBadge && <i aria-hidden="true"><SvgIcon type="badge" /></i>}
             </button>
           );
         })}
@@ -869,6 +1019,20 @@ function RecordSummary({ item }) {
 function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, importCsv, setPendingDelete }) {
   return (
     <>
+      <section className="panel">
+        <div className="section-row">
+          <h2>テーマ</h2>
+          <p>表示の明るさ</p>
+        </div>
+        <div className="theme-switch">
+          {["dark", "light"].map((theme) => (
+            <button key={theme} type="button" className={(db.theme || "dark") === theme ? "selected" : ""} onClick={() => setDb({ ...db, theme })}>
+              {theme === "dark" ? "ダーク" : "ライト"}
+            </button>
+          ))}
+        </div>
+      </section>
+
       <section className="panel">
         <div className="section-row">
           <h2>名前</h2>
