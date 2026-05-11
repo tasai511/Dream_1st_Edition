@@ -11,7 +11,7 @@ const defaultDb = {
   names: ["遥太"],
   bats: ["赤バット", "黒バット"],
   defaultBat: "赤バット",
-  theme: "dark",
+  theme: "red",
   records: [],
 };
 
@@ -24,7 +24,7 @@ function SvgIcon({ type }) {
   if (type === "count") return <svg {...props}><path d="M4 7h16M4 12h16M4 17h10" /></svg>;
   if (type === "avg") return <svg {...props}><path d="M4 17 9 12l4 4 7-9" /><path d="M16 7h4v4" /></svg>;
   if (type === "best") return <svg {...props}><path d="M12 3 9.5 8.5 4 9l4.2 3.8L7 18.5l5-3 5 3-1.2-5.7L20 9l-5.5-.5L12 3Z" /></svg>;
-  if (type === "bat") return <svg {...props}><path d="M3.4 20.7c-.55-.55-.55-1.44 0-1.99l1.3-1.3 1.99 1.99-1.3 1.3c-.55.55-1.44.55-1.99 0Z" fill="currentColor" stroke="none" /><path d="M5.05 17.05 14 8.1l1.9 1.9-8.95 8.95z" fill="currentColor" stroke="none" /><path d="M13.6 7.65 18.35 2.9c1.14-1.14 2.99-1.14 4.13 0s1.14 2.99 0 4.13l-4.75 4.75c-.7.7-1.84.7-2.54 0L13.6 10.2c-.7-.7-.7-1.84 0-2.54Z" fill="currentColor" stroke="none" /><path d="M7.2 16.8 5.6 15.2" /></svg>;
+  if (type === "bat") return <svg {...props}><path d="M4.1 20.8a1.25 1.25 0 0 1 0-1.76l1.05-1.05 1.76 1.76-1.05 1.05a1.25 1.25 0 0 1-1.76 0Z" fill="currentColor" stroke="none" /><path d="m5.85 17.25 2.15-2.15 2.9 2.9-2.15 2.15z" fill="currentColor" stroke="none" /><path d="M7.6 15.1 18.55 4.15c1.04-1.04 2.72-1.04 3.76 0 .9.9.98 2.32.18 3.31L11.55 18.4z" fill="currentColor" stroke="none" /><path d="m16.1 5.9 2 2" /><path d="m14 8 3.8 3.8" /></svg>;
   if (type === "badge") return <svg {...props}><circle cx="12" cy="8" r="4" /><path d="m9 12-2 8 5-3 5 3-2-8" /></svg>;
   if (type === "plus") return <svg {...props}><path d="M12 5v14M5 12h14" /></svg>;
   if (type === "trash") return <svg {...props}><path d="M4 7h16" /><path d="M10 11v6M14 11v6" /><path d="M6 7l1 14h10l1-14" /><path d="M9 7V4h6v3" /></svg>;
@@ -84,7 +84,7 @@ function loadDb() {
       names: Array.isArray(parsed.names) ? parsed.names : [],
       bats: Array.isArray(parsed.bats) ? parsed.bats : [],
       defaultBat: parsed.bats?.includes(parsed.defaultBat) ? parsed.defaultBat : parsed.bats?.[0] || "",
-      theme: parsed.theme === "light" ? "light" : "dark",
+      theme: ["red", "blue", "green"].includes(parsed.theme) ? parsed.theme : "red",
       records: Array.isArray(parsed.records) ? parsed.records : [],
     };
   } catch {
@@ -456,8 +456,8 @@ function Chart({ data, initialRange }) {
   };
   const visibleStartLabel = data[visibleIndexAt(0)]?.label || data[0].label;
   const visibleEndLabel = data[visibleIndexAt(plotW)]?.label || data.at(-1).label;
-  const hoverX = hovered ? Math.min(width - 118, Math.max(pad.left + 4, hovered.x + 10)) : 0;
-  const hoverY = hovered ? Math.max(8, hovered.y - 48) : 0;
+  const hoverX = hovered ? Math.min(width - 142, Math.max(pad.left + 4, hovered.x + 10)) : 0;
+  const hoverY = hovered ? Math.max(8, hovered.y - 62) : 0;
   const hoveredInPlot = hovered && hovered.x >= pad.left && hovered.x <= width - pad.right;
   const clientXToSvgX = (clientX) => {
     const rect = svgRef.current?.getBoundingClientRect();
@@ -527,10 +527,19 @@ function Chart({ data, initialRange }) {
       startPanGesture(pointers[0]);
     }
   };
-  const nearestPointTo = (clientX) => {
+  const nearestDayTo = (clientX) => {
     const svgX = clientXToSvgX(clientX);
-    const candidates = [...avgDisplayPoints, ...bestDisplayPoints]
-      .filter((pointItem) => pointItem.x >= pad.left && pointItem.x <= width - pad.right);
+    const candidates = data.map((item, index) => {
+      const avgPoint = avgDisplayPoints.find((pointItem) => pointItem.item.date === item.date) || null;
+      const bestPoint = bestDisplayPoints.find((pointItem) => pointItem.item.date === item.date) || null;
+      return {
+        item,
+        x: avgPoint?.x ?? bestPoint?.x ?? pad.left + ((data.length <= 1 ? plotW / 2 : (plotW * index) / (data.length - 1)) * chartView.scale) + chartView.offset,
+        avgPoint,
+        bestPoint,
+      };
+    })
+      .filter((pointItem) => (pointItem.avgPoint || pointItem.bestPoint) && pointItem.x >= pad.left && pointItem.x <= width - pad.right);
     if (!candidates.length) return null;
     return candidates.reduce((nearest, pointItem) => (
       Math.abs(pointItem.x - svgX) < Math.abs(nearest.x - svgX) ? pointItem : nearest
@@ -539,7 +548,7 @@ function Chart({ data, initialRange }) {
   const handlePointerMove = (event) => {
     if (!pointersRef.current.has(event.pointerId)) {
       if (event.pointerType === "mouse") {
-        setHovered(nearestPointTo(event.clientX));
+        setHovered(nearestDayTo(event.clientX));
       }
       return;
     }
@@ -569,7 +578,7 @@ function Chart({ data, initialRange }) {
       gestureRef.current = null;
     }
     if (wasTap) {
-      const nearest = nearestPointTo(event.clientX);
+      const nearest = nearestDayTo(event.clientX);
       if (nearest) {
         setHovered(nearest);
       }
@@ -593,8 +602,8 @@ function Chart({ data, initialRange }) {
       >
         <defs>
           <linearGradient id="avgFill" x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0%" stopColor="rgba(255,48,68,.25)" />
-            <stop offset="100%" stopColor="rgba(255,48,68,0)" />
+            <stop offset="0%" stopColor="currentColor" stopOpacity=".25" />
+            <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
           </linearGradient>
           <clipPath id="chartPlotClip">
             <rect x={pad.left} y={pad.top} width={plotW} height={plotH} />
@@ -623,16 +632,20 @@ function Chart({ data, initialRange }) {
           ))}
         </g>
         {hoveredInPlot && (
-          <circle className={`chart-active-point ${hovered.key}`} cx={hovered.x} cy={hovered.y} r="4.5" />
+          <>
+            {hovered.avgPoint && <circle className="chart-active-point avg" cx={hovered.avgPoint.x} cy={hovered.avgPoint.y} r="4.5" />}
+            {hovered.bestPoint && <circle className="chart-active-point best" cx={hovered.bestPoint.x} cy={hovered.bestPoint.y} r="4.5" />}
+          </>
         )}
         <text x={pad.left} y={height - 12} className="chart-date">{visibleStartLabel}</text>
         <text x={width - pad.right} y={height - 12} textAnchor="end" className="chart-date">{visibleEndLabel}</text>
         {hoveredInPlot && (
           <g className="chart-tooltip" pointerEvents="none">
             <line x1={hovered.x} y1={pad.top} x2={hovered.x} y2={height - pad.bottom} className="hover-line" />
-            <rect x={hoverX} y={hoverY} width="108" height="42" rx="7" />
+            <rect x={hoverX} y={hoverY} width="132" height="56" rx="7" />
             <text x={hoverX + 9} y={hoverY + 16}>{hovered.item.label}</text>
-            <text x={hoverX + 9} y={hoverY + 32}>{hovered.label} {hovered.value}点</text>
+            <text x={hoverX + 9} y={hoverY + 33}>平均 {hovered.item.avg ?? "-"}点</text>
+            <text x={hoverX + 9} y={hoverY + 48}>ベスト {hovered.item.best ?? "-"}点</text>
           </g>
         )}
       </svg>
@@ -658,7 +671,7 @@ function demoDb() {
       records.push({ id: uid(), name, bat: bats[(ago + nameIndex) % bats.length], date, count, avg, best });
     });
   }
-  return { activeName: names[0], names, bats, defaultBat: bats[0], theme: "dark", records };
+  return { activeName: names[0], names, bats, defaultBat: bats[0], theme: "red", records };
 }
 
 export default function App() {
@@ -719,7 +732,7 @@ export default function App() {
     setPendingDelete(null);
     if (!pending) return;
     if (pending.type === "all") {
-      setDb({ activeName: "", names: [], bats: [], defaultBat: "", theme: db.theme || "dark", records: [] });
+      setDb({ activeName: "", names: [], bats: [], defaultBat: "", theme: db.theme || "red", records: [] });
       return;
     }
     if (pending.type === "name") {
@@ -775,7 +788,7 @@ export default function App() {
   };
 
   return (
-    <div className={`app theme-${db.theme || "dark"}`}>
+    <div className={`app theme-${db.theme || "red"}`}>
       <div className="phone-shell">
         <header className="top-tabs-row">
           <BottomNav tab={tab} setTab={setTab} />
@@ -1013,9 +1026,9 @@ function RecordView({ db, allForName, badgeMap, selectedDate, setSelectedDate, m
               <h2>スイング入力</h2>
               <p>{isToday ? "今日の記録を入力" : "選択日の記録を修正"}</p>
             </div>
-            <button type="button" className="ghost edit-toggle" onClick={() => setIsEditing(false)}>閉じる</button>
           </div>
           <SwingForm bats={db.bats} defaultBat={db.defaultBat} onSubmit={handleRecordSubmit} submitLabel={isToday ? "記録する" : "修正を保存"} />
+          <button type="button" className="ghost edit-toggle input-close" onClick={() => setIsEditing(false)}>閉じる</button>
         </div>
       </section>
 
@@ -1052,9 +1065,9 @@ function SwingForm({ bats, defaultBat, onSubmit, submitLabel }) {
   return (
     <form className="input-grid swing-form" onSubmit={onSubmit}>
       <label className="field-label">バット<select key={selectedBat} name="bat" required defaultValue={selectedBat}>{bats.map((bat) => <option key={bat}>{bat}</option>)}</select></label>
-      <label className="field-label">回数<input name="count" type="number" inputMode="numeric" min="1" step="1" placeholder="50" required /></label>
-      <label className="field-label">平均<input name="avg" type="number" inputMode="numeric" min="0" max="999" step="1" placeholder="520" required /></label>
-      <label className="field-label">ベスト<input name="best" type="number" inputMode="numeric" min="0" max="999" step="1" placeholder="710" required /></label>
+      <label className="field-label">回数<input name="count" type="number" inputMode="numeric" min="1" step="1" required /></label>
+      <label className="field-label">平均<input name="avg" type="number" inputMode="numeric" min="0" max="999" step="1" required /></label>
+      <label className="field-label">ベスト<input name="best" type="number" inputMode="numeric" min="0" max="999" step="1" required /></label>
       <button className="primary wide" type="submit"><ButtonIcon type="plus" />{submitLabel}</button>
     </form>
   );
@@ -1113,12 +1126,16 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
       <section className="panel">
         <div className="section-row">
           <h2>テーマ</h2>
-          <p>表示の明るさ</p>
+          <p>アクセントカラー</p>
         </div>
         <div className="theme-switch">
-          {["dark", "light"].map((theme) => (
-            <button key={theme} type="button" className={(db.theme || "dark") === theme ? "selected" : ""} onClick={() => setDb({ ...db, theme })}>
-              {theme === "dark" ? "ダーク" : "ライト"}
+          {[
+            ["red", "赤"],
+            ["blue", "青"],
+            ["green", "緑"],
+          ].map(([theme, label]) => (
+            <button key={theme} type="button" className={(db.theme || "red") === theme ? "selected" : ""} onClick={() => setDb({ ...db, theme })}>
+              {label}
             </button>
           ))}
         </div>
@@ -1148,24 +1165,16 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
           <h2>バット</h2>
           <p>全員で共有 / 入力時の初期値</p>
         </div>
-        <label className="field-label default-bat-field">
-          デフォルト
-          <span className="select-shell">
-            <span className="select-leading"><SvgIcon type="bat" /></span>
-            <select value={db.defaultBat || db.bats[0] || ""} onChange={(event) => setDb({ ...db, defaultBat: event.target.value })}>
-              {db.bats.map((bat) => <option key={bat} value={bat}>{bat}</option>)}
-            </select>
-            <span className="select-caret" aria-hidden="true"><SvgIcon type="chevronDown" /></span>
-          </span>
-        </label>
         <form className="add-row" onSubmit={addBat}>
           <input name="bat" type="text" autoComplete="off" placeholder="例: 赤バット" />
           <button type="submit" className="primary"><ButtonIcon type="plus" /></button>
         </form>
         <div className="chip-list">
           {db.bats.map((bat) => (
-            <span key={bat} className="chip">
-              <button type="button">{bat}</button>
+            <span key={bat} className={`chip ${bat === db.defaultBat ? "active default" : ""}`}>
+              <button type="button" onClick={() => setDb({ ...db, defaultBat: bat })}>
+                {bat}{bat === db.defaultBat ? <small>デフォルト</small> : null}
+              </button>
               <button type="button" className="chip-delete" aria-label={`${bat}を削除`} onClick={() => setPendingDelete({ type: "bat", value: bat })}><SvgIcon type="trash" /></button>
             </span>
           ))}
