@@ -132,15 +132,14 @@ svg text {
 
 .brand-lockup strong {
   position: relative;
-  padding: 2px 1px 6px;
+  padding: 1px 1px 6px;
   color: rgba(255, 255, 255, 0.96);
-  font-family: Impact, "Arial Black", "Avenir Next Condensed", "DIN Condensed", system-ui, sans-serif;
-  font-size: 1.14rem;
-  font-weight: 800;
-  letter-spacing: 0.045em;
+  font-family: "Avenir Next", "DIN Alternate", "Helvetica Neue", system-ui, sans-serif;
+  font-size: 1.18rem;
+  font-weight: 900;
+  letter-spacing: 0.065em;
   line-height: 1;
   text-shadow: 0 1px 0 rgba(0, 0, 0, 0.52), 0 0 13px rgba(var(--hot-rgb), 0.34);
-  transform: skewX(-8deg);
   white-space: nowrap;
 }
 

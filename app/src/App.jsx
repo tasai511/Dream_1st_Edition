@@ -29,7 +29,7 @@ function SvgIcon({ type }) {
   if (type === "count") return <svg {...props}><path d="M4 7h16M4 12h16M4 17h10" /></svg>;
   if (type === "avg") return <svg {...props}><path d="M4 17 9 12l4 4 7-9" /><path d="M16 7h4v4" /></svg>;
   if (type === "best") return <svg {...props}><path d="M12 3 9.5 8.5 4 9l4.2 3.8L7 18.5l5-3 5 3-1.2-5.7L20 9l-5.5-.5L12 3Z" /></svg>;
-  if (type === "bat") return <svg {...props}><g transform="rotate(43 12 12)"><path d="M9.8 1.2h4.4c.8 0 1.45.65 1.45 1.45v5.8c0 1.3-.42 2.56-1.2 3.6L12.72 14.4h-1.44l-1.73-2.35a6 6 0 0 1-1.2-3.6v-5.8c0-.8.65-1.45 1.45-1.45Z" fill="currentColor" stroke="none" /><path d="M11.15 14.4h1.7v5.15h-1.7z" fill="currentColor" stroke="none" /><path d="M9.55 19.55h4.9l1.05 1.82c.35.6-.08 1.38-.78 1.38H9.28c-.7 0-1.13-.78-.78-1.38z" fill="currentColor" stroke="none" /></g></svg>;
+  if (type === "bat") return <svg {...props}><path fill="currentColor" stroke="none" d="M6.25 21.1c-.38.02-.78.05-1.2.1-.97.12-1.7-.05-2.08-.48-.31-.35-.37-.86-.15-1.32.24-.53.82-.92 1.56-1.05.42-.07.77-.11 1.06-.13L15.55 2.78c.98-1.5 3-1.95 4.52-.99 1.51.95 1.97 2.96 1.03 4.48l-.31.51c-1.18 1.91-2.57 3.7-4.15 5.29L7.08 21.7c-.31.31-.81.31-1.12 0a.76.76 0 0 1-.22-.55c.15-.01.32-.03.51-.05Z" /></svg>;
   if (type === "badge") return <svg {...props}><circle cx="12" cy="8" r="4" /><path d="m9 12-2 8 5-3 5 3-2-8" /></svg>;
   if (type === "plus") return <svg {...props}><path d="M12 5v14M5 12h14" /></svg>;
   if (type === "trash") return <svg {...props}><path d="M4 7h16" /><path d="M10 11v6M14 11v6" /><path d="M6 7l1 14h10l1-14" /><path d="M9 7V4h6v3" /></svg>;
