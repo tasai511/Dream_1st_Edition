@@ -228,8 +228,6 @@ function Chart({ data }) {
             <text x={pad.left - 9} y={tick.y + 3} textAnchor="end" className="chart-axis-label">{tick.value}</text>
           </g>
         ))}
-        <line x1={pad.left} y1={pad.top} x2={pad.left} y2={height - pad.bottom} className="axis-line" />
-        <line x1={pad.left} y1={height - pad.bottom} x2={width - pad.right} y2={height - pad.bottom} className="axis-line" />
         {avgPoints.length > 1 && <path className="area" d={`${avgPath} L ${avgPoints.at(-1).x} ${height - pad.bottom} L ${avgPoints[0].x} ${height - pad.bottom} Z`} />}
         <path className="avg-path" d={avgPath} />
         <path className="best-path" d={bestPath} />
