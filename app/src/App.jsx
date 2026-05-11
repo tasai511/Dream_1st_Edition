@@ -800,7 +800,7 @@ export default function App() {
         <header className="app-header">
           <div className="brand-lockup">
             <img className="dream-logo" src="./images/dream-logo.png" alt="Dream" />
-            <strong>Swing Log</strong>
+            <strong>SWING LOG</strong>
           </div>
           <button className="active-player" type="button" onClick={() => setTab("settings")}><SvgIcon type="person" />{currentName || "未選択"}</button>
         </header>
