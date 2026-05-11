@@ -1,9 +1,9 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 const STORAGE_KEY = "dream1-swing-tracker-v1";
 const ALL = "__all__";
 const RANGE_ALL = "all";
-const MAX_CHART_SCALE = 8;
+const MAX_CHART_SCALE = 30;
 
 const defaultDb = {
   activeName: "遥太",
@@ -175,13 +175,25 @@ function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
 
-function constrainChartView(view, plotWidth) {
-  const scale = clamp(view.scale, 1, MAX_CHART_SCALE);
+function constrainChartView(view, plotWidth, maxScale = MAX_CHART_SCALE) {
+  const scale = clamp(view.scale, 1, maxScale);
   const minOffset = plotWidth - (plotWidth * scale);
   return {
     scale,
     offset: scale === 1 ? 0 : clamp(view.offset, minOffset, 0),
   };
+}
+
+function initialChartView(itemCount, range, plotWidth) {
+  if (range === RANGE_ALL || itemCount <= 1) {
+    return { scale: 1, offset: 0 };
+  }
+  const visibleCount = Math.max(2, Math.min(itemCount, range));
+  const scale = Math.max(1, (itemCount - 1) / (visibleCount - 1));
+  return constrainChartView({
+    scale,
+    offset: plotWidth - (plotWidth * scale),
+  }, plotWidth, Math.max(MAX_CHART_SCALE, scale));
 }
 
 function pointerDistance(first, second) {
@@ -197,7 +209,7 @@ function Metric({ icon, label, value, unit }) {
   );
 }
 
-function Chart({ data }) {
+function Chart({ data, initialRange }) {
   const [hovered, setHovered] = useState(null);
   const [view, setView] = useState({ scale: 1, offset: 0 });
   const svgRef = useRef(null);
@@ -208,8 +220,16 @@ function Chart({ data }) {
   const pad = { left: 42, right: 18, top: 22, bottom: 42 };
   const plotW = width - pad.left - pad.right;
   const plotH = height - pad.top - pad.bottom;
-  const chartView = constrainChartView(view, plotW);
+  const maxScale = Math.max(MAX_CHART_SCALE, initialChartView(data.length, initialRange, plotW).scale);
+  const chartView = constrainChartView(view, plotW, maxScale);
   const values = data.flatMap((item) => [item.avg, item.best]).filter((value) => Number.isFinite(value));
+
+  useEffect(() => {
+    pointersRef.current.clear();
+    gestureRef.current = null;
+    setHovered(null);
+    setView(initialChartView(data.length, initialRange, plotW));
+  }, [data.length, data[0]?.date, data.at(-1)?.date, initialRange, plotW]);
 
   if (!values.length) return <div className="chart-empty">記録を入れるとグラフが表示されます。</div>;
 
@@ -239,6 +259,13 @@ function Chart({ data }) {
     const value = Math.round((maxY * (1 - ratio)) / 100) * 100;
     return { value, y: pad.top + plotH * ratio };
   });
+  const visibleIndexAt = (plotX) => {
+    if (data.length <= 1) return 0;
+    const baseX = (plotX - chartView.offset) / chartView.scale;
+    return clamp(Math.round((baseX / plotW) * (data.length - 1)), 0, data.length - 1);
+  };
+  const visibleStartLabel = data[visibleIndexAt(0)]?.label || data[0].label;
+  const visibleEndLabel = data[visibleIndexAt(plotW)]?.label || data.at(-1).label;
   const hoverX = hovered ? Math.min(width - 118, Math.max(pad.left + 4, hovered.x + 10)) : 0;
   const hoverY = hovered ? Math.max(8, hovered.y - 48) : 0;
   const clientXToSvgX = (clientX) => {
@@ -280,7 +307,7 @@ function Chart({ data }) {
       setView(constrainChartView({
         scale: gesture.startScale,
         offset: gesture.startOffset + dx,
-      }, plotW));
+      }, plotW, maxScale));
       return;
     }
 
@@ -288,12 +315,12 @@ function Chart({ data }) {
       const [first, second] = pointers;
       const distance = pointerDistance(first, second);
       if (!gesture.startDistance) return;
-      const nextScale = clamp(gesture.startScale * (distance / gesture.startDistance), 1, MAX_CHART_SCALE);
+      const nextScale = clamp(gesture.startScale * (distance / gesture.startDistance), 1, maxScale);
       const baseX = (gesture.originX - gesture.startOffset) / gesture.startScale;
       setView(constrainChartView({
         scale: nextScale,
         offset: gesture.originX - (baseX * nextScale),
-      }, plotW));
+      }, plotW, maxScale));
     }
   };
   const handlePointerDown = (event) => {
@@ -379,8 +406,8 @@ function Chart({ data }) {
             />
           ))}
         </g>
-        <text x={pad.left} y={height - 12} className="chart-date">{data[0].label}</text>
-        <text x={width - pad.right} y={height - 12} textAnchor="end" className="chart-date">{data.at(-1).label}</text>
+        <text x={pad.left} y={height - 12} className="chart-date">{visibleStartLabel}</text>
+        <text x={width - pad.right} y={height - 12} textAnchor="end" className="chart-date">{visibleEndLabel}</text>
         {hovered && (
           <g className="chart-tooltip" pointerEvents="none">
             <line x1={hovered.x} y1={pad.top} x2={hovered.x} y2={height - pad.bottom} className="hover-line" />
@@ -580,18 +607,22 @@ export default function App() {
 
 function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHomeBat }) {
   const from = range === RANGE_ALL ? null : toISO(addDays(parseISO(todayISO()), -(range - 1)));
-  const filtered = db.records.filter((record) => (
+  const allFiltered = db.records.filter((record) => (
     record.name === currentName &&
-    (from === null || record.date >= from) &&
     record.date <= todayISO() &&
     (homeBat === ALL || record.bat === homeBat)
   ));
+  const filtered = allFiltered.filter((record) => (
+    (from === null || record.date >= from) &&
+    record.date <= todayISO()
+  ));
   const daily = aggregate(filtered);
+  const chartDaily = aggregate(allFiltered);
   const total = daily.reduce((sum, day) => sum + day.count, 0);
   const avg = total ? Math.round(daily.reduce((sum, day) => sum + day.avg * day.count, 0) / total) : 0;
   const best = daily.reduce((max, day) => Math.max(max, day.best), 0);
   const badgeCounts = collectBadgeCounts(allForName);
-  const chartData = chartDataForRange(daily, range);
+  const chartData = filledChartExtent(chartDaily);
   const rangeOptions = [
     [7, "7日"],
     [30, "30日"],
@@ -652,7 +683,7 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
             </div>
             <div className="legend"><span className="avg-line" />平均 <span className="best-line" />ベスト</div>
           </div>
-          <Chart data={chartData} />
+          <Chart data={chartData} initialRange={range} />
         </section>
       </section>
 
@@ -671,21 +702,16 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
   );
 }
 
-function chartDataForRange(daily, range) {
-  if (range === RANGE_ALL) {
-    return daily.map((day) => ({
-      ...day,
-      label: day.date.slice(5).replace("-", "/"),
-    }));
+function filledChartExtent(daily) {
+  if (!daily.length) {
+    return [];
   }
-  return filledChart(daily, range);
-}
-
-function filledChart(daily, range) {
   const map = new Map(daily.map((day) => [day.date, day]));
+  const start = parseISO(daily[0].date);
   const end = parseISO(todayISO());
-  return Array.from({ length: range }, (_, index) => {
-    const date = toISO(addDays(end, index - range + 1));
+  const days = Math.max(1, Math.floor((end - start) / 86400000) + 1);
+  return Array.from({ length: days }, (_, index) => {
+    const date = toISO(addDays(start, index));
     const day = map.get(date);
     return {
       date,
