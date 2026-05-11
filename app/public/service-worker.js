@@ -1,4 +1,4 @@
-const CACHE_NAME = "swing-log-v8";
+const CACHE_NAME = "swing-log-v9";
 const ASSETS = [
   "./",
   "./index.html",
@@ -7,7 +7,7 @@ const ASSETS = [
   "./icons/icon-maskable.svg",
   "./icons/apple-touch-icon.svg",
   "./icons/apple-touch-icon.png",
-  "./images/swing-neon.jpg",
+  "./images/swing-line.png",
 ];
 
 self.addEventListener("install", (event) => {

@@ -531,15 +531,15 @@ input::placeholder {
 
 .swing-silhouette {
   position: absolute;
-  right: -24px;
-  bottom: -30px;
-  width: 190px;
-  height: 158px;
+  right: -18px;
+  bottom: -10px;
+  width: 220px;
+  height: 126px;
   object-fit: cover;
-  object-position: 66% 52%;
-  opacity: 0.72;
-  mix-blend-mode: multiply;
-  filter: saturate(1.1) contrast(1.08) drop-shadow(0 0 12px rgba(var(--hot-rgb), 0.32));
+  object-position: 50% 48%;
+  opacity: 0.66;
+  mix-blend-mode: screen;
+  filter: saturate(0.15) contrast(1.12) drop-shadow(0 0 12px rgba(255, 255, 255, 0.24));
   pointer-events: none;
 }
 
@@ -803,6 +803,19 @@ input::placeholder {
   font-weight: 950;
 }
 
+.badge-group-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.badge-group-title p {
+  font-size: 0.66rem;
+  font-weight: 850;
+  text-align: right;
+}
+
 .record-list {
   display: grid;
   margin-top: 12px;
@@ -894,10 +907,15 @@ input::placeholder {
   line-height: 1;
 }
 
-.calendar-day i {
+.calendar-badges {
   position: absolute;
   top: -3px;
   right: -2px;
+  display: flex;
+  gap: 2px;
+}
+
+.calendar-badges i {
   display: grid;
   place-items: center;
   width: 16px;
@@ -911,7 +929,25 @@ input::placeholder {
   font-style: normal;
 }
 
-.calendar-day i svg {
+.calendar-badges i.count {
+  border-color: rgba(255, 220, 150, 0.72);
+  background: linear-gradient(180deg, #ffb341, #e07711);
+  box-shadow: 0 0 10px rgba(255, 166, 42, 0.34);
+}
+
+.calendar-badges i.score {
+  border-color: rgba(var(--hot-rgb), 0.7);
+  background: linear-gradient(180deg, var(--hot), var(--hot-dark));
+  box-shadow: 0 0 10px rgba(var(--hot-rgb), 0.34);
+}
+
+.calendar-badges i.streak {
+  border-color: rgba(111, 238, 183, 0.68);
+  background: linear-gradient(180deg, #44d7a8, #15956d);
+  box-shadow: 0 0 10px rgba(68, 215, 168, 0.28);
+}
+
+.calendar-badges i svg {
   width: 10px;
   height: 10px;
   stroke-width: 2.6;
@@ -962,38 +998,9 @@ input::placeholder {
 
 .input-panel-layout {
   display: grid;
-  grid-template-columns: 96px minmax(0, 1fr);
-  gap: 10px 12px;
+  grid-template-columns: 1fr;
+  gap: 10px;
   align-items: stretch;
-}
-
-.input-panel-head {
-  display: grid;
-  align-content: start;
-  gap: 8px;
-}
-
-.input-panel-head strong {
-  display: block;
-  color: rgba(255, 255, 255, 0.92);
-  font-size: 0.88rem;
-  font-weight: 950;
-}
-
-.input-panel-icon {
-  display: grid;
-  width: 34px;
-  height: 34px;
-  place-items: center;
-  border: 1px solid rgba(var(--hot-rgb), 0.25);
-  border-radius: var(--radius);
-  color: #f0f0f0;
-  background: rgba(var(--hot-rgb), 0.14);
-}
-
-.input-panel-icon svg {
-  width: 22px;
-  height: 22px;
 }
 
 .swing-form {
@@ -1003,6 +1010,17 @@ input::placeholder {
   background:
     linear-gradient(135deg, rgba(var(--hot-rgb), 0.13), rgba(255, 255, 255, 0.035)),
     rgba(0, 0, 0, 0.2);
+}
+
+.field-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.field-title .icon {
+  width: 22px;
+  height: 22px;
 }
 
 .input-close {

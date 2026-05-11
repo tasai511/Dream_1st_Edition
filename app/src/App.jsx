@@ -6,9 +6,9 @@ const RANGE_ALL = "all";
 const kMinChartVisibleDays = 7;
 const kMaxChartVisibleDays = 365;
 const BADGE_CATEGORIES = [
-  ["count", "回数系"],
-  ["score", "スコア系"],
-  ["streak", "連続系"],
+  ["count", "回数系", "達成したら何回でも獲得可"],
+  ["score", "スコア系", "達成時に1回だけ獲得可"],
+  ["streak", "連続系", "達成したら何回でも獲得可"],
 ];
 
 const defaultDb = {
@@ -29,7 +29,7 @@ function SvgIcon({ type }) {
   if (type === "count") return <svg {...props}><path d="M4 7h16M4 12h16M4 17h10" /></svg>;
   if (type === "avg") return <svg {...props}><path d="M4 17 9 12l4 4 7-9" /><path d="M16 7h4v4" /></svg>;
   if (type === "best") return <svg {...props}><path d="M12 3 9.5 8.5 4 9l4.2 3.8L7 18.5l5-3 5 3-1.2-5.7L20 9l-5.5-.5L12 3Z" /></svg>;
-  if (type === "bat") return <svg {...props}><path d="M2.6 4.35c.95-1.18 2.72-1.27 3.78-.19 4.15 4.21 7.9 8.85 11.22 13.78l-2.11 2.11C10.55 16.74 5.9 12.98 1.69 8.83.61 7.77.7 6 1.88 5.05l.72-.7Z" fill="currentColor" stroke="none" /><path d="m16.35 19.48 2.1-2.1 1.5 1.5-2.1 2.1z" fill="currentColor" stroke="none" /><path d="M20.55 19.35c.82.32 1.53.9 2 1.65.32.52.22 1.19-.23 1.61l-.95.88c-.43.4-1.08.44-1.55.09-.7-.52-1.23-1.26-1.49-2.1z" fill="currentColor" stroke="none" /></svg>;
+  if (type === "bat") return <svg {...props}><g transform="rotate(-45 12 12)"><path d="M7 3.4C7 1.5 8.5 0 10.4 0h3.2C15.5 0 17 1.5 17 3.4v7.2c0 .8-.3 1.5-.8 2.1L13.4 16h-2.8l-2.8-3.3c-.5-.6-.8-1.3-.8-2.1Z" fill="currentColor" stroke="none" /><path d="M10.4 16h3.2v2.4h-3.2z" fill="currentColor" stroke="none" /><path d="M9.2 18.4h5.6l1.5 2.7c.4.8-.1 1.9-1 1.9H8.7c-.9 0-1.4-1.1-1-1.9z" fill="currentColor" stroke="none" /></g></svg>;
   if (type === "badge") return <svg {...props}><circle cx="12" cy="8" r="4" /><path d="m9 12-2 8 5-3 5 3-2-8" /></svg>;
   if (type === "plus") return <svg {...props}><path d="M12 5v14M5 12h14" /></svg>;
   if (type === "trash") return <svg {...props}><path d="M4 7h16" /><path d="M10 11v6M14 11v6" /><path d="M6 7l1 14h10l1-14" /><path d="M9 7V4h6v3" /></svg>;
@@ -48,7 +48,7 @@ function ButtonIcon({ type }) {
 
 function SwingSilhouette() {
   return (
-    <img className="swing-silhouette" src="./images/swing-neon.jpg" alt="" aria-hidden="true" />
+    <img className="swing-silhouette" src="./images/swing-line.png" alt="" aria-hidden="true" />
   );
 }
 
@@ -941,7 +941,10 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
           <div className="badge-groups">
             {groupedBadges.filter((group) => group.badges.length).map((group) => (
               <section className={`badge-group ${group.key}`} key={group.key}>
-                <h3>{group.label}</h3>
+                <div className="badge-group-title">
+                  <h3>{group.label}</h3>
+                  <p>{group.description}</p>
+                </div>
                 <div className="badge-list">
                   {group.badges.map(([label, count]) => (
                     <span className={`badge ${group.key}`} key={label}><Icon type="badge" />{label}{count > 1 ? ` x${count}` : ""}</span>
@@ -1018,7 +1021,12 @@ function badgeGroups(badgeCounts) {
   badgeCounts.forEach(([label, count]) => {
     groups.get(badgeCategory(label))?.push([label, count]);
   });
-  return BADGE_CATEGORIES.map(([key, label]) => ({ key, label, badges: groups.get(key) || [] }));
+  return BADGE_CATEGORIES.map(([key, label, description]) => ({
+    key,
+    label,
+    description,
+    badges: groups.get(key) || [],
+  }));
 }
 
 function RecordView({ db, allForName, badgeMap, selectedDate, setSelectedDate, month, setMonth, addRecord }) {
@@ -1057,13 +1065,6 @@ function RecordView({ db, allForName, badgeMap, selectedDate, setSelectedDate, m
           <p>{isToday ? "今日の記録を入力" : "選択日の記録を修正"}</p>
         </div>
         <div className="input-panel-layout">
-          <div className="input-panel-head">
-            <span className="input-panel-icon"><SvgIcon type="bat" /></span>
-            <div>
-              <strong>入力</strong>
-              <p>{db.defaultBat || "バット"}を初期選択</p>
-            </div>
-          </div>
           <SwingForm bats={db.bats} defaultBat={db.defaultBat} onSubmit={handleRecordSubmit} submitLabel={isToday ? "記録する" : "修正を保存"} />
           <button type="button" className="ghost edit-toggle input-close" onClick={() => setIsEditing(false)}>閉じる</button>
         </div>
@@ -1101,10 +1102,10 @@ function SwingForm({ bats, defaultBat, onSubmit, submitLabel }) {
   const selectedBat = bats.includes(defaultBat) ? defaultBat : bats[0] || "";
   return (
     <form className="input-grid swing-form" onSubmit={onSubmit}>
-      <label className="field-label">バット<select key={selectedBat} name="bat" required defaultValue={selectedBat}>{bats.map((bat) => <option key={bat}>{bat}</option>)}</select></label>
-      <label className="field-label">回数<input name="count" type="number" inputMode="numeric" min="1" step="1" required /></label>
-      <label className="field-label">平均<input name="avg" type="number" inputMode="numeric" min="0" max="999" step="1" required /></label>
-      <label className="field-label">ベスト<input name="best" type="number" inputMode="numeric" min="0" max="999" step="1" required /></label>
+      <label className="field-label"><span className="field-title"><Icon type="bat" />バット</span><select key={selectedBat} name="bat" required defaultValue={selectedBat}>{bats.map((bat) => <option key={bat}>{bat}</option>)}</select></label>
+      <label className="field-label"><span className="field-title"><Icon type="count" />回数</span><input name="count" type="number" inputMode="numeric" min="1" step="1" required /></label>
+      <label className="field-label"><span className="field-title"><Icon type="avg" />平均</span><input name="avg" type="number" inputMode="numeric" min="0" max="999" step="1" required /></label>
+      <label className="field-label"><span className="field-title"><Icon type="best" />ベスト</span><input name="best" type="number" inputMode="numeric" min="0" max="999" step="1" required /></label>
       <button className="primary wide" type="submit"><ButtonIcon type="plus" />{submitLabel}</button>
     </form>
   );
@@ -1125,7 +1126,7 @@ function Calendar({ records, badgeMap, month, selectedDate, setSelectedDate }) {
           const day = index + 1;
           const date = toISO(new Date(year, monthIndex, day));
           const hasRecord = daily.has(date);
-          const hasBadge = (badgeMap.get(date) || []).length > 0;
+          const badgeCategories = [...new Set((badgeMap.get(date) || []).map(badgeCategory))];
           return (
             <button
               type="button"
@@ -1135,7 +1136,11 @@ function Calendar({ records, badgeMap, month, selectedDate, setSelectedDate }) {
             >
               <span>{day}</span>
               {hasRecord && <small>{daily.get(date).count}回</small>}
-              {hasBadge && <i aria-hidden="true"><SvgIcon type="badge" /></i>}
+              {badgeCategories.length > 0 && (
+                <span className="calendar-badges" aria-hidden="true">
+                  {badgeCategories.map((category) => <i className={category} key={category}><SvgIcon type="badge" /></i>)}
+                </span>
+              )}
             </button>
           );
         })}
