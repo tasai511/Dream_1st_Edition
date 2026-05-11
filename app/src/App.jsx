@@ -24,7 +24,7 @@ function SvgIcon({ type }) {
   if (type === "count") return <svg {...props}><path d="M4 7h16M4 12h16M4 17h10" /></svg>;
   if (type === "avg") return <svg {...props}><path d="M4 17 9 12l4 4 7-9" /><path d="M16 7h4v4" /></svg>;
   if (type === "best") return <svg {...props}><path d="M12 3 9.5 8.5 4 9l4.2 3.8L7 18.5l5-3 5 3-1.2-5.7L20 9l-5.5-.5L12 3Z" /></svg>;
-  if (type === "bat") return <svg {...props}><path d="M4.1 20.8a1.25 1.25 0 0 1 0-1.76l1.05-1.05 1.76 1.76-1.05 1.05a1.25 1.25 0 0 1-1.76 0Z" fill="currentColor" stroke="none" /><path d="m5.85 17.25 2.15-2.15 2.9 2.9-2.15 2.15z" fill="currentColor" stroke="none" /><path d="M7.6 15.1 18.55 4.15c1.04-1.04 2.72-1.04 3.76 0 .9.9.98 2.32.18 3.31L11.55 18.4z" fill="currentColor" stroke="none" /><path d="m16.1 5.9 2 2" /><path d="m14 8 3.8 3.8" /></svg>;
+  if (type === "bat") return <svg {...props}><path d="M2.6 4.35c.95-1.18 2.72-1.27 3.78-.19 4.15 4.21 7.9 8.85 11.22 13.78l-2.11 2.11C10.55 16.74 5.9 12.98 1.69 8.83.61 7.77.7 6 1.88 5.05l.72-.7Z" fill="currentColor" stroke="none" /><path d="m16.35 19.48 2.1-2.1 1.5 1.5-2.1 2.1z" fill="currentColor" stroke="none" /><path d="M20.55 19.35c.82.32 1.53.9 2 1.65.32.52.22 1.19-.23 1.61l-.95.88c-.43.4-1.08.44-1.55.09-.7-.52-1.23-1.26-1.49-2.1z" fill="currentColor" stroke="none" /></svg>;
   if (type === "badge") return <svg {...props}><circle cx="12" cy="8" r="4" /><path d="m9 12-2 8 5-3 5 3-2-8" /></svg>;
   if (type === "plus") return <svg {...props}><path d="M12 5v14M5 12h14" /></svg>;
   if (type === "trash") return <svg {...props}><path d="M4 7h16" /><path d="M10 11v6M14 11v6" /><path d="M6 7l1 14h10l1-14" /><path d="M9 7V4h6v3" /></svg>;
@@ -456,8 +456,8 @@ function Chart({ data, initialRange }) {
   };
   const visibleStartLabel = data[visibleIndexAt(0)]?.label || data[0].label;
   const visibleEndLabel = data[visibleIndexAt(plotW)]?.label || data.at(-1).label;
-  const hoverX = hovered ? Math.min(width - 142, Math.max(pad.left + 4, hovered.x + 10)) : 0;
-  const hoverY = hovered ? Math.max(8, hovered.y - 62) : 0;
+  const hoverX = hovered ? Math.min(width - 162, Math.max(pad.left + 4, hovered.x + 10)) : 0;
+  const hoverY = hovered ? Math.max(8, hovered.y - 66) : 0;
   const hoveredInPlot = hovered && hovered.x >= pad.left && hovered.x <= width - pad.right;
   const clientXToSvgX = (clientX) => {
     const rect = svgRef.current?.getBoundingClientRect();
@@ -642,10 +642,10 @@ function Chart({ data, initialRange }) {
         {hoveredInPlot && (
           <g className="chart-tooltip" pointerEvents="none">
             <line x1={hovered.x} y1={pad.top} x2={hovered.x} y2={height - pad.bottom} className="hover-line" />
-            <rect x={hoverX} y={hoverY} width="132" height="56" rx="7" />
+            <rect x={hoverX} y={hoverY} width="152" height="60" rx="7" />
             <text x={hoverX + 9} y={hoverY + 16}>{hovered.item.label}</text>
-            <text x={hoverX + 9} y={hoverY + 33}>平均 {hovered.item.avg ?? "-"}点</text>
-            <text x={hoverX + 9} y={hoverY + 48}>ベスト {hovered.item.best ?? "-"}点</text>
+            <text x={hoverX + 9} y={hoverY + 34}>平均: {Number(hovered.item.avg || 0).toLocaleString("ja-JP")}点</text>
+            <text x={hoverX + 9} y={hoverY + 50}>ベスト: {Number(hovered.item.best || 0).toLocaleString("ja-JP")}点</text>
           </g>
         )}
       </svg>
@@ -1019,12 +1019,16 @@ function RecordView({ db, allForName, badgeMap, selectedDate, setSelectedDate, m
       </section>
 
       <section className={`panel input-panel ${isEditing ? "open" : ""}`} aria-hidden={!isEditing}>
+        <div className="input-panel-title">
+          <h2>スイング入力</h2>
+          <p>{isToday ? "今日の記録を入力" : "選択日の記録を修正"}</p>
+        </div>
         <div className="input-panel-layout">
           <div className="input-panel-head">
             <span className="input-panel-icon"><SvgIcon type="bat" /></span>
             <div>
-              <h2>スイング入力</h2>
-              <p>{isToday ? "今日の記録を入力" : "選択日の記録を修正"}</p>
+              <strong>入力</strong>
+              <p>{db.defaultBat || "バット"}を初期選択</p>
             </div>
           </div>
           <SwingForm bats={db.bats} defaultBat={db.defaultBat} onSubmit={handleRecordSubmit} submitLabel={isToday ? "記録する" : "修正を保存"} />
