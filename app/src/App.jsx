@@ -29,7 +29,7 @@ function SvgIcon({ type }) {
   if (type === "count") return <svg {...props}><path d="M4 7h16M4 12h16M4 17h10" /></svg>;
   if (type === "avg") return <svg {...props}><path d="M4 17 9 12l4 4 7-9" /><path d="M16 7h4v4" /></svg>;
   if (type === "best") return <svg {...props}><path d="M12 3 9.5 8.5 4 9l4.2 3.8L7 18.5l5-3 5 3-1.2-5.7L20 9l-5.5-.5L12 3Z" /></svg>;
-  if (type === "bat") return <svg {...props}><g transform="rotate(42 12 12)"><path d="M9.6 1.2h4.8c.9 0 1.6.7 1.6 1.6v7.3c0 1.1-.3 2.1-.9 3L12.9 16h-1.8l-2.2-2.9c-.6-.9-.9-1.9-.9-3V2.8c0-.9.7-1.6 1.6-1.6Z" fill="currentColor" stroke="none" /><path d="M11 16h2v4.1h-2z" fill="currentColor" stroke="none" /><path d="M9.4 20.1h5.2l.9 1.7c.3.5-.1 1.2-.7 1.2H9.2c-.6 0-1-.7-.7-1.2z" fill="currentColor" stroke="none" /></g></svg>;
+  if (type === "bat") return <svg {...props}><g transform="rotate(43 12 12)"><path d="M9.8 1.2h4.4c.8 0 1.45.65 1.45 1.45v5.8c0 1.3-.42 2.56-1.2 3.6L12.72 14.4h-1.44l-1.73-2.35a6 6 0 0 1-1.2-3.6v-5.8c0-.8.65-1.45 1.45-1.45Z" fill="currentColor" stroke="none" /><path d="M11.15 14.4h1.7v5.15h-1.7z" fill="currentColor" stroke="none" /><path d="M9.55 19.55h4.9l1.05 1.82c.35.6-.08 1.38-.78 1.38H9.28c-.7 0-1.13-.78-.78-1.38z" fill="currentColor" stroke="none" /></g></svg>;
   if (type === "badge") return <svg {...props}><circle cx="12" cy="8" r="4" /><path d="m9 12-2 8 5-3 5 3-2-8" /></svg>;
   if (type === "plus") return <svg {...props}><path d="M12 5v14M5 12h14" /></svg>;
   if (type === "trash") return <svg {...props}><path d="M4 7h16" /><path d="M10 11v6M14 11v6" /><path d="M6 7l1 14h10l1-14" /><path d="M9 7V4h6v3" /></svg>;
@@ -48,7 +48,7 @@ function ButtonIcon({ type }) {
 
 function SwingSilhouette() {
   return (
-    <img className="swing-silhouette" src="./images/swing-line.png" alt="" aria-hidden="true" />
+    <img className="swing-silhouette" src="./images/swing-hero.png" alt="" aria-hidden="true" />
   );
 }
 
@@ -802,7 +802,10 @@ export default function App() {
     <div className={`app theme-${db.theme || "red"}`}>
       <div className="phone-shell">
         <header className="app-header">
-          <img className="dream-logo" src="./images/dream-logo.png" alt="Dream" />
+          <div className="brand-lockup">
+            <img className="dream-logo" src="./images/dream-logo.png" alt="Dream" />
+            <strong>Swing Log</strong>
+          </div>
           <button className="active-player" type="button" onClick={() => setTab("settings")}><SvgIcon type="person" />{currentName || "未選択"}</button>
         </header>
 
