@@ -527,7 +527,6 @@ function Chart({ data, initialRange }) {
     event.preventDefault();
     event.currentTarget.setPointerCapture?.(event.pointerId);
     pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
-    setHovered(null);
     const pointers = [...pointersRef.current.values()];
     if (pointers.length >= 2) {
       startPinchGesture(pointers);
@@ -540,9 +539,11 @@ function Chart({ data, initialRange }) {
     const candidates = data.map((item, index) => {
       const avgPoint = avgDisplayPoints.find((pointItem) => pointItem.item.date === item.date) || null;
       const bestPoint = bestDisplayPoints.find((pointItem) => pointItem.item.date === item.date) || null;
+      const pointY = Math.min(avgPoint?.y ?? Infinity, bestPoint?.y ?? Infinity);
       return {
         item,
         x: avgPoint?.x ?? bestPoint?.x ?? pad.left + ((data.length <= 1 ? plotW / 2 : (plotW * index) / (data.length - 1)) * chartView.scale) + chartView.offset,
+        y: Number.isFinite(pointY) ? pointY : pad.top,
         avgPoint,
         bestPoint,
       };
@@ -553,10 +554,16 @@ function Chart({ data, initialRange }) {
       Math.abs(pointItem.x - svgX) < Math.abs(nearest.x - svgX) ? pointItem : nearest
     ));
   };
+  const showNearestDay = (clientX) => {
+    const nearest = nearestDayTo(clientX);
+    if (nearest) {
+      setHovered(nearest);
+    }
+  };
   const handlePointerMove = (event) => {
     if (!pointersRef.current.has(event.pointerId)) {
       if (event.pointerType === "mouse") {
-        setHovered(nearestDayTo(event.clientX));
+        showNearestDay(event.clientX);
       }
       return;
     }
@@ -569,8 +576,8 @@ function Chart({ data, initialRange }) {
     const gesture = gestureRef.current;
     const wasTap =
       gesture?.type === "pan" &&
-      Math.abs(event.clientX - gesture.startX) < 8 &&
-      Math.abs(event.clientY - gesture.startY) < 8;
+      Math.abs(event.clientX - gesture.startX) < 18 &&
+      Math.abs(event.clientY - gesture.startY) < 18;
     try {
       event.currentTarget.releasePointerCapture?.(event.pointerId);
     } catch {
@@ -586,10 +593,7 @@ function Chart({ data, initialRange }) {
       gestureRef.current = null;
     }
     if (wasTap) {
-      const nearest = nearestDayTo(event.clientX);
-      if (nearest) {
-        setHovered(nearest);
-      }
+      showNearestDay(event.clientX);
     }
   };
 
@@ -604,6 +608,7 @@ function Chart({ data, initialRange }) {
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerEnd}
         onPointerCancel={handlePointerEnd}
+        onClick={(event) => showNearestDay(event.clientX)}
         onPointerLeave={(event) => {
           if (event.pointerType === "mouse") setHovered(null);
         }}
@@ -629,15 +634,6 @@ function Chart({ data, initialRange }) {
           {avgDisplayPoints.length > 1 && <path className="area" d={`${avgPath} L ${avgDisplayPoints.at(-1).x} ${height - pad.bottom} L ${avgDisplayPoints[0].x} ${height - pad.bottom} Z`} />}
           <path className="avg-path" d={avgPath} />
           <path className="best-path" d={bestPath} />
-          {[...avgDisplayPoints, ...bestDisplayPoints].map((pointItem) => (
-            <circle
-              key={`${pointItem.key}-${pointItem.item.date}`}
-              className={`chart-point ${pointItem.key}`}
-              cx={pointItem.x}
-              cy={pointItem.y}
-              r="8"
-            />
-          ))}
         </g>
         {hoveredInPlot && (
           <>
