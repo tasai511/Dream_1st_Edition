@@ -468,13 +468,6 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
   return (
     <>
       <section className="panel hero-card bat-dashboard">
-        <div className="section-row">
-          <div>
-            <h2>フィルター</h2>
-            <p>{currentName || "選手"} / {homeBat === ALL ? "すべてのバット" : homeBat}</p>
-          </div>
-        </div>
-
         <div className="dashboard-controls">
           <label className="field-label bat-field">
             表示するバット
