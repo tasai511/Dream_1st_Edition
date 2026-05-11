@@ -463,15 +463,18 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
     [7, "7日"],
     [30, "30日"],
     [90, "90日"],
+    [180, "半年"],
+    [365, "1年"],
     [RANGE_ALL, "全期間"],
   ];
+  const rangeLabel = rangeOptions.find(([value]) => value === range)?.[1] || `${range}日`;
 
   return (
     <>
       <section className="panel hero-card bat-dashboard">
         <div className="dashboard-controls">
           <label className="field-label bat-field">
-            表示するバット
+            バット
             <span className="select-shell">
               <span className="select-leading"><SvgIcon type="bat" /></span>
               <select value={homeBat} onChange={(event) => setHomeBat(event.target.value)}>
@@ -495,7 +498,7 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
           <div className="section-row tight">
             <div>
               <h2>スコア</h2>
-              <p>{range === RANGE_ALL ? "全期間" : `直近${range}日`}</p>
+              <p>{range === RANGE_ALL ? "全期間" : `直近${rangeLabel}`}</p>
             </div>
           </div>
           <div className="total-card">
