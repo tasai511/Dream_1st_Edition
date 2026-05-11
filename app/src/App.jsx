@@ -399,10 +399,12 @@ function ScoreComparison({ daily, range }) {
 function Chart({ data, initialRange }) {
   const [hovered, setHovered] = useState(null);
   const [view, setView] = useState({ scale: 1, offset: 0 });
+  const [chartWidth, setChartWidth] = useState(360);
+  const wrapRef = useRef(null);
   const svgRef = useRef(null);
   const pointersRef = useRef(new Map());
   const gestureRef = useRef(null);
-  const width = 360;
+  const width = chartWidth;
   const height = 250;
   const pad = { left: 42, right: 18, top: 22, bottom: 42 };
   const plotW = width - pad.left - pad.right;
@@ -411,6 +413,25 @@ function Chart({ data, initialRange }) {
   const maxScale = Math.max(maxChartScale(data.length), initialChartView(data.length, initialRange, plotW).scale);
   const chartView = constrainChartView(view, plotW, minScale, maxScale);
   const values = data.flatMap((item) => [item.avg, item.best]).filter((value) => Number.isFinite(value));
+
+  useEffect(() => {
+    const node = wrapRef.current;
+    if (!node) return undefined;
+
+    const updateWidth = () => {
+      setChartWidth(Math.max(360, Math.round(node.getBoundingClientRect().width)));
+    };
+    updateWidth();
+
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", updateWidth);
+      return () => window.removeEventListener("resize", updateWidth);
+    }
+
+    const observer = new ResizeObserver(updateWidth);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     pointersRef.current.clear();
@@ -598,7 +619,7 @@ function Chart({ data, initialRange }) {
   };
 
   return (
-    <div className="chart-wrap">
+    <div className="chart-wrap" ref={wrapRef}>
       <svg
         ref={svgRef}
         viewBox={`0 0 ${width} ${height}`}
@@ -798,10 +819,8 @@ export default function App() {
     <div className={`app theme-${db.theme || "red"}`}>
       <div className="phone-shell">
         <header className="app-header">
-          <div className="brand-lockup">
-            <img className="dream-logo" src="./images/dream-logo.png" alt="Dream" />
-            <strong>SWING LOG</strong>
-          </div>
+          <img className="dream-logo" src="./images/dream-logo.png" alt="Dream" />
+          <strong className="app-title">SWING LOG</strong>
           <button className="active-player" type="button" onClick={() => setTab("settings")}><SvgIcon type="person" />{currentName || "未選択"}</button>
         </header>
 

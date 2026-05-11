@@ -120,6 +120,9 @@ svg text {
 }
 
 .app-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
   margin-bottom: 12px;
 }
 
@@ -130,8 +133,9 @@ svg text {
   gap: 10px;
 }
 
-.brand-lockup strong {
+.app-title {
   position: relative;
+  justify-self: center;
   padding: 1px 1px 6px;
   color: rgba(255, 255, 255, 0.96);
   font-family: "Avenir Next", "DIN Alternate", "Helvetica Neue", system-ui, sans-serif;
@@ -143,7 +147,7 @@ svg text {
   white-space: nowrap;
 }
 
-.brand-lockup strong::after {
+.app-title::after {
   position: absolute;
   right: 0.02em;
   bottom: 0;
@@ -157,6 +161,7 @@ svg text {
 .dream-logo {
   display: block;
   flex: 0 1 auto;
+  justify-self: start;
   width: min(130px, 34vw);
   height: 38px;
   object-fit: contain;
@@ -215,6 +220,10 @@ p {
   background: rgba(var(--hot-rgb), 0.14);
   font-size: 0.84rem;
   font-weight: 900;
+}
+
+.active-player {
+  justify-self: end;
 }
 
 .active-player svg {
