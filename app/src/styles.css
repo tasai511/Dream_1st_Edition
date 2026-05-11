@@ -547,15 +547,21 @@ input::placeholder {
 
 .swing-silhouette {
   position: absolute;
-  right: -16px;
-  bottom: 2px;
-  width: 168px;
-  height: 96px;
+  right: -20px;
+  bottom: -2px;
+  width: 194px;
+  height: 112px;
   object-fit: cover;
   object-position: 57% 47%;
-  opacity: 0.68;
+  opacity: 0.78;
   mix-blend-mode: screen;
-  filter: saturate(0.15) contrast(1.12) drop-shadow(0 0 12px rgba(255, 255, 255, 0.24));
+  filter:
+    saturate(0.18)
+    contrast(1.22)
+    brightness(1.16)
+    drop-shadow(0 0 5px rgba(255, 255, 255, 0.82))
+    drop-shadow(0 0 18px rgba(255, 255, 255, 0.34))
+    drop-shadow(0 0 26px rgba(var(--hot-rgb), 0.22));
   pointer-events: none;
 }
 
