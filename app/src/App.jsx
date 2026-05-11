@@ -424,14 +424,17 @@ function Chart({ data, initialRange }) {
 function demoDb() {
   const names = ["遥太", "颯太"];
   const bats = ["赤バット", "黒バット", "軽量バット"];
+  const demoDays = 730;
   const end = parseISO(todayISO());
   const records = [];
-  for (let ago = 120; ago >= 0; ago -= 1) {
+  for (let ago = demoDays; ago >= 0; ago -= 1) {
     const date = toISO(addDays(end, -ago));
     names.forEach((name, nameIndex) => {
-      const growth = Math.floor((120 - ago) * 1.8);
+      const elapsed = demoDays - ago;
+      const growth = Math.floor(elapsed * 0.33);
+      const seasonal = Math.floor(28 * Math.sin(elapsed / 38));
       const count = 35 + ((ago * 13 + nameIndex * 17) % 76) + (ago % 24 === 0 ? 210 : 0);
-      const avg = Math.min(820, 360 + nameIndex * 35 + growth + ((ago * 7) % 80));
+      const avg = Math.min(820, 330 + nameIndex * 35 + growth + seasonal + ((ago * 7) % 80));
       const best = Math.min(965, avg + 55 + ((ago * 11) % 115));
       records.push({ id: uid(), name, bat: bats[(ago + nameIndex) % bats.length], date, count, avg, best });
     });
