@@ -105,7 +105,14 @@ svg text {
 }
 
 .top-tabs-row {
-  margin-bottom: 16px;
+  margin-bottom: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 4px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.025)),
+    rgba(255, 255, 255, 0.045);
+  box-shadow: var(--shadow);
 }
 
 .eyebrow {
@@ -160,6 +167,11 @@ p {
   font-weight: 900;
 }
 
+.top-tabs-row .active-player {
+  min-height: 44px;
+  padding-inline: 13px;
+}
+
 .content {
   display: grid;
   gap: 12px;
@@ -191,11 +203,61 @@ p {
   background-color: rgba(255, 255, 255, 0.72);
 }
 
+.theme-light .top-tabs-row,
+.theme-light .bottom-nav,
+.theme-light .active-player,
+.theme-light .status-pill,
+.theme-light .badge,
+.theme-light .ghost,
+.theme-light .file-control,
+.theme-light .chart-tooltip rect {
+  background-color: rgba(255, 255, 255, 0.78);
+}
+
+.theme-light .active-player,
+.theme-light .status-pill {
+  color: #a51627;
+}
+
+.theme-light .bottom-nav button {
+  color: #6d7280;
+}
+
+.theme-light .bottom-nav button.active {
+  color: #fff;
+  background: #e9283d;
+}
+
+.theme-light .metric-label,
+.theme-light .chart-date,
+.theme-light .chart-axis-label,
+.theme-light .bar-item span,
+.theme-light .bar-item em {
+  color: #5f6674;
+}
+
+.theme-light .chart-tooltip text {
+  fill: #171820;
+}
+
+.theme-light .ghost,
+.theme-light .file-control {
+  color: #252a35;
+}
+
 .theme-light .bat-field select {
   color: var(--text);
   background:
     linear-gradient(135deg, rgba(255, 48, 68, 0.12), rgba(255, 255, 255, 0.72)),
     rgba(255, 255, 255, 0.9);
+}
+
+.theme-light .select-leading,
+.theme-light .select-caret,
+.theme-light .input-panel-icon,
+.theme-light .icon {
+  color: #6b6f78;
+  background: rgba(233, 40, 61, 0.1);
 }
 
 .theme-light .swing-silhouette {
@@ -289,6 +351,23 @@ input::placeholder {
   gap: 8px;
 }
 
+.bat-field,
+.range-field {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+}
+
+.bat-field {
+  color: var(--muted);
+}
+
+.bat-field .select-shell,
+.range-field .segmented {
+  min-width: 0;
+}
+
 .select-shell {
   position: relative;
   display: block;
@@ -311,7 +390,7 @@ input::placeholder {
   height: 24px;
   border: 1px solid rgba(255, 48, 68, 0.3);
   border-radius: var(--radius);
-  color: #ffe2e6;
+  color: #c8c9cf;
   background: rgba(255, 48, 68, 0.16);
 }
 
@@ -358,8 +437,7 @@ input::placeholder {
 }
 
 .range-field {
-  display: grid;
-  gap: 6px;
+  gap: 8px;
 }
 
 .range-field > span {
@@ -462,6 +540,11 @@ input::placeholder {
   box-shadow: 0 0 18px rgba(255, 255, 255, 0.18);
 }
 
+.theme-light .mode-best .bar-fill {
+  background: #3254d3;
+  box-shadow: 0 0 16px rgba(50, 84, 211, 0.12);
+}
+
 .mode-count .bar-fill {
   background: #44d7a8;
   box-shadow: 0 0 18px rgba(68, 215, 168, 0.16);
@@ -513,11 +596,12 @@ input::placeholder {
 
 .swing-silhouette {
   position: absolute;
-  right: 10px;
-  bottom: 6px;
-  width: 92px;
-  height: 92px;
-  color: rgba(255, 255, 255, 0.28);
+  right: -2px;
+  bottom: 2px;
+  width: 126px;
+  height: 100px;
+  color: rgba(255, 78, 89, 0.46);
+  filter: drop-shadow(0 0 8px rgba(255, 48, 68, 0.34));
   pointer-events: none;
 }
 
@@ -633,6 +717,10 @@ input::placeholder {
   background: rgba(0, 0, 0, 0.13);
 }
 
+.theme-light .chart-wrap {
+  background: rgba(255, 255, 255, 0.48);
+}
+
 .chart-wrap svg {
   width: 100%;
   height: 282px;
@@ -649,6 +737,26 @@ input::placeholder {
 .axis-line {
   stroke: rgba(255, 255, 255, 0.18);
   stroke-width: 0.7;
+}
+
+.theme-light .grid-line {
+  stroke: rgba(22, 28, 40, 0.08);
+}
+
+.theme-light .axis-line {
+  stroke: rgba(22, 28, 40, 0.2);
+}
+
+.theme-light .best-path {
+  stroke: #3254d3;
+}
+
+.theme-light .best-line {
+  background: #3254d3;
+}
+
+.theme-light .chart-active-point.best {
+  stroke: #3254d3;
 }
 
 .area {
@@ -905,10 +1013,39 @@ input::placeholder {
   transform: translateY(0);
 }
 
+.input-panel-layout {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr);
+  gap: 10px;
+  align-items: stretch;
+}
+
+.input-panel-head {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+
+.input-panel-icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid rgba(255, 48, 68, 0.25);
+  border-radius: var(--radius);
+  color: #f0f0f0;
+  background: rgba(255, 48, 68, 0.14);
+}
+
+.input-panel-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
 .swing-form {
   border: 1px solid rgba(255, 48, 68, 0.16);
   border-radius: var(--radius);
-  padding: 12px;
+  padding: 10px;
   background:
     linear-gradient(135deg, rgba(255, 48, 68, 0.13), rgba(255, 255, 255, 0.035)),
     rgba(0, 0, 0, 0.2);
@@ -917,6 +1054,17 @@ input::placeholder {
 .swing-form input,
 .swing-form select {
   background: rgba(0, 0, 0, 0.38);
+}
+
+.theme-light .swing-form {
+  background:
+    linear-gradient(135deg, rgba(255, 48, 68, 0.1), rgba(255, 255, 255, 0.72)),
+    rgba(255, 255, 255, 0.86);
+}
+
+.theme-light .swing-form input,
+.theme-light .swing-form select {
+  background: rgba(255, 255, 255, 0.86);
 }
 
 .edit-toggle {
@@ -1095,28 +1243,27 @@ input::placeholder {
   grid-template-columns: repeat(3, 1fr);
   flex: 1 1 auto;
   min-width: 0;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 4px;
-  background: rgba(255, 255, 255, 0.055);
+  border-radius: 6px;
+  padding: 0;
+  background: transparent;
 }
 
 .bottom-nav button {
   display: grid;
   place-items: center;
-  gap: 4px;
-  min-height: 52px;
+  gap: 2px;
+  min-height: 44px;
   border: 0;
   border-radius: 6px;
   color: #777780;
   background: transparent;
-  font-size: 0.7rem;
+  font-size: 0.62rem;
   font-weight: 950;
 }
 
 .bottom-nav svg {
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
 }
 
 .bottom-nav button.active {
@@ -1179,5 +1326,18 @@ input::placeholder {
   .calendar-grid,
   .weekdays {
     gap: 4px;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 520px) {
+  .app {
+    min-height: 100svh;
+    overflow: hidden;
+  }
+
+  .phone-shell {
+    width: min(480px, 100svh);
+    height: 100svh;
+    overflow-y: auto;
   }
 }

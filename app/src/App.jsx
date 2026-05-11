@@ -22,7 +22,7 @@ function SvgIcon({ type }) {
   if (type === "count") return <svg {...props}><path d="M4 7h16M4 12h16M4 17h10" /></svg>;
   if (type === "avg") return <svg {...props}><path d="M4 17 9 12l4 4 7-9" /><path d="M16 7h4v4" /></svg>;
   if (type === "best") return <svg {...props}><path d="M12 3 9.5 8.5 4 9l4.2 3.8L7 18.5l5-3 5 3-1.2-5.7L20 9l-5.5-.5L12 3Z" /></svg>;
-  if (type === "bat") return <svg {...props}><text x="12" y="17" textAnchor="middle">🏏</text></svg>;
+  if (type === "bat") return <svg {...props}><path d="M3.4 20.7c-.55-.55-.55-1.44 0-1.99l1.3-1.3 1.99 1.99-1.3 1.3c-.55.55-1.44.55-1.99 0Z" fill="currentColor" stroke="none" /><path d="M5.05 17.05 14 8.1l1.9 1.9-8.95 8.95z" fill="currentColor" stroke="none" /><path d="M13.6 7.65 18.35 2.9c1.14-1.14 2.99-1.14 4.13 0s1.14 2.99 0 4.13l-4.75 4.75c-.7.7-1.84.7-2.54 0L13.6 10.2c-.7-.7-.7-1.84 0-2.54Z" fill="currentColor" stroke="none" /><path d="M7.2 16.8 5.6 15.2" /></svg>;
   if (type === "badge") return <svg {...props}><circle cx="12" cy="8" r="4" /><path d="m9 12-2 8 5-3 5 3-2-8" /></svg>;
   if (type === "plus") return <svg {...props}><path d="M12 5v14M5 12h14" /></svg>;
   if (type === "trash") return <svg {...props}><path d="M4 7h16" /><path d="M10 11v6M14 11v6" /><path d="M6 7l1 14h10l1-14" /><path d="M9 7V4h6v3" /></svg>;
@@ -41,14 +41,22 @@ function ButtonIcon({ type }) {
 
 function SwingSilhouette() {
   return (
-    <svg className="swing-silhouette" viewBox="0 0 96 96" aria-hidden="true">
-      <path d="M66 12 42 38" />
-      <path d="M63 11 72 20" />
-      <circle cx="44" cy="28" r="7" />
-      <path d="M40 37 52 48 66 44" />
-      <path d="M50 48 42 64 28 77" />
-      <path d="M51 50 64 65 78 72" />
-      <path d="M32 43c-9 4-16 10-20 18" />
+    <svg className="swing-silhouette" viewBox="0 0 160 120" aria-hidden="true">
+      <path d="M40 29c8-18 32-20 45-7" />
+      <path d="M43 28c3 21 36 25 48 6" />
+      <path d="M54 18c10-3 22-1 30 6" />
+      <path d="M81 31 110 44" />
+      <path d="M66 43c18 2 35 13 45 31" />
+      <path d="M62 45c-13 11-20 26-25 46" />
+      <path d="M76 57 50 72" />
+      <path d="M88 58 124 72" />
+      <path d="M126 70 149 88" />
+      <path d="M124 73 148 62" />
+      <path d="M35 91c14 9 35 10 53 0" />
+      <path d="M91 76c9 13 19 22 33 29" />
+      <path d="M42 99c-9 6-19 7-31 4" />
+      <path d="M116 105c10 6 21 7 33 3" />
+      <circle cx="64" cy="29" r="14" />
     </svg>
   );
 }
@@ -139,10 +147,16 @@ function badgesFor(records) {
   const add = (date, label) => byDate.set(date, [...(byDate.get(date) || []), label]);
   let streak = 0;
   let previous = null;
-  let cumulative = 0;
+  let bestEver = 0;
+  let avgEver = 0;
+  let weekStart = "";
+  let weekTotal = 0;
   const monthTotals = new Map();
+  const crossedDaily = new Set();
+  const crossedWeek = new Set();
   const crossedMonth = new Set();
-  const crossedTotal = new Set();
+  const crossedBest = new Set();
+  const crossedAvg = new Set();
 
   daily.forEach((day) => {
     streak = previous && toISO(addDays(parseISO(previous), 1)) === day.date ? streak + 1 : 1;
@@ -150,7 +164,29 @@ function badgesFor(records) {
     if (streak === 3) add(day.date, "3日連続");
     if (streak === 7) add(day.date, "1週間連続");
     if (streak >= 30 && streak % 30 === 0) add(day.date, `${streak / 30}か月連続`);
-    if (day.count >= 300) add(day.date, "1日300スイング");
+
+    for (let threshold = 100; threshold <= day.count; threshold += 100) {
+      const key = `${day.date}-${threshold}`;
+      if (!crossedDaily.has(key)) {
+        add(day.date, `1日${threshold.toLocaleString("ja-JP")}スイング`);
+        crossedDaily.add(key);
+      }
+    }
+
+    const dateValue = parseISO(day.date);
+    const currentWeekStart = toISO(addDays(dateValue, -dateValue.getDay()));
+    if (weekStart !== currentWeekStart) {
+      weekStart = currentWeekStart;
+      weekTotal = 0;
+    }
+    weekTotal += day.count;
+    for (let threshold = 500; threshold <= weekTotal; threshold += 500) {
+      const key = `${weekStart}-${threshold}`;
+      if (!crossedWeek.has(key)) {
+        add(day.date, `週間${threshold.toLocaleString("ja-JP")}スイング`);
+        crossedWeek.add(key);
+      }
+    }
 
     const monthKey = day.date.slice(0, 7);
     const monthTotal = (monthTotals.get(monthKey) || 0) + day.count;
@@ -163,11 +199,16 @@ function badgesFor(records) {
       }
     }
 
-    cumulative += day.count;
-    [10000, 50000].forEach((threshold) => {
-      if (cumulative >= threshold && !crossedTotal.has(threshold)) {
-        add(day.date, `累計${threshold.toLocaleString("ja-JP")}スイング`);
-        crossedTotal.add(threshold);
+    bestEver = Math.max(bestEver, day.best || 0);
+    avgEver = Math.max(avgEver, day.avg || 0);
+    [100, 200, 300, 400, 500, 600, 700, 800, 900, 999].forEach((threshold) => {
+      if (bestEver >= threshold && !crossedBest.has(threshold)) {
+        add(day.date, threshold === 999 ? "ベストスコア999達成" : `ベストスコア${threshold}超え`);
+        crossedBest.add(threshold);
+      }
+      if (avgEver >= threshold && !crossedAvg.has(threshold)) {
+        add(day.date, threshold === 999 ? "平均スコア999達成" : `平均スコア${threshold}超え`);
+        crossedAvg.add(threshold);
       }
     });
   });
@@ -236,14 +277,17 @@ function compareLabel(index, range) {
   if (index === 0) {
     if (range === 7) return "今週";
     if (range === 30) return "今月";
-    if (range === 90) return "今期";
-    if (range === 180) return "今半期";
+    if (range === 90) return "直近3か月";
+    if (range === 180) return "直近半年";
     return "今年";
   }
   if (range === 7) return `${index}週前`;
   if (range === 30) return `${index}か月前`;
   if (range === 90) return `${index * 3}か月前`;
-  if (range === 180) return `${index}半期前`;
+  if (range === 180) {
+    const years = index * 0.5;
+    return years === 0.5 ? "半年前" : `${Number.isInteger(years) ? years : years.toFixed(1)}年前`;
+  }
   return `${index}年前`;
 }
 
@@ -298,7 +342,9 @@ function Metric({ icon, label, value, unit }) {
 
 function ScoreComparison({ daily, range }) {
   const [mode, setMode] = useState("avg");
+  const scrollRef = useRef(null);
   const buckets = useMemo(() => comparisonBuckets(daily, range), [daily, range]);
+  const visibleBuckets = useMemo(() => [...buckets].reverse(), [buckets]);
   const modes = [
     ["avg", "平均", "点"],
     ["best", "ベスト", "点"],
@@ -307,6 +353,18 @@ function ScoreComparison({ daily, range }) {
   const current = modes.find(([key]) => key === mode) || modes[0];
   const values = buckets.map((bucket) => bucket[mode]);
   const max = Math.max(1, ...values);
+  const activeValues = values.filter((value) => value > 0);
+  const rawMin = Math.min(...activeValues, max);
+  const floor = mode === "count"
+    ? Math.max(0, Math.floor(rawMin * 0.72 / 50) * 50)
+    : Math.max(0, Math.floor(rawMin * 0.86 / 50) * 50);
+  const rangeSpan = Math.max(1, max - floor);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollLeft = scrollRef.current.scrollWidth;
+    }
+  }, [mode, range, buckets.length]);
 
   return (
     <section className="dashboard-section comparison-section">
@@ -322,10 +380,10 @@ function ScoreComparison({ daily, range }) {
         </div>
       </div>
       {buckets.length ? (
-        <div className={`bar-scroll mode-${mode}`}>
-          {buckets.map((bucket) => {
+        <div className={`bar-scroll mode-${mode}`} ref={scrollRef}>
+          {visibleBuckets.map((bucket) => {
             const value = bucket[mode];
-            const height = Math.max(8, (value / max) * 100);
+            const height = value > 0 ? Math.max(10, ((value - floor) / rangeSpan) * 88 + 12) : 0;
             return (
               <article className="bar-item" key={bucket.label}>
                 <div className="bar-track">
@@ -366,6 +424,16 @@ function Chart({ data, initialRange }) {
     setView(initialChartView(data.length, initialRange, plotW));
   }, [data.length, data[0]?.date, data.at(-1)?.date, initialRange, plotW]);
 
+  useEffect(() => {
+    const clearHover = () => setHovered(null);
+    window.addEventListener("scroll", clearHover, { passive: true });
+    window.addEventListener("resize", clearHover);
+    return () => {
+      window.removeEventListener("scroll", clearHover);
+      window.removeEventListener("resize", clearHover);
+    };
+  }, []);
+
   if (!values.length) return <div className="chart-empty">記録を入れるとグラフが表示されます。</div>;
 
   const maxY = Math.ceil((Math.max(800, ...values) * 1.08) / 100) * 100;
@@ -403,6 +471,7 @@ function Chart({ data, initialRange }) {
   const visibleEndLabel = data[visibleIndexAt(plotW)]?.label || data.at(-1).label;
   const hoverX = hovered ? Math.min(width - 118, Math.max(pad.left + 4, hovered.x + 10)) : 0;
   const hoverY = hovered ? Math.max(8, hovered.y - 48) : 0;
+  const hoveredInPlot = hovered && hovered.x >= pad.left && hovered.x <= width - pad.right;
   const clientXToSvgX = (clientX) => {
     const rect = svgRef.current?.getBoundingClientRect();
     if (!rect || rect.width === 0) return pad.left;
@@ -417,6 +486,7 @@ function Chart({ data, initialRange }) {
     gestureRef.current = {
       type: "pan",
       startX: pointer.x,
+      startY: pointer.y,
       startOffset: chartView.offset,
       startScale: chartView.scale,
     };
@@ -488,13 +558,15 @@ function Chart({ data, initialRange }) {
     }
     event.preventDefault();
     pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    setHovered(null);
     updateGesture();
   };
   const handlePointerEnd = (event) => {
     const gesture = gestureRef.current;
     const wasTap =
       gesture?.type === "pan" &&
-      Math.abs(event.clientX - gesture.startX) < 8;
+      Math.abs(event.clientX - gesture.startX) < 8 &&
+      Math.abs(event.clientY - gesture.startY) < 8;
     try {
       event.currentTarget.releasePointerCapture?.(event.pointerId);
     } catch {
@@ -528,7 +600,9 @@ function Chart({ data, initialRange }) {
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerEnd}
         onPointerCancel={handlePointerEnd}
-        onPointerLeave={() => setHovered(null)}
+        onPointerLeave={(event) => {
+          if (event.pointerType === "mouse") setHovered(null);
+        }}
       >
         <defs>
           <linearGradient id="avgFill" x1="0" x2="0" y1="0" y2="1">
@@ -561,12 +635,12 @@ function Chart({ data, initialRange }) {
             />
           ))}
         </g>
-        {hovered && (
+        {hoveredInPlot && (
           <circle className={`chart-active-point ${hovered.key}`} cx={hovered.x} cy={hovered.y} r="4.5" />
         )}
         <text x={pad.left} y={height - 12} className="chart-date">{visibleStartLabel}</text>
         <text x={width - pad.right} y={height - 12} textAnchor="end" className="chart-date">{visibleEndLabel}</text>
-        {hovered && (
+        {hoveredInPlot && (
           <g className="chart-tooltip" pointerEvents="none">
             <line x1={hovered.x} y1={pad.top} x2={hovered.x} y2={height - pad.bottom} className="hover-line" />
             <rect x={hoverX} y={hoverY} width="108" height="42" rx="7" />
@@ -886,12 +960,25 @@ function collectBadgeCounts(records) {
   [...badgesFor(records).values()].flat().forEach((badge) => {
     counts[badge] = (counts[badge] || 0) + 1;
   });
-  const order = ["3日連続", "1週間連続", "1日300スイング"];
+  const rank = (label) => {
+    const number = Number(label.match(/[\d,.]+/)?.[0]?.replace(/,/g, "") || 0);
+    if (label.startsWith("1日")) return [0, 0, number];
+    if (label.startsWith("週間")) return [0, 1, number];
+    if (label.startsWith("月間")) return [0, 2, number];
+    if (label.startsWith("平均スコア")) return [1, 0, number || 999];
+    if (label.startsWith("ベストスコア")) return [1, 1, number || 999];
+    if (label.includes("連続")) {
+      if (label.startsWith("3日")) return [2, 0, 3];
+      if (label.startsWith("1週間")) return [2, 1, 7];
+      return [2, 2, number];
+    }
+    return [9, 9, 0];
+  };
   return Object.entries(counts).sort(([a], [b]) => {
-    const aIndex = order.findIndex((label) => a.startsWith(label));
-    const bIndex = order.findIndex((label) => b.startsWith(label));
-    if (aIndex !== bIndex) {
-      return (aIndex === -1 ? 99 : aIndex) - (bIndex === -1 ? 99 : bIndex);
+    const aRank = rank(a);
+    const bRank = rank(b);
+    for (let index = 0; index < aRank.length; index += 1) {
+      if (aRank[index] !== bRank[index]) return aRank[index] - bRank[index];
     }
     return a.localeCompare(b, "ja");
   });
@@ -922,11 +1009,17 @@ function RecordView({ db, allForName, badgeMap, selectedDate, setSelectedDate, m
       </section>
 
       <section className={`panel input-panel ${isEditing ? "open" : ""}`} aria-hidden={!isEditing}>
-        <div className="section-row">
-          <h2>スイング入力</h2>
-          <p>{isToday ? "今日の記録を入力" : "選択日の記録を修正"}</p>
+        <div className="input-panel-layout">
+          <div className="input-panel-head">
+            <span className="input-panel-icon"><SvgIcon type="bat" /></span>
+            <div>
+              <h2>スイング入力</h2>
+              <p>{isToday ? "今日の記録を入力" : "選択日の記録を修正"}</p>
+            </div>
+            <button type="button" className="ghost edit-toggle" onClick={() => setIsEditing(false)}>閉じる</button>
+          </div>
+          <SwingForm bats={db.bats} onSubmit={addRecord} submitLabel={isToday ? "記録する" : "修正を保存"} />
         </div>
-        <SwingForm bats={db.bats} onSubmit={addRecord} submitLabel={isToday ? "記録する" : "修正を保存"} />
       </section>
 
       <section className="panel">
@@ -934,9 +1027,9 @@ function RecordView({ db, allForName, badgeMap, selectedDate, setSelectedDate, m
           <div>
             <h2>{isToday ? "今日の記録" : selectedDateLabel}</h2>
           </div>
-          {canEdit && (
+          {canEdit && !isEditing && (
             <button type="button" className="ghost edit-toggle" onClick={() => setIsEditing((value) => !value)}>
-              {isEditing ? "閉じる" : isToday ? "入力" : "修正"}
+              {isToday ? "入力" : "修正"}
             </button>
           )}
         </div>
