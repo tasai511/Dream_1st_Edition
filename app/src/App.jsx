@@ -43,23 +43,7 @@ function ButtonIcon({ type }) {
 
 function SwingSilhouette() {
   return (
-    <svg className="swing-silhouette" viewBox="0 0 160 120" aria-hidden="true">
-      <path d="M40 29c8-18 32-20 45-7" />
-      <path d="M43 28c3 21 36 25 48 6" />
-      <path d="M54 18c10-3 22-1 30 6" />
-      <path d="M81 31 110 44" />
-      <path d="M66 43c18 2 35 13 45 31" />
-      <path d="M62 45c-13 11-20 26-25 46" />
-      <path d="M76 57 50 72" />
-      <path d="M88 58 124 72" />
-      <path d="M126 70 149 88" />
-      <path d="M124 73 148 62" />
-      <path d="M35 91c14 9 35 10 53 0" />
-      <path d="M91 76c9 13 19 22 33 29" />
-      <path d="M42 99c-9 6-19 7-31 4" />
-      <path d="M116 105c10 6 21 7 33 3" />
-      <circle cx="64" cy="29" r="14" />
-    </svg>
+    <img className="swing-silhouette" src="./images/swing-neon.png" alt="" aria-hidden="true" />
   );
 }
 
