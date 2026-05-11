@@ -518,13 +518,14 @@ input::placeholder {
 .bar-fill {
   width: 100%;
   border-radius: 6px;
-  background: var(--hot);
+  background: #ff3d45;
+  box-shadow: 0 0 18px rgba(255, 61, 69, 0.16);
   transition: height 260ms ease, background-color 260ms ease, box-shadow 260ms ease;
 }
 
 .mode-best .bar-fill {
-  background: #f5f7ff;
-  box-shadow: 0 0 18px rgba(255, 255, 255, 0.18);
+  background: #4d8dff;
+  box-shadow: 0 0 18px rgba(77, 141, 255, 0.18);
 }
 
 .mode-count .bar-fill {
