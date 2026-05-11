@@ -19,7 +19,7 @@ function SvgIcon({ type }) {
   if (type === "count") return <svg {...props}><path d="M4 7h16M4 12h16M4 17h10" /></svg>;
   if (type === "avg") return <svg {...props}><path d="M4 17 9 12l4 4 7-9" /><path d="M16 7h4v4" /></svg>;
   if (type === "best") return <svg {...props}><path d="M12 3 9.5 8.5 4 9l4.2 3.8L7 18.5l5-3 5 3-1.2-5.7L20 9l-5.5-.5L12 3Z" /></svg>;
-  if (type === "bat") return <svg {...props}><path d="M5 19.5 15.8 8.7" /><path d="M14.2 7.1 16.9 4.4a2.1 2.1 0 0 1 3 3l-2.7 2.7Z" /><path d="m3.8 18.2 2 2" /><path d="m4.7 16.7 2.6 2.6" /></svg>;
+  if (type === "bat") return <svg {...props}><path d="M4 13h11" /><path d="M15 10h1.8c2.1 0 3.8 1.2 3.8 3s-1.7 3-3.8 3H15Z" /><path d="M3.4 11.7v2.6" /><path d="M6 11.8v2.4" /></svg>;
   if (type === "badge") return <svg {...props}><circle cx="12" cy="8" r="4" /><path d="m9 12-2 8 5-3 5 3-2-8" /></svg>;
   if (type === "plus") return <svg {...props}><path d="M12 5v14M5 12h14" /></svg>;
   if (type === "trash") return <svg {...props}><path d="M4 7h16" /><path d="M10 11v6M14 11v6" /><path d="M6 7l1 14h10l1-14" /><path d="M9 7V4h6v3" /></svg>;

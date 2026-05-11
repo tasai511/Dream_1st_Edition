@@ -255,9 +255,9 @@ input::placeholder {
 }
 
 .select-leading {
-  left: 14px;
-  width: 36px;
-  height: 36px;
+  left: 12px;
+  width: 32px;
+  height: 32px;
   border: 1px solid rgba(255, 48, 68, 0.3);
   border-radius: var(--radius);
   color: #ffe2e6;
@@ -265,15 +265,15 @@ input::placeholder {
 }
 
 .select-leading svg {
-  width: 23px;
-  height: 23px;
-  stroke-width: 2.15;
+  width: 22px;
+  height: 22px;
+  stroke-width: 2.05;
 }
 
 .select-caret {
-  right: 15px;
-  width: 34px;
-  height: 34px;
+  right: 12px;
+  width: 30px;
+  height: 30px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 50%;
   color: #ffe2e6;
@@ -291,9 +291,9 @@ input::placeholder {
 .bat-field select {
   appearance: none;
   -webkit-appearance: none;
-  min-height: 76px;
+  min-height: 58px;
   border-color: rgba(255, 48, 68, 0.28);
-  padding: 0 58px 0 62px;
+  padding: 0 52px 0 54px;
   color: #fff4f5;
   background:
     linear-gradient(135deg, rgba(255, 48, 68, 0.22), rgba(255, 255, 255, 0.06)),
