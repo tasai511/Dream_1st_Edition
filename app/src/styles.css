@@ -383,6 +383,11 @@ input::placeholder {
   stroke-width: 2.1;
 }
 
+.select-leading .bat-image-icon {
+  width: 18px;
+  height: 18px;
+}
+
 .select-caret {
   right: 9px;
   width: 24px;
@@ -664,10 +669,21 @@ input::placeholder {
 }
 
 .icon svg,
+.icon .bat-image-icon,
 .button-icon svg,
+.button-icon .bat-image-icon,
 .bottom-nav svg {
   width: 18px;
   height: 18px;
+}
+
+.bat-image-icon {
+  display: block;
+  width: 1em;
+  height: 1em;
+  object-fit: contain;
+  opacity: 0.9;
+  filter: invert(1) grayscale(1);
 }
 
 .legend {

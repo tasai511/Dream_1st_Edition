@@ -1,4 +1,4 @@
-const CACHE_NAME = "swing-log-v14";
+const CACHE_NAME = "swing-log-v15";
 const ASSETS = [
   "./",
   "./index.html",
@@ -7,6 +7,7 @@ const ASSETS = [
   "./icons/icon-512.png",
   "./icons/apple-touch-icon.svg",
   "./icons/apple-touch-icon.png",
+  "./images/bat-icon.svg",
   "./images/dream-logo.png",
   "./images/swing-line.png",
   "./images/swing-hero.png",
