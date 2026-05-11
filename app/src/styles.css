@@ -132,24 +132,23 @@ svg text {
 
 .brand-lockup strong {
   position: relative;
-  padding: 3px 0 5px 9px;
-  border-left: 2px solid rgba(var(--hot-rgb), 0.72);
+  padding: 2px 1px 6px;
   color: rgba(255, 255, 255, 0.96);
-  font-family: "Avenir Next Condensed", "DIN Condensed", "Roboto Condensed", "Arial Narrow", system-ui, sans-serif;
-  font-size: 0.98rem;
-  font-stretch: condensed;
-  font-weight: 900;
-  letter-spacing: 0.08em;
+  font-family: Impact, "Arial Black", "Avenir Next Condensed", "DIN Condensed", system-ui, sans-serif;
+  font-size: 1.14rem;
+  font-weight: 800;
+  letter-spacing: 0.045em;
   line-height: 1;
-  text-shadow: 0 0 12px rgba(var(--hot-rgb), 0.36);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.52), 0 0 13px rgba(var(--hot-rgb), 0.34);
+  transform: skewX(-8deg);
   white-space: nowrap;
 }
 
 .brand-lockup strong::after {
   position: absolute;
-  right: 0.08em;
+  right: 0.02em;
   bottom: 0;
-  left: 9px;
+  left: 0.04em;
   height: 2px;
   border-radius: 999px;
   background: linear-gradient(90deg, var(--hot), rgba(255, 255, 255, 0.72), transparent);
