@@ -10,6 +10,7 @@ const defaultDb = {
   activeName: "遥太",
   names: ["遥太"],
   bats: ["赤バット", "黒バット"],
+  defaultBat: "赤バット",
   theme: "dark",
   records: [],
 };
@@ -19,6 +20,7 @@ function SvgIcon({ type }) {
   if (type === "home") return <svg {...props}><path d="M4 11.5 12 5l8 6.5" /><path d="M6.5 10.5V20h11v-9.5" /><path d="M9.5 20v-5h5v5" /></svg>;
   if (type === "log") return <svg {...props}><rect x="4" y="5" width="16" height="15" rx="3" /><path d="M8 3v4M16 3v4M4 10h16" /></svg>;
   if (type === "settings") return <svg {...props}><circle cx="12" cy="12" r="3.2" /><path d="M19 12a7 7 0 0 0-.1-1l2-1.6-2-3.4-2.4 1a7 7 0 0 0-1.8-1L14.4 3h-4.8l-.3 3a7 7 0 0 0-1.8 1l-2.4-1-2 3.4 2 1.6A7 7 0 0 0 5 12a7 7 0 0 0 .1 1l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 1.8 1l.3 3h4.8l.3-3a7 7 0 0 0 1.8-1l2.4 1 2-3.4-2-1.6c.1-.3.1-.7.1-1Z" /></svg>;
+  if (type === "person") return <svg {...props}><circle cx="12" cy="7.4" r="3.4" /><path d="M5 21c.8-4.6 3.2-7 7-7s6.2 2.4 7 7" /></svg>;
   if (type === "count") return <svg {...props}><path d="M4 7h16M4 12h16M4 17h10" /></svg>;
   if (type === "avg") return <svg {...props}><path d="M4 17 9 12l4 4 7-9" /><path d="M16 7h4v4" /></svg>;
   if (type === "best") return <svg {...props}><path d="M12 3 9.5 8.5 4 9l4.2 3.8L7 18.5l5-3 5 3-1.2-5.7L20 9l-5.5-.5L12 3Z" /></svg>;
@@ -97,6 +99,7 @@ function loadDb() {
       activeName: parsed.activeName || parsed.names?.[0] || "",
       names: Array.isArray(parsed.names) ? parsed.names : [],
       bats: Array.isArray(parsed.bats) ? parsed.bats : [],
+      defaultBat: parsed.bats?.includes(parsed.defaultBat) ? parsed.defaultBat : parsed.bats?.[0] || "",
       theme: parsed.theme === "light" ? "light" : "dark",
       records: Array.isArray(parsed.records) ? parsed.records : [],
     };
@@ -671,7 +674,7 @@ function demoDb() {
       records.push({ id: uid(), name, bat: bats[(ago + nameIndex) % bats.length], date, count, avg, best });
     });
   }
-  return { activeName: names[0], names, bats, theme: "dark", records };
+  return { activeName: names[0], names, bats, defaultBat: bats[0], theme: "dark", records };
 }
 
 export default function App() {
@@ -696,7 +699,7 @@ export default function App() {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     const bat = String(form.get("bat") || "");
-    if (!currentName || !bat) return;
+    if (!currentName || !bat) return false;
     const record = {
       id: uid(),
       name: currentName,
@@ -708,6 +711,7 @@ export default function App() {
     };
     setDb({ ...db, records: [...db.records, record] });
     event.currentTarget.reset();
+    return true;
   };
 
   const addName = (event) => {
@@ -722,7 +726,7 @@ export default function App() {
     event.preventDefault();
     const value = String(new FormData(event.currentTarget).get("bat") || "").trim();
     if (!value || db.bats.includes(value)) return;
-    setDb({ ...db, bats: [...db.bats, value] });
+    setDb({ ...db, bats: [...db.bats, value], defaultBat: db.defaultBat || value });
     event.currentTarget.reset();
   };
 
@@ -731,7 +735,7 @@ export default function App() {
     setPendingDelete(null);
     if (!pending) return;
     if (pending.type === "all") {
-      setDb({ activeName: "", names: [], bats: [], records: [] });
+      setDb({ activeName: "", names: [], bats: [], defaultBat: "", theme: db.theme || "dark", records: [] });
       return;
     }
     if (pending.type === "name") {
@@ -744,9 +748,11 @@ export default function App() {
       });
     }
     if (pending.type === "bat") {
+      const bats = db.bats.filter((bat) => bat !== pending.value);
       setDb({
         ...db,
-        bats: db.bats.filter((bat) => bat !== pending.value),
+        bats,
+        defaultBat: db.defaultBat === pending.value ? bats[0] || "" : db.defaultBat,
         records: db.records.filter((record) => record.bat !== pending.value),
       });
     }
@@ -779,6 +785,7 @@ export default function App() {
       next.records.push({ id: uid(), name, bat, date, count: Number(count) || 0, avg: Number(avg) || 0, best: Number(best) || 0 });
     });
     if (!next.activeName && next.names[0]) next.activeName = next.names[0];
+    if (!next.defaultBat && next.bats[0]) next.defaultBat = next.bats[0];
     setDb(next);
     event.target.value = "";
   };
@@ -788,7 +795,7 @@ export default function App() {
       <div className="phone-shell">
         <header className="top-tabs-row">
           <BottomNav tab={tab} setTab={setTab} />
-          <button className="active-player" type="button" onClick={() => setTab("settings")}>{currentName || "未選択"}</button>
+          <button className="active-player" type="button" onClick={() => setTab("settings")}><SvgIcon type="person" />{currentName || "未選択"}</button>
         </header>
 
         <main className="content">
@@ -997,6 +1004,12 @@ function RecordView({ db, allForName, badgeMap, selectedDate, setSelectedDate, m
     setIsEditing(false);
   }, [selectedDate]);
 
+  const handleRecordSubmit = (event) => {
+    if (addRecord(event)) {
+      setIsEditing(false);
+    }
+  };
+
   return (
     <>
       <section className="panel">
@@ -1018,7 +1031,7 @@ function RecordView({ db, allForName, badgeMap, selectedDate, setSelectedDate, m
             </div>
             <button type="button" className="ghost edit-toggle" onClick={() => setIsEditing(false)}>閉じる</button>
           </div>
-          <SwingForm bats={db.bats} onSubmit={addRecord} submitLabel={isToday ? "記録する" : "修正を保存"} />
+          <SwingForm bats={db.bats} defaultBat={db.defaultBat} onSubmit={handleRecordSubmit} submitLabel={isToday ? "記録する" : "修正を保存"} />
         </div>
       </section>
 
@@ -1050,10 +1063,11 @@ function RecordView({ db, allForName, badgeMap, selectedDate, setSelectedDate, m
   );
 }
 
-function SwingForm({ bats, onSubmit, submitLabel }) {
+function SwingForm({ bats, defaultBat, onSubmit, submitLabel }) {
+  const selectedBat = bats.includes(defaultBat) ? defaultBat : bats[0] || "";
   return (
     <form className="input-grid swing-form" onSubmit={onSubmit}>
-      <label className="field-label">バット<select name="bat" required>{bats.map((bat) => <option key={bat}>{bat}</option>)}</select></label>
+      <label className="field-label">バット<select key={selectedBat} name="bat" required defaultValue={selectedBat}>{bats.map((bat) => <option key={bat}>{bat}</option>)}</select></label>
       <label className="field-label">回数<input name="count" type="number" inputMode="numeric" min="1" step="1" placeholder="50" required /></label>
       <label className="field-label">平均<input name="avg" type="number" inputMode="numeric" min="0" max="999" step="1" placeholder="520" required /></label>
       <label className="field-label">ベスト<input name="best" type="number" inputMode="numeric" min="0" max="999" step="1" placeholder="710" required /></label>
@@ -1148,8 +1162,18 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
       <section className="panel">
         <div className="section-row">
           <h2>バット</h2>
-          <p>全員で共有</p>
+          <p>全員で共有 / 入力時の初期値</p>
         </div>
+        <label className="field-label default-bat-field">
+          デフォルト
+          <span className="select-shell">
+            <span className="select-leading"><SvgIcon type="bat" /></span>
+            <select value={db.defaultBat || db.bats[0] || ""} onChange={(event) => setDb({ ...db, defaultBat: event.target.value })}>
+              {db.bats.map((bat) => <option key={bat} value={bat}>{bat}</option>)}
+            </select>
+            <span className="select-caret" aria-hidden="true"><SvgIcon type="chevronDown" /></span>
+          </span>
+        </label>
         <form className="add-row" onSubmit={addBat}>
           <input name="bat" type="text" autoComplete="off" placeholder="例: 赤バット" />
           <button type="submit" className="primary"><ButtonIcon type="plus" /></button>

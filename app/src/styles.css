@@ -156,6 +156,7 @@ p {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
   flex: 0 0 auto;
   min-height: 38px;
   border: 1px solid var(--line-hot);
@@ -165,6 +166,12 @@ p {
   background: rgba(255, 48, 68, 0.14);
   font-size: 0.84rem;
   font-weight: 900;
+}
+
+.active-player svg {
+  width: 17px;
+  height: 17px;
+  stroke-width: 2.4;
 }
 
 .top-tabs-row .active-player {
@@ -960,10 +967,11 @@ input::placeholder {
   place-items: center;
   width: 16px;
   height: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.54);
+  border: 1px solid rgba(255, 220, 150, 0.72);
   border-radius: 50%;
-  color: white;
-  background: var(--hot);
+  color: #fff8e9;
+  background: linear-gradient(180deg, #ffb341, #e07711);
+  box-shadow: 0 0 10px rgba(255, 166, 42, 0.34);
   font-size: 0.55rem;
   font-style: normal;
 }
@@ -1112,6 +1120,17 @@ input::placeholder {
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 8px;
+}
+
+.default-bat-field {
+  margin-bottom: 10px;
+}
+
+.default-bat-field select {
+  appearance: none;
+  -webkit-appearance: none;
+  min-height: 42px;
+  padding: 0 38px 0 40px;
 }
 
 .tool-grid {
