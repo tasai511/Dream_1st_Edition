@@ -524,14 +524,15 @@ input::placeholder {
 
 .swing-silhouette {
   position: absolute;
-  right: -18px;
-  bottom: -18px;
-  width: 176px;
-  height: 140px;
-  object-fit: contain;
-  opacity: 0.7;
-  mix-blend-mode: screen;
-  filter: drop-shadow(0 0 10px rgba(var(--hot-rgb), 0.42));
+  right: -24px;
+  bottom: -30px;
+  width: 190px;
+  height: 158px;
+  object-fit: cover;
+  object-position: 66% 52%;
+  opacity: 0.72;
+  mix-blend-mode: multiply;
+  filter: saturate(1.1) contrast(1.08) drop-shadow(0 0 12px rgba(var(--hot-rgb), 0.32));
   pointer-events: none;
 }
 
@@ -1242,12 +1243,36 @@ input::placeholder {
 @media (orientation: landscape) and (max-height: 520px) {
   .app {
     min-height: 100svh;
-    overflow: hidden;
+    overflow: auto;
   }
 
   .phone-shell {
-    width: min(480px, 100svh);
+    width: min(900px, 100vw);
     height: 100svh;
+    max-width: none;
+    padding-inline: max(18px, env(safe-area-inset-left), env(safe-area-inset-right));
     overflow-y: auto;
+  }
+
+  .content {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .bat-dashboard {
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 0.9fr);
+    align-items: start;
+  }
+
+  .dashboard-controls {
+    grid-column: 1 / -1;
+  }
+
+  .bat-dashboard .dashboard-section:first-of-type,
+  .bat-dashboard .comparison-section {
+    grid-column: auto;
+  }
+
+  .bat-dashboard .dashboard-section:last-of-type {
+    grid-column: 1 / -1;
   }
 }

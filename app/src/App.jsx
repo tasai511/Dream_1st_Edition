@@ -43,7 +43,7 @@ function ButtonIcon({ type }) {
 
 function SwingSilhouette() {
   return (
-    <img className="swing-silhouette" src="./images/swing-neon.png" alt="" aria-hidden="true" />
+    <img className="swing-silhouette" src="./images/swing-neon.jpg" alt="" aria-hidden="true" />
   );
 }
 
