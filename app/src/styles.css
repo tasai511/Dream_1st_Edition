@@ -239,9 +239,9 @@ input::placeholder {
 }
 
 .bat-field select {
-  min-height: 58px;
-  padding: 0 14px;
-  font-size: 1.02rem;
+  min-height: 96px;
+  padding: 0 18px;
+  font-size: 1.16rem;
   font-weight: 900;
 }
 
