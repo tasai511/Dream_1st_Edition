@@ -1,8 +1,9 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 const STORAGE_KEY = "dream1-swing-tracker-v1";
 const ALL = "__all__";
 const RANGE_ALL = "all";
+const MAX_CHART_SCALE = 8;
 
 const defaultDb = {
   activeName: "遥太",
@@ -170,6 +171,23 @@ function pathFromPoints(points) {
   return path;
 }
 
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function constrainChartView(view, plotWidth) {
+  const scale = clamp(view.scale, 1, MAX_CHART_SCALE);
+  const minOffset = plotWidth - (plotWidth * scale);
+  return {
+    scale,
+    offset: scale === 1 ? 0 : clamp(view.offset, minOffset, 0),
+  };
+}
+
+function pointerDistance(first, second) {
+  return Math.hypot(first.x - second.x, first.y - second.y);
+}
+
 function Metric({ icon, label, value, unit }) {
   return (
     <div className="metric-card">
@@ -181,11 +199,16 @@ function Metric({ icon, label, value, unit }) {
 
 function Chart({ data }) {
   const [hovered, setHovered] = useState(null);
+  const [view, setView] = useState({ scale: 1, offset: 0 });
+  const svgRef = useRef(null);
+  const pointersRef = useRef(new Map());
+  const gestureRef = useRef(null);
   const width = 360;
   const height = 250;
   const pad = { left: 42, right: 18, top: 22, bottom: 42 };
   const plotW = width - pad.left - pad.right;
   const plotH = height - pad.top - pad.bottom;
+  const chartView = constrainChartView(view, plotW);
   const values = data.flatMap((item) => [item.avg, item.best]).filter((value) => Number.isFinite(value));
 
   if (!values.length) return <div className="chart-empty">記録を入れるとグラフが表示されます。</div>;
@@ -204,23 +227,131 @@ function Chart({ data }) {
   };
   const avgPoints = data.map((item, index) => point(item, index, "avg")).filter(Boolean);
   const bestPoints = data.map((item, index) => point(item, index, "best")).filter(Boolean);
-  const avgPath = pathFromPoints(avgPoints);
-  const bestPath = pathFromPoints(bestPoints);
+  const transformPoint = (item) => ({
+    ...item,
+    x: pad.left + ((item.x - pad.left) * chartView.scale) + chartView.offset,
+  });
+  const avgDisplayPoints = avgPoints.map(transformPoint);
+  const bestDisplayPoints = bestPoints.map(transformPoint);
+  const avgPath = pathFromPoints(avgDisplayPoints);
+  const bestPath = pathFromPoints(bestDisplayPoints);
   const yLabels = [0, 0.25, 0.5, 0.75, 1].map((ratio) => {
     const value = Math.round((maxY * (1 - ratio)) / 100) * 100;
     return { value, y: pad.top + plotH * ratio };
   });
   const hoverX = hovered ? Math.min(width - 118, Math.max(pad.left + 4, hovered.x + 10)) : 0;
   const hoverY = hovered ? Math.max(8, hovered.y - 48) : 0;
+  const clientXToSvgX = (clientX) => {
+    const rect = svgRef.current?.getBoundingClientRect();
+    if (!rect || rect.width === 0) return pad.left;
+    return ((clientX - rect.left) / rect.width) * width;
+  };
+  const clientDeltaToSvgDelta = (clientDeltaX) => {
+    const rect = svgRef.current?.getBoundingClientRect();
+    if (!rect || rect.width === 0) return 0;
+    return (clientDeltaX / rect.width) * width;
+  };
+  const startPanGesture = (pointer) => {
+    gestureRef.current = {
+      type: "pan",
+      startX: pointer.x,
+      startOffset: chartView.offset,
+      startScale: chartView.scale,
+    };
+  };
+  const startPinchGesture = (pointers) => {
+    const [first, second] = pointers;
+    const centerX = (first.x + second.x) / 2;
+    gestureRef.current = {
+      type: "pinch",
+      startDistance: pointerDistance(first, second),
+      startOffset: chartView.offset,
+      startScale: chartView.scale,
+      originX: clientXToSvgX(centerX) - pad.left,
+    };
+  };
+  const updateGesture = () => {
+    const pointers = [...pointersRef.current.values()];
+    const gesture = gestureRef.current;
+    if (!gesture || pointers.length === 0) return;
+
+    if (gesture.type === "pan" && pointers.length === 1) {
+      const dx = clientDeltaToSvgDelta(pointers[0].x - gesture.startX);
+      setView(constrainChartView({
+        scale: gesture.startScale,
+        offset: gesture.startOffset + dx,
+      }, plotW));
+      return;
+    }
+
+    if (pointers.length >= 2) {
+      const [first, second] = pointers;
+      const distance = pointerDistance(first, second);
+      if (!gesture.startDistance) return;
+      const nextScale = clamp(gesture.startScale * (distance / gesture.startDistance), 1, MAX_CHART_SCALE);
+      const baseX = (gesture.originX - gesture.startOffset) / gesture.startScale;
+      setView(constrainChartView({
+        scale: nextScale,
+        offset: gesture.originX - (baseX * nextScale),
+      }, plotW));
+    }
+  };
+  const handlePointerDown = (event) => {
+    event.preventDefault();
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+    pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    setHovered(null);
+    const pointers = [...pointersRef.current.values()];
+    if (pointers.length >= 2) {
+      startPinchGesture(pointers);
+    } else {
+      startPanGesture(pointers[0]);
+    }
+  };
+  const handlePointerMove = (event) => {
+    if (!pointersRef.current.has(event.pointerId)) return;
+    event.preventDefault();
+    pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    updateGesture();
+  };
+  const handlePointerEnd = (event) => {
+    try {
+      event.currentTarget.releasePointerCapture?.(event.pointerId);
+    } catch {
+      // Some browsers throw if the pointer was already released.
+    }
+    pointersRef.current.delete(event.pointerId);
+    const pointers = [...pointersRef.current.values()];
+    if (pointers.length >= 2) {
+      startPinchGesture(pointers);
+    } else if (pointers.length === 1) {
+      startPanGesture(pointers[0]);
+    } else {
+      gestureRef.current = null;
+    }
+  };
 
   return (
     <div className="chart-wrap">
-      <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="スコア推移" onPointerLeave={() => setHovered(null)}>
+      <svg
+        ref={svgRef}
+        viewBox={`0 0 ${width} ${height}`}
+        role="img"
+        aria-label="スコア推移"
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerEnd}
+        onPointerCancel={handlePointerEnd}
+        onPointerLeave={() => setHovered(null)}
+      >
         <defs>
           <linearGradient id="avgFill" x1="0" x2="0" y1="0" y2="1">
             <stop offset="0%" stopColor="rgba(255,48,68,.25)" />
             <stop offset="100%" stopColor="rgba(255,48,68,0)" />
           </linearGradient>
+          <clipPath id="chartPlotClip">
+            <rect x={pad.left} y={pad.top} width={plotW} height={plotH} />
+          </clipPath>
         </defs>
         {yLabels.map((tick) => (
           <g key={tick.value}>
@@ -230,22 +361,24 @@ function Chart({ data }) {
         ))}
         <line x1={pad.left} y1={pad.top} x2={pad.left} y2={height - pad.bottom} className="axis-line" />
         <line x1={pad.left} y1={height - pad.bottom} x2={width - pad.right} y2={height - pad.bottom} className="axis-line" />
-        {avgPoints.length > 1 && <path className="area" d={`${avgPath} L ${avgPoints.at(-1).x} ${height - pad.bottom} L ${avgPoints[0].x} ${height - pad.bottom} Z`} />}
-        <path className="avg-path" d={avgPath} />
-        <path className="best-path" d={bestPath} />
-        {[...avgPoints, ...bestPoints].map((pointItem) => (
-          <circle
-            key={`${pointItem.key}-${pointItem.item.date}`}
-            className={`chart-point ${pointItem.key}`}
-            cx={pointItem.x}
-            cy={pointItem.y}
-            r="8"
-            tabIndex="0"
-            onPointerEnter={() => setHovered(pointItem)}
-            onFocus={() => setHovered(pointItem)}
-            onBlur={() => setHovered(null)}
-          />
-        ))}
+        <g clipPath="url(#chartPlotClip)">
+          {avgDisplayPoints.length > 1 && <path className="area" d={`${avgPath} L ${avgDisplayPoints.at(-1).x} ${height - pad.bottom} L ${avgDisplayPoints[0].x} ${height - pad.bottom} Z`} />}
+          <path className="avg-path" d={avgPath} />
+          <path className="best-path" d={bestPath} />
+          {[...avgDisplayPoints, ...bestDisplayPoints].map((pointItem) => (
+            <circle
+              key={`${pointItem.key}-${pointItem.item.date}`}
+              className={`chart-point ${pointItem.key}`}
+              cx={pointItem.x}
+              cy={pointItem.y}
+              r="8"
+              tabIndex="0"
+              onPointerEnter={() => setHovered(pointItem)}
+              onFocus={() => setHovered(pointItem)}
+              onBlur={() => setHovered(null)}
+            />
+          ))}
+        </g>
         <text x={pad.left} y={height - 12} className="chart-date">{data[0].label}</text>
         <text x={width - pad.right} y={height - 12} textAnchor="end" className="chart-date">{data.at(-1).label}</text>
         {hovered && (
