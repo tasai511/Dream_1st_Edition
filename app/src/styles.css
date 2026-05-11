@@ -128,7 +128,7 @@ svg text {
   width: min(176px, 48%);
   height: 44px;
   object-fit: contain;
-  object-position: right center;
+  object-position: left center;
   filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.28));
 }
 
@@ -532,10 +532,10 @@ input::placeholder {
 
 .swing-silhouette {
   position: absolute;
-  right: -18px;
-  bottom: -10px;
-  width: 220px;
-  height: 126px;
+  right: -10px;
+  bottom: 0;
+  width: 176px;
+  height: 100px;
   object-fit: cover;
   object-position: 50% 48%;
   opacity: 0.66;
@@ -758,8 +758,8 @@ input::placeholder {
 
 .chart-tooltip-card {
   position: absolute;
-  top: clamp(8px, var(--tooltip-y), calc(100% - 74px));
-  left: clamp(8px, var(--tooltip-x), calc(100% - 156px));
+  top: var(--tooltip-y);
+  left: var(--tooltip-x);
   z-index: 2;
   display: grid;
   width: 148px;
@@ -857,13 +857,13 @@ input::placeholder {
 }
 
 .badge.count {
-  border-color: rgba(255, 179, 65, 0.34);
-  background: rgba(255, 179, 65, 0.14);
+  border-color: rgba(255, 68, 86, 0.42);
+  background: rgba(255, 68, 86, 0.16);
 }
 
 .badge.score {
-  border-color: rgba(var(--hot-rgb), 0.42);
-  background: rgba(var(--hot-rgb), 0.18);
+  border-color: rgba(47, 134, 255, 0.42);
+  background: rgba(47, 134, 255, 0.16);
 }
 
 .badge.streak {
@@ -931,6 +931,9 @@ input::placeholder {
   top: -3px;
   right: -2px;
   display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  max-width: 42px;
   gap: 2px;
 }
 
@@ -949,15 +952,15 @@ input::placeholder {
 }
 
 .calendar-badges i.count {
-  border-color: rgba(255, 220, 150, 0.72);
-  background: linear-gradient(180deg, #ffb341, #e07711);
-  box-shadow: 0 0 10px rgba(255, 166, 42, 0.34);
+  border-color: rgba(255, 132, 143, 0.72);
+  background: linear-gradient(180deg, #ff4456, #b20f20);
+  box-shadow: 0 0 10px rgba(255, 68, 86, 0.34);
 }
 
 .calendar-badges i.score {
-  border-color: rgba(var(--hot-rgb), 0.7);
-  background: linear-gradient(180deg, var(--hot), var(--hot-dark));
-  box-shadow: 0 0 10px rgba(var(--hot-rgb), 0.34);
+  border-color: rgba(111, 170, 255, 0.7);
+  background: linear-gradient(180deg, #2f86ff, #1755b8);
+  box-shadow: 0 0 10px rgba(47, 134, 255, 0.34);
 }
 
 .calendar-badges i.streak {
@@ -1170,10 +1173,17 @@ input::placeholder {
 .chip-delete {
   display: grid;
   place-items: center;
+  flex: 0 0 40px;
   width: 40px;
   border-left: 1px solid var(--line) !important;
   color: rgba(255, 255, 255, 0.86) !important;
   padding: 0 !important;
+}
+
+.chip-delete svg {
+  width: 16px;
+  height: 16px;
+  margin: auto;
 }
 
 .primary,

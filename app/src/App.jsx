@@ -29,7 +29,7 @@ function SvgIcon({ type }) {
   if (type === "count") return <svg {...props}><path d="M4 7h16M4 12h16M4 17h10" /></svg>;
   if (type === "avg") return <svg {...props}><path d="M4 17 9 12l4 4 7-9" /><path d="M16 7h4v4" /></svg>;
   if (type === "best") return <svg {...props}><path d="M12 3 9.5 8.5 4 9l4.2 3.8L7 18.5l5-3 5 3-1.2-5.7L20 9l-5.5-.5L12 3Z" /></svg>;
-  if (type === "bat") return <svg {...props}><g transform="rotate(-45 12 12)"><path d="M7 3.4C7 1.5 8.5 0 10.4 0h3.2C15.5 0 17 1.5 17 3.4v7.2c0 .8-.3 1.5-.8 2.1L13.4 16h-2.8l-2.8-3.3c-.5-.6-.8-1.3-.8-2.1Z" fill="currentColor" stroke="none" /><path d="M10.4 16h3.2v2.4h-3.2z" fill="currentColor" stroke="none" /><path d="M9.2 18.4h5.6l1.5 2.7c.4.8-.1 1.9-1 1.9H8.7c-.9 0-1.4-1.1-1-1.9z" fill="currentColor" stroke="none" /></g></svg>;
+  if (type === "bat") return <svg {...props}><g transform="rotate(42 12 12)"><path d="M9.6 1.2h4.8c.9 0 1.6.7 1.6 1.6v7.3c0 1.1-.3 2.1-.9 3L12.9 16h-1.8l-2.2-2.9c-.6-.9-.9-1.9-.9-3V2.8c0-.9.7-1.6 1.6-1.6Z" fill="currentColor" stroke="none" /><path d="M11 16h2v4.1h-2z" fill="currentColor" stroke="none" /><path d="M9.4 20.1h5.2l.9 1.7c.3.5-.1 1.2-.7 1.2H9.2c-.6 0-1-.7-.7-1.2z" fill="currentColor" stroke="none" /></g></svg>;
   if (type === "badge") return <svg {...props}><circle cx="12" cy="8" r="4" /><path d="m9 12-2 8 5-3 5 3-2-8" /></svg>;
   if (type === "plus") return <svg {...props}><path d="M12 5v14M5 12h14" /></svg>;
   if (type === "trash") return <svg {...props}><path d="M4 7h16" /><path d="M10 11v6M14 11v6" /><path d="M6 7l1 14h10l1-14" /><path d="M9 7V4h6v3" /></svg>;
@@ -465,8 +465,8 @@ function Chart({ data, initialRange }) {
   const visibleStartLabel = data[visibleIndexAt(0)]?.label || data[0].label;
   const visibleEndLabel = data[visibleIndexAt(plotW)]?.label || data.at(-1).label;
   const hoveredInPlot = hovered && hovered.x >= pad.left && hovered.x <= width - pad.right;
-  const tooltipLeft = hovered ? `${(hovered.x / width) * 100}%` : "0%";
-  const tooltipTop = hovered ? `${(clamp(hovered.y - 74, 12, height - 80) / height) * 100}%` : "0%";
+  const tooltipLeft = hovered ? `${(clamp(hovered.x + 10, 8, width - 156) / width) * 100}%` : "0%";
+  const tooltipTop = hovered ? `${(clamp(hovered.y - 74, 10, height - 82) / height) * 100}%` : "0%";
   const clientXToSvgX = (clientX) => {
     const rect = svgRef.current?.getBoundingClientRect();
     if (!rect || rect.width === 0) return pad.left;
@@ -802,8 +802,8 @@ export default function App() {
     <div className={`app theme-${db.theme || "red"}`}>
       <div className="phone-shell">
         <header className="app-header">
-          <button className="active-player" type="button" onClick={() => setTab("settings")}><SvgIcon type="person" />{currentName || "未選択"}</button>
           <img className="dream-logo" src="./images/dream-logo.png" alt="Dream" />
+          <button className="active-player" type="button" onClick={() => setTab("settings")}><SvgIcon type="person" />{currentName || "未選択"}</button>
         </header>
 
         <main className="content">
@@ -1096,7 +1096,7 @@ function RecordView({ db, allForName, badgeMap, selectedDate, setSelectedDate, m
           {selectedByBat.length ? selectedByBat.map((item) => <RecordSummary key={item.bat} item={item} />) : <p className="empty">この日の記録はまだありません。</p>}
         </div>
         <div className="badge-list day-badges">
-          {(badgeMap.get(selectedDate) || []).map((badge) => <span className="badge hot" key={badge}><Icon type="badge" />{badge}</span>)}
+          {(badgeMap.get(selectedDate) || []).map((badge) => <span className={`badge ${badgeCategory(badge)}`} key={badge}><Icon type="badge" />{badge}</span>)}
         </div>
       </section>
     </>
@@ -1131,7 +1131,7 @@ function Calendar({ records, badgeMap, month, selectedDate, setSelectedDate }) {
           const day = index + 1;
           const date = toISO(new Date(year, monthIndex, day));
           const hasRecord = daily.has(date);
-          const badgeCategories = [...new Set((badgeMap.get(date) || []).map(badgeCategory))];
+          const badgeCategories = (badgeMap.get(date) || []).map(badgeCategory);
           return (
             <button
               type="button"
