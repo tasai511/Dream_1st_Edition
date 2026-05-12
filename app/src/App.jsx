@@ -656,7 +656,7 @@ function ProgressMeter({ kind, value, range, variableTarget, targets }) {
         aria-label={`${targetBadge.label}の詳細`}
         onClick={() => setSelectedBadge({ ...targetBadge, earnedCount: 0, lockedSecret: false })}
       >
-        <RarityIcon rarity={targetBadge.rarity} />
+        <span className="meter-badge-icon"><RarityIcon rarity={targetBadge.rarity} /></span>
         <span>獲得まで</span>
       </button>
     </div>

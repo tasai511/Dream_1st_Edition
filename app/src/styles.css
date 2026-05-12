@@ -358,6 +358,14 @@ p {
   font-size: 1.8rem;
 }
 
+.cumulative-summary .achievement-metric.count > div > strong {
+  font-size: 1.8rem !important;
+}
+
+.cumulative-summary .compact-metrics .achievement-metric.count > div > strong {
+  font-size: 1.8rem !important;
+}
+
 .achievement-metric > div > strong span {
   margin-left: 4px;
   color: var(--muted);
@@ -455,10 +463,12 @@ p {
 }
 
 .meter-ring .meter-remaining {
-  gap: 2px;
-  align-content: center;
+  display: grid !important;
+  gap: 1px;
+  place-content: center;
   justify-items: center;
   text-align: center;
+  transform: translateY(-1px);
 }
 
 .meter-ring .meter-remaining em,
@@ -1498,6 +1508,10 @@ input::placeholder {
 
 .completion-meter .meter-ring .meter-remaining b {
   font-size: 1.1rem;
+}
+
+.completion-meter .meter-ring .meter-remaining {
+  transform: translateY(-2px);
 }
 
 .completion-meter small {
@@ -2910,13 +2924,14 @@ body,
   justify-content: center;
   justify-self: end;
   gap: 5px;
-  width: auto;
-  height: 24px;
+  width: var(--meter-size);
+  min-height: 24px;
   margin-top: 5px;
-  border-color: color-mix(in srgb, currentColor 40%, var(--line));
-  border-radius: 999px;
-  padding: 0 7px;
-  background: #202633;
+  margin-left: auto;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
   color: currentColor;
   font-size: 0.6rem;
   font-weight: 900;
@@ -2927,9 +2942,20 @@ body,
 .meter-badge .rarity-icon {
   width: 13px;
   height: 13px;
+  color: currentColor;
 }
 
-.meter-badge span {
+.meter-badge-icon {
+  display: grid;
+  place-items: center;
+  width: 21px;
+  height: 21px;
+  border: 1px solid color-mix(in srgb, currentColor 42%, var(--line));
+  border-radius: 50%;
+  background: #202633;
+}
+
+.meter-badge > span:not(.meter-badge-icon) {
   color: var(--muted);
   white-space: nowrap;
 }
