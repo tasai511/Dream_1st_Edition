@@ -336,14 +336,14 @@ function Metric({ icon, label, value, unit }) {
 }
 
 function ScoreComparison({ daily, range }) {
-  const [mode, setMode] = useState("avg");
+  const [mode, setMode] = useState("count");
   const scrollRef = useRef(null);
   const buckets = useMemo(() => comparisonBuckets(daily, range), [daily, range]);
   const visibleBuckets = useMemo(() => [...buckets].reverse(), [buckets]);
   const modes = [
+    ["count", "回数", "回"],
     ["avg", "平均", "点"],
     ["best", "ベスト", "点"],
-    ["count", "回数", "回"],
   ];
   const current = modes.find(([key]) => key === mode) || modes[0];
   const values = buckets.map((bucket) => bucket[mode]);
@@ -362,7 +362,7 @@ function ScoreComparison({ daily, range }) {
   }, [mode, range, buckets.length]);
 
   return (
-    <section className="dashboard-section comparison-section">
+    <section className="panel comparison-section">
       <div className="section-row tight">
         <div>
           <h2>スコア比較</h2>
@@ -896,10 +896,29 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
     [365, "1年"],
   ];
   const rangeLabel = rangeOptions.find(([value]) => value === range)?.[1] || `${range}日`;
+  const badgeTotal = badgeCounts.reduce((sum, [, count]) => sum + count, 0);
 
   return (
     <>
-      <section className="panel hero-card bat-dashboard">
+      <section className="panel hero-card">
+        <div className="section-row tight">
+          <div>
+            <h2>スコア</h2>
+            <p>{range === RANGE_ALL ? "全期間" : `直近${rangeLabel}`}</p>
+          </div>
+        </div>
+        <div className="total-card">
+          <SwingSilhouette />
+          <div className="metric-label"><Icon type="count" />総スイング</div>
+          <strong>{total.toLocaleString("ja-JP")}<span>回</span></strong>
+        </div>
+        <div className="metric-grid">
+          <Metric icon="avg" label="平均" value={avg} unit="点" />
+          <Metric icon="best" label="ベスト" value={best} unit="点" />
+        </div>
+      </section>
+
+      <section className="panel home-controls-panel">
         <div className="dashboard-controls">
           <label className="field-label bat-field">
             バット
@@ -921,43 +940,25 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
             </div>
           </div>
         </div>
-
-        <section className="dashboard-section">
-          <div className="section-row tight">
-            <div>
-              <h2>スコア</h2>
-              <p>{range === RANGE_ALL ? "全期間" : `直近${rangeLabel}`}</p>
-            </div>
-          </div>
-          <div className="total-card">
-            <SwingSilhouette />
-            <div className="metric-label"><Icon type="count" />総スイング</div>
-            <strong>{total.toLocaleString("ja-JP")}<span>回</span></strong>
-          </div>
-          <div className="metric-grid">
-            <Metric icon="best" label="ベスト" value={best} unit="点" />
-            <Metric icon="avg" label="平均" value={avg} unit="点" />
-          </div>
-        </section>
-
-        <ScoreComparison daily={chartData} range={range} />
-
-        <section className="dashboard-section">
-          <div className="section-row tight">
-            <div>
-              <h2>スコア推移</h2>
-              <p>平均とベストの流れ</p>
-            </div>
-            <div className="legend"><span className="avg-line" />平均 <span className="best-line" />ベスト</div>
-          </div>
-          <Chart data={chartData} initialRange={range} />
-        </section>
       </section>
+
+      <section className="panel">
+        <div className="section-row tight">
+          <div>
+            <h2>スコア推移</h2>
+            <p>平均とベストの流れ</p>
+          </div>
+          <div className="legend"><span className="avg-line" />平均 <span className="best-line" />ベスト</div>
+        </div>
+        <Chart data={chartData} initialRange={range} />
+      </section>
+
+      <ScoreComparison daily={chartData} range={range} />
 
       <section className="panel">
         <div className="section-row">
           <h2>獲得バッジ</h2>
-          <p>全期間</p>
+          <p>全期間 / 合計{badgeTotal.toLocaleString("ja-JP")}個</p>
         </div>
         {badgeCounts.length ? (
           <div className="badge-groups">
