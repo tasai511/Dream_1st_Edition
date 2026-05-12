@@ -268,6 +268,32 @@ p {
     rgba(0, 0, 0, 0.18);
 }
 
+.attached-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  margin: -4px 0 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius);
+  padding: 3px;
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.attached-tabs button {
+  min-height: 30px;
+  border: 0;
+  border-radius: 6px;
+  color: var(--muted);
+  background: transparent;
+  font-size: 0.72rem;
+  font-weight: 950;
+}
+
+.attached-tabs button.selected {
+  color: white;
+  background: var(--hot);
+}
+
 .achievement-summary {
   display: grid;
   gap: 10px;
@@ -299,6 +325,11 @@ p {
 .achievement-metric.count > div > strong {
   font-size: 2.72rem;
   color: var(--hot);
+}
+
+.compact-metrics .achievement-metric > div > strong,
+.compact-metrics .achievement-metric.count > div > strong {
+  font-size: 1.8rem;
 }
 
 .achievement-metric > div > strong span {
@@ -615,10 +646,21 @@ input::placeholder {
 }
 
 .score-card .dashboard-section {
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: var(--radius);
-  padding: 14px;
-  background: rgba(0, 0, 0, 0.18);
+  border: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0;
+  padding: 14px 0 0;
+  background: transparent;
+}
+
+.cumulative-summary {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 14px;
+}
+
+.cumulative-summary .progress-meter.count {
+  --meter-size: 72px;
+  min-height: 72px;
 }
 
 .comparison-section {

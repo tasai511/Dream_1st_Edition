@@ -9,10 +9,14 @@ const RANGE_MONTH = "month";
 const RANGE_TOTAL = "total";
 const kMinChartVisibleDays = 7;
 const kMaxChartVisibleDays = 365;
+const UNIQUE_TOTAL_COUNT_TARGETS = [100, 500, 1000, 3000, 5000, 10000, 30000, 50000, 100000];
+const UNIQUE_BEST_TARGETS = [500, 600, 700, 800, 900, 999];
+const UNIQUE_STREAK_TARGETS = [2, 3, 7, 14, 30, 60, 100, 365];
 const BADGE_PERIODS = [
   ["daily", "毎日バッジ"],
   ["weekly", "毎週バッジ"],
   ["monthly", "毎月バッジ"],
+  ["total", "累計バッジ"],
 ];
 const HOME_BADGE_DEFINITIONS = [
   ...[50, 100, 200, 300, 500].map((target) => ({ period: RANGE_TODAY, group: "daily", metric: "count", target, label: `今日${target}回` })),
@@ -25,6 +29,10 @@ const HOME_BADGE_DEFINITIONS = [
   ...[500, 1000, 2000, 3000, 5000].map((target) => ({ period: RANGE_MONTH, group: "monthly", metric: "count", target, label: `月間${target}回` })),
   ...[300, 400, 500, 600].map((target) => ({ period: RANGE_MONTH, group: "monthly", metric: "avg", target, label: `月平均${target}` })),
   ...[[5, "今月5日練習"], [10, "今月10日練習"], [20, "今月20日練習"], ["all", "今月毎日練習"]].map(([target, label]) => ({ period: RANGE_MONTH, group: "monthly", metric: "days", target, label })),
+];
+const UNIQUE_BADGE_DEFINITIONS = [
+  ...UNIQUE_TOTAL_COUNT_TARGETS.map((target) => ({ metric: "count", target, label: `累計${target}回` })),
+  ...UNIQUE_BEST_TARGETS.map((target) => ({ metric: "best", target, label: `初${target}点` })),
 ];
 
 const defaultDb = {
@@ -126,19 +134,6 @@ function rangeWindow(range, baseDate = parseISO(todayISO())) {
     return { start, end: endOfMonth(baseDate), title: "今月の実績", label: `${formatRangeDate(start)}-${formatRangeDate(endOfMonth(baseDate))}` };
   }
   return { start: baseDate, end: baseDate, title: "今日の実績", label: formatRangeDate(baseDate) };
-}
-
-function cumulativeWindow(records, baseDate = parseISO(todayISO())) {
-  if (!records.length) {
-    return { start: baseDate, end: baseDate, title: "累計の実績", label: formatRangeDate(baseDate) };
-  }
-  const start = parseISO(records.reduce((min, record) => record.date < min ? record.date : min, records[0].date));
-  return {
-    start,
-    end: baseDate,
-    title: "累計の実績",
-    label: `${formatRangeDate(start)}-${formatRangeDate(baseDate)}`,
-  };
 }
 
 function badgeFilterWindow(filter, baseDate = parseISO(todayISO())) {
@@ -288,8 +283,22 @@ function badgesFor(records) {
   const dailyMap = new Map(daily.map((day) => [day.date, day]));
   const streaks = streakByDate(daily);
   const byDate = new Map();
+  const uniqueEarned = new Set();
+  let cumulativeCount = 0;
+  let cumulativeBest = 0;
 
   daily.forEach((day) => {
+    cumulativeCount += day.count;
+    cumulativeBest = Math.max(cumulativeBest, day.best || 0);
+    UNIQUE_BADGE_DEFINITIONS.forEach((definition) => {
+      if (uniqueEarned.has(definition.label)) return;
+      const value = definition.metric === "count" ? cumulativeCount : cumulativeBest;
+      if (value >= definition.target) {
+        addHomeBadge(byDate, day.date, definition.label);
+        uniqueEarned.add(definition.label);
+      }
+    });
+
     const summary = { ...day, badgeAvg: day.avg, days: 1, spanDays: 1, streak: streaks.get(day.date) || 0 };
     HOME_BADGE_DEFINITIONS
       .filter((definition) => definition.period === RANGE_TODAY)
@@ -448,18 +457,20 @@ function Metric({ icon, label, value, unit }) {
   );
 }
 
-function progressInfo(kind, value, range, variableTarget) {
-  const definitions = HOME_BADGE_DEFINITIONS
-    .filter((definition) => (
-      definition.period === range &&
-      definition.metric === kind &&
-      (typeof definition.target === "number" || (definition.target === "all" && variableTarget))
-    ))
-    .map((definition) => ({
-      ...definition,
-      progressTarget: definition.target === "all" ? variableTarget : definition.target,
-    }))
-    .sort((a, b) => a.progressTarget - b.progressTarget);
+function progressInfo(kind, value, range, variableTarget, targets = null) {
+  const definitions = targets
+    ? targets.map((target) => ({ target, progressTarget: target, label: `${target}` }))
+    : HOME_BADGE_DEFINITIONS
+      .filter((definition) => (
+        definition.period === range &&
+        definition.metric === kind &&
+        (typeof definition.target === "number" || (definition.target === "all" && variableTarget))
+      ))
+      .map((definition) => ({
+        ...definition,
+        progressTarget: definition.target === "all" ? variableTarget : definition.target,
+      }));
+  definitions.sort((a, b) => a.progressTarget - b.progressTarget);
   const fallback = definitions.at(-1) || { progressTarget: 1, label: "次のバッジ" };
   const next = definitions.find((definition) => value < definition.progressTarget) || fallback;
   const previous = [...definitions].reverse().find((definition) => definition.progressTarget < next.progressTarget)?.progressTarget || 0;
@@ -472,8 +483,8 @@ function progressInfo(kind, value, range, variableTarget) {
   };
 }
 
-function ProgressMeter({ kind, value, range, variableTarget }) {
-  const info = progressInfo(kind, Number(value || 0), range, variableTarget);
+function ProgressMeter({ kind, value, range, variableTarget, targets }) {
+  const info = progressInfo(kind, Number(value || 0), range, variableTarget, targets);
   const span = Math.max(1, info.goal - info.previous);
   const ratio = clamp((Number(value || 0) - info.previous) / span, 0, 1);
   const circumference = 169.65;
@@ -517,14 +528,14 @@ function ProgressMeter({ kind, value, range, variableTarget }) {
   );
 }
 
-function AchievementMetric({ icon, label, value, unit, kind, range, showMeter = true, variableTarget = null }) {
+function AchievementMetric({ icon, label, value, unit, kind, range, showMeter = true, variableTarget = null, targets = null }) {
   return (
     <div className={`achievement-metric ${kind}`}>
       <div>
         <div className="metric-label"><Icon type={icon} />{label}</div>
         <strong>{Number(value || 0).toLocaleString("ja-JP")}<span>{unit}</span></strong>
       </div>
-      {showMeter && <ProgressMeter kind={kind} value={value} range={range} variableTarget={variableTarget} />}
+      {showMeter && <ProgressMeter kind={kind} value={value} range={range} variableTarget={variableTarget} targets={targets} />}
     </div>
   );
 }
@@ -1210,15 +1221,13 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
     record.date <= todayISO() &&
     (homeBat === ALL || record.bat === homeBat)
   ));
-  const achievementWindow = range === RANGE_TOTAL ? cumulativeWindow(allFiltered) : rangeWindow(range);
+  const achievementWindow = rangeWindow(range);
   const from = toISO(achievementWindow.start);
   const to = toISO(achievementWindow.end);
-  const filtered = range === RANGE_TOTAL
-    ? allFiltered
-    : allFiltered.filter((record) => (
-      record.date >= from &&
-      record.date <= to
-    ));
+  const filtered = allFiltered.filter((record) => (
+    record.date >= from &&
+    record.date <= to
+  ));
   const daily = aggregate(filtered);
   const periodSummary = periodSummaryFromDaily(
     new Map(daily.map((day) => [day.date, day])),
@@ -1227,6 +1236,11 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
   );
   const chartDaily = aggregate(allFiltered);
   const currentStreak = streakByDate(chartDaily).get(todayISO()) || 0;
+  const cumulativeSummary = periodSummaryFromDaily(
+    new Map(chartDaily.map((day) => [day.date, day])),
+    chartDaily.length ? parseISO(chartDaily[0].date) : parseISO(todayISO()),
+    parseISO(todayISO()),
+  );
   const total = periodSummary.count;
   const avg = range === RANGE_TODAY ? periodSummary.avg : periodSummary.badgeAvg;
   const best = periodSummary.best;
@@ -1241,7 +1255,6 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
     [RANGE_TODAY, "今日"],
     [RANGE_WEEK, "今週"],
     [RANGE_MONTH, "今月"],
-    [RANGE_TOTAL, "累計"],
   ];
   const badgeTotal = badgeCounts.reduce((sum, [, count]) => sum + count, 0);
   const badgeFilterOptions = [
@@ -1251,6 +1264,23 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
     ["year", "今年"],
     [RANGE_ALL, "全期間"],
   ];
+  const selectRangeByStep = (step) => {
+    const index = rangeOptions.findIndex(([value]) => value === range);
+    const next = rangeOptions[clamp(index + step, 0, rangeOptions.length - 1)];
+    if (next) setRange(next[0]);
+  };
+  const handleRangeTouchStart = (event) => {
+    if (event.target.closest(".chart-wrap, .record-scroll, .bar-scroll")) return;
+    event.currentTarget.dataset.touchX = String(event.touches[0].clientX);
+  };
+  const handleRangeTouchEnd = (event) => {
+    if (event.target.closest(".chart-wrap, .record-scroll, .bar-scroll")) return;
+    const startX = Number(event.currentTarget.dataset.touchX || 0);
+    const deltaX = event.changedTouches[0].clientX - startX;
+    if (Math.abs(deltaX) > 48) {
+      selectRangeByStep(deltaX < 0 ? 1 : -1);
+    }
+  };
 
   return (
     <>
@@ -1267,22 +1297,19 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
               <span className="select-caret" aria-hidden="true"><SvgIcon type="chevronDown" /></span>
             </span>
           </label>
-          <div className="range-field">
-            <span>期間</span>
-            <div className="segmented">
-              {rangeOptions.map(([value, label]) => (
-                <button key={value} type="button" className={range === value ? "selected" : ""} onClick={() => setRange(value)}>{label}</button>
-              ))}
-            </div>
-          </div>
         </div>
 
-        <section className="score-summary-card">
+        <section className="score-summary-card" onTouchStart={handleRangeTouchStart} onTouchEnd={handleRangeTouchEnd}>
           <div className="section-row tight">
             <div>
               <h2>{achievementWindow.title}</h2>
               <p>{achievementWindow.label}</p>
             </div>
+          </div>
+          <div className="attached-tabs" role="tablist" aria-label="実績期間">
+            {rangeOptions.map(([value, label]) => (
+              <button key={value} type="button" className={range === value ? "selected" : ""} onClick={() => setRange(value)}>{label}</button>
+            ))}
           </div>
           <div className="achievement-summary all-period">
             <AchievementMetric icon="count" label="スイング数" value={total} unit="回" kind="count" range={range} showMeter={range !== RANGE_TOTAL} />
@@ -1300,9 +1327,22 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
               <AchievementMetric icon="log" label="毎日練習" value={currentStreak} unit="日目" kind="streak" range={range} />
             )}
           </div>
+          <RecordPanel daily={chartData} range={range} />
         </section>
 
-        <RecordPanel daily={chartData} range={range} />
+        <section className="cumulative-summary">
+          <div className="section-row tight">
+            <div>
+              <h2>累計の実績</h2>
+              <p>全期間</p>
+            </div>
+          </div>
+          <div className="achievement-summary compact-metrics">
+            <AchievementMetric icon="count" label="スイング数" value={cumulativeSummary.count} unit="回" kind="count" range={RANGE_TOTAL} targets={UNIQUE_TOTAL_COUNT_TARGETS} />
+            <AchievementMetric icon="log" label="練習した日数" value={cumulativeSummary.days} unit="日" kind="days" range={RANGE_TOTAL} targets={UNIQUE_STREAK_TARGETS} />
+            <AchievementMetric icon="best" label="過去最高点" value={cumulativeSummary.best} unit="点" kind="best" range={RANGE_TOTAL} targets={UNIQUE_BEST_TARGETS} />
+          </div>
+        </section>
       </section>
 
       <section className="panel">
@@ -1388,10 +1428,12 @@ function collectBadgeCounts(records, filter = RANGE_ALL) {
 }
 
 function badgeCategory(label) {
+  if (label.startsWith("初")) return "score";
   return label.includes("平均") || label.includes("ベスト") ? "score" : "count";
 }
 
 function badgePeriod(label) {
+  if (label.startsWith("累計") || label.startsWith("初")) return "total";
   if (label.includes("日連続練習")) return "daily";
   if (label.startsWith("今日") || label.startsWith("日平均")) return "daily";
   if (label.startsWith("今週") || label.startsWith("週平均")) return "weekly";
@@ -1411,7 +1453,7 @@ function badgeValue(label) {
 
 function badgeSortKey(label) {
   const value = badgeValue(label);
-  const period = badgePeriod(label) === "daily" ? 0 : badgePeriod(label) === "weekly" ? 1 : badgePeriod(label) === "monthly" ? 2 : 9;
+  const period = badgePeriod(label) === "daily" ? 0 : badgePeriod(label) === "weekly" ? 1 : badgePeriod(label) === "monthly" ? 2 : badgePeriod(label) === "total" ? 3 : 9;
   const metric = label.includes("平均") ? 1 : label.includes("ベスト") ? 2 : label.includes("練習") || label.includes("皆勤") || label.includes("毎日") ? 3 : 0;
   return [period, metric, value || 9999, label];
 }
