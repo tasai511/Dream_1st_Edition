@@ -6,6 +6,7 @@ const RANGE_ALL = "all";
 const RANGE_TODAY = "today";
 const RANGE_WEEK = "week";
 const RANGE_MONTH = "month";
+const RANGE_TOTAL = "total";
 const kMinChartVisibleDays = 7;
 const kMaxChartVisibleDays = 365;
 const BADGE_PERIODS = [
@@ -124,6 +125,19 @@ function rangeWindow(range, baseDate = parseISO(todayISO())) {
     return { start, end: endOfMonth(baseDate), title: "今月の実績", label: `${formatRangeDate(start)}-${formatRangeDate(endOfMonth(baseDate))}` };
   }
   return { start: baseDate, end: baseDate, title: "今日の実績", label: formatRangeDate(baseDate) };
+}
+
+function cumulativeWindow(records, baseDate = parseISO(todayISO())) {
+  if (!records.length) {
+    return { start: baseDate, end: baseDate, title: "累計の実績", label: formatRangeDate(baseDate) };
+  }
+  const start = parseISO(records.reduce((min, record) => record.date < min ? record.date : min, records[0].date));
+  return {
+    start,
+    end: baseDate,
+    title: "累計の実績",
+    label: `${formatRangeDate(start)}-${formatRangeDate(baseDate)}`,
+  };
 }
 
 function badgeFilterWindow(filter, baseDate = parseISO(todayISO())) {
@@ -1164,18 +1178,20 @@ export default function App() {
 
 function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHomeBat }) {
   const [badgeFilter, setBadgeFilter] = useState(RANGE_TODAY);
-  const achievementWindow = rangeWindow(range);
-  const from = toISO(achievementWindow.start);
-  const to = toISO(achievementWindow.end);
   const allFiltered = db.records.filter((record) => (
     record.name === currentName &&
     record.date <= todayISO() &&
     (homeBat === ALL || record.bat === homeBat)
   ));
-  const filtered = allFiltered.filter((record) => (
-    record.date >= from &&
-    record.date <= to
-  ));
+  const achievementWindow = range === RANGE_TOTAL ? cumulativeWindow(allFiltered) : rangeWindow(range);
+  const from = toISO(achievementWindow.start);
+  const to = toISO(achievementWindow.end);
+  const filtered = range === RANGE_TOTAL
+    ? allFiltered
+    : allFiltered.filter((record) => (
+      record.date >= from &&
+      record.date <= to
+    ));
   const daily = aggregate(filtered);
   const periodSummary = periodSummaryFromDaily(
     new Map(daily.map((day) => [day.date, day])),
@@ -1194,6 +1210,7 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
     [RANGE_TODAY, "今日"],
     [RANGE_WEEK, "今週"],
     [RANGE_MONTH, "今月"],
+    [RANGE_TOTAL, "累計"],
   ];
   const badgeTotal = badgeCounts.reduce((sum, [, count]) => sum + count, 0);
   const badgeFilterOptions = [
@@ -1237,10 +1254,14 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
             </div>
           </div>
           <div className="achievement-summary all-period">
-            <AchievementMetric icon="count" label="スイング数" value={total} unit="回" kind="count" range={range} />
-            <AchievementMetric icon="avg" label="平均" value={avg} unit="点" kind="avg" range={range} />
-            {range === RANGE_TODAY ? (
-              <AchievementMetric icon="best" label="ベスト" value={best} unit="点" kind="best" range={range} />
+            <AchievementMetric icon="count" label="スイング数" value={total} unit="回" kind="count" range={range} showMeter={range !== RANGE_TOTAL} />
+            {range === RANGE_TOTAL ? (
+              <AchievementMetric icon="log" label="継続日数" value={practiceDays} unit="日" kind="days" range={range} showMeter={false} />
+            ) : (
+              <AchievementMetric icon="avg" label="平均" value={avg} unit="点" kind="avg" range={range} />
+            )}
+            {range === RANGE_TODAY || range === RANGE_TOTAL ? (
+              <AchievementMetric icon="best" label="ベスト" value={best} unit="点" kind="best" range={range} showMeter={range !== RANGE_TOTAL} />
             ) : (
               <AchievementMetric icon="log" label="継続日数" value={practiceDays} unit="日" kind="days" range={range} variableTarget={periodSummary.spanDays} />
             )}
