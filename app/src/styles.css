@@ -1917,22 +1917,23 @@ body,
 .attached-tabs {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 6px;
-  margin: 0;
-  padding: 6px;
-  border: 1px solid var(--line);
-  border-radius: 16px;
+  gap: 0;
+  margin: 0 0 -1px;
+  padding: 0;
+  border: 0;
+  border-radius: 16px 16px 0 0;
   background: var(--panel);
   box-shadow: var(--shadow);
+  overflow: hidden;
 }
 
 .attached-tabs button {
   display: grid;
   place-items: center;
   min-width: 0;
-  min-height: 38px;
+  min-height: 42px;
   border: 0;
-  border-radius: 12px;
+  border-radius: 0;
   padding: 6px 4px;
   color: #8d95a4;
   background: #242936;
@@ -1947,9 +1948,9 @@ body,
 }
 
 .period-heading {
-  margin: 0 0 12px;
+  margin: 0 0 14px;
   color: var(--muted);
-  font-size: 0.72rem;
+  font-size: 0.86rem;
   font-weight: 900;
 }
 

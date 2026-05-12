@@ -124,16 +124,20 @@ function formatRangeDate(date) {
   return `${date.getMonth() + 1}/${date.getDate()}`;
 }
 
+function formatJapaneseDate(date) {
+  return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
+}
+
 function rangeWindow(range, baseDate = parseISO(todayISO())) {
   if (range === RANGE_WEEK) {
     const start = startOfWeek(baseDate);
-    return { start, end: endOfWeek(baseDate), title: "今週の実績", label: `${formatRangeDate(start)}-${formatRangeDate(endOfWeek(baseDate))}` };
+    return { start, end: endOfWeek(baseDate), title: "今週の実績", label: `${formatJapaneseDate(start)}〜${formatJapaneseDate(endOfWeek(baseDate))}` };
   }
   if (range === RANGE_MONTH) {
     const start = startOfMonth(baseDate);
-    return { start, end: endOfMonth(baseDate), title: "今月の実績", label: `${formatRangeDate(start)}-${formatRangeDate(endOfMonth(baseDate))}` };
+    return { start, end: endOfMonth(baseDate), title: "今月の実績", label: `${formatJapaneseDate(start)}〜${formatJapaneseDate(endOfMonth(baseDate))}` };
   }
-  return { start: baseDate, end: baseDate, title: "今日の実績", label: formatRangeDate(baseDate) };
+  return { start: baseDate, end: baseDate, title: "今日の実績", label: formatJapaneseDate(baseDate) };
 }
 
 function badgeFilterWindow(filter, baseDate = parseISO(todayISO())) {
@@ -1265,6 +1269,7 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
       <section className="panel hero-card score-card">
         <div className="dashboard-controls">
           <label className="field-label bat-field">
+            <span aria-hidden="true"></span>
             <span className="select-shell">
               <span className="select-leading"><SvgIcon type="bat" /></span>
               <select value={homeBat} onChange={(event) => setHomeBat(event.target.value)}>
