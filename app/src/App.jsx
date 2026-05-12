@@ -9,8 +9,12 @@ const RANGE_MONTH = "month";
 const kMinChartVisibleDays = 7;
 const kMaxChartVisibleDays = 365;
 const BADGE_CATEGORIES = [
-  ["count", "回数バッジ", "スイング数の達成バッジ"],
-  ["score", "スコアバッジ", "平均・ベストのスコアバッジ"],
+  ["daily-count", "毎日の回数", "日ごとのスイング数バッジ"],
+  ["weekly-count", "毎週の回数", "週ごとのスイング数バッジ"],
+  ["monthly-count", "毎月の回数", "月ごとのスイング数バッジ"],
+  ["daily-score", "毎日のスコア", "日ごとの平均・ベストバッジ"],
+  ["weekly-score", "毎週のスコア", "週ごとの平均・ベストバッジ"],
+  ["monthly-score", "毎月のスコア", "月ごとの平均・ベストバッジ"],
 ];
 
 const defaultDb = {
@@ -262,15 +266,7 @@ function badgesFor(records) {
 function pathFromPoints(points) {
   if (!points.length) return "";
   if (points.length === 1) return `M ${points[0].x} ${points[0].y} L ${points[0].x + 0.1} ${points[0].y}`;
-  let path = `M ${points[0].x} ${points[0].y}`;
-  for (let index = 0; index < points.length - 1; index += 1) {
-    const p0 = points[Math.max(0, index - 1)];
-    const p1 = points[index];
-    const p2 = points[index + 1];
-    const p3 = points[Math.min(points.length - 1, index + 2)];
-    path += ` C ${p1.x + (p2.x - p0.x) / 6} ${p1.y + (p2.y - p0.y) / 6}, ${p2.x - (p3.x - p1.x) / 6} ${p2.y - (p3.y - p1.y) / 6}, ${p2.x} ${p2.y}`;
-  }
-  return path;
+  return points.slice(1).reduce((path, point) => `${path} L ${point.x} ${point.y}`, `M ${points[0].x} ${points[0].y}`);
 }
 
 function clamp(value, min, max) {
@@ -1314,14 +1310,24 @@ function collectBadgeCounts(records, filter = RANGE_ALL) {
 }
 
 function badgeCategory(label) {
-  if (label.includes("平均スコア") || label.includes("ベストスコア")) return "score";
-  return "count";
+  return label.includes("平均スコア") || label.includes("ベストスコア") ? "score" : "count";
+}
+
+function badgePeriod(label) {
+  if (label.startsWith("1日")) return "daily";
+  if (label.startsWith("週間")) return "weekly";
+  if (label.startsWith("月間")) return "monthly";
+  return "other";
+}
+
+function badgeGroupKey(label) {
+  return `${badgePeriod(label)}-${badgeCategory(label)}`;
 }
 
 function badgeGroups(badgeCounts) {
   const groups = new Map(BADGE_CATEGORIES.map(([key]) => [key, []]));
   badgeCounts.forEach(([label, count]) => {
-    groups.get(badgeCategory(label))?.push([label, count]);
+    groups.get(badgeGroupKey(label))?.push([label, count]);
   });
   return BADGE_CATEGORIES.map(([key, label, description]) => ({
     key,
@@ -1428,7 +1434,6 @@ function Calendar({ records, badgeMap, month, selectedDate, setSelectedDate }) {
           const day = index + 1;
           const date = toISO(new Date(year, monthIndex, day));
           const hasRecord = daily.has(date);
-          const badgeCategories = [...new Set((badgeMap.get(date) || []).map(badgeCategory))];
           return (
             <button
               type="button"
@@ -1438,11 +1443,6 @@ function Calendar({ records, badgeMap, month, selectedDate, setSelectedDate }) {
             >
               <span>{day}</span>
               {hasRecord && <small>{daily.get(date).count}回</small>}
-              {badgeCategories.length > 0 && (
-                <span className="calendar-badges" aria-hidden="true">
-                  {badgeCategories.map((category) => <i className={category} key={category}><SvgIcon type="badge" /></i>)}
-                </span>
-              )}
             </button>
           );
         })}
@@ -1474,12 +1474,12 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
         </div>
         <div className="theme-switch">
           {[
-            ["red", "赤"],
-            ["blue", "青"],
-            ["green", "緑"],
-          ].map(([theme, label]) => (
-            <button key={theme} type="button" className={(db.theme || "red") === theme ? "selected" : ""} onClick={() => setDb({ ...db, theme })}>
-              {label}
+            ["red", "赤", "#ff4055", "255,64,85"],
+            ["blue", "青", "#3b8dff", "59,141,255"],
+            ["green", "緑", "#31db8f", "49,219,143"],
+          ].map(([theme, label, color, rgb]) => (
+            <button key={theme} type="button" className={(db.theme || "red") === theme ? "selected" : ""} onClick={() => setDb({ ...db, theme })} aria-label={`テーマ: ${label}`} title={`テーマ: ${label}`}>
+              <span className="theme-dot" style={{ "--theme-dot": color, "--theme-dot-rgb": rgb }} aria-hidden="true" />
             </button>
           ))}
         </div>

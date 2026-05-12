@@ -317,8 +317,8 @@ p {
 }
 
 .progress-meter.count {
-  --meter-size: 96px;
-  min-height: 96px;
+  --meter-size: 112px;
+  min-height: 112px;
 }
 
 .meter-ring {
@@ -419,7 +419,7 @@ p {
 }
 
 .achievement-summary.all-period .progress-meter.count .meter-ring {
-  margin-left: 40px;
+  margin-left: 28px;
 }
 
 .section-row {
@@ -698,7 +698,7 @@ input::placeholder {
 
 .bar-item {
   display: grid;
-  flex: 0 0 68px;
+  flex: 0 0 56px;
   grid-template-rows: 104px auto auto auto;
   gap: 5px;
   align-items: end;
@@ -712,7 +712,7 @@ input::placeholder {
   height: 104px;
   border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: var(--radius);
-  padding: 5px;
+  padding: 5px 10px;
   background: rgba(0, 0, 0, 0.22);
 }
 
@@ -1248,49 +1248,6 @@ input::placeholder {
   line-height: 1;
 }
 
-.calendar-badges {
-  position: absolute;
-  top: -3px;
-  right: -2px;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  max-width: 42px;
-  gap: 2px;
-}
-
-.calendar-badges i {
-  display: grid;
-  place-items: center;
-  width: 16px;
-  height: 16px;
-  border: 1px solid rgba(255, 220, 150, 0.72);
-  border-radius: 50%;
-  color: #fff8e9;
-  background: linear-gradient(180deg, #ffb341, #e07711);
-  box-shadow: 0 0 10px rgba(255, 166, 42, 0.34);
-  font-size: 0.55rem;
-  font-style: normal;
-}
-
-.calendar-badges i.count {
-  border-color: rgba(255, 132, 143, 0.72);
-  background: linear-gradient(180deg, #ff4456, #b20f20);
-  box-shadow: 0 0 10px rgba(255, 68, 86, 0.34);
-}
-
-.calendar-badges i.score {
-  border-color: rgba(111, 170, 255, 0.7);
-  background: linear-gradient(180deg, #2f86ff, #1755b8);
-  box-shadow: 0 0 10px rgba(47, 134, 255, 0.34);
-}
-
-.calendar-badges i svg {
-  width: 10px;
-  height: 10px;
-  stroke-width: 2.6;
-}
-
 .calendar-day.has-record {
   border-color: rgba(var(--hot-rgb), 0.24);
   background: rgba(var(--hot-rgb), 0.13);
@@ -1434,6 +1391,8 @@ input::placeholder {
 }
 
 .theme-switch button {
+  display: grid;
+  place-items: center;
   min-height: 42px;
   border: 0;
   border-radius: 6px;
@@ -1443,8 +1402,17 @@ input::placeholder {
 }
 
 .theme-switch button.selected {
-  color: white;
-  background: var(--hot);
+  background: rgba(var(--hot-rgb), 0.16);
+  box-shadow: inset 0 0 0 1px rgba(var(--hot-rgb), 0.5);
+}
+
+.theme-dot {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.82);
+  border-radius: 50%;
+  background: var(--theme-dot);
+  box-shadow: 0 0 14px rgba(var(--theme-dot-rgb), 0.34);
 }
 
 .chip-list {
