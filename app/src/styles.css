@@ -422,7 +422,7 @@ p {
   gap: 3px;
   width: 33px;
   min-height: 33px;
-  transform: translate(-8%, -12%);
+  transform: translate(18%, -12%);
   z-index: 2;
 }
 
