@@ -1839,15 +1839,15 @@ input::placeholder {
 
 /* Modern flat refresh */
 :root {
-  color-scheme: light;
-  --bg: #f4f6f9;
-  --panel: #ffffff;
-  --panel-strong: #f8fafc;
-  --line: #e4e8ef;
+  color-scheme: dark;
+  --bg: #101217;
+  --panel: #181b22;
+  --panel-strong: #20242d;
+  --line: rgba(255, 255, 255, 0.1);
   --line-hot: rgba(var(--hot-rgb), 0.28);
-  --text: #242936;
-  --muted: #7a8392;
-  --shadow: 0 12px 30px rgba(32, 38, 54, 0.08);
+  --text: #f4f6fb;
+  --muted: #9098a7;
+  --shadow: 0 16px 34px rgba(0, 0, 0, 0.24);
   --radius: 12px;
 }
 
@@ -1855,8 +1855,8 @@ input::placeholder {
 .theme-blue,
 .theme-green {
   --app-bg:
-    radial-gradient(circle at 50% -18%, rgba(var(--hot-rgb), 0.12), transparent 34%),
-    linear-gradient(180deg, #f7f8fb 0%, #eef2f7 100%);
+    radial-gradient(circle at 50% -18%, rgba(var(--hot-rgb), 0.18), transparent 34%),
+    linear-gradient(180deg, #171a21 0%, #0d0f14 100%);
 }
 
 body,
@@ -1882,7 +1882,7 @@ body,
 .status-pill {
   border: 0;
   color: var(--text);
-  background: #ffffff;
+  background: var(--panel);
   box-shadow: var(--shadow);
 }
 
@@ -1894,12 +1894,12 @@ body,
 .metric-card,
 .total-card {
   border: 1px solid var(--line);
-  background: #ffffff;
+  background: var(--panel);
   box-shadow: var(--shadow);
 }
 
 .hero-card {
-  background: #ffffff;
+  background: var(--panel);
 }
 
 .score-card {
@@ -1920,7 +1920,7 @@ body,
   padding: 6px;
   border: 1px solid var(--line);
   border-radius: 16px;
-  background: #ffffff;
+  background: var(--panel);
   box-shadow: var(--shadow);
 }
 
@@ -1932,8 +1932,8 @@ body,
   border: 0;
   border-radius: 12px;
   padding: 6px 4px;
-  color: #9aa1ad;
-  background: #eef2f6;
+  color: #8d95a4;
+  background: #242936;
   font-size: 0.72rem;
   font-weight: 950;
 }
@@ -1951,7 +1951,7 @@ body,
 
 .score-card .dashboard-section {
   margin-top: 16px;
-  border-top: 1px solid #d7dde7;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
   background: transparent;
 }
 
@@ -1964,7 +1964,7 @@ body,
 }
 
 .metric-label {
-  color: #3a4050;
+  color: rgba(244, 246, 251, 0.84);
 }
 
 .icon,
@@ -1981,14 +1981,14 @@ select,
 .swing-form select {
   border-color: var(--line);
   color: var(--text);
-  background: #f8fafc;
+  background: #11141a;
   box-shadow: none;
 }
 
 .select-caret {
   border: 0;
   color: var(--text);
-  background: #edf1f6;
+  background: #252a35;
 }
 
 .segmented,
@@ -1996,14 +1996,14 @@ select,
 .compare-tabs,
 .theme-switch {
   border: 0;
-  background: #eef2f6;
+  background: #242936;
 }
 
 .segmented button,
 .record-tabs button,
 .compare-tabs button,
 .theme-switch button {
-  color: #8a93a3;
+  color: #8d95a4;
 }
 
 .segmented button.selected,
@@ -2018,29 +2018,29 @@ select,
 .bar-track,
 .calendar-day.has-record,
 .mini-grid span {
-  background: #f6f8fb;
+  background: #11141a;
 }
 
 .grid-line {
-  stroke: rgba(36, 41, 54, 0.08);
+  stroke: rgba(255, 255, 255, 0.08);
 }
 
 .axis-line {
-  stroke: rgba(36, 41, 54, 0.18);
+  stroke: rgba(255, 255, 255, 0.18);
 }
 
 .chart-note,
 .chart-date,
 .chart-axis-label {
-  fill: rgba(36, 41, 54, 0.58);
+  fill: rgba(244, 246, 251, 0.58);
 }
 
 .best-path {
-  stroke: #202633;
+  stroke: #ffffff;
 }
 
 .best-line {
-  background: #202633;
+  background: #ffffff;
 }
 
 .meter-ring span {
@@ -2052,15 +2052,15 @@ select,
   border: 0;
   border-radius: 18px;
   padding: 9px;
-  background: rgba(255, 255, 255, 0.94);
-  box-shadow: 0 16px 36px rgba(32, 38, 54, 0.14);
+  background: rgba(24, 27, 34, 0.94);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.36);
   backdrop-filter: blur(16px);
 }
 
 .bottom-nav button {
   min-height: 46px;
   border-radius: 999px;
-  color: #c3c7ce;
+  color: #6f7786;
   font-size: 0.64rem;
 }
 
@@ -2072,17 +2072,17 @@ select,
 .ghost {
   border-color: var(--line);
   color: var(--text);
-  background: #f8fafc;
+  background: #11141a;
 }
 
 .chip,
 .badge {
   border-color: var(--line);
   color: var(--text);
-  background: #f8fafc;
+  background: #11141a;
 }
 
 .dialog {
   border-color: var(--line);
-  background: #ffffff;
+  background: var(--panel);
 }
