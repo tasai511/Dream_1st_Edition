@@ -931,6 +931,7 @@ function Chart({ data, initialRange }) {
         {yLabels.map((tick) => (
           <g key={tick.value}>
             <line x1={pad.left} y1={tick.y} x2={width - pad.right} y2={tick.y} className="grid-line" />
+            <line x1={pad.left - 5} y1={tick.y} x2={pad.left} y2={tick.y} className="axis-tick" />
             <text x={pad.left - 9} y={tick.y + 3} textAnchor="end" className="chart-axis-label">{tick.value}</text>
           </g>
         ))}
