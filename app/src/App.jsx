@@ -188,77 +188,8 @@ function aggregateByBat(records) {
 }
 
 function badgesFor(records) {
-  const daily = aggregate(records);
-  const byDate = new Map();
-  const add = (date, label) => byDate.set(date, [...(byDate.get(date) || []), label]);
-  const today = todayISO();
-  const weekMap = new Map();
-  const monthMap = new Map();
-  const crossedCount = new Set();
-  const crossedScore = new Set();
-  const addThresholdBadges = (date, prefix, total, base, step, periodKey) => {
-    if (total < base) return;
-    const threshold = base + Math.floor((total - base) / step) * step;
-    for (let value = base; value <= threshold; value += step) {
-      const key = `${prefix}-${periodKey}-${value}`;
-      if (!crossedCount.has(key)) {
-        add(date, `${prefix}${value.toLocaleString("ja-JP")}スイング`);
-        crossedCount.add(key);
-      }
-    }
-  };
-  const addScoreBadges = (date, prefix, scoreType, value, periodKey = date) => {
-    [500, 600, 700, 800, 900, 999].forEach((threshold) => {
-      const key = `${periodKey}-${scoreType}-${threshold}`;
-      if (value >= threshold && !crossedScore.has(key)) {
-        add(date, `${prefix}${scoreType}スコア${threshold.toLocaleString("ja-JP")}達成`);
-        crossedScore.add(key);
-      }
-    });
-  };
-
-  daily.forEach((day) => {
-    addThresholdBadges(day.date, "1日", day.count, 50, 50, day.date);
-    if (day.date < today) addScoreBadges(day.date, "1日", "平均", day.avg || 0, day.date);
-    addScoreBadges(day.date, "1日", "ベスト", day.best || 0, day.date);
-
-    const dateValue = parseISO(day.date);
-    const weekKey = toISO(startOfWeek(dateValue));
-    const weekItem = weekMap.get(weekKey) || { start: startOfWeek(dateValue), end: endOfWeek(dateValue), count: 0, avgTotal: 0, best: 0, lastDate: day.date };
-    weekItem.count += day.count;
-    weekItem.avgTotal += day.avg * day.count;
-    weekItem.best = Math.max(weekItem.best, day.best || 0);
-    weekItem.lastDate = day.date;
-    weekMap.set(weekKey, weekItem);
-    addThresholdBadges(day.date, "週間", weekItem.count, 500, 100, weekKey);
-    addScoreBadges(day.date, "週間", "ベスト", weekItem.best, weekKey);
-
-    const monthKey = day.date.slice(0, 7);
-    const monthDate = parseISO(`${monthKey}-01`);
-    const monthItem = monthMap.get(monthKey) || { start: startOfMonth(monthDate), end: endOfMonth(monthDate), count: 0, avgTotal: 0, best: 0, lastDate: day.date };
-    monthItem.count += day.count;
-    monthItem.avgTotal += day.avg * day.count;
-    monthItem.best = Math.max(monthItem.best, day.best || 0);
-    monthItem.lastDate = day.date;
-    monthMap.set(monthKey, monthItem);
-    addThresholdBadges(day.date, "月間", monthItem.count, 1000, 1000, monthKey);
-    addScoreBadges(day.date, "月間", "ベスト", monthItem.best, monthKey);
-  });
-
-  weekMap.forEach((item, key) => {
-    const endDate = toISO(item.end);
-    if (endDate < today && item.count > 0) {
-      addScoreBadges(endDate, "週間", "平均", Math.round(item.avgTotal / item.count), key);
-    }
-  });
-
-  monthMap.forEach((item, key) => {
-    const endDate = toISO(item.end);
-    if (endDate < today && item.count > 0) {
-      addScoreBadges(endDate, "月間", "平均", Math.round(item.avgTotal / item.count), key);
-    }
-  });
-  return byDate;
+  void records;
+  return new Map();
 }
 
 function pathFromPoints(points) {
@@ -1308,34 +1239,9 @@ function filledChartExtent(daily) {
 }
 
 function collectBadgeCounts(records, filter = RANGE_ALL) {
-  const { start, end } = badgeFilterWindow(filter);
-  const startISO = start ? toISO(start) : null;
-  const endISO = end ? toISO(end) : null;
-  const counts = {};
-  [...badgesFor(records).entries()].forEach(([date, badges]) => {
-    if (startISO && date < startISO) return;
-    if (endISO && date > endISO) return;
-    badges.forEach((badge) => {
-      counts[badge] = (counts[badge] || 0) + 1;
-    });
-  });
-  const rank = (label) => {
-    const number = Number(label.match(/[\d,.]+/)?.[0]?.replace(/,/g, "") || 0);
-    if (label.includes("平均スコア")) return [1, 0, number || 999];
-    if (label.includes("ベストスコア")) return [1, 1, number || 999];
-    if (label.startsWith("1日")) return [0, 0, number];
-    if (label.startsWith("週間")) return [0, 1, number];
-    if (label.startsWith("月間")) return [0, 2, number];
-    return [9, 9, 0];
-  };
-  return Object.entries(counts).sort(([a], [b]) => {
-    const aRank = rank(a);
-    const bRank = rank(b);
-    for (let index = 0; index < aRank.length; index += 1) {
-      if (aRank[index] !== bRank[index]) return aRank[index] - bRank[index];
-    }
-    return a.localeCompare(b, "ja");
-  });
+  void records;
+  void filter;
+  return [];
 }
 
 function badgeCategory(label) {
