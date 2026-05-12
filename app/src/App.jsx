@@ -536,13 +536,26 @@ function progressInfo(kind, value, range, variableTarget, targets = null) {
 
 function ProgressMeter({ kind, value, range, variableTarget, targets }) {
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const meterRef = useRef(null);
   const info = progressInfo(kind, Number(value || 0), range, variableTarget, targets);
   const span = Math.max(1, info.goal - info.previous);
   const ratio = clamp((Number(value || 0) - info.previous) / span, 0, 1);
   const circumference = 169.65;
   const dashOffset = circumference * (1 - ratio);
+
+  useEffect(() => {
+    if (!detailsOpen) return undefined;
+    const closeOnOutside = (event) => {
+      if (!meterRef.current?.contains(event.target)) {
+        setDetailsOpen(false);
+      }
+    };
+    document.addEventListener("pointerdown", closeOnOutside);
+    return () => document.removeEventListener("pointerdown", closeOnOutside);
+  }, [detailsOpen]);
+
   return (
-    <div className={`progress-meter ${kind}`}>
+    <div className={`progress-meter ${kind}`} ref={meterRef}>
       <div className="meter-ring">
         <svg viewBox="0 0 72 72" aria-hidden="true">
           <circle className="meter-track" cx="36" cy="36" r="27" />
@@ -688,6 +701,7 @@ function RecordPanel({ daily, range }) {
   return (
     <section className="dashboard-section record-section">
       <div className="section-row tight">
+        <h2>履歴</h2>
         <div className="record-tabs" role="tablist" aria-label="記録表示">
           <button type="button" className={mode === "count" ? "selected" : ""} onClick={() => setMode("count")}>回数</button>
           <button type="button" className={mode === "score" ? "selected" : ""} onClick={() => setMode("score")}>スコア</button>

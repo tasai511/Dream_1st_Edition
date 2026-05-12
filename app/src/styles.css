@@ -2414,25 +2414,55 @@ body,
   background: #1b202a;
 }
 
+.panel,
+.score-summary-card,
+.cumulative-summary,
+.content > .panel {
+  box-shadow: none;
+}
+
+.period-heading {
+  color: var(--text);
+  font-size: 1.18rem;
+  font-weight: 950;
+  line-height: 1.2;
+}
+
+.record-section .section-row.tight {
+  align-items: center;
+}
+
+.record-section .section-row h2 {
+  margin: 0;
+  font-size: 1.18rem;
+}
+
 .pending-label {
   right: 3px;
   bottom: 1.55em;
 }
 
+.progress-meter {
+  width: 116px;
+}
+
 .meter-badge {
-  right: 4px;
-  bottom: 4px;
+  right: -4px;
+  bottom: 50%;
+  transform: translateY(50%);
+  line-height: 0;
   box-shadow: none;
 }
 
 .meter-badge svg {
   width: 14px;
   height: 14px;
+  transform: translateX(0.8px);
 }
 
 .progress-meter.count .meter-badge {
-  right: 14px;
-  bottom: 14px;
+  right: -4px;
+  bottom: 50%;
 }
 
 .record-section {
@@ -2454,4 +2484,23 @@ body,
 
 .record-section .bar-track {
   border: 0;
+}
+
+.record-section,
+.record-section .section-row,
+.record-section .chart-wrap,
+.record-section .record-scroll,
+.record-section .bar-track {
+  background: transparent;
+}
+
+.record-section,
+.record-section .chart-wrap,
+.record-section .record-scroll,
+.record-section .bar-track {
+  border: 0;
+}
+
+.record-section .chart-wrap {
+  overflow: visible;
 }
