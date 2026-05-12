@@ -2438,8 +2438,8 @@ body,
 }
 
 .pending-label {
-  right: 3px;
-  bottom: 1.55em;
+  right: 0.2em;
+  bottom: 1.85em;
 }
 
 .progress-meter {
@@ -2511,5 +2511,19 @@ body,
 .score-bucket-chart,
 .count-bars,
 .bar-track {
-  background: transparent !important;
+  background: #1b202a !important;
+}
+
+.record-section,
+.record-section .section-row,
+.record-section .chart-wrap,
+.record-section .record-scroll,
+.record-section .bar-track {
+  background: #1b202a !important;
+}
+
+.record-section .chart-wrap,
+.record-section .record-scroll {
+  box-shadow: none;
+  outline: 0;
 }
