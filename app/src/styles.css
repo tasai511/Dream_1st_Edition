@@ -924,7 +924,7 @@ input::placeholder {
 }
 
 .best-line {
-  background: rgba(var(--hot-rgb), 0.52);
+  background: #fff;
 }
 
 .chart-wrap {
@@ -971,7 +971,7 @@ input::placeholder {
 }
 
 .best-path {
-  stroke: rgba(var(--hot-rgb), 0.56);
+  stroke: white;
   stroke-width: 1.7;
 }
 
@@ -1011,7 +1011,7 @@ input::placeholder {
 }
 
 .chart-active-point.best {
-  stroke: rgba(var(--hot-rgb), 0.56);
+  stroke: rgba(255, 255, 255, 0.55);
 }
 
 .chart-point:focus {
