@@ -599,7 +599,7 @@ input::placeholder {
 
 .range-field .segmented {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   border-radius: var(--radius);
 }
 
@@ -1078,6 +1078,53 @@ input::placeholder {
   gap: 14px;
 }
 
+.badge-filter-tabs {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 3px;
+  margin-bottom: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 3px;
+  background: rgba(0, 0, 0, 0.24);
+}
+
+.badge-filter-tabs button {
+  min-height: 30px;
+  border: 0;
+  border-radius: 6px;
+  padding: 0 3px;
+  color: var(--muted);
+  background: transparent;
+  font-size: 0.66rem;
+  font-weight: 900;
+}
+
+.badge-filter-tabs button.selected {
+  color: #fff;
+  background: rgba(var(--hot-rgb), 0.78);
+}
+
+.badge-total {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  margin-bottom: 14px;
+  color: var(--hot);
+}
+
+.badge-total strong {
+  font-size: 2.2rem;
+  line-height: 1;
+  font-weight: 950;
+}
+
+.badge-total span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 850;
+}
+
 .badge-group {
   display: grid;
   gap: 8px;
@@ -1119,29 +1166,26 @@ input::placeholder {
   font-weight: 900;
 }
 
+.badge-chip-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.badge-chip-wrap > b {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
 .badge.hot {
   border-color: rgba(var(--hot-rgb), 0.48);
   background: rgba(var(--hot-rgb), 0.22);
 }
 
-.badge.daily {
+.badge.count {
   border-color: rgba(255, 68, 86, 0.42);
   background: rgba(255, 68, 86, 0.16);
-}
-
-.badge.weekly {
-  border-color: rgba(255, 159, 63, 0.42);
-  background: rgba(255, 159, 63, 0.15);
-}
-
-.badge.monthly {
-  border-color: rgba(68, 215, 168, 0.34);
-  background: rgba(68, 215, 168, 0.14);
-}
-
-.badge.yearly {
-  border-color: rgba(157, 107, 255, 0.4);
-  background: rgba(157, 107, 255, 0.15);
 }
 
 .badge.score {
@@ -1229,28 +1273,10 @@ input::placeholder {
   font-style: normal;
 }
 
-.calendar-badges i.daily {
+.calendar-badges i.count {
   border-color: rgba(255, 132, 143, 0.72);
   background: linear-gradient(180deg, #ff4456, #b20f20);
   box-shadow: 0 0 10px rgba(255, 68, 86, 0.34);
-}
-
-.calendar-badges i.weekly {
-  border-color: rgba(255, 190, 112, 0.72);
-  background: linear-gradient(180deg, #ff9f3f, #b95508);
-  box-shadow: 0 0 10px rgba(255, 159, 63, 0.34);
-}
-
-.calendar-badges i.monthly {
-  border-color: rgba(111, 238, 183, 0.68);
-  background: linear-gradient(180deg, #44d7a8, #15956d);
-  box-shadow: 0 0 10px rgba(68, 215, 168, 0.28);
-}
-
-.calendar-badges i.yearly {
-  border-color: rgba(190, 158, 255, 0.72);
-  background: linear-gradient(180deg, #9d6bff, #6234c9);
-  box-shadow: 0 0 10px rgba(157, 107, 255, 0.3);
 }
 
 .calendar-badges i.score {
