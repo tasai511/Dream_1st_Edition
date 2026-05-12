@@ -2377,6 +2377,64 @@ body,
   font-weight: 800;
 }
 
+.home-bat-filter .select-leading,
+.home-bat-filter.all-selected .select-leading {
+  color: #8d95a4;
+  background: #242936;
+}
+
+.home-bat-filter .bat-field select,
+.home-bat-filter.all-selected .bat-field select {
+  border-color: var(--line);
+  color: var(--text);
+  background: #242936;
+}
+
+.home-bat-filter .select-caret,
+.home-bat-filter.all-selected .select-caret {
+  color: #8d95a4;
+  background: #242936;
+}
+
+.bottom-nav {
+  background: #242936;
+}
+
+.bottom-nav button {
+  color: #8d95a4;
+}
+
+.bottom-nav button.active {
+  background: #303645;
+}
+
+.score-summary-card,
+.cumulative-summary,
+.content > .panel {
+  background: #1b202a;
+}
+
+.pending-label {
+  right: 3px;
+  bottom: 1.55em;
+}
+
+.meter-badge {
+  right: 4px;
+  bottom: 4px;
+  box-shadow: none;
+}
+
+.meter-badge svg {
+  width: 14px;
+  height: 14px;
+}
+
+.progress-meter.count .meter-badge {
+  right: 14px;
+  bottom: 14px;
+}
+
 .record-section {
   border-top: 1px solid var(--line);
   border-right: 0;
