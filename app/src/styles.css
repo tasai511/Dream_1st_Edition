@@ -275,7 +275,7 @@ p {
 
 .achievement-metric {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) 138px;
   align-items: center;
   gap: 12px;
   min-width: 0;
@@ -309,22 +309,22 @@ p {
 
 .progress-meter {
   display: grid;
-  grid-template-columns: 72px 54px;
+  grid-template-columns: 1fr 34px;
   align-items: center;
   gap: 8px;
-  justify-content: end;
-  width: 134px;
+  width: 100%;
 }
 
 .progress-meter.count {
-  grid-template-columns: 96px 34px;
-  width: 138px;
+  grid-template-columns: 1fr 34px;
+  width: 100%;
 }
 
 .meter-ring {
   position: relative;
   display: grid;
   place-items: center;
+  justify-self: center;
   width: 72px;
   height: 72px;
   border-radius: 50%;
@@ -402,6 +402,7 @@ p {
   align-content: center;
   width: 34px;
   min-height: 36px;
+  justify-self: start;
 }
 
 .meter-badge {
