@@ -344,6 +344,9 @@ function progressInfo(kind, value, range) {
       remaining: Math.max(0, goal - value),
       earned: Math.max(0, Math.floor((value - config.base) / config.step) + 1),
       category: range === 1 ? "daily" : range === 7 ? "weekly" : range === 30 ? "monthly" : "yearly",
+      badgeBase: config.base,
+      badgeStep: config.step,
+      badgePrefix: config.label,
     };
   }
   const goal = scoreGoal(value);
@@ -354,6 +357,9 @@ function progressInfo(kind, value, range) {
     remaining: Math.max(0, goal - value),
     earned: Math.max(0, Math.floor(value / 100)),
     category: "score",
+    badgeBase: 100,
+    badgeStep: 100,
+    badgePrefix: kind === "avg" ? "平均スコア" : "ベストスコア",
   };
 }
 
@@ -361,15 +367,36 @@ function ProgressMeter({ kind, value, range, showBadges = false }) {
   const info = progressInfo(kind, Number(value || 0), range);
   const span = Math.max(1, info.goal - info.previous);
   const ratio = clamp((Number(value || 0) - info.previous) / span, 0, 1);
+  const circumference = 144.51;
   const badgeIcons = showBadges ? Array.from({ length: info.earned }, (_, index) => index) : [];
   return (
     <div className="progress-meter">
-      <div className="meter-ring" style={{ "--meter-progress": `${ratio * 360}deg` }}>
+      <div className="meter-ring">
+        <svg viewBox="0 0 62 62" aria-hidden="true">
+          <circle className="meter-track" cx="31" cy="31" r="23" />
+          <circle
+            className="meter-value"
+            cx="31"
+            cy="31"
+            r="23"
+            pathLength={circumference}
+            style={{ strokeDasharray: `${ratio * circumference} ${circumference}` }}
+          />
+        </svg>
         <span>{info.remaining.toLocaleString("ja-JP")}</span>
       </div>
       {badgeIcons.length > 0 && (
         <div className="meter-badges" aria-label="この期間で獲得したバッジ">
-          {badgeIcons.map((index) => <i className={info.category} key={index}><SvgIcon type="badge" /></i>)}
+          {badgeIcons.map((index) => {
+            const badgeValue = info.badgeBase + (index * info.badgeStep);
+            const suffix = info.category === "score" ? "達成" : "スイング";
+            const label = `${info.badgePrefix}${badgeValue.toLocaleString("ja-JP")}${suffix}`;
+            return (
+              <button className={`meter-badge ${info.category}`} type="button" key={index} title={label} aria-label={label} data-label={label}>
+                <SvgIcon type="badge" />
+              </button>
+            );
+          })}
         </div>
       )}
     </div>
