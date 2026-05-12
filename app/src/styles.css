@@ -1202,11 +1202,13 @@ input::placeholder {
   min-height: 36px;
   border: 1px solid rgba(var(--hot-rgb), 0.25);
   border-radius: 999px;
-  padding: 6px 10px;
+  padding: 6px 8px;
   color: rgba(255, 255, 255, 0.92);
   background: rgba(var(--hot-rgb), 0.13);
-  font-size: 0.78rem;
+  font-size: 0.68rem;
   font-weight: 900;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .badge-chip-wrap {
@@ -1240,15 +1242,34 @@ input::placeholder {
   color: #dbeaff;
 }
 
+.badge.count .icon,
 .badge.score .icon {
-  color: #74b4ff;
+  width: 18px;
+  height: 18px;
+  border-color: transparent;
+  border-radius: 50%;
+  color: #fff;
+  background: #ff4055;
+}
+
+.badge.score .icon {
+  background: #2f86ff;
+}
+
+.badge.count .icon svg,
+.badge.score .icon svg {
+  width: 12px;
+  height: 12px;
+  stroke-width: 2.8;
 }
 
 .badge-chip-wrap .badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  min-width: 0;
+  justify-content: flex-start;
+  gap: 5px;
+  width: 116px;
+  min-width: 116px;
 }
 
 .badge-chip-wrap .badge svg {
