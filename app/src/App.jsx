@@ -12,6 +12,14 @@ const kMaxChartVisibleDays = 365;
 const UNIQUE_TOTAL_COUNT_TARGETS = [100, 500, 1000, 3000, 5000, 10000, 30000, 50000, 100000];
 const UNIQUE_BEST_TARGETS = [500, 600, 700, 800, 900, 999];
 const UNIQUE_STREAK_TARGETS = [2, 3, 7, 14, 30, 60, 100, 365];
+const BAT_COUNT_TARGETS = [100, 500, 1000, 3000, 5000, 10000];
+const BAT_DAYS_TARGETS = [3, 7, 14, 30, 60, 100];
+const BAT_BEST_TARGETS = [500, 600, 700, 800, 900, 999];
+const BAT_BADGE_DEFINITIONS = [
+  ...BAT_COUNT_TARGETS.map((target) => ({ metric: "count", target, label: `相棒${target}回`, description: `このバットで累計${target}回スイング` })),
+  ...BAT_DAYS_TARGETS.map((target) => ({ metric: "days", target, label: `相棒${target}日`, description: `このバットで${target}日記録` })),
+  ...BAT_BEST_TARGETS.map((target) => ({ metric: "best", target, label: `相棒ベスト${target}`, description: `このバットでベスト${target}点到達` })),
+];
 const BADGE_PERIODS = [
   ["daily", "毎日バッジ"],
   ["weekly", "毎週バッジ"],
@@ -300,10 +308,31 @@ function badgesFor(records) {
   const streaks = streakByDate(daily);
   const byDate = new Map();
   const uniqueEarned = new Set();
+  const batEarned = new Set();
+  const batStats = new Map();
   let cumulativeCount = 0;
   let cumulativeBest = 0;
 
   daily.forEach((day) => {
+    const dayRecords = records.filter((record) => record.date === day.date);
+    dayRecords.forEach((record) => {
+      const stats = batStats.get(record.bat) || { count: 0, days: new Set(), best: 0 };
+      stats.count += record.count;
+      stats.days.add(record.date);
+      stats.best = Math.max(stats.best, record.best || 0);
+      batStats.set(record.bat, stats);
+
+      BAT_BADGE_DEFINITIONS.forEach((definition) => {
+        const key = `${record.bat}:${definition.label}`;
+        if (batEarned.has(key)) return;
+        const value = definition.metric === "count" ? stats.count : definition.metric === "days" ? stats.days.size : stats.best;
+        if (value >= definition.target) {
+          addHomeBadge(byDate, day.date, `${record.bat} ${definition.label}`);
+          batEarned.add(key);
+        }
+      });
+    });
+
     cumulativeCount += day.count;
     cumulativeBest = Math.max(cumulativeBest, day.best || 0);
     UNIQUE_BADGE_DEFINITIONS.forEach((definition) => {
@@ -475,7 +504,11 @@ function Metric({ icon, label, value, unit }) {
 
 function progressInfo(kind, value, range, variableTarget, targets = null) {
   const definitions = targets
-    ? targets.map((target) => ({ target, progressTarget: target, label: `${target}` }))
+    ? targets.map((target) => (
+        typeof target === "number"
+          ? { target, progressTarget: target, label: `${target}`, description: `${target}達成` }
+          : { ...target, progressTarget: target.target }
+      ))
     : HOME_BADGE_DEFINITIONS
       .filter((definition) => (
         definition.period === range &&
@@ -496,10 +529,13 @@ function progressInfo(kind, value, range, variableTarget, targets = null) {
     remaining: Math.max(0, next.progressTarget - value),
     earned: definitions.filter((definition) => value >= definition.progressTarget).length,
     badgeLabel: next.label,
+    badgeDescription: next.description || `${next.label}まであと${Math.max(0, next.progressTarget - value).toLocaleString("ja-JP")}`,
+    badgeTarget: next.progressTarget,
   };
 }
 
 function ProgressMeter({ kind, value, range, variableTarget, targets }) {
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const info = progressInfo(kind, Number(value || 0), range, variableTarget, targets);
   const span = Math.max(1, info.goal - info.previous);
   const ratio = clamp((Number(value || 0) - info.previous) / span, 0, 1);
@@ -539,14 +575,29 @@ function ProgressMeter({ kind, value, range, variableTarget, targets }) {
           />
         </svg>
         <span>-{info.remaining.toLocaleString("ja-JP")}</span>
+        <button
+          type="button"
+          className={`meter-badge badge-${kind}`}
+          aria-label={`${info.badgeLabel}の詳細`}
+          onClick={() => setDetailsOpen((open) => !open)}
+          onBlur={() => setDetailsOpen(false)}
+        >
+          <SvgIcon type="badge" />
+        </button>
+        {detailsOpen && (
+          <span className={`meter-badge-popover badge-${kind}`} role="tooltip">
+            <strong>{info.badgeLabel}</strong>
+            <small>{info.badgeDescription}</small>
+          </span>
+        )}
       </div>
     </div>
   );
 }
 
-function AchievementMetric({ icon, label, value, unit, kind, range, showMeter = true, variableTarget = null, targets = null }) {
+function AchievementMetric({ icon, label, value, unit, kind, range, showMeter = true, variableTarget = null, targets = null, pending = false }) {
   return (
-    <div className={`achievement-metric ${kind}`}>
+    <div className={`achievement-metric ${kind} ${pending ? "pending" : ""}`}>
       <div>
         <div className="metric-label"><Icon type={icon} />{label}</div>
         <strong>{Number(value || 0).toLocaleString("ja-JP")}<span>{unit}</span></strong>
@@ -1000,8 +1051,6 @@ function Chart({ data, initialRange }) {
             <text x={pad.left - 9} y={tick.y + 3} textAnchor="end" className="chart-axis-label">{tick.value}</text>
           </g>
         ))}
-        <line x1={pad.left} y1={pad.top} x2={pad.left} y2={height - pad.bottom} className="axis-line" />
-        <line x1={pad.left} y1={height - pad.bottom} x2={width - pad.right} y2={height - pad.bottom} className="axis-line" />
         <g clipPath="url(#chartPlotClip)">
           {data.map((item, index) => {
             const x = pad.left + ((data.length <= 1 ? plotW / 2 : (plotW * index) / (data.length - 1)) * chartView.scale) + chartView.offset;
@@ -1260,6 +1309,17 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
   const periodDayLabel = `${periodSummary.spanDays}日目`;
   const avgUnit = range === RANGE_TODAY || range === RANGE_TOTAL ? "点" : `点＠${periodDayLabel}`;
   const practiceUnit = `／${periodDayLabel}`;
+  const isPeriodComplete = achievementWindow.end <= parseISO(todayISO());
+  const isBatFiltered = homeBat !== ALL;
+  const cumulativeCountTargets = isBatFiltered
+    ? BAT_BADGE_DEFINITIONS.filter((definition) => definition.metric === "count")
+    : UNIQUE_TOTAL_COUNT_TARGETS.map((target) => ({ target, label: `累計${target}回`, description: `累計${target}回スイング` }));
+  const cumulativeDaysTargets = isBatFiltered
+    ? BAT_BADGE_DEFINITIONS.filter((definition) => definition.metric === "days")
+    : UNIQUE_STREAK_TARGETS.map((target) => ({ target, label: `${target}日連続`, description: `${target}日連続で記録` }));
+  const cumulativeBestTargets = isBatFiltered
+    ? BAT_BADGE_DEFINITIONS.filter((definition) => definition.metric === "best")
+    : UNIQUE_BEST_TARGETS.map((target) => ({ target, label: `初${target}点`, description: `ベスト${target}点到達` }));
   const badgeCounts = collectBadgeCounts(allForName, badgeFilter);
   const groupedBadges = badgeGroups(badgeCounts);
   const chartData = filledChartExtent(chartDaily);
@@ -1303,18 +1363,21 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
           <p className="period-heading">{achievementWindow.label}</p>
           <div className="achievement-summary all-period">
             <AchievementMetric icon="count" label="スイング数" value={total} unit="回" kind="count" range={range} showMeter={range !== RANGE_TOTAL} />
-            {range === RANGE_TOTAL ? (
-              <AchievementMetric icon="log" label="練習した日数" value={practiceDays} unit="日" kind="days" range={range} showMeter={false} />
-            ) : (
-              <AchievementMetric icon="avg" label="平均" value={avg} unit={avgUnit} kind="avg" range={range} />
-            )}
-            {range === RANGE_TODAY || range === RANGE_TOTAL ? (
-              <AchievementMetric icon="best" label="ベスト" value={best} unit="点" kind="best" range={range} showMeter={range !== RANGE_TOTAL} />
-            ) : (
-              <AchievementMetric icon="log" label="練習した日数" value={practiceDays} unit={practiceUnit} kind="days" range={range} variableTarget={periodSummary.spanDays} />
-            )}
             {range === RANGE_TODAY && (
               <AchievementMetric icon="log" label="毎日練習" value={currentStreak} unit="日目" kind="streak" range={range} />
+            )}
+            {range === RANGE_TODAY && (
+              <>
+                <AchievementMetric icon="avg" label="平均" value={avg} unit={avgUnit} kind="avg" range={range} />
+                <AchievementMetric icon="best" label="ベスト" value={best} unit="点" kind="best" range={range} />
+              </>
+            )}
+            {range !== RANGE_TODAY && range !== RANGE_TOTAL && (
+              <>
+                <AchievementMetric icon="log" label="練習日数" value={practiceDays} unit={practiceUnit} kind="days" range={range} variableTarget={periodSummary.spanDays} />
+                <AchievementMetric icon="avg" label="平均" value={avg} unit={avgUnit} kind="avg" range={range} pending={!isPeriodComplete} />
+                <AchievementMetric icon="best" label="ベスト" value={best} unit="点" kind="best" range={range} showMeter={false} />
+              </>
             )}
           </div>
           <RecordPanel daily={chartData} range={range} />
@@ -1327,9 +1390,9 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
             </div>
           </div>
           <div className="achievement-summary compact-metrics">
-            <AchievementMetric icon="count" label="スイング数" value={cumulativeSummary.count} unit="回" kind="count" range={RANGE_TOTAL} targets={UNIQUE_TOTAL_COUNT_TARGETS} />
-            <AchievementMetric icon="log" label="練習した日数" value={cumulativeSummary.days} unit="日" kind="days" range={RANGE_TOTAL} targets={UNIQUE_STREAK_TARGETS} />
-            <AchievementMetric icon="best" label="過去最高点" value={cumulativeSummary.best} unit="点" kind="best" range={RANGE_TOTAL} targets={UNIQUE_BEST_TARGETS} />
+            <AchievementMetric icon="count" label="スイング数" value={cumulativeSummary.count} unit="回" kind="count" range={RANGE_TOTAL} targets={cumulativeCountTargets} />
+            <AchievementMetric icon="log" label={isBatFiltered ? "相棒日数" : "練習した日数"} value={cumulativeSummary.days} unit="日" kind="days" range={RANGE_TOTAL} targets={cumulativeDaysTargets} />
+            <AchievementMetric icon="best" label={isBatFiltered ? "相棒ベスト" : "過去最高点"} value={cumulativeSummary.best} unit="点" kind="best" range={RANGE_TOTAL} targets={cumulativeBestTargets} />
           </div>
         </section>
       </section>
@@ -1417,11 +1480,13 @@ function collectBadgeCounts(records, filter = RANGE_ALL) {
 }
 
 function badgeCategory(label) {
+  if (label.includes("相棒ベスト")) return "score";
   if (label.startsWith("初")) return "score";
   return label.includes("平均") || label.includes("ベスト") ? "score" : "count";
 }
 
 function badgePeriod(label) {
+  if (label.includes("相棒")) return "total";
   if (label.startsWith("累計") || label.startsWith("初")) return "total";
   if (label.includes("日連続練習")) return "daily";
   if (label.startsWith("今日") || label.startsWith("日平均")) return "daily";
