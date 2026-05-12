@@ -368,6 +368,7 @@ function ProgressMeter({ kind, value, range, showBadges = false }) {
   const span = Math.max(1, info.goal - info.previous);
   const ratio = clamp((Number(value || 0) - info.previous) / span, 0, 1);
   const circumference = 144.51;
+  const dashOffset = circumference * (1 - ratio);
   const badgeIcons = showBadges ? Array.from({ length: info.earned }, (_, index) => index) : [];
   return (
     <div className="progress-meter">
@@ -379,8 +380,9 @@ function ProgressMeter({ kind, value, range, showBadges = false }) {
             cx="31"
             cy="31"
             r="23"
-            pathLength={circumference}
-            style={{ strokeDasharray: `${ratio * circumference} ${circumference}` }}
+            strokeDasharray={circumference}
+            strokeDashoffset={dashOffset}
+            transform="rotate(-90 31 31)"
           />
         </svg>
         <span>{info.remaining.toLocaleString("ja-JP")}</span>

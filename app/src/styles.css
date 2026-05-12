@@ -321,6 +321,7 @@ p {
   width: 62px;
   height: 62px;
   border-radius: 50%;
+  background: transparent;
   box-shadow:
     0 0 18px rgba(var(--hot-rgb), 0.24),
     0 0 34px rgba(var(--hot-rgb), 0.1);
@@ -347,9 +348,7 @@ p {
   stroke: var(--hot);
   stroke-linecap: round;
   filter: drop-shadow(0 0 6px rgba(var(--hot-rgb), 0.56));
-  transform: rotate(-90deg);
-  transform-origin: 31px 31px;
-  transition: stroke-dasharray 0.24s ease;
+  transition: stroke-dashoffset 0.24s ease;
 }
 
 .meter-ring span {
