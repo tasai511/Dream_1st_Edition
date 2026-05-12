@@ -309,74 +309,70 @@ p {
 
 .progress-meter {
   display: grid;
-  grid-template-columns: auto minmax(96px, 1fr);
+  grid-template-columns: auto auto;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
 }
 
 .meter-ring {
+  position: relative;
   display: grid;
   place-items: center;
-  width: 58px;
-  height: 58px;
+  width: 62px;
+  height: 62px;
   border-radius: 50%;
   background:
-    radial-gradient(circle at center, #11131a 56%, transparent 57%),
-    conic-gradient(var(--hot) var(--meter-progress), rgba(255, 255, 255, 0.12) 0);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+    radial-gradient(circle at center, rgba(5, 5, 7, 0.98) 49%, transparent 50%),
+    radial-gradient(circle at center, rgba(255, 255, 255, 0.24) 58%, transparent 59%),
+    conic-gradient(from -90deg, #fff 0deg, rgba(var(--hot-rgb), 1) var(--meter-progress), rgba(255, 255, 255, 0.13) 0);
+  box-shadow:
+    0 0 18px rgba(var(--hot-rgb), 0.3),
+    0 0 34px rgba(var(--hot-rgb), 0.14),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.meter-ring::after {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  border: 1px solid rgba(var(--hot-rgb), 0.36);
+  box-shadow: inset 0 0 14px rgba(var(--hot-rgb), 0.18);
+  pointer-events: none;
 }
 
 .meter-ring span {
   color: #fff;
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   font-weight: 950;
-}
-
-.meter-meta {
-  display: grid;
-  gap: 2px;
-  min-width: 0;
-}
-
-.meter-meta small,
-.meter-meta strong {
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.meter-meta small {
-  color: var(--muted);
-  font-size: 0.58rem;
-  font-weight: 900;
-  white-space: nowrap;
-}
-
-.meter-meta strong {
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 0.68rem;
-  font-weight: 950;
-  white-space: nowrap;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.42);
 }
 
 .meter-badges {
   display: flex;
   flex-wrap: wrap;
-  gap: 2px;
+  gap: 3px;
   align-items: center;
+  max-width: 50px;
 }
 
 .meter-badges i {
   display: grid;
   place-items: center;
-  width: 14px;
-  height: 14px;
+  width: 15px;
+  height: 15px;
   border-radius: 50%;
   color: #fff;
-  background: #44d7a8;
+  background: #ff4456;
+  box-shadow: 0 0 10px rgba(255, 68, 86, 0.45);
 }
 
+.meter-badges i.weekly { background: #ff9f3f; box-shadow: 0 0 10px rgba(255, 159, 63, 0.45); }
+.meter-badges i.monthly { background: #44d7a8; box-shadow: 0 0 10px rgba(68, 215, 168, 0.45); }
+.meter-badges i.yearly { background: #9d6bff; box-shadow: 0 0 10px rgba(157, 107, 255, 0.45); }
 .meter-badges i.score {
   background: #4d8dff;
+  box-shadow: 0 0 10px rgba(77, 141, 255, 0.45);
 }
 
 .meter-badges svg {
@@ -569,7 +565,7 @@ input::placeholder {
 
 .range-field .segmented {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   border-radius: var(--radius);
 }
 
@@ -1094,19 +1090,29 @@ input::placeholder {
   background: rgba(var(--hot-rgb), 0.22);
 }
 
-.badge.count {
+.badge.daily {
   border-color: rgba(255, 68, 86, 0.42);
   background: rgba(255, 68, 86, 0.16);
+}
+
+.badge.weekly {
+  border-color: rgba(255, 159, 63, 0.42);
+  background: rgba(255, 159, 63, 0.15);
+}
+
+.badge.monthly {
+  border-color: rgba(68, 215, 168, 0.34);
+  background: rgba(68, 215, 168, 0.14);
+}
+
+.badge.yearly {
+  border-color: rgba(157, 107, 255, 0.4);
+  background: rgba(157, 107, 255, 0.15);
 }
 
 .badge.score {
   border-color: rgba(47, 134, 255, 0.42);
   background: rgba(47, 134, 255, 0.16);
-}
-
-.badge.streak {
-  border-color: rgba(68, 215, 168, 0.34);
-  background: rgba(68, 215, 168, 0.14);
 }
 
 .day-badges {
@@ -1189,22 +1195,34 @@ input::placeholder {
   font-style: normal;
 }
 
-.calendar-badges i.count {
+.calendar-badges i.daily {
   border-color: rgba(255, 132, 143, 0.72);
   background: linear-gradient(180deg, #ff4456, #b20f20);
   box-shadow: 0 0 10px rgba(255, 68, 86, 0.34);
+}
+
+.calendar-badges i.weekly {
+  border-color: rgba(255, 190, 112, 0.72);
+  background: linear-gradient(180deg, #ff9f3f, #b95508);
+  box-shadow: 0 0 10px rgba(255, 159, 63, 0.34);
+}
+
+.calendar-badges i.monthly {
+  border-color: rgba(111, 238, 183, 0.68);
+  background: linear-gradient(180deg, #44d7a8, #15956d);
+  box-shadow: 0 0 10px rgba(68, 215, 168, 0.28);
+}
+
+.calendar-badges i.yearly {
+  border-color: rgba(190, 158, 255, 0.72);
+  background: linear-gradient(180deg, #9d6bff, #6234c9);
+  box-shadow: 0 0 10px rgba(157, 107, 255, 0.3);
 }
 
 .calendar-badges i.score {
   border-color: rgba(111, 170, 255, 0.7);
   background: linear-gradient(180deg, #2f86ff, #1755b8);
   box-shadow: 0 0 10px rgba(47, 134, 255, 0.34);
-}
-
-.calendar-badges i.streak {
-  border-color: rgba(111, 238, 183, 0.68);
-  background: linear-gradient(180deg, #44d7a8, #15956d);
-  box-shadow: 0 0 10px rgba(68, 215, 168, 0.28);
 }
 
 .calendar-badges i svg {

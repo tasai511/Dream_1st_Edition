@@ -6,9 +6,11 @@ const RANGE_ALL = "all";
 const kMinChartVisibleDays = 7;
 const kMaxChartVisibleDays = 365;
 const BADGE_CATEGORIES = [
-  ["count", "回数系", "達成したら何回でも獲得可"],
-  ["score", "スコア系", "達成時に1回だけ獲得可"],
-  ["streak", "連続系", "達成したら何回でも獲得可"],
+  ["daily", "毎日", "毎日もらえる回数バッジ"],
+  ["weekly", "毎週", "1週間に1回もらえる回数バッジ"],
+  ["monthly", "毎月", "1か月に1回もらえる回数バッジ"],
+  ["yearly", "毎年", "1年に1回もらえる回数バッジ"],
+  ["score", "全期間", "1回だけもらえるスコアバッジ"],
 ];
 
 const defaultDb = {
@@ -131,34 +133,31 @@ function badgesFor(records) {
   const daily = aggregate(records);
   const byDate = new Map();
   const add = (date, label) => byDate.set(date, [...(byDate.get(date) || []), label]);
-  let streak = 0;
-  let previous = null;
   let bestEver = 0;
   let avgEver = 0;
   let weekStart = "";
   let weekTotal = 0;
   const monthTotals = new Map();
+  const yearTotals = new Map();
   const crossedDaily = new Set();
   const crossedWeek = new Set();
   const crossedMonth = new Set();
+  const crossedYear = new Set();
   const crossedBest = new Set();
   const crossedAvg = new Set();
-
-  daily.forEach((day) => {
-    streak = previous && toISO(addDays(parseISO(previous), 1)) === day.date ? streak + 1 : 1;
-    previous = day.date;
-    if (streak === 3) add(day.date, "3日連続");
-    if (streak === 7) add(day.date, "1週間連続");
-    if (streak >= 30 && streak % 30 === 0) add(day.date, `${streak / 30}か月連続`);
-
-    const dailyThreshold = Math.floor(day.count / 100) * 100;
-    if (dailyThreshold >= 100) {
-      const key = `${day.date}-${dailyThreshold}`;
-      if (!crossedDaily.has(key)) {
-        add(day.date, `1日${dailyThreshold.toLocaleString("ja-JP")}スイング`);
-        crossedDaily.add(key);
+  const addThresholdBadges = (date, prefix, total, step, periodKey, crossed) => {
+    const threshold = Math.floor(total / step) * step;
+    for (let value = step; value <= threshold; value += step) {
+      const key = `${periodKey}-${value}`;
+      if (!crossed.has(key)) {
+        add(date, `${prefix}${value.toLocaleString("ja-JP")}スイング`);
+        crossed.add(key);
       }
     }
+  };
+
+  daily.forEach((day) => {
+    addThresholdBadges(day.date, "1日", day.count, 50, day.date, crossedDaily);
 
     const dateValue = parseISO(day.date);
     const currentWeekStart = toISO(addDays(dateValue, -dateValue.getDay()));
@@ -167,26 +166,17 @@ function badgesFor(records) {
       weekTotal = 0;
     }
     weekTotal += day.count;
-    const weekThreshold = Math.floor(weekTotal / 500) * 500;
-    if (weekThreshold >= 500) {
-      const key = `${weekStart}-${weekThreshold}`;
-      if (!crossedWeek.has(key)) {
-        add(day.date, `週間${weekThreshold.toLocaleString("ja-JP")}スイング`);
-        crossedWeek.add(key);
-      }
-    }
+    addThresholdBadges(day.date, "週間", weekTotal, 500, weekStart, crossedWeek);
 
     const monthKey = day.date.slice(0, 7);
     const monthTotal = (monthTotals.get(monthKey) || 0) + day.count;
     monthTotals.set(monthKey, monthTotal);
-    const monthThreshold = Math.floor(monthTotal / 1000) * 1000;
-    if (monthThreshold >= 1000) {
-      const key = `${monthKey}-${monthThreshold}`;
-      if (!crossedMonth.has(key)) {
-        add(day.date, `月間${monthThreshold.toLocaleString("ja-JP")}スイング`);
-        crossedMonth.add(key);
-      }
-    }
+    addThresholdBadges(day.date, "月間", monthTotal, 1000, monthKey, crossedMonth);
+
+    const yearKey = day.date.slice(0, 4);
+    const yearTotal = (yearTotals.get(yearKey) || 0) + day.count;
+    yearTotals.set(yearKey, yearTotal);
+    addThresholdBadges(day.date, "年間", yearTotal, 10000, yearKey, crossedYear);
 
     bestEver = Math.max(bestEver, day.best || 0);
     avgEver = Math.max(avgEver, day.avg || 0);
@@ -267,18 +257,11 @@ function compareLabel(index, range) {
     if (range === 1) return "今日";
     if (range === 7) return "今週";
     if (range === 30) return "今月";
-    if (range === 90) return "直近3か月";
-    if (range === 180) return "直近半年";
     return "今年";
   }
   if (range === 1) return index === 1 ? "昨日" : `${index}日前`;
   if (range === 7) return `${index}週前`;
   if (range === 30) return `${index}か月前`;
-  if (range === 90) return `${index * 3}か月前`;
-  if (range === 180) {
-    const years = index * 0.5;
-    return years === 0.5 ? "半年前" : `${Number.isInteger(years) ? years : years.toFixed(1)}年前`;
-  }
   return `${index}年前`;
 }
 
@@ -286,21 +269,22 @@ function comparisonBuckets(daily, range) {
   if (!daily.length) {
     return [];
   }
+  const bucketRange = range === RANGE_ALL ? 365 : range;
   const map = new Map(daily.map((day) => [day.date, day]));
   const startDate = parseISO(daily[0].date);
   const today = parseISO(todayISO());
   const totalDays = Math.floor((today - startDate) / 86400000) + 1;
-  const bucketCount = Math.max(1, Math.ceil(totalDays / range));
+  const bucketCount = Math.max(1, Math.ceil(totalDays / bucketRange));
 
   return Array.from({ length: bucketCount }, (_, bucketIndex) => {
-    const end = addDays(today, -(bucketIndex * range));
-    const start = addDays(end, -(range - 1));
+    const end = addDays(today, -(bucketIndex * bucketRange));
+    const start = addDays(end, -(bucketRange - 1));
     let count = 0;
     let avgTotal = 0;
     let avgDays = 0;
     let best = 0;
 
-    for (let offset = 0; offset < range; offset += 1) {
+    for (let offset = 0; offset < bucketRange; offset += 1) {
       const date = toISO(addDays(start, offset));
       const day = map.get(date);
       if (!day) continue;
@@ -313,7 +297,7 @@ function comparisonBuckets(daily, range) {
     }
 
     return {
-      label: compareLabel(bucketIndex, range),
+      label: compareLabel(bucketIndex, bucketRange),
       rangeLabel: `${toISO(start).slice(5).replace("-", "/")}-${toISO(end).slice(5).replace("-", "/")}`,
       avg: avgDays ? Math.round(avgTotal / avgDays) : 0,
       best,
@@ -332,11 +316,9 @@ function Metric({ icon, label, value, unit }) {
 }
 
 function rangeCountGoal(range) {
-  if (range === 1) return { base: 100, step: 50, label: "1日" };
+  if (range === 1) return { base: 50, step: 50, label: "1日" };
   if (range === 7) return { base: 500, step: 500, label: "週間" };
   if (range === 30) return { base: 1000, step: 1000, label: "月間" };
-  if (range === 90) return { base: 3000, step: 3000, label: "3か月" };
-  if (range === 180) return { base: 6000, step: 6000, label: "半年" };
   return { base: 10000, step: 10000, label: "1年" };
 }
 
@@ -360,9 +342,8 @@ function progressInfo(kind, value, range) {
       goal,
       previous,
       remaining: Math.max(0, goal - value),
-      label: `${config.label}${goal.toLocaleString("ja-JP")}スイング`,
       earned: Math.max(0, Math.floor((value - config.base) / config.step) + 1),
-      category: "count",
+      category: range === 1 ? "daily" : range === 7 ? "weekly" : range === 30 ? "monthly" : "yearly",
     };
   }
   const goal = scoreGoal(value);
@@ -371,44 +352,38 @@ function progressInfo(kind, value, range) {
     goal,
     previous,
     remaining: Math.max(0, goal - value),
-    label: `${kind === "avg" ? "平均" : "ベスト"}${goal}点`,
     earned: Math.max(0, Math.floor(value / 100)),
     category: "score",
   };
 }
 
-function ProgressMeter({ kind, value, range }) {
+function ProgressMeter({ kind, value, range, showBadges = false }) {
   const info = progressInfo(kind, Number(value || 0), range);
   const span = Math.max(1, info.goal - info.previous);
   const ratio = clamp((Number(value || 0) - info.previous) / span, 0, 1);
-  const badgeIcons = Array.from({ length: Math.min(info.earned, 8) }, (_, index) => index);
+  const badgeIcons = showBadges ? Array.from({ length: info.earned }, (_, index) => index) : [];
   return (
     <div className="progress-meter">
       <div className="meter-ring" style={{ "--meter-progress": `${ratio * 360}deg` }}>
         <span>{info.remaining.toLocaleString("ja-JP")}</span>
       </div>
-      <div className="meter-meta">
-        <small>次: {info.label}</small>
-        <strong>あと{info.remaining.toLocaleString("ja-JP")}</strong>
-        {badgeIcons.length > 0 && (
-          <div className="meter-badges" aria-label="今日獲得したバッジ">
-            {badgeIcons.map((index) => <i className={info.category} key={index}><SvgIcon type="badge" /></i>)}
-            {info.earned > badgeIcons.length && <em>+{info.earned - badgeIcons.length}</em>}
-          </div>
-        )}
-      </div>
+      {badgeIcons.length > 0 && (
+        <div className="meter-badges" aria-label="この期間で獲得したバッジ">
+          {badgeIcons.map((index) => <i className={info.category} key={index}><SvgIcon type="badge" /></i>)}
+        </div>
+      )}
     </div>
   );
 }
 
-function AchievementMetric({ icon, label, value, unit, kind, range }) {
+function AchievementMetric({ icon, label, value, unit, kind, range, showMeter = true, showBadges = false }) {
   return (
     <div className={`achievement-metric ${kind}`}>
       <div>
         <div className="metric-label"><Icon type={icon} />{label}</div>
         <strong>{Number(value || 0).toLocaleString("ja-JP")}<span>{unit}</span></strong>
       </div>
-      <ProgressMeter kind={kind} value={value} range={range} />
+      {showMeter && <ProgressMeter kind={kind} value={value} range={range} showBadges={showBadges} />}
     </div>
   );
 }
@@ -478,6 +453,13 @@ function RecordPanel({ daily, range }) {
   const [mode, setMode] = useState("count");
   const buckets = useMemo(() => comparisonBuckets(daily, range), [daily, range]);
   const visibleBuckets = useMemo(() => [...buckets].reverse(), [buckets]);
+  const scoreData = useMemo(() => visibleBuckets.map((bucket) => ({
+    date: bucket.label,
+    label: bucket.label,
+    count: bucket.count,
+    avg: bucket.avg,
+    best: bucket.best,
+  })), [visibleBuckets]);
 
   return (
     <section className="dashboard-section record-section">
@@ -494,16 +476,24 @@ function RecordPanel({ daily, range }) {
       {visibleBuckets.length ? (
         mode === "count"
           ? <CountBars buckets={visibleBuckets} />
-          : <ScoreLineBuckets buckets={visibleBuckets} />
+          : <Chart data={scoreData} initialRange={Math.min(scoreData.length, 12)} />
       ) : <p className="empty compact-empty">記録がありません。</p>}
     </section>
   );
 }
 
 function CountBars({ buckets }) {
+  const scrollRef = useRef(null);
   const max = Math.max(1, ...buckets.map((bucket) => bucket.count));
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollLeft = scrollRef.current.scrollWidth;
+    }
+  }, [buckets.length, buckets[0]?.label, buckets.at(-1)?.label]);
+
   return (
-    <div className="record-scroll">
+    <div className="record-scroll" ref={scrollRef}>
       <div className="count-bars">
         {buckets.map((bucket) => {
           const height = bucket.count > 0 ? Math.max(10, (bucket.count / max) * 100) : 0;
@@ -1080,9 +1070,8 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
     [1, "今日"],
     [7, "1週間"],
     [30, "1か月"],
-    [90, "3か月"],
-    [180, "半年"],
     [365, "1年"],
+    [RANGE_ALL, "全期間"],
   ];
   const rangeLabel = rangeOptions.find(([value]) => value === range)?.[1] || `${range}日`;
   const badgeTotal = badgeCounts.reduce((sum, [, count]) => sum + count, 0);
@@ -1120,9 +1109,9 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
             </div>
           </div>
           <div className="achievement-summary">
-            <AchievementMetric icon="count" label="総スイング" value={total} unit="回" kind="count" range={range} />
-            <AchievementMetric icon="avg" label="平均" value={avg} unit="点" kind="avg" range={range} />
-            <AchievementMetric icon="best" label="ベスト" value={best} unit="点" kind="best" range={range} />
+            <AchievementMetric icon="count" label="総スイング" value={total} unit="回" kind="count" range={range} showBadges={range !== RANGE_ALL} />
+            <AchievementMetric icon="avg" label="平均" value={avg} unit="点" kind="avg" range={range} showMeter={range === RANGE_ALL} />
+            <AchievementMetric icon="best" label="ベスト" value={best} unit="点" kind="best" range={range} showMeter={range === RANGE_ALL} />
           </div>
         </section>
 
@@ -1187,13 +1176,9 @@ function collectBadgeCounts(records) {
     if (label.startsWith("1日")) return [0, 0, number];
     if (label.startsWith("週間")) return [0, 1, number];
     if (label.startsWith("月間")) return [0, 2, number];
+    if (label.startsWith("年間")) return [0, 3, number];
     if (label.startsWith("平均スコア")) return [1, 0, number || 999];
     if (label.startsWith("ベストスコア")) return [1, 1, number || 999];
-    if (label.includes("連続")) {
-      if (label.startsWith("3日")) return [2, 0, 3];
-      if (label.startsWith("1週間")) return [2, 1, 7];
-      return [2, 2, number];
-    }
     return [9, 9, 0];
   };
   return Object.entries(counts).sort(([a], [b]) => {
@@ -1207,10 +1192,12 @@ function collectBadgeCounts(records) {
 }
 
 function badgeCategory(label) {
-  if (label.startsWith("1日") || label.startsWith("週間") || label.startsWith("月間")) return "count";
+  if (label.startsWith("1日")) return "daily";
+  if (label.startsWith("週間")) return "weekly";
+  if (label.startsWith("月間")) return "monthly";
+  if (label.startsWith("年間")) return "yearly";
   if (label.startsWith("平均スコア") || label.startsWith("ベストスコア")) return "score";
-  if (label.includes("連続")) return "streak";
-  return "count";
+  return "daily";
 }
 
 function badgeGroups(badgeCounts) {
