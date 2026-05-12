@@ -256,10 +256,12 @@ p {
 .score-card {
   display: grid;
   gap: 12px;
+  min-width: 0;
   padding: 12px;
 }
 
 .score-summary-card {
+  min-width: 0;
   border: 1px solid rgba(var(--hot-rgb), 0.2);
   border-radius: var(--radius);
   padding: 14px;
@@ -269,34 +271,41 @@ p {
 }
 
 .attached-tabs {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 4px;
-  margin: -4px 0 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius);
-  padding: 3px;
-  background: rgba(0, 0, 0, 0.22);
+  display: flex;
+  align-items: end;
+  gap: 6px;
+  min-width: 0;
+  margin: 2px 8px -13px;
+  padding: 0 0 0 8px;
+  border-bottom: 1px solid rgba(var(--hot-rgb), 0.22);
+  position: relative;
+  z-index: 2;
 }
 
 .attached-tabs button {
-  min-height: 30px;
-  border: 0;
-  border-radius: 6px;
-  color: var(--muted);
-  background: transparent;
-  font-size: 0.72rem;
+  min-width: 74px;
+  min-height: 34px;
+  border: 1px solid rgba(var(--hot-rgb), 0.28);
+  border-bottom: 0;
+  border-radius: 9px 9px 0 0;
+  color: rgba(255, 255, 255, 0.76);
+  background: rgba(0, 0, 0, 0.24);
+  font-size: 0.74rem;
   font-weight: 950;
 }
 
 .attached-tabs button.selected {
   color: white;
-  background: var(--hot);
+  background:
+    linear-gradient(180deg, rgba(var(--hot-rgb), 0.3), rgba(var(--hot-rgb), 0.12)),
+    #171922;
+  transform: translateY(1px);
 }
 
 .achievement-summary {
   display: grid;
   gap: 10px;
+  min-width: 0;
 }
 
 .achievement-metric {
@@ -646,6 +655,7 @@ input::placeholder {
 }
 
 .score-card .dashboard-section {
+  min-width: 0;
   border: 0;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 0;
@@ -654,8 +664,13 @@ input::placeholder {
 }
 
 .cumulative-summary {
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  padding-top: 14px;
+  min-width: 0;
+  border: 1px solid rgba(var(--hot-rgb), 0.16);
+  border-radius: var(--radius);
+  padding: 14px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.018)),
+    rgba(0, 0, 0, 0.18);
 }
 
 .cumulative-summary .progress-meter.count {
@@ -669,6 +684,7 @@ input::placeholder {
 
 .record-section {
   overflow: hidden;
+  min-width: 0;
 }
 
 .record-tabs,
@@ -709,6 +725,8 @@ input::placeholder {
 
 .record-scroll {
   position: relative;
+  min-width: 0;
+  max-width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
   padding: 3px 2px 8px;
@@ -722,12 +740,14 @@ input::placeholder {
 .count-bars {
   display: flex;
   gap: 9px;
-  min-width: max-content;
+  width: max-content;
 }
 
 .bar-scroll {
   display: flex;
   gap: 9px;
+  min-width: 0;
+  max-width: 100%;
   overflow-x: auto;
   padding: 4px 2px 8px;
   scroll-snap-type: x proximity;

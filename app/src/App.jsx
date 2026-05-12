@@ -1264,24 +1264,6 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
     ["year", "今年"],
     [RANGE_ALL, "全期間"],
   ];
-  const selectRangeByStep = (step) => {
-    const index = rangeOptions.findIndex(([value]) => value === range);
-    const next = rangeOptions[clamp(index + step, 0, rangeOptions.length - 1)];
-    if (next) setRange(next[0]);
-  };
-  const handleRangeTouchStart = (event) => {
-    if (event.target.closest(".chart-wrap, .record-scroll, .bar-scroll")) return;
-    event.currentTarget.dataset.touchX = String(event.touches[0].clientX);
-  };
-  const handleRangeTouchEnd = (event) => {
-    if (event.target.closest(".chart-wrap, .record-scroll, .bar-scroll")) return;
-    const startX = Number(event.currentTarget.dataset.touchX || 0);
-    const deltaX = event.changedTouches[0].clientX - startX;
-    if (Math.abs(deltaX) > 48) {
-      selectRangeByStep(deltaX < 0 ? 1 : -1);
-    }
-  };
-
   return (
     <>
       <section className="panel hero-card score-card">
@@ -1299,17 +1281,17 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
           </label>
         </div>
 
-        <section className="score-summary-card" onTouchStart={handleRangeTouchStart} onTouchEnd={handleRangeTouchEnd}>
+        <div className="attached-tabs" role="tablist" aria-label="実績期間">
+          {rangeOptions.map(([value, label]) => (
+            <button key={value} type="button" className={range === value ? "selected" : ""} onClick={() => setRange(value)}>{label}</button>
+          ))}
+        </div>
+        <section className="score-summary-card">
           <div className="section-row tight">
             <div>
               <h2>{achievementWindow.title}</h2>
               <p>{achievementWindow.label}</p>
             </div>
-          </div>
-          <div className="attached-tabs" role="tablist" aria-label="実績期間">
-            {rangeOptions.map(([value, label]) => (
-              <button key={value} type="button" className={range === value ? "selected" : ""} onClick={() => setRange(value)}>{label}</button>
-            ))}
           </div>
           <div className="achievement-summary all-period">
             <AchievementMetric icon="count" label="スイング数" value={total} unit="回" kind="count" range={range} showMeter={range !== RANGE_TOTAL} />
