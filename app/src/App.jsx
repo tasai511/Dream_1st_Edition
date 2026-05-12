@@ -18,6 +18,7 @@ const HOME_BADGE_DEFINITIONS = [
   ...[50, 100, 200, 300, 500].map((target) => ({ period: RANGE_TODAY, group: "daily", metric: "count", target, label: `今日${target}回` })),
   ...[300, 400, 500, 600, 700].map((target) => ({ period: RANGE_TODAY, group: "daily", metric: "avg", target, label: `日平均${target}` })),
   ...[500, 600, 700, 800, 900].map((target) => ({ period: RANGE_TODAY, group: "daily", metric: "best", target, label: `今日ベスト${target}` })),
+  ...[2, 3, 7, 14, 30, 60, 100, 365].map((target) => ({ period: RANGE_TODAY, group: "daily", metric: "streak", target, label: `${target}日連続練習`, trigger: "exact" })),
   ...[300, 500, 1000, 2000].map((target) => ({ period: RANGE_WEEK, group: "weekly", metric: "count", target, label: `今週${target}回` })),
   ...[300, 400, 500, 600].map((target) => ({ period: RANGE_WEEK, group: "weekly", metric: "avg", target, label: `週平均${target}` })),
   ...[[3, "今週3日練習"], [5, "今週5日練習"], [7, "今週皆勤"]].map(([target, label]) => ({ period: RANGE_WEEK, group: "weekly", metric: "days", target, label })),
@@ -213,7 +214,9 @@ function aggregateByBat(records) {
 }
 
 function periodSummaryFromDaily(dailyMap, start, end) {
-  const spanDays = Math.max(1, Math.floor((end - start) / 86400000) + 1);
+  const today = parseISO(todayISO());
+  const effectiveEnd = end > today ? today : end;
+  const spanDays = Math.max(1, Math.floor((effectiveEnd - start) / 86400000) + 1);
   let count = 0;
   let weightedTotal = 0;
   let best = 0;
@@ -241,11 +244,28 @@ function periodSummaryFromDaily(dailyMap, start, end) {
   };
 }
 
+function streakByDate(daily) {
+  const streaks = new Map();
+  let previousDate = null;
+  let currentStreak = 0;
+
+  daily.forEach((day) => {
+    const date = parseISO(day.date);
+    const continued = previousDate && toISO(addDays(previousDate, 1)) === day.date;
+    currentStreak = continued ? currentStreak + 1 : 1;
+    streaks.set(day.date, currentStreak);
+    previousDate = date;
+  });
+
+  return streaks;
+}
+
 function homeBadgeMetricValue(definition, summary) {
   if (definition.metric === "count") return summary.count;
   if (definition.metric === "avg") return summary.badgeAvg ?? summary.avg;
   if (definition.metric === "best") return summary.best;
   if (definition.metric === "days") return summary.days;
+  if (definition.metric === "streak") return summary.streak;
   return 0;
 }
 
@@ -257,17 +277,24 @@ function addHomeBadge(map, date, label) {
   map.set(date, [...(map.get(date) || []), label]);
 }
 
+function isHomeBadgeEarned(definition, summary) {
+  const value = homeBadgeMetricValue(definition, summary);
+  const target = homeBadgeTarget(definition, summary);
+  return definition.trigger === "exact" ? value === target : value >= target;
+}
+
 function badgesFor(records) {
   const daily = aggregate(records);
   const dailyMap = new Map(daily.map((day) => [day.date, day]));
+  const streaks = streakByDate(daily);
   const byDate = new Map();
 
   daily.forEach((day) => {
-    const summary = { ...day, badgeAvg: day.avg, days: 1, spanDays: 1 };
+    const summary = { ...day, badgeAvg: day.avg, days: 1, spanDays: 1, streak: streaks.get(day.date) || 0 };
     HOME_BADGE_DEFINITIONS
       .filter((definition) => definition.period === RANGE_TODAY)
       .forEach((definition) => {
-        if (homeBadgeMetricValue(definition, summary) >= homeBadgeTarget(definition, summary)) {
+        if (isHomeBadgeEarned(definition, summary)) {
           addHomeBadge(byDate, day.date, definition.label);
         }
       });
@@ -287,7 +314,7 @@ function badgesFor(records) {
     HOME_BADGE_DEFINITIONS
       .filter((definition) => definition.period === period.period)
       .forEach((definition) => {
-        if (homeBadgeMetricValue(definition, summary) >= homeBadgeTarget(definition, summary)) {
+        if (isHomeBadgeEarned(definition, summary)) {
           addHomeBadge(byDate, period.earnedAt, definition.label);
         }
       });
@@ -1199,10 +1226,13 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
     achievementWindow.end,
   );
   const chartDaily = aggregate(allFiltered);
+  const currentStreak = streakByDate(chartDaily).get(todayISO()) || 0;
   const total = periodSummary.count;
   const avg = range === RANGE_TODAY ? periodSummary.avg : periodSummary.badgeAvg;
   const best = periodSummary.best;
   const practiceDays = periodSummary.days;
+  const avgUnit = range === RANGE_TOTAL ? "点" : `点／${periodSummary.spanDays}日`;
+  const practiceUnit = `日／${periodSummary.spanDays}日`;
   const badgeCounts = collectBadgeCounts(allForName, badgeFilter);
   const groupedBadges = badgeGroups(badgeCounts);
   const chartData = filledChartExtent(chartDaily);
@@ -1258,12 +1288,15 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
             {range === RANGE_TOTAL ? (
               <AchievementMetric icon="log" label="継続日数" value={practiceDays} unit="日" kind="days" range={range} showMeter={false} />
             ) : (
-              <AchievementMetric icon="avg" label="平均" value={avg} unit="点" kind="avg" range={range} />
+              <AchievementMetric icon="avg" label="平均" value={avg} unit={avgUnit} kind="avg" range={range} />
             )}
             {range === RANGE_TODAY || range === RANGE_TOTAL ? (
               <AchievementMetric icon="best" label="ベスト" value={best} unit="点" kind="best" range={range} showMeter={range !== RANGE_TOTAL} />
             ) : (
-              <AchievementMetric icon="log" label="継続日数" value={practiceDays} unit="日" kind="days" range={range} variableTarget={periodSummary.spanDays} />
+              <AchievementMetric icon="log" label="練習した日" value={practiceDays} unit={practiceUnit} kind="days" range={range} variableTarget={periodSummary.spanDays} />
+            )}
+            {range === RANGE_TODAY && (
+              <AchievementMetric icon="log" label="毎日練習" value={currentStreak} unit="日目" kind="streak" range={range} />
             )}
           </div>
         </section>
@@ -1358,6 +1391,7 @@ function badgeCategory(label) {
 }
 
 function badgePeriod(label) {
+  if (label.includes("日連続練習")) return "daily";
   if (label.startsWith("今日") || label.startsWith("日平均")) return "daily";
   if (label.startsWith("今週") || label.startsWith("週平均")) return "weekly";
   if (label.startsWith("月間")) return "monthly";
