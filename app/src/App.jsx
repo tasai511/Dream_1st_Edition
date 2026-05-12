@@ -752,7 +752,7 @@ function Chart({ data, initialRange }) {
   const pointersRef = useRef(new Map());
   const gestureRef = useRef(null);
   const width = chartWidth;
-  const height = 250;
+  const height = 230;
   const pad = { left: 42, right: 18, top: 22, bottom: 42 };
   const plotW = width - pad.left - pad.right;
   const plotH = height - pad.top - pad.bottom;
@@ -1623,24 +1623,6 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
     <>
       <section className="panel">
         <div className="section-row">
-          <h2>テーマ</h2>
-          <p>アクセントカラー</p>
-        </div>
-        <div className="theme-switch">
-          {[
-            ["red", "赤", "#ff4055", "255,64,85"],
-            ["blue", "青", "#3b8dff", "59,141,255"],
-            ["green", "緑", "#31db8f", "49,219,143"],
-          ].map(([theme, label, color, rgb]) => (
-            <button key={theme} type="button" className={(db.theme || "red") === theme ? "selected" : ""} onClick={() => setDb({ ...db, theme })} aria-label={`テーマ: ${label}`} title={`テーマ: ${label}`}>
-              <span className="theme-dot" style={{ "--theme-dot": color, "--theme-dot-rgb": rgb }} aria-hidden="true" />
-            </button>
-          ))}
-        </div>
-      </section>
-
-      <section className="panel">
-        <div className="section-row">
           <h2>名前</h2>
           <p>使う人を切り替え</p>
         </div>
@@ -1683,6 +1665,24 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
 
       <section className="panel">
         <div className="section-row">
+          <h2>テーマ</h2>
+          <p>アクセントカラー</p>
+        </div>
+        <div className="theme-switch">
+          {[
+            ["red", "赤", "#ff4055", "255,64,85"],
+            ["blue", "青", "#3b8dff", "59,141,255"],
+            ["green", "緑", "#249c68", "36,156,104"],
+          ].map(([theme, label, color, rgb]) => (
+            <button key={theme} type="button" className={(db.theme || "red") === theme ? "selected" : ""} onClick={() => setDb({ ...db, theme })} aria-label={`テーマ: ${label}`} title={`テーマ: ${label}`}>
+              <span className="theme-dot" style={{ "--theme-dot": color, "--theme-dot-rgb": rgb }} aria-hidden="true" />
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="panel">
+        <div className="section-row">
           <h2>データ管理</h2>
           <p>この端末に保存</p>
         </div>
@@ -1699,16 +1699,15 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
 
 function BottomNav({ tab, setTab }) {
   const tabs = [
-    ["home", "home", "ホーム"],
-    ["record", "log", "入力"],
-    ["settings", "settings", "設定"],
+    ["home", "home"],
+    ["record", "log"],
+    ["settings", "settings"],
   ];
   return (
     <nav className="bottom-nav" aria-label="画面切り替え">
-      {tabs.map(([key, icon, label]) => (
-        <button key={key} type="button" className={tab === key ? "active" : ""} onClick={() => setTab(key)}>
+      {tabs.map(([key, icon]) => (
+        <button key={key} type="button" className={tab === key ? "active" : ""} onClick={() => setTab(key)} aria-label={key}>
           <SvgIcon type={icon} />
-          <span>{label}</span>
         </button>
       ))}
     </nav>

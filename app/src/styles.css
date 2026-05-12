@@ -93,10 +93,10 @@ svg text {
 }
 
 .theme-green {
-  --hot: #35d07f;
-  --hot-rgb: 53, 208, 127;
-  --hot-dark: #168650;
-  --line-hot: rgba(53, 208, 127, 0.36);
+  --hot: #249c68;
+  --hot-rgb: 36, 156, 104;
+  --hot-dark: #126743;
+  --line-hot: rgba(36, 156, 104, 0.36);
   --danger: #ff4758;
   --app-bg:
     radial-gradient(circle at 50% -14%, rgba(var(--hot-rgb), 0.2), transparent 32%),
@@ -1847,14 +1847,14 @@ input::placeholder {
   --line-hot: rgba(var(--hot-rgb), 0.28);
   --text: #f4f6fb;
   --muted: #9098a7;
-  --shadow: 0 14px 30px rgba(0, 0, 0, 0.22), 0 0 0 1px rgba(var(--hot-rgb), 0.035);
+  --shadow: 0 18px 36px rgba(0, 0, 0, 0.34), 0 0 0 1px rgba(var(--hot-rgb), 0.07);
   --radius: 12px;
 }
 
 .theme-red,
 .theme-blue,
 .theme-green {
-  --app-bg: #101217;
+  --app-bg: #242936;
 }
 
 body,
@@ -2113,4 +2113,96 @@ select,
 .dialog {
   border-color: var(--line);
   background: var(--panel);
+}
+
+.score-summary-card,
+.cumulative-summary,
+.record-card,
+.metric-card,
+.total-card {
+  background: #181c25;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.38), 0 0 0 1px rgba(255, 255, 255, 0.055);
+}
+
+.meter-track {
+  stroke: rgba(255, 255, 255, 0.16);
+}
+
+.attached-tabs button {
+  min-height: 34px;
+  padding-block: 4px;
+}
+
+.bottom-nav button {
+  min-height: 52px;
+  font-size: 0;
+}
+
+.bottom-nav svg {
+  width: 27px;
+  height: 27px;
+}
+
+.record-section .section-row {
+  justify-content: flex-end;
+}
+
+.record-section .record-tabs {
+  margin-left: auto;
+}
+
+.record-scroll,
+.chart-wrap {
+  min-height: 230px;
+}
+
+.chart-wrap svg {
+  height: 230px;
+}
+
+.record-section .bar-item {
+  grid-template-rows: 150px auto;
+}
+
+.record-section .bar-track {
+  height: 150px;
+}
+
+.record-section .bar-item > span:not(.bar-fill) {
+  display: none;
+}
+
+body,
+.app {
+  background: #242936;
+}
+
+.panel,
+.hero-card,
+.score-summary-card {
+  background: #1b202a;
+  box-shadow: 0 18px 34px rgba(0, 0, 0, 0.28), 0 1px 0 rgba(255, 255, 255, 0.035) inset;
+}
+
+.cumulative-summary,
+.dashboard-section,
+.record-card {
+  background: #171b24;
+  box-shadow: 0 16px 30px rgba(0, 0, 0, 0.32), 0 0 0 1px rgba(255, 255, 255, 0.052);
+}
+
+.metric-card,
+.total-card {
+  background: #141820;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.34), 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.add-row .primary {
+  border-color: var(--line);
+  background: #252a35;
+  box-shadow: none;
+}
+
+.add-row .primary:hover {
+  background: #2d3340;
 }
