@@ -344,7 +344,7 @@ p {
 .meter-track,
 .meter-value {
   fill: none;
-  stroke-width: 10;
+  stroke-width: 8;
 }
 
 .meter-track {
@@ -377,7 +377,7 @@ p {
 
 .progress-meter.count .meter-track,
 .progress-meter.count .meter-value {
-  stroke-width: 11;
+  stroke-width: 9;
 }
 
 .progress-meter.count .meter-ring span {
@@ -385,7 +385,7 @@ p {
 }
 
 .progress-meter.count .meter-ring {
-  margin-left: -24px;
+  margin-left: -12px;
 }
 
 .meter-badges {
