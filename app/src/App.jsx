@@ -369,7 +369,10 @@ function ProgressMeter({ kind, value, range, showBadges = false }) {
   const ratio = clamp((Number(value || 0) - info.previous) / span, 0, 1);
   const circumference = 169.65;
   const dashOffset = circumference * (1 - ratio);
-  const badgeIcons = showBadges ? Array.from({ length: info.earned }, (_, index) => index) : [];
+  const firstBadgeIndex = Math.max(0, info.earned - 4);
+  const badgeIcons = showBadges
+    ? Array.from({ length: Math.min(info.earned, 4) }, (_, index) => firstBadgeIndex + index)
+    : [];
   return (
     <div className={`progress-meter ${kind}`}>
       <div className="meter-ring">

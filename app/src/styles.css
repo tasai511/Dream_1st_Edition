@@ -275,7 +275,7 @@ p {
 
 .achievement-metric {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 116px;
+  grid-template-columns: minmax(0, 1fr) 104px;
   align-items: center;
   gap: 12px;
   min-width: 0;
@@ -309,10 +309,9 @@ p {
 
 .progress-meter {
   --meter-size: 72px;
-  --meter-center: 78px;
   position: relative;
   display: block;
-  width: 116px;
+  width: 104px;
   min-height: var(--meter-size);
 }
 
@@ -327,7 +326,7 @@ p {
   place-items: center;
   width: var(--meter-size);
   height: var(--meter-size);
-  margin-left: calc(var(--meter-center) - (var(--meter-size) / 2));
+  margin-left: auto;
   border-radius: 50%;
   background: none !important;
   box-shadow: none;
@@ -387,16 +386,15 @@ p {
 
 .meter-badges {
   position: absolute;
-  top: 50%;
+  top: 0;
   right: 0;
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, 15px);
   gap: 3px;
-  align-items: center;
-  align-content: center;
-  width: 32px;
-  min-height: 36px;
-  transform: translateY(-50%);
+  width: 33px;
+  min-height: 33px;
+  transform: translate(18%, -12%);
+  z-index: 2;
 }
 
 .meter-badge {
