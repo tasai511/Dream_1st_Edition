@@ -1270,7 +1270,7 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
                         {section.badges.length ? section.badges.map(([label, count]) => (
                           <span className="badge-chip-wrap" key={label}>
                             <span className={`badge ${section.key}`}><Icon type="badge" />{formatBadgeLabel(label)}</span>
-                            {count > 1 ? <b>x{count}</b> : null}
+                            <b>{count > 1 ? `x${count}` : ""}</b>
                           </span>
                         )) : <span className="badge-empty">-</span>}
                       </div>
@@ -1477,7 +1477,16 @@ function RecordView({ db, allForName, badgeMap, selectedDate, setSelectedDate, m
           {selectedByBat.length ? selectedByBat.map((item) => <RecordSummary key={item.bat} item={item} />) : <p className="empty">この日の記録はまだありません。</p>}
         </div>
         <div className="badge-list day-badges">
-          {(badgeMap.get(selectedDate) || []).map((badge) => <span className={`badge ${badgeCategory(badge)}`} key={badge}><Icon type="badge" />{badge}</span>)}
+          {[...(badgeMap.get(selectedDate) || [])].sort((a, b) => {
+            const aKey = badgeSortKey(a);
+            const bKey = badgeSortKey(b);
+            return aKey[0] - bKey[0] || aKey[1] - bKey[1] || String(aKey[2]).localeCompare(String(bKey[2]), "ja");
+          }).map((badge) => (
+            <span className="badge-chip-wrap" key={badge}>
+              <span className={`badge ${badgeCategory(badge)}`}><Icon type="badge" />{formatBadgeLabel(badge)}</span>
+              <b />
+            </span>
+          ))}
         </div>
       </section>
     </>

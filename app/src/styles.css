@@ -1214,15 +1214,19 @@ input::placeholder {
 .badge-chip-wrap {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   width: fit-content;
   max-width: 100%;
 }
 
 .badge-chip-wrap > b {
+  display: inline-block;
+  width: 38px;
   color: var(--muted);
-  font-size: 0.76rem;
+  font-size: 0.68rem;
   font-weight: 900;
+  line-height: 1;
+  text-align: left;
 }
 
 .badge.hot {
@@ -1268,8 +1272,8 @@ input::placeholder {
   align-items: center;
   justify-content: flex-start;
   gap: 5px;
-  width: 116px;
-  min-width: 116px;
+  width: 124px;
+  min-width: 124px;
 }
 
 .badge-chip-wrap .badge svg {
