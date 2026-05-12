@@ -389,7 +389,6 @@ p {
   line-height: 1;
   font-weight: 650;
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.42);
-  transform: translateY(12px);
 }
 
 .progress-meter.count .meter-track,
@@ -409,7 +408,6 @@ p {
 
 .progress-meter.count .meter-ring span {
   font-size: 0.92rem;
-  transform: translateY(15px);
 }
 
 .progress-meter.count .meter-ring {
@@ -422,80 +420,6 @@ p {
 
 .achievement-summary.all-period .progress-meter.count .meter-ring {
   margin-left: 40px;
-}
-
-.meter-goal-badge {
-  appearance: none;
-  -webkit-appearance: none;
-  position: relative;
-  z-index: 2;
-  display: grid;
-  place-items: center;
-  width: 24px;
-  height: 24px;
-  border: 0;
-  border-radius: 50%;
-  padding: 0;
-  color: #fff;
-  background: #ff4456;
-  box-shadow: 0 0 10px rgba(255, 68, 86, 0.45);
-  transform: translateY(-7px);
-}
-
-.progress-meter.count .meter-goal-badge {
-  width: 28px;
-  height: 28px;
-  transform: translateY(-9px);
-}
-
-.meter-goal-badge.weekly { background: #ff9f3f; box-shadow: 0 0 10px rgba(255, 159, 63, 0.45); }
-.meter-goal-badge.monthly { background: #44d7a8; box-shadow: 0 0 10px rgba(68, 215, 168, 0.45); }
-.meter-goal-badge.yearly { background: #9d6bff; box-shadow: 0 0 10px rgba(157, 107, 255, 0.45); }
-.meter-goal-badge.score {
-  background: #4d8dff;
-  box-shadow: 0 0 10px rgba(77, 141, 255, 0.45);
-}
-
-.meter-goal-badge svg {
-  width: 14px;
-  height: 14px;
-  stroke-width: 2.8;
-}
-
-.progress-meter.count .meter-goal-badge svg {
-  width: 16px;
-  height: 16px;
-}
-
-.meter-goal-badge::after {
-  content: attr(data-label);
-  position: absolute;
-  right: 50%;
-  bottom: calc(100% + 7px);
-  z-index: 6;
-  width: max-content;
-  max-width: 160px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 8px;
-  padding: 5px 7px;
-  color: #fff;
-  background: rgba(9, 9, 13, 0.96);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.36);
-  font-size: 0.64rem;
-  font-weight: 800;
-  line-height: 1.25;
-  opacity: 0;
-  pointer-events: none;
-  transform: translateX(50%) translateY(3px);
-  transition: opacity 0.14s ease, transform 0.14s ease;
-}
-
-.meter-goal-badge:hover::after,
-.meter-goal-badge:focus::after,
-.meter-goal-badge:focus-visible::after,
-.meter-goal-badge:active::after {
-  opacity: 1;
-  transform: translateX(50%) translateY(0);
 }
 
 .section-row {

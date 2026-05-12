@@ -347,7 +347,6 @@ function progressInfo(kind, value, range) {
       badgeBase: config.base,
       badgeStep: config.step,
       badgePrefix: config.label,
-      goalLabel: `${config.label}${goal.toLocaleString("ja-JP")}スイング`,
     };
   }
   const goal = scoreGoal(value);
@@ -363,7 +362,6 @@ function progressInfo(kind, value, range) {
     badgeStep: 100,
     badgePrefix: kind === "avg" ? "平均スコア" : "ベストスコア",
     badgeThresholds,
-    goalLabel: `${kind === "avg" ? "平均スコア" : "ベストスコア"}${goal.toLocaleString("ja-JP")}達成`,
   };
 }
 
@@ -406,9 +404,6 @@ function ProgressMeter({ kind, value, range }) {
             transform="rotate(-90 36 36)"
           />
         </svg>
-        <button className={`meter-goal-badge ${info.category}`} type="button" title={info.goalLabel} aria-label={info.goalLabel} data-label={info.goalLabel}>
-          <SvgIcon type="badge" />
-        </button>
         <span>-{info.remaining.toLocaleString("ja-JP")}</span>
       </div>
     </div>
