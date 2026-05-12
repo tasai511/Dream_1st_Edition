@@ -253,6 +253,12 @@ p {
     var(--panel-bg, #171922);
 }
 
+.score-card {
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+}
+
 .section-row {
   margin-bottom: 14px;
 }
@@ -443,6 +449,13 @@ input::placeholder {
 .dashboard-section {
   padding-top: 14px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.score-card .dashboard-section {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius);
+  padding: 14px;
+  background: rgba(0, 0, 0, 0.18);
 }
 
 .comparison-section {
