@@ -379,6 +379,24 @@ function ProgressMeter({ kind, value, range, showBadges = false }) {
         <svg viewBox="0 0 72 72" aria-hidden="true">
           <circle className="meter-track" cx="36" cy="36" r="27" />
           <circle
+            className="meter-glow meter-glow-wide"
+            cx="36"
+            cy="36"
+            r="27"
+            strokeDasharray={circumference}
+            strokeDashoffset={dashOffset}
+            transform="rotate(-90 36 36)"
+          />
+          <circle
+            className="meter-glow meter-glow-core"
+            cx="36"
+            cy="36"
+            r="27"
+            strokeDasharray={circumference}
+            strokeDashoffset={dashOffset}
+            transform="rotate(-90 36 36)"
+          />
+          <circle
             className="meter-value"
             cx="36"
             cy="36"

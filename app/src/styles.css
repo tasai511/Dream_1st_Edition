@@ -343,22 +343,37 @@ p {
 }
 
 .meter-track,
+.meter-glow,
 .meter-value {
   fill: none;
-  stroke-width: 8;
 }
 
 .meter-track {
   stroke: transparent;
+  stroke-width: 8;
+}
+
+.meter-glow {
+  stroke: var(--hot);
+  stroke-linecap: round;
+  transform-origin: 36px 36px;
+  transition: stroke-dashoffset 0.24s ease;
+}
+
+.meter-glow-wide {
+  stroke-width: 24;
+  opacity: 0.16;
+}
+
+.meter-glow-core {
+  stroke-width: 15;
+  opacity: 0.26;
 }
 
 .meter-value {
   stroke: var(--hot);
+  stroke-width: 8;
   stroke-linecap: round;
-  filter:
-    drop-shadow(0 0 7px rgba(var(--hot-rgb), 0.95))
-    drop-shadow(0 0 16px rgba(var(--hot-rgb), 0.72))
-    drop-shadow(0 0 30px rgba(var(--hot-rgb), 0.42));
   transition: stroke-dashoffset 0.24s ease;
 }
 
@@ -379,6 +394,16 @@ p {
 .progress-meter.count .meter-track,
 .progress-meter.count .meter-value {
   stroke-width: 7;
+}
+
+.progress-meter.count .meter-glow-wide {
+  stroke-width: 28;
+  opacity: 0.18;
+}
+
+.progress-meter.count .meter-glow-core {
+  stroke-width: 17;
+  opacity: 0.3;
 }
 
 .progress-meter.count .meter-ring span {
