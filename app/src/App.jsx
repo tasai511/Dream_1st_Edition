@@ -1338,21 +1338,21 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
   ];
   return (
     <>
-      <section className="panel hero-card score-card">
-        <div className="dashboard-controls">
-          <label className="field-label bat-field">
-            <span className="select-shell">
-              <span className="select-leading"><SvgIcon type="bat" /></span>
-              <select value={homeBat} onChange={(event) => setHomeBat(event.target.value)}>
-                <option value={ALL}>すべてのバット</option>
-                {db.bats.map((bat) => <option key={bat} value={bat}>{bat}</option>)}
-              </select>
-              <span className="select-caret" aria-hidden="true"><SvgIcon type="chevronDown" /></span>
-            </span>
-          </label>
-        </div>
+      <div className="dashboard-controls home-bat-filter">
+        <label className="field-label bat-field">
+          <span className="select-shell">
+            <span className="select-leading"><SvgIcon type="bat" /></span>
+            <select value={homeBat} onChange={(event) => setHomeBat(event.target.value)}>
+              <option value={ALL}>すべてのバット</option>
+              {db.bats.map((bat) => <option key={bat} value={bat}>{bat}</option>)}
+            </select>
+            <span className="select-caret" aria-hidden="true"><SvgIcon type="chevronDown" /></span>
+          </span>
+        </label>
+      </div>
 
-        <section className="score-summary-card">
+      <section className="score-card">
+        <section className="panel score-summary-card">
           <div className="attached-tabs" role="tablist" aria-label="実績期間">
             {rangeOptions.map(([value, label]) => (
               <button key={value} type="button" className={range === value ? "selected" : ""} onClick={() => setRange(value)}>
@@ -1383,7 +1383,7 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
           <RecordPanel daily={chartData} range={range} />
         </section>
 
-        <section className="cumulative-summary">
+        <section className="panel cumulative-summary">
           <div className="section-row tight">
             <div>
               <h2>累計</h2>

@@ -2211,6 +2211,36 @@ body,
   background: #2d3340;
 }
 
+.active-player,
+.app-header .active-player {
+  border: 0;
+  color: #ffffff;
+  background: var(--hot);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.26);
+}
+
+.active-player svg {
+  color: #ffffff;
+}
+
+.home-bat-filter {
+  margin-bottom: 0;
+}
+
+.home-bat-filter .bat-field {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.home-bat-filter .select-shell {
+  width: 100%;
+}
+
+.score-card {
+  display: grid;
+  gap: 12px;
+  padding: 0;
+}
+
 .bottom-nav {
   padding: 5px;
 }
@@ -2249,25 +2279,25 @@ body,
 
 .meter-badge {
   position: absolute;
-  right: -1px;
-  bottom: -1px;
+  right: -13px;
+  bottom: 2px;
   z-index: 3;
   display: grid;
   place-items: center;
-  width: 25px;
-  height: 25px;
-  border: 1px solid var(--line);
+  width: 27px;
+  height: 27px;
+  border: 1px solid rgba(var(--hot-rgb), 0.35);
   border-radius: 50%;
   padding: 0;
-  color: var(--text);
-  background: #252a35;
+  color: #ffffff;
+  background: var(--hot);
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.32);
 }
 
 .meter-badge svg {
-  width: 14px;
-  height: 14px;
-  stroke-width: 2.4;
+  width: 15px;
+  height: 15px;
+  stroke-width: 2.6;
 }
 
 .meter-badge-popover {
