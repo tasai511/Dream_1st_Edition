@@ -2504,3 +2504,12 @@ body,
 .record-section .chart-wrap {
   overflow: visible;
 }
+
+.chart-wrap,
+.record-scroll,
+.score-record-scroll,
+.score-bucket-chart,
+.count-bars,
+.bar-track {
+  background: transparent !important;
+}

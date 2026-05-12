@@ -588,15 +588,6 @@ function ProgressMeter({ kind, value, range, variableTarget, targets }) {
           />
         </svg>
         <span>-{info.remaining.toLocaleString("ja-JP")}</span>
-        <button
-          type="button"
-          className={`meter-badge badge-${kind}`}
-          aria-label={`${info.badgeLabel}の詳細`}
-          onClick={() => setDetailsOpen((open) => !open)}
-          onBlur={() => setDetailsOpen(false)}
-        >
-          <SvgIcon type="badge" />
-        </button>
         {detailsOpen && (
           <span className={`meter-badge-popover badge-${kind}`} role="tooltip">
             <strong>{info.badgeLabel}</strong>
