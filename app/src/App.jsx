@@ -1269,7 +1269,6 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
       <section className="panel hero-card score-card">
         <div className="dashboard-controls">
           <label className="field-label bat-field">
-            <span aria-hidden="true"></span>
             <span className="select-shell">
               <span className="select-leading"><SvgIcon type="bat" /></span>
               <select value={homeBat} onChange={(event) => setHomeBat(event.target.value)}>
@@ -1281,14 +1280,14 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
           </label>
         </div>
 
-        <div className="attached-tabs" role="tablist" aria-label="実績期間">
-          {rangeOptions.map(([value, label]) => (
-            <button key={value} type="button" className={range === value ? "selected" : ""} onClick={() => setRange(value)}>
-              <span>{label}</span>
-            </button>
-          ))}
-        </div>
         <section className="score-summary-card">
+          <div className="attached-tabs" role="tablist" aria-label="実績期間">
+            {rangeOptions.map(([value, label]) => (
+              <button key={value} type="button" className={range === value ? "selected" : ""} onClick={() => setRange(value)}>
+                <span>{label}</span>
+              </button>
+            ))}
+          </div>
           <p className="period-heading">{achievementWindow.label}</p>
           <div className="achievement-summary all-period">
             <AchievementMetric icon="count" label="スイング数" value={total} unit="回" kind="count" range={range} showMeter={range !== RANGE_TOTAL} />
