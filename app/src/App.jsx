@@ -772,8 +772,12 @@ function Chart({ data, initialRange }) {
     const baseX = (plotX - chartView.offset) / chartView.scale;
     return clamp(Math.round((baseX / plotW) * (data.length - 1)), 0, data.length - 1);
   };
-  const visibleStartLabel = data[visibleIndexAt(0)]?.label || data[0].label;
-  const visibleEndLabel = data[visibleIndexAt(plotW)]?.label || data.at(-1).label;
+  const xAxisLabels = [
+    { x: pad.left, anchor: "start", label: data[visibleIndexAt(0)]?.label || data[0].label },
+    { x: pad.left + (plotW / 3), anchor: "middle", label: data[visibleIndexAt(plotW / 3)]?.label || "" },
+    { x: pad.left + ((plotW * 2) / 3), anchor: "middle", label: data[visibleIndexAt((plotW * 2) / 3)]?.label || "" },
+    { x: width - pad.right, anchor: "end", label: data[visibleIndexAt(plotW)]?.label || data.at(-1).label },
+  ].filter((item, index, array) => item.label && array.findIndex((candidate) => candidate.label === item.label) === index);
   const hoveredInPlot = hovered && hovered.x >= pad.left && hovered.x <= width - pad.right;
   const tooltipLeft = hovered ? `${(clamp(hovered.x + 10, 8, width - 156) / width) * 100}%` : "0%";
   const tooltipTop = hovered ? `${(clamp(hovered.y - 74, 10, height - 82) / height) * 100}%` : "0%";
@@ -956,8 +960,9 @@ function Chart({ data, initialRange }) {
             {hovered.bestPoint && <circle className="chart-active-point best" cx={hovered.bestPoint.x} cy={hovered.bestPoint.y} r="4.5" />}
           </>
         )}
-        <text x={pad.left} y={height - 12} className="chart-date">{visibleStartLabel}</text>
-        <text x={width - pad.right} y={height - 12} textAnchor="end" className="chart-date">{visibleEndLabel}</text>
+        {xAxisLabels.map((item) => (
+          <text key={`${item.anchor}-${item.label}`} x={item.x} y={height - 12} textAnchor={item.anchor} className="chart-date">{item.label}</text>
+        ))}
         {hoveredInPlot && (
           <g className="chart-tooltip" pointerEvents="none">
             <line x1={hovered.x} y1={pad.top} x2={hovered.x} y2={height - pad.bottom} className="hover-line" />
