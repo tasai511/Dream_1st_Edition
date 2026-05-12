@@ -619,7 +619,6 @@ function RecordPanel({ daily, range }) {
       <div className="section-row tight">
         <div>
           <h2>記録</h2>
-          <p>{mode === "count" ? "期間ごとの回数" : "平均とベストのスコア"}</p>
         </div>
         <div className="record-tabs" role="tablist" aria-label="記録表示">
           <button type="button" className={mode === "count" ? "selected" : ""} onClick={() => setMode("count")}>回数</button>
@@ -1252,9 +1251,9 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
   const groupedBadges = badgeGroups(badgeCounts);
   const chartData = filledChartExtent(chartDaily);
   const rangeOptions = [
-    [RANGE_TODAY, "今日の実績", rangeWindow(RANGE_TODAY).label],
-    [RANGE_WEEK, "今週の実績", rangeWindow(RANGE_WEEK).label],
-    [RANGE_MONTH, "今月の実績", rangeWindow(RANGE_MONTH).label],
+    [RANGE_TODAY, "今日", rangeWindow(RANGE_TODAY).label],
+    [RANGE_WEEK, "今週", rangeWindow(RANGE_WEEK).label],
+    [RANGE_MONTH, "今月", rangeWindow(RANGE_MONTH).label],
   ];
   const badgeTotal = badgeCounts.reduce((sum, [, count]) => sum + count, 0);
   const badgeFilterOptions = [
@@ -1312,8 +1311,7 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
         <section className="cumulative-summary">
           <div className="section-row tight">
             <div>
-              <h2>累計の実績</h2>
-              <p>全期間</p>
+              <h2>累計</h2>
             </div>
           </div>
           <div className="achievement-summary compact-metrics">

@@ -275,7 +275,7 @@ p {
   align-items: end;
   gap: 6px;
   min-width: 0;
-  margin: 2px 8px -1px;
+  margin: 0 8px -1px;
   padding: 0 0 0 8px;
   position: relative;
   z-index: 2;
@@ -284,8 +284,8 @@ p {
 .attached-tabs button {
   display: grid;
   gap: 2px;
-  min-width: 88px;
-  min-height: 48px;
+  min-width: 82px;
+  min-height: 44px;
   border: 1px solid rgba(var(--hot-rgb), 0.28);
   border-bottom-color: rgba(var(--hot-rgb), 0.2);
   border-radius: 9px 9px 0 0;
@@ -673,10 +673,12 @@ input::placeholder {
 .score-card .dashboard-section {
   min-width: 0;
   border: 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid rgba(var(--hot-rgb), 0.28);
   border-radius: 0;
-  padding: 14px 0 0;
-  background: transparent;
+  margin-top: 18px;
+  padding: 18px 0 0;
+  background:
+    linear-gradient(180deg, rgba(var(--hot-rgb), 0.08), transparent 44px);
 }
 
 .cumulative-summary {
