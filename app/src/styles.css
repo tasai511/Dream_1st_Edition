@@ -952,8 +952,8 @@ input::placeholder {
 }
 
 .grid-line.vertical {
-  stroke: rgba(255, 255, 255, 0.08);
-  stroke-dasharray: 2 6;
+  stroke: rgba(255, 255, 255, 0.14);
+  stroke-width: 0.8;
 }
 
 .axis-line {
