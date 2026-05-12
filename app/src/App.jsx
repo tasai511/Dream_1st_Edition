@@ -600,7 +600,11 @@ function AchievementMetric({ icon, label, value, unit, kind, range, showMeter = 
     <div className={`achievement-metric ${kind} ${pending ? "pending" : ""}`}>
       <div>
         <div className="metric-label"><Icon type={icon} />{label}</div>
-        <strong>{Number(value || 0).toLocaleString("ja-JP")}<span>{unit}</span></strong>
+        <strong>
+          {Number(value || 0).toLocaleString("ja-JP")}
+          <span>{unit}</span>
+          {pending && <em className="pending-label">未確定</em>}
+        </strong>
       </div>
       {showMeter && <ProgressMeter kind={kind} value={value} range={range} variableTarget={variableTarget} targets={targets} />}
     </div>
@@ -1338,7 +1342,7 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
   ];
   return (
     <>
-      <div className="dashboard-controls home-bat-filter">
+      <div className={`dashboard-controls home-bat-filter ${homeBat === ALL ? "all-selected" : ""}`}>
         <label className="field-label bat-field">
           <span className="select-shell">
             <span className="select-leading"><SvgIcon type="bat" /></span>
