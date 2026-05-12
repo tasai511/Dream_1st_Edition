@@ -298,6 +298,7 @@ p {
 
 .achievement-metric.count > div > strong {
   font-size: 2.72rem;
+  color: var(--hot);
 }
 
 .achievement-metric > div > strong span {
@@ -355,9 +356,9 @@ p {
   stroke: var(--hot);
   stroke-linecap: round;
   filter:
-    drop-shadow(0 0 5px rgba(var(--hot-rgb), 0.84))
-    drop-shadow(0 0 12px rgba(var(--hot-rgb), 0.52))
-    drop-shadow(0 0 22px rgba(var(--hot-rgb), 0.28));
+    drop-shadow(0 0 7px rgba(var(--hot-rgb), 0.95))
+    drop-shadow(0 0 16px rgba(var(--hot-rgb), 0.72))
+    drop-shadow(0 0 30px rgba(var(--hot-rgb), 0.42));
   transition: stroke-dashoffset 0.24s ease;
 }
 
@@ -377,7 +378,7 @@ p {
 
 .progress-meter.count .meter-track,
 .progress-meter.count .meter-value {
-  stroke-width: 9;
+  stroke-width: 7;
 }
 
 .progress-meter.count .meter-ring span {
