@@ -371,7 +371,7 @@ function ProgressMeter({ kind, value, range, showBadges = false }) {
   const dashOffset = circumference * (1 - ratio);
   const badgeIcons = showBadges ? Array.from({ length: info.earned }, (_, index) => index) : [];
   return (
-    <div className="progress-meter">
+    <div className={`progress-meter ${kind}`}>
       <div className="meter-ring">
         <svg viewBox="0 0 72 72" aria-hidden="true">
           <circle className="meter-track" cx="36" cy="36" r="27" />
@@ -385,7 +385,7 @@ function ProgressMeter({ kind, value, range, showBadges = false }) {
             transform="rotate(-90 36 36)"
           />
         </svg>
-        <span>{info.remaining.toLocaleString("ja-JP")}</span>
+        <span>-{info.remaining.toLocaleString("ja-JP")}</span>
       </div>
       {showBadges && (
         <div className="meter-badges" aria-label="この期間で獲得したバッジ">

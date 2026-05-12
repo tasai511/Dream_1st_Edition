@@ -316,6 +316,11 @@ p {
   width: 134px;
 }
 
+.progress-meter.count {
+  grid-template-columns: 96px 54px;
+  width: 158px;
+}
+
 .meter-ring {
   position: relative;
   display: grid;
@@ -366,8 +371,27 @@ p {
   color: #fff;
   font-size: 0.72rem;
   line-height: 1;
-  font-weight: 950;
+  font-weight: 650;
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.42);
+}
+
+.progress-meter.count .meter-ring {
+  width: 96px;
+  height: 96px;
+}
+
+.progress-meter.count .meter-ring svg {
+  width: 96px;
+  height: 96px;
+}
+
+.progress-meter.count .meter-track,
+.progress-meter.count .meter-value {
+  stroke-width: 11;
+}
+
+.progress-meter.count .meter-ring span {
+  font-size: 0.92rem;
 }
 
 .meter-badges {
