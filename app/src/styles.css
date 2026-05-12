@@ -317,8 +317,8 @@ p {
 }
 
 .progress-meter.count {
-  grid-template-columns: 96px 54px;
-  width: 158px;
+  grid-template-columns: 96px 34px;
+  width: 138px;
 }
 
 .meter-ring {
@@ -400,7 +400,7 @@ p {
   gap: 3px;
   align-items: center;
   align-content: center;
-  width: 54px;
+  width: 34px;
   min-height: 36px;
 }
 
