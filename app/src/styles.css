@@ -309,17 +309,19 @@ p {
 
 .progress-meter {
   display: grid;
-  grid-template-columns: auto auto;
+  grid-template-columns: 72px 54px;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
+  justify-content: end;
+  width: 134px;
 }
 
 .meter-ring {
   position: relative;
   display: grid;
   place-items: center;
-  width: 62px;
-  height: 62px;
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
   background: none !important;
   box-shadow: none;
@@ -328,8 +330,8 @@ p {
 .meter-ring svg {
   position: absolute;
   inset: 0;
-  width: 62px;
-  height: 62px;
+  width: 72px;
+  height: 72px;
   overflow: visible;
   pointer-events: none;
 }
@@ -337,7 +339,7 @@ p {
 .meter-track,
 .meter-value {
   fill: none;
-  stroke-width: 9;
+  stroke-width: 10;
 }
 
 .meter-track {
@@ -347,15 +349,23 @@ p {
 .meter-value {
   stroke: var(--hot);
   stroke-linecap: round;
-  filter: drop-shadow(0 0 6px rgba(var(--hot-rgb), 0.56));
+  filter:
+    drop-shadow(0 0 5px rgba(var(--hot-rgb), 0.84))
+    drop-shadow(0 0 12px rgba(var(--hot-rgb), 0.52))
+    drop-shadow(0 0 22px rgba(var(--hot-rgb), 0.28));
   transition: stroke-dashoffset 0.24s ease;
 }
 
 .meter-ring span {
   position: relative;
   z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
   color: #fff;
   font-size: 0.72rem;
+  line-height: 1;
   font-weight: 950;
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.42);
 }
@@ -365,7 +375,9 @@ p {
   flex-wrap: wrap;
   gap: 3px;
   align-items: center;
-  max-width: 50px;
+  align-content: center;
+  width: 54px;
+  min-height: 36px;
 }
 
 .meter-badge {
