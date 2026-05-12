@@ -321,7 +321,7 @@ p {
   width: 62px;
   height: 62px;
   border-radius: 50%;
-  background: transparent;
+  background: none !important;
   box-shadow:
     0 0 18px rgba(var(--hot-rgb), 0.24),
     0 0 34px rgba(var(--hot-rgb), 0.1);
@@ -330,6 +330,8 @@ p {
 .meter-ring svg {
   position: absolute;
   inset: 0;
+  width: 62px;
+  height: 62px;
   overflow: visible;
   pointer-events: none;
 }
