@@ -326,7 +326,7 @@ p {
   place-items: center;
   width: var(--meter-size);
   height: var(--meter-size);
-  margin-left: 8px;
+  margin-left: 0;
   border-radius: 50%;
   background: none !important;
   box-shadow: none;
@@ -385,7 +385,7 @@ p {
 }
 
 .progress-meter.count .meter-ring {
-  margin-left: 0;
+  margin-left: -8px;
 }
 
 .meter-badges {
