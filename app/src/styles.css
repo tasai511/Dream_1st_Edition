@@ -355,8 +355,7 @@ p {
 
 .meter-glow {
   stroke: var(--hot);
-  stroke-linecap: round;
-  transform-origin: 36px 36px;
+  stroke-linecap: butt;
   transition: stroke-dashoffset 0.24s ease;
 }
 
