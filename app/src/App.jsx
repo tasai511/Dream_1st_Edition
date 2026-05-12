@@ -46,12 +46,6 @@ function ButtonIcon({ type }) {
   return <span className="button-icon"><SvgIcon type={type} /></span>;
 }
 
-function SwingSilhouette() {
-  return (
-    <img className="swing-silhouette" src="./images/swing-hero.png" alt="" aria-hidden="true" />
-  );
-}
-
 function todayISO() {
   return toISO(new Date());
 }
@@ -270,12 +264,14 @@ function pointerDistance(first, second) {
 
 function compareLabel(index, range) {
   if (index === 0) {
+    if (range === 1) return "今日";
     if (range === 7) return "今週";
     if (range === 30) return "今月";
     if (range === 90) return "直近3か月";
     if (range === 180) return "直近半年";
     return "今年";
   }
+  if (range === 1) return index === 1 ? "昨日" : `${index}日前`;
   if (range === 7) return `${index}週前`;
   if (range === 30) return `${index}か月前`;
   if (range === 90) return `${index * 3}か月前`;
@@ -309,9 +305,9 @@ function comparisonBuckets(daily, range) {
       const day = map.get(date);
       if (!day) continue;
       count += day.count;
-      if (Number.isFinite(day.avg)) {
-        avgTotal += day.avg;
-        avgDays += 1;
+      if (Number.isFinite(day.avg) && day.count > 0) {
+        avgTotal += day.avg * day.count;
+        avgDays += day.count;
       }
       best = Math.max(best, day.best || 0);
     }
@@ -331,6 +327,88 @@ function Metric({ icon, label, value, unit }) {
     <div className="metric-card">
       <div className="metric-label"><Icon type={icon} />{label}</div>
       <strong>{Number(value || 0).toLocaleString("ja-JP")}<span>{unit}</span></strong>
+    </div>
+  );
+}
+
+function rangeCountGoal(range) {
+  if (range === 1) return { base: 100, step: 50, label: "1日" };
+  if (range === 7) return { base: 500, step: 500, label: "週間" };
+  if (range === 30) return { base: 1000, step: 1000, label: "月間" };
+  if (range === 90) return { base: 3000, step: 3000, label: "3か月" };
+  if (range === 180) return { base: 6000, step: 6000, label: "半年" };
+  return { base: 10000, step: 10000, label: "1年" };
+}
+
+function nextSteppedGoal(value, base, step) {
+  if (value < base) return base;
+  return base + (Math.floor((value - base) / step) + 1) * step;
+}
+
+function scoreGoal(value) {
+  if (value < 100) return 100;
+  if (value >= 999) return 999;
+  return Math.min(999, Math.ceil((value + 1) / 100) * 100);
+}
+
+function progressInfo(kind, value, range) {
+  if (kind === "count") {
+    const config = rangeCountGoal(range);
+    const goal = nextSteppedGoal(value, config.base, config.step);
+    const previous = Math.max(0, goal - config.step);
+    return {
+      goal,
+      previous,
+      remaining: Math.max(0, goal - value),
+      label: `${config.label}${goal.toLocaleString("ja-JP")}スイング`,
+      earned: Math.max(0, Math.floor((value - config.base) / config.step) + 1),
+      category: "count",
+    };
+  }
+  const goal = scoreGoal(value);
+  const previous = Math.max(0, goal - 100);
+  return {
+    goal,
+    previous,
+    remaining: Math.max(0, goal - value),
+    label: `${kind === "avg" ? "平均" : "ベスト"}${goal}点`,
+    earned: Math.max(0, Math.floor(value / 100)),
+    category: "score",
+  };
+}
+
+function ProgressMeter({ kind, value, range }) {
+  const info = progressInfo(kind, Number(value || 0), range);
+  const span = Math.max(1, info.goal - info.previous);
+  const ratio = clamp((Number(value || 0) - info.previous) / span, 0, 1);
+  const badgeIcons = Array.from({ length: Math.min(info.earned, 8) }, (_, index) => index);
+  return (
+    <div className="progress-meter">
+      <div className="meter-ring" style={{ "--meter-progress": `${ratio * 360}deg` }}>
+        <span>{info.remaining.toLocaleString("ja-JP")}</span>
+      </div>
+      <div className="meter-meta">
+        <small>次: {info.label}</small>
+        <strong>あと{info.remaining.toLocaleString("ja-JP")}</strong>
+        {badgeIcons.length > 0 && (
+          <div className="meter-badges" aria-label="今日獲得したバッジ">
+            {badgeIcons.map((index) => <i className={info.category} key={index}><SvgIcon type="badge" /></i>)}
+            {info.earned > badgeIcons.length && <em>+{info.earned - badgeIcons.length}</em>}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function AchievementMetric({ icon, label, value, unit, kind, range }) {
+  return (
+    <div className={`achievement-metric ${kind}`}>
+      <div>
+        <div className="metric-label"><Icon type={icon} />{label}</div>
+        <strong>{Number(value || 0).toLocaleString("ja-JP")}<span>{unit}</span></strong>
+      </div>
+      <ProgressMeter kind={kind} value={value} range={range} />
     </div>
   );
 }
@@ -393,6 +471,116 @@ function ScoreComparison({ daily, range }) {
         </div>
       ) : <p className="empty compact-empty">比較できる記録がありません。</p>}
     </section>
+  );
+}
+
+function RecordPanel({ daily, range }) {
+  const [mode, setMode] = useState("count");
+  const buckets = useMemo(() => comparisonBuckets(daily, range), [daily, range]);
+  const visibleBuckets = useMemo(() => [...buckets].reverse(), [buckets]);
+
+  return (
+    <section className="dashboard-section record-section">
+      <div className="section-row tight">
+        <div>
+          <h2>記録</h2>
+          <p>{mode === "count" ? "期間ごとの回数" : "平均とベストのスコア"}</p>
+        </div>
+        <div className="record-tabs" role="tablist" aria-label="記録表示">
+          <button type="button" className={mode === "count" ? "selected" : ""} onClick={() => setMode("count")}>回数</button>
+          <button type="button" className={mode === "score" ? "selected" : ""} onClick={() => setMode("score")}>スコア</button>
+        </div>
+      </div>
+      {visibleBuckets.length ? (
+        mode === "count"
+          ? <CountBars buckets={visibleBuckets} />
+          : <ScoreLineBuckets buckets={visibleBuckets} />
+      ) : <p className="empty compact-empty">記録がありません。</p>}
+    </section>
+  );
+}
+
+function CountBars({ buckets }) {
+  const max = Math.max(1, ...buckets.map((bucket) => bucket.count));
+  return (
+    <div className="record-scroll">
+      <div className="count-bars">
+        {buckets.map((bucket) => {
+          const height = bucket.count > 0 ? Math.max(10, (bucket.count / max) * 100) : 0;
+          return (
+            <article className="bar-item" key={bucket.label}>
+              <div className="bar-track">
+                <span className="bar-fill" style={{ height: `${height}%` }} />
+              </div>
+              <strong>{Number(bucket.count || 0).toLocaleString("ja-JP")}<small>回</small></strong>
+              <span>{bucket.label}</span>
+              <em>{bucket.rangeLabel}</em>
+            </article>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function ScoreLineBuckets({ buckets }) {
+  const [hovered, setHovered] = useState(null);
+  const width = Math.max(360, buckets.length * 74);
+  const height = 238;
+  const pad = { left: 36, right: 18, top: 20, bottom: 42 };
+  const plotW = width - pad.left - pad.right;
+  const plotH = height - pad.top - pad.bottom;
+  const values = buckets.flatMap((bucket) => [bucket.avg, bucket.best]).filter((value) => value > 0);
+
+  if (!values.length) return <p className="empty compact-empty">スコア記録がありません。</p>;
+
+  const maxY = Math.ceil((Math.max(800, ...values) * 1.08) / 100) * 100;
+  const point = (bucket, index, key) => ({
+    x: pad.left + (buckets.length <= 1 ? plotW / 2 : (plotW * index) / (buckets.length - 1)),
+    y: pad.top + plotH - ((bucket[key] || 0) / maxY) * plotH,
+    bucket,
+  });
+  const avgPoints = buckets.map((bucket, index) => point(bucket, index, "avg")).filter((item) => item.bucket.avg > 0);
+  const bestPoints = buckets.map((bucket, index) => point(bucket, index, "best")).filter((item) => item.bucket.best > 0);
+  const hoverPoint = hovered !== null ? point(buckets[hovered], hovered, "best") : null;
+
+  return (
+    <div className="record-scroll score-record-scroll">
+      <svg className="score-bucket-chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="スコア記録" onMouseLeave={() => setHovered(null)}>
+        {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
+          const y = pad.top + plotH * ratio;
+          const value = Math.round((maxY * (1 - ratio)) / 100) * 100;
+          return (
+            <g key={ratio}>
+              <line x1={pad.left} y1={y} x2={width - pad.right} y2={y} className="grid-line" />
+              <text x={pad.left - 8} y={y + 3} textAnchor="end" className="chart-axis-label">{value}</text>
+            </g>
+          );
+        })}
+        <path className="avg-path" d={pathFromPoints(avgPoints)} />
+        <path className="best-path" d={pathFromPoints(bestPoints)} />
+        {buckets.map((bucket, index) => {
+          const x = pad.left + (buckets.length <= 1 ? plotW / 2 : (plotW * index) / (buckets.length - 1));
+          return (
+            <g key={bucket.label}>
+              <rect x={x - 32} y={pad.top} width="64" height={plotH} fill="transparent" onMouseEnter={() => setHovered(index)} onTouchStart={() => setHovered(index)} />
+              <text x={x} y={height - 22} textAnchor="middle" className="chart-date">{bucket.label}</text>
+              <text x={x} y={height - 9} textAnchor="middle" className="chart-date sub">{bucket.rangeLabel}</text>
+            </g>
+          );
+        })}
+        {hoverPoint && (
+          <line x1={hoverPoint.x} y1={pad.top} x2={hoverPoint.x} y2={height - pad.bottom} className="hover-line" />
+        )}
+      </svg>
+      {hovered !== null && (
+        <div className="record-tooltip">
+          <strong>{buckets[hovered].label}</strong>
+          <span>平均 {Number(buckets[hovered].avg || 0).toLocaleString("ja-JP")}点</span>
+          <span>ベスト {Number(buckets[hovered].best || 0).toLocaleString("ja-JP")}点</span>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -705,7 +893,7 @@ function demoDb() {
 export default function App() {
   const [db, setDbState] = useState(loadDb);
   const [tab, setTab] = useState("home");
-  const [range, setRange] = useState(30);
+  const [range, setRange] = useState(7);
   const [homeBat, setHomeBat] = useState(ALL);
   const [selectedDate, setSelectedDate] = useState(todayISO);
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
@@ -889,6 +1077,7 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
   const groupedBadges = badgeGroups(badgeCounts);
   const chartData = filledChartExtent(chartDaily);
   const rangeOptions = [
+    [1, "今日"],
     [7, "1週間"],
     [30, "1か月"],
     [90, "3か月"],
@@ -926,33 +1115,18 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
         <section className="score-summary-card">
           <div className="section-row tight">
             <div>
-              <h2>スコア</h2>
+              <h2>実績</h2>
               <p>{range === RANGE_ALL ? "全期間" : `直近${rangeLabel}`}</p>
             </div>
           </div>
-          <div className="total-card">
-            <SwingSilhouette />
-            <div className="metric-label"><Icon type="count" />総スイング</div>
-            <strong>{total.toLocaleString("ja-JP")}<span>回</span></strong>
-          </div>
-          <div className="metric-grid">
-            <Metric icon="avg" label="平均" value={avg} unit="点" />
-            <Metric icon="best" label="ベスト" value={best} unit="点" />
+          <div className="achievement-summary">
+            <AchievementMetric icon="count" label="総スイング" value={total} unit="回" kind="count" range={range} />
+            <AchievementMetric icon="avg" label="平均" value={avg} unit="点" kind="avg" range={range} />
+            <AchievementMetric icon="best" label="ベスト" value={best} unit="点" kind="best" range={range} />
           </div>
         </section>
 
-        <section className="dashboard-section">
-          <div className="section-row tight">
-            <div>
-              <h2>スコア推移</h2>
-              <p>平均とベストの流れ</p>
-            </div>
-            <div className="legend"><span className="avg-line" />平均 <span className="best-line" />ベスト</div>
-          </div>
-          <Chart data={chartData} initialRange={range} />
-        </section>
-
-        <ScoreComparison daily={chartData} range={range} />
+        <RecordPanel daily={chartData} range={range} />
       </section>
 
       <section className="panel">
@@ -1267,7 +1441,7 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
 function BottomNav({ tab, setTab }) {
   const tabs = [
     ["home", "home", "ホーム"],
-    ["record", "log", "記録"],
+    ["record", "log", "入力"],
     ["settings", "settings", "設定"],
   ];
   return (

@@ -268,6 +268,129 @@ p {
     rgba(0, 0, 0, 0.18);
 }
 
+.achievement-summary {
+  display: grid;
+  gap: 10px;
+}
+
+.achievement-metric {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 4px 0;
+}
+
+.achievement-metric + .achievement-metric {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 12px;
+}
+
+.achievement-metric strong {
+  display: block;
+  margin-top: 7px;
+  color: var(--text);
+  font-size: 2rem;
+  line-height: 1;
+  font-weight: 950;
+}
+
+.achievement-metric.count strong {
+  font-size: 3.3rem;
+}
+
+.achievement-metric strong span {
+  margin-left: 4px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.progress-meter {
+  display: grid;
+  grid-template-columns: auto minmax(0, 84px);
+  align-items: center;
+  gap: 8px;
+}
+
+.meter-ring {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at center, #11131a 56%, transparent 57%),
+    conic-gradient(var(--hot) var(--meter-progress), rgba(255, 255, 255, 0.12) 0);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.meter-ring span {
+  color: #fff;
+  font-size: 0.74rem;
+  font-weight: 950;
+}
+
+.meter-meta {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.meter-meta small,
+.meter-meta strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.meter-meta small {
+  color: var(--muted);
+  font-size: 0.58rem;
+  font-weight: 900;
+}
+
+.meter-meta strong {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.68rem;
+  font-weight: 950;
+}
+
+.meter-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  align-items: center;
+}
+
+.meter-badges i {
+  display: grid;
+  place-items: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  color: #fff;
+  background: #44d7a8;
+}
+
+.meter-badges i.score {
+  background: #4d8dff;
+}
+
+.meter-badges svg {
+  width: 9px;
+  height: 9px;
+  stroke-width: 2.8;
+}
+
+.meter-badges em {
+  color: var(--muted);
+  font-size: 0.58rem;
+  font-style: normal;
+  font-weight: 900;
+}
+
 .section-row {
   margin-bottom: 14px;
 }
@@ -445,7 +568,7 @@ input::placeholder {
 
 .range-field .segmented {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   border-radius: var(--radius);
 }
 
@@ -471,18 +594,29 @@ input::placeholder {
   overflow: hidden;
 }
 
+.record-section {
+  overflow: hidden;
+}
+
+.record-tabs,
 .compare-tabs {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 3px;
   flex: 0 0 auto;
-  min-width: 132px;
+  min-width: 112px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 3px;
   background: rgba(0, 0, 0, 0.24);
 }
 
+.compare-tabs {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  min-width: 132px;
+}
+
+.record-tabs button,
 .compare-tabs button {
   min-height: 28px;
   border: 0;
@@ -494,9 +628,28 @@ input::placeholder {
   font-weight: 950;
 }
 
+.record-tabs button.selected,
 .compare-tabs button.selected {
   color: white;
   background: rgba(var(--hot-rgb), 0.78);
+}
+
+.record-scroll {
+  position: relative;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 3px 2px 8px;
+  scrollbar-width: none;
+}
+
+.record-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.count-bars {
+  display: flex;
+  gap: 9px;
+  min-width: max-content;
 }
 
 .bar-scroll {
@@ -535,8 +688,8 @@ input::placeholder {
 .bar-fill {
   width: 100%;
   border-radius: 6px;
-  background: #ff3d45;
-  box-shadow: 0 0 18px rgba(255, 61, 69, 0.16);
+  background: #44d7a8;
+  box-shadow: 0 0 18px rgba(68, 215, 168, 0.16);
   transition: height 260ms ease, background-color 260ms ease, box-shadow 260ms ease;
 }
 
@@ -575,6 +728,44 @@ input::placeholder {
   font-size: 0.58rem;
 }
 
+.score-record-scroll {
+  min-height: 270px;
+}
+
+.score-bucket-chart {
+  display: block;
+  min-width: 100%;
+  height: 252px;
+}
+
+.chart-date.sub {
+  fill: rgba(255, 255, 255, 0.38);
+  font-size: 8px;
+}
+
+.record-tooltip {
+  position: sticky;
+  left: 8px;
+  bottom: 8px;
+  z-index: 3;
+  display: inline-grid;
+  gap: 2px;
+  border: 1px solid rgba(var(--hot-rgb), 0.38);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+  color: #fff;
+  background: rgba(17, 18, 24, 0.96);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.36);
+  pointer-events: none;
+}
+
+.record-tooltip strong,
+.record-tooltip span {
+  font-size: 0.72rem;
+  font-weight: 950;
+  line-height: 1.25;
+}
+
 .total-card,
 .metric-card,
 .record-card {
@@ -592,26 +783,6 @@ input::placeholder {
     linear-gradient(180deg, rgba(var(--hot-rgb), 0.25), rgba(var(--hot-rgb), 0.08)),
     rgba(0, 0, 0, 0.28);
   border-color: rgba(var(--hot-rgb), 0.25);
-}
-
-.swing-silhouette {
-  position: absolute;
-  right: -20px;
-  bottom: -2px;
-  width: 194px;
-  height: 112px;
-  object-fit: cover;
-  object-position: 57% 47%;
-  opacity: 0.78;
-  mix-blend-mode: screen;
-  filter:
-    saturate(0.18)
-    contrast(1.22)
-    brightness(1.16)
-    drop-shadow(0 0 5px rgba(255, 255, 255, 0.82))
-    drop-shadow(0 0 18px rgba(255, 255, 255, 0.34))
-    drop-shadow(0 0 26px rgba(var(--hot-rgb), 0.22));
-  pointer-events: none;
 }
 
 .total-card strong {
