@@ -124,18 +124,30 @@ function formatRangeDate(date) {
   return `${date.getMonth() + 1}/${date.getDate()}`;
 }
 
-function formatJapaneseDate(date) {
-  return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
+function formatJapaneseDate(date, includeMonth = true) {
+  return includeMonth ? `${date.getMonth() + 1}月${date.getDate()}日` : `${date.getDate()}日`;
+}
+
+function formatJapaneseRange(start, end) {
+  if (toISO(start) === toISO(end)) {
+    return formatJapaneseDate(start);
+  }
+  if (start.getMonth() === end.getMonth()) {
+    return `${formatJapaneseDate(start)}〜${formatJapaneseDate(end, false)}`;
+  }
+  return `${formatJapaneseDate(start)}〜${formatJapaneseDate(end)}`;
 }
 
 function rangeWindow(range, baseDate = parseISO(todayISO())) {
   if (range === RANGE_WEEK) {
     const start = startOfWeek(baseDate);
-    return { start, end: endOfWeek(baseDate), title: "今週の実績", label: `${formatJapaneseDate(start)}〜${formatJapaneseDate(endOfWeek(baseDate))}` };
+    const end = endOfWeek(baseDate);
+    return { start, end, title: "今週の実績", label: formatJapaneseRange(start, end) };
   }
   if (range === RANGE_MONTH) {
     const start = startOfMonth(baseDate);
-    return { start, end: endOfMonth(baseDate), title: "今月の実績", label: `${formatJapaneseDate(start)}〜${formatJapaneseDate(endOfMonth(baseDate))}` };
+    const end = endOfMonth(baseDate);
+    return { start, end, title: "今月の実績", label: formatJapaneseRange(start, end) };
   }
   return { start: baseDate, end: baseDate, title: "今日の実績", label: formatJapaneseDate(baseDate) };
 }
