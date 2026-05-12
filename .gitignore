@@ -10,3 +10,4 @@ node_modules
 dist
 .edge-profile-check
 .edge-shot.png
+cad/kicad/.history
