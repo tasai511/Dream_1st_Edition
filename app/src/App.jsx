@@ -9,9 +9,9 @@ const RANGE_MONTH = "month";
 const kMinChartVisibleDays = 7;
 const kMaxChartVisibleDays = 365;
 const BADGE_PERIODS = [
-  ["daily", "1日1回バッジ"],
-  ["weekly", "毎週1回バッジ"],
-  ["monthly", "毎月1回バッジ"],
+  ["daily", "毎日バッジ"],
+  ["weekly", "毎週バッジ"],
+  ["monthly", "毎月バッジ"],
 ];
 
 const defaultDb = {
@@ -196,9 +196,10 @@ function badgesFor(records) {
   const monthMap = new Map();
   const crossedCount = new Set();
   const crossedScore = new Set();
-  const addThresholdBadges = (date, prefix, total, step, periodKey) => {
-    const threshold = Math.floor(total / step) * step;
-    for (let value = step; value <= threshold; value += step) {
+  const addThresholdBadges = (date, prefix, total, base, step, periodKey) => {
+    if (total < base) return;
+    const threshold = base + Math.floor((total - base) / step) * step;
+    for (let value = base; value <= threshold; value += step) {
       const key = `${prefix}-${periodKey}-${value}`;
       if (!crossedCount.has(key)) {
         add(date, `${prefix}${value.toLocaleString("ja-JP")}スイング`);
@@ -217,7 +218,7 @@ function badgesFor(records) {
   };
 
   daily.forEach((day) => {
-    addThresholdBadges(day.date, "1日", day.count, 50, day.date);
+    addThresholdBadges(day.date, "1日", day.count, 50, 50, day.date);
     if (day.date < today) addScoreBadges(day.date, "1日", "平均", day.avg || 0, day.date);
     addScoreBadges(day.date, "1日", "ベスト", day.best || 0, day.date);
 
@@ -229,7 +230,7 @@ function badgesFor(records) {
     weekItem.best = Math.max(weekItem.best, day.best || 0);
     weekItem.lastDate = day.date;
     weekMap.set(weekKey, weekItem);
-    addThresholdBadges(day.date, "週間", weekItem.count, 500, weekKey);
+    addThresholdBadges(day.date, "週間", weekItem.count, 500, 100, weekKey);
     addScoreBadges(day.date, "週間", "ベスト", weekItem.best, weekKey);
 
     const monthKey = day.date.slice(0, 7);
@@ -240,7 +241,7 @@ function badgesFor(records) {
     monthItem.best = Math.max(monthItem.best, day.best || 0);
     monthItem.lastDate = day.date;
     monthMap.set(monthKey, monthItem);
-    addThresholdBadges(day.date, "月間", monthItem.count, 1000, monthKey);
+    addThresholdBadges(day.date, "月間", monthItem.count, 1000, 1000, monthKey);
     addScoreBadges(day.date, "月間", "ベスト", monthItem.best, monthKey);
   });
 
@@ -1265,7 +1266,6 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
                 <div className="badge-period-grid">
                   {group.sections.map((section) => (
                     <section className={`badge-subgroup ${section.key}`} key={section.key}>
-                      <h4>{section.label}</h4>
                       <div className="badge-list two-col">
                         {section.badges.length ? section.badges.map(([label, count]) => (
                           <span className="badge-chip-wrap" key={label}>
@@ -1353,14 +1353,19 @@ function badgeGroupKey(label) {
   return `${badgePeriod(label)}-${badgeCategory(label)}`;
 }
 
+function badgeValue(label) {
+  const matches = label.match(/[\d,.]+/g) || [];
+  return Number(matches.at(-1)?.replace(/,/g, "") || 0);
+}
+
 function badgeSortKey(label) {
-  const value = Number(label.match(/[\d,.]+/)?.[0]?.replace(/,/g, "") || 0);
+  const value = badgeValue(label);
   const scoreType = label.includes("平均スコア") ? 0 : label.includes("ベストスコア") ? 1 : 0;
   return [value, scoreType, label];
 }
 
 function formatBadgeLabel(label) {
-  const value = Number(label.match(/[\d,.]+/)?.[0]?.replace(/,/g, "") || 0).toLocaleString("ja-JP");
+  const value = badgeValue(label).toLocaleString("ja-JP");
   if (label.startsWith("1日")) {
     if (label.includes("平均スコア")) return `1日平均${value}点`;
     if (label.includes("ベストスコア")) return `1日ベスト${value}点`;

@@ -1166,7 +1166,8 @@ input::placeholder {
 .badge-period-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  align-items: start;
+  gap: 8px;
 }
 
 .badge-subgroup {
@@ -1174,17 +1175,16 @@ input::placeholder {
   gap: 8px;
 }
 
-.badge-subgroup h4 {
-  margin: 0;
-  color: var(--muted);
-  font-size: 0.7rem;
-  font-weight: 950;
+.badge-list.two-col {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: start;
+  align-items: center;
+  gap: 8px;
 }
 
-.badge-list.two-col {
-  display: grid;
-  align-content: start;
-  gap: 8px;
+.badge-subgroup.score .badge-list.two-col {
+  justify-content: flex-end;
 }
 
 .badge-empty {
@@ -1210,11 +1210,11 @@ input::placeholder {
 }
 
 .badge-chip-wrap {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
-  min-width: 0;
+  width: fit-content;
+  max-width: 100%;
 }
 
 .badge-chip-wrap > b {
@@ -1240,8 +1240,8 @@ input::placeholder {
   color: #dbeaff;
 }
 
-.badge .icon {
-  flex: 0 0 auto;
+.badge.score .icon {
+  color: #74b4ff;
 }
 
 .badge-chip-wrap .badge {
@@ -1253,12 +1253,6 @@ input::placeholder {
 
 .badge-chip-wrap .badge svg {
   flex: 0 0 auto;
-}
-
-@media (max-width: 560px) {
-  .badge-period-grid {
-    grid-template-columns: 1fr;
-  }
 }
 
 .day-badges {
