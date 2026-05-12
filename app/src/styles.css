@@ -1137,12 +1137,16 @@ input::placeholder {
 .badge-group {
   display: grid;
   gap: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius);
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .badge-group h3 {
   margin: 0;
-  color: var(--muted);
-  font-size: 0.76rem;
+  color: var(--text);
+  font-size: 0.82rem;
   font-weight: 950;
 }
 
@@ -1153,10 +1157,40 @@ input::placeholder {
   gap: 8px;
 }
 
-.badge-group-title p {
-  font-size: 0.66rem;
-  font-weight: 850;
-  text-align: right;
+.badge-group-title strong {
+  color: var(--hot);
+  font-size: 0.82rem;
+  font-weight: 950;
+}
+
+.badge-period-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.badge-subgroup {
+  display: grid;
+  gap: 8px;
+}
+
+.badge-subgroup h4 {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 950;
+}
+
+.badge-list.two-col {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+
+.badge-empty {
+  color: #6f6f78;
+  font-size: 0.8rem;
+  font-weight: 900;
 }
 
 .record-list {
@@ -1176,9 +1210,11 @@ input::placeholder {
 }
 
 .badge-chip-wrap {
-  display: inline-flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
+  min-width: 0;
 }
 
 .badge-chip-wrap > b {
@@ -1195,11 +1231,34 @@ input::placeholder {
 .badge.count {
   border-color: rgba(255, 68, 86, 0.42);
   background: rgba(255, 68, 86, 0.16);
+  color: #ffd8dd;
 }
 
 .badge.score {
   border-color: rgba(47, 134, 255, 0.42);
   background: rgba(47, 134, 255, 0.16);
+  color: #dbeaff;
+}
+
+.badge .icon {
+  flex: 0 0 auto;
+}
+
+.badge-chip-wrap .badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.badge-chip-wrap .badge svg {
+  flex: 0 0 auto;
+}
+
+@media (max-width: 560px) {
+  .badge-period-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .day-badges {

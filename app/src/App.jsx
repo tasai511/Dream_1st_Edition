@@ -8,13 +8,10 @@ const RANGE_WEEK = "week";
 const RANGE_MONTH = "month";
 const kMinChartVisibleDays = 7;
 const kMaxChartVisibleDays = 365;
-const BADGE_CATEGORIES = [
-  ["daily-count", "毎日の回数", "日ごとのスイング数バッジ"],
-  ["weekly-count", "毎週の回数", "週ごとのスイング数バッジ"],
-  ["monthly-count", "毎月の回数", "月ごとのスイング数バッジ"],
-  ["daily-score", "毎日のスコア", "日ごとの平均・ベストバッジ"],
-  ["weekly-score", "毎週のスコア", "週ごとの平均・ベストバッジ"],
-  ["monthly-score", "毎月のスコア", "月ごとの平均・ベストバッジ"],
+const BADGE_PERIODS = [
+  ["daily", "1日1回バッジ"],
+  ["weekly", "毎週1回バッジ"],
+  ["monthly", "毎月1回バッジ"],
 ];
 
 const defaultDb = {
@@ -1259,15 +1256,25 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
         <div className="badge-total"><strong>{badgeTotal.toLocaleString("ja-JP")}</strong><span>個</span></div>
         {badgeCounts.length ? (
           <div className="badge-groups">
-            {groupedBadges.filter((group) => group.badges.length).map((group) => (
+            {groupedBadges.filter((group) => group.total > 0).map((group) => (
               <section className={`badge-group ${group.key}`} key={group.key}>
                 <div className="badge-group-title">
                   <h3>{group.label}</h3>
-                  <p>{group.description}</p>
+                  <strong>{group.total.toLocaleString("ja-JP")}個</strong>
                 </div>
-                <div className="badge-list">
-                  {group.badges.map(([label, count]) => (
-                    <span className="badge-chip-wrap" key={label}><span className={`badge ${group.key}`}><Icon type="badge" />{label}</span>{count > 1 ? <b>x{count}</b> : null}</span>
+                <div className="badge-period-grid">
+                  {group.sections.map((section) => (
+                    <section className={`badge-subgroup ${section.key}`} key={section.key}>
+                      <h4>{section.label}</h4>
+                      <div className="badge-list two-col">
+                        {section.badges.length ? section.badges.map(([label, count]) => (
+                          <span className="badge-chip-wrap" key={label}>
+                            <span className={`badge ${section.key}`}><Icon type="badge" />{formatBadgeLabel(label)}</span>
+                            {count > 1 ? <b>x{count}</b> : null}
+                          </span>
+                        )) : <span className="badge-empty">-</span>}
+                      </div>
+                    </section>
                   ))}
                 </div>
               </section>
@@ -1346,17 +1353,61 @@ function badgeGroupKey(label) {
   return `${badgePeriod(label)}-${badgeCategory(label)}`;
 }
 
+function badgeSortKey(label) {
+  const value = Number(label.match(/[\d,.]+/)?.[0]?.replace(/,/g, "") || 0);
+  const scoreType = label.includes("平均スコア") ? 0 : label.includes("ベストスコア") ? 1 : 0;
+  return [value, scoreType, label];
+}
+
+function formatBadgeLabel(label) {
+  const value = Number(label.match(/[\d,.]+/)?.[0]?.replace(/,/g, "") || 0).toLocaleString("ja-JP");
+  if (label.startsWith("1日")) {
+    if (label.includes("平均スコア")) return `1日平均${value}点`;
+    if (label.includes("ベストスコア")) return `1日ベスト${value}点`;
+    return `1日${value}回`;
+  }
+  if (label.startsWith("週間")) {
+    if (label.includes("平均スコア")) return `週間平均${value}点`;
+    if (label.includes("ベストスコア")) return `週間ベスト${value}点`;
+    return `週間${value}回`;
+  }
+  if (label.startsWith("月間")) {
+    if (label.includes("平均スコア")) return `月間平均${value}点`;
+    if (label.includes("ベストスコア")) return `月間ベスト${value}点`;
+    return `月間${value}回`;
+  }
+  return label;
+}
+
 function badgeGroups(badgeCounts) {
-  const groups = new Map(BADGE_CATEGORIES.map(([key]) => [key, []]));
+  const groups = new Map(BADGE_PERIODS.map(([key]) => [key, { count: [], score: [] }]));
   badgeCounts.forEach(([label, count]) => {
-    groups.get(badgeGroupKey(label))?.push([label, count]);
+    const period = badgePeriod(label);
+    const category = badgeCategory(label);
+    groups.get(period)?.[category].push([label, count]);
   });
-  return BADGE_CATEGORIES.map(([key, label, description]) => ({
+  return BADGE_PERIODS.map(([key, label]) => {
+    const sections = groups.get(key) || { count: [], score: [] };
+    const countBadges = [...sections.count].sort((a, b) => {
+      const aKey = badgeSortKey(a[0]);
+      const bKey = badgeSortKey(b[0]);
+      return aKey[0] - bKey[0] || aKey[1] - bKey[1] || String(aKey[2]).localeCompare(String(bKey[2]), "ja");
+    });
+    const scoreBadges = [...sections.score].sort((a, b) => {
+      const aKey = badgeSortKey(a[0]);
+      const bKey = badgeSortKey(b[0]);
+      return aKey[0] - bKey[0] || aKey[1] - bKey[1] || String(aKey[2]).localeCompare(String(bKey[2]), "ja");
+    });
+    return {
     key,
     label,
-    description,
-    badges: groups.get(key) || [],
-  }));
+    total: [...countBadges, ...scoreBadges].reduce((sum, [, count]) => sum + count, 0),
+    sections: [
+      { key: "count", label: "回数", badges: countBadges },
+      { key: "score", label: "スコア", badges: scoreBadges },
+    ],
+  };
+  });
 }
 
 function RecordView({ db, allForName, badgeMap, selectedDate, setSelectedDate, month, setMonth, addRecord }) {
