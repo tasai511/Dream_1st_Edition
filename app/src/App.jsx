@@ -1252,9 +1252,9 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
   const groupedBadges = badgeGroups(badgeCounts);
   const chartData = filledChartExtent(chartDaily);
   const rangeOptions = [
-    [RANGE_TODAY, "今日"],
-    [RANGE_WEEK, "今週"],
-    [RANGE_MONTH, "今月"],
+    [RANGE_TODAY, "今日の実績", rangeWindow(RANGE_TODAY).label],
+    [RANGE_WEEK, "今週の実績", rangeWindow(RANGE_WEEK).label],
+    [RANGE_MONTH, "今月の実績", rangeWindow(RANGE_MONTH).label],
   ];
   const badgeTotal = badgeCounts.reduce((sum, [, count]) => sum + count, 0);
   const badgeFilterOptions = [
@@ -1282,17 +1282,14 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
         </div>
 
         <div className="attached-tabs" role="tablist" aria-label="実績期間">
-          {rangeOptions.map(([value, label]) => (
-            <button key={value} type="button" className={range === value ? "selected" : ""} onClick={() => setRange(value)}>{label}</button>
+          {rangeOptions.map(([value, label, sublabel]) => (
+            <button key={value} type="button" className={range === value ? "selected" : ""} onClick={() => setRange(value)}>
+              <span>{label}</span>
+              <small>{sublabel}</small>
+            </button>
           ))}
         </div>
         <section className="score-summary-card">
-          <div className="section-row tight">
-            <div>
-              <h2>{achievementWindow.title}</h2>
-              <p>{achievementWindow.label}</p>
-            </div>
-          </div>
           <div className="achievement-summary all-period">
             <AchievementMetric icon="count" label="スイング数" value={total} unit="回" kind="count" range={range} showMeter={range !== RANGE_TOTAL} />
             {range === RANGE_TOTAL ? (

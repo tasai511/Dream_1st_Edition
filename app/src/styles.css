@@ -264,7 +264,7 @@ p {
   min-width: 0;
   border: 1px solid rgba(var(--hot-rgb), 0.2);
   border-radius: var(--radius);
-  padding: 14px;
+  padding: 18px 14px 14px;
   background:
     linear-gradient(145deg, rgba(var(--hot-rgb), 0.15), rgba(255, 255, 255, 0.035)),
     rgba(0, 0, 0, 0.18);
@@ -275,31 +275,47 @@ p {
   align-items: end;
   gap: 6px;
   min-width: 0;
-  margin: 2px 8px -13px;
+  margin: 2px 8px -1px;
   padding: 0 0 0 8px;
-  border-bottom: 1px solid rgba(var(--hot-rgb), 0.22);
   position: relative;
   z-index: 2;
 }
 
 .attached-tabs button {
-  min-width: 74px;
-  min-height: 34px;
+  display: grid;
+  gap: 2px;
+  min-width: 88px;
+  min-height: 48px;
   border: 1px solid rgba(var(--hot-rgb), 0.28);
-  border-bottom: 0;
+  border-bottom-color: rgba(var(--hot-rgb), 0.2);
   border-radius: 9px 9px 0 0;
   color: rgba(255, 255, 255, 0.76);
   background: rgba(0, 0, 0, 0.24);
-  font-size: 0.74rem;
+  padding: 6px 8px 5px;
+  font-size: 0.72rem;
   font-weight: 950;
 }
 
 .attached-tabs button.selected {
+  border-color: rgba(var(--hot-rgb), 0.2);
+  border-bottom-color: #22151d;
   color: white;
   background:
-    linear-gradient(180deg, rgba(var(--hot-rgb), 0.3), rgba(var(--hot-rgb), 0.12)),
-    #171922;
+    linear-gradient(145deg, rgba(var(--hot-rgb), 0.15), rgba(255, 255, 255, 0.035)),
+    #22151d;
   transform: translateY(1px);
+}
+
+.attached-tabs button span,
+.attached-tabs button small {
+  display: block;
+  line-height: 1.05;
+}
+
+.attached-tabs button small {
+  color: var(--muted);
+  font-size: 0.56rem;
+  font-weight: 850;
 }
 
 .achievement-summary {
