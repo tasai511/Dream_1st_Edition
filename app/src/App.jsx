@@ -351,15 +351,17 @@ function progressInfo(kind, value, range) {
   }
   const goal = scoreGoal(value);
   const previous = Math.max(0, goal - 100);
+  const badgeThresholds = [100, 200, 300, 400, 500, 600, 700, 800, 900, 999].filter((threshold) => value >= threshold);
   return {
     goal,
     previous,
     remaining: Math.max(0, goal - value),
-    earned: Math.max(0, Math.floor(value / 100)),
+    earned: badgeThresholds.length,
     category: "score",
     badgeBase: 100,
     badgeStep: 100,
     badgePrefix: kind === "avg" ? "平均スコア" : "ベストスコア",
+    badgeThresholds,
   };
 }
 
@@ -411,7 +413,7 @@ function ProgressMeter({ kind, value, range, showBadges = false }) {
       {showBadges && (
         <div className="meter-badges" aria-label="この期間で獲得したバッジ">
           {badgeIcons.map((index) => {
-            const badgeValue = info.badgeBase + (index * info.badgeStep);
+            const badgeValue = info.badgeThresholds?.[index] || info.badgeBase + (index * info.badgeStep);
             const suffix = info.category === "score" ? "達成" : "スイング";
             const label = `${info.badgePrefix}${badgeValue.toLocaleString("ja-JP")}${suffix}`;
             return (
@@ -1158,10 +1160,10 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
               <p>{range === RANGE_ALL ? "全期間" : `直近${rangeLabel}`}</p>
             </div>
           </div>
-          <div className="achievement-summary">
+          <div className={`achievement-summary ${range === RANGE_ALL ? "all-period" : ""}`}>
             <AchievementMetric icon="count" label="総スイング" value={total} unit="回" kind="count" range={range} showBadges={range !== RANGE_ALL} />
-            <AchievementMetric icon="avg" label="平均" value={avg} unit="点" kind="avg" range={range} showMeter={range === RANGE_ALL} />
-            <AchievementMetric icon="best" label="ベスト" value={best} unit="点" kind="best" range={range} showMeter={range === RANGE_ALL} />
+            <AchievementMetric icon="avg" label="平均" value={avg} unit="点" kind="avg" range={range} showMeter={range === RANGE_ALL} showBadges={range === RANGE_ALL} />
+            <AchievementMetric icon="best" label="ベスト" value={best} unit="点" kind="best" range={range} showMeter={range === RANGE_ALL} showBadges={range === RANGE_ALL} />
           </div>
         </section>
 

@@ -413,6 +413,14 @@ p {
   margin-left: auto;
 }
 
+.achievement-summary.all-period .progress-meter .meter-ring {
+  margin-left: 52px;
+}
+
+.achievement-summary.all-period .progress-meter.count .meter-ring {
+  margin-left: 40px;
+}
+
 .meter-badges {
   position: absolute;
   top: 0;
