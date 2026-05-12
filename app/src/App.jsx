@@ -347,6 +347,7 @@ function progressInfo(kind, value, range) {
       badgeBase: config.base,
       badgeStep: config.step,
       badgePrefix: config.label,
+      goalLabel: `${config.label}${goal.toLocaleString("ja-JP")}スイング`,
     };
   }
   const goal = scoreGoal(value);
@@ -362,19 +363,16 @@ function progressInfo(kind, value, range) {
     badgeStep: 100,
     badgePrefix: kind === "avg" ? "平均スコア" : "ベストスコア",
     badgeThresholds,
+    goalLabel: `${kind === "avg" ? "平均スコア" : "ベストスコア"}${goal.toLocaleString("ja-JP")}達成`,
   };
 }
 
-function ProgressMeter({ kind, value, range, showBadges = false }) {
+function ProgressMeter({ kind, value, range }) {
   const info = progressInfo(kind, Number(value || 0), range);
   const span = Math.max(1, info.goal - info.previous);
   const ratio = clamp((Number(value || 0) - info.previous) / span, 0, 1);
   const circumference = 169.65;
   const dashOffset = circumference * (1 - ratio);
-  const firstBadgeIndex = Math.max(0, info.earned - 4);
-  const badgeIcons = showBadges
-    ? Array.from({ length: Math.min(info.earned, 4) }, (_, index) => firstBadgeIndex + index)
-    : [];
   return (
     <div className={`progress-meter ${kind}`}>
       <div className="meter-ring">
@@ -408,22 +406,11 @@ function ProgressMeter({ kind, value, range, showBadges = false }) {
             transform="rotate(-90 36 36)"
           />
         </svg>
+        <button className={`meter-goal-badge ${info.category}`} type="button" title={info.goalLabel} aria-label={info.goalLabel} data-label={info.goalLabel}>
+          <SvgIcon type="badge" />
+        </button>
         <span>-{info.remaining.toLocaleString("ja-JP")}</span>
       </div>
-      {showBadges && (
-        <div className="meter-badges" aria-label="この期間で獲得したバッジ">
-          {badgeIcons.map((index) => {
-            const badgeValue = info.badgeThresholds?.[index] || info.badgeBase + (index * info.badgeStep);
-            const suffix = info.category === "score" ? "達成" : "スイング";
-            const label = `${info.badgePrefix}${badgeValue.toLocaleString("ja-JP")}${suffix}`;
-            return (
-              <button className={`meter-badge ${info.category}`} type="button" key={index} title={label} aria-label={label} data-label={label}>
-                <SvgIcon type="badge" />
-              </button>
-            );
-          })}
-        </div>
-      )}
     </div>
   );
 }
@@ -435,7 +422,7 @@ function AchievementMetric({ icon, label, value, unit, kind, range, showMeter = 
         <div className="metric-label"><Icon type={icon} />{label}</div>
         <strong>{Number(value || 0).toLocaleString("ja-JP")}<span>{unit}</span></strong>
       </div>
-      {showMeter && <ProgressMeter kind={kind} value={value} range={range} showBadges={showBadges} />}
+      {showMeter && <ProgressMeter kind={kind} value={value} range={range} />}
     </div>
   );
 }

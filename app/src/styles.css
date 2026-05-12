@@ -377,7 +377,8 @@ p {
 }
 
 .meter-ring span {
-  position: relative;
+  position: absolute;
+  inset: 0;
   z-index: 1;
   display: grid;
   place-items: center;
@@ -388,6 +389,7 @@ p {
   line-height: 1;
   font-weight: 650;
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.42);
+  transform: translateY(12px);
 }
 
 .progress-meter.count .meter-track,
@@ -407,6 +409,7 @@ p {
 
 .progress-meter.count .meter-ring span {
   font-size: 0.92rem;
+  transform: translateY(15px);
 }
 
 .progress-meter.count .meter-ring {
@@ -421,70 +424,50 @@ p {
   margin-left: 40px;
 }
 
-.meter-badges {
-  position: absolute;
-  top: 0;
-  left: 0;
-  display: grid;
-  grid-template-columns: repeat(2, 15px);
-  gap: 3px;
-  width: 33px;
-  min-height: 33px;
-  transform: translate(18%, -12%);
-  z-index: 2;
-}
-
-.meter-badge {
+.meter-goal-badge {
   appearance: none;
   -webkit-appearance: none;
   position: relative;
+  z-index: 2;
   display: grid;
   place-items: center;
-  width: 15px;
-  height: 15px;
+  width: 24px;
+  height: 24px;
   border: 0;
   border-radius: 50%;
   padding: 0;
   color: #fff;
   background: #ff4456;
   box-shadow: 0 0 10px rgba(255, 68, 86, 0.45);
+  transform: translateY(-7px);
 }
 
-.meter-badge:nth-child(1) {
-  grid-column: 2;
-  grid-row: 1;
+.progress-meter.count .meter-goal-badge {
+  width: 28px;
+  height: 28px;
+  transform: translateY(-9px);
 }
 
-.meter-badge:nth-child(2) {
-  grid-column: 2;
-  grid-row: 2;
-}
-
-.meter-badge:nth-child(3) {
-  grid-column: 1;
-  grid-row: 1;
-}
-
-.meter-badge:nth-child(4) {
-  grid-column: 1;
-  grid-row: 2;
-}
-
-.meter-badge.weekly { background: #ff9f3f; box-shadow: 0 0 10px rgba(255, 159, 63, 0.45); }
-.meter-badge.monthly { background: #44d7a8; box-shadow: 0 0 10px rgba(68, 215, 168, 0.45); }
-.meter-badge.yearly { background: #9d6bff; box-shadow: 0 0 10px rgba(157, 107, 255, 0.45); }
-.meter-badge.score {
+.meter-goal-badge.weekly { background: #ff9f3f; box-shadow: 0 0 10px rgba(255, 159, 63, 0.45); }
+.meter-goal-badge.monthly { background: #44d7a8; box-shadow: 0 0 10px rgba(68, 215, 168, 0.45); }
+.meter-goal-badge.yearly { background: #9d6bff; box-shadow: 0 0 10px rgba(157, 107, 255, 0.45); }
+.meter-goal-badge.score {
   background: #4d8dff;
   box-shadow: 0 0 10px rgba(77, 141, 255, 0.45);
 }
 
-.meter-badge svg {
-  width: 9px;
-  height: 9px;
+.meter-goal-badge svg {
+  width: 14px;
+  height: 14px;
   stroke-width: 2.8;
 }
 
-.meter-badge::after {
+.progress-meter.count .meter-goal-badge svg {
+  width: 16px;
+  height: 16px;
+}
+
+.meter-goal-badge::after {
   content: attr(data-label);
   position: absolute;
   right: 50%;
@@ -507,19 +490,12 @@ p {
   transition: opacity 0.14s ease, transform 0.14s ease;
 }
 
-.meter-badge:hover::after,
-.meter-badge:focus::after,
-.meter-badge:focus-visible::after,
-.meter-badge:active::after {
+.meter-goal-badge:hover::after,
+.meter-goal-badge:focus::after,
+.meter-goal-badge:focus-visible::after,
+.meter-goal-badge:active::after {
   opacity: 1;
   transform: translateX(50%) translateY(0);
-}
-
-.meter-badges em {
-  color: var(--muted);
-  font-size: 0.58rem;
-  font-style: normal;
-  font-weight: 900;
 }
 
 .section-row {
