@@ -1265,7 +1265,6 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
       <section className="panel hero-card score-card">
         <div className="dashboard-controls">
           <label className="field-label bat-field">
-            バット
             <span className="select-shell">
               <span className="select-leading"><SvgIcon type="bat" /></span>
               <select value={homeBat} onChange={(event) => setHomeBat(event.target.value)}>

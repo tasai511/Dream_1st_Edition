@@ -1847,16 +1847,14 @@ input::placeholder {
   --line-hot: rgba(var(--hot-rgb), 0.28);
   --text: #f4f6fb;
   --muted: #9098a7;
-  --shadow: 0 16px 34px rgba(0, 0, 0, 0.24);
+  --shadow: 0 14px 30px rgba(0, 0, 0, 0.22), 0 0 0 1px rgba(var(--hot-rgb), 0.035);
   --radius: 12px;
 }
 
 .theme-red,
 .theme-blue,
 .theme-green {
-  --app-bg:
-    radial-gradient(circle at 50% -18%, rgba(var(--hot-rgb), 0.18), transparent 34%),
-    linear-gradient(180deg, #171a21 0%, #0d0f14 100%);
+  --app-bg: #101217;
 }
 
 body,
@@ -1893,13 +1891,17 @@ body,
 .record-card,
 .metric-card,
 .total-card {
-  border: 1px solid var(--line);
-  background: var(--panel);
+  border: 1px solid rgba(var(--hot-rgb), 0.09);
+  background:
+    linear-gradient(180deg, rgba(var(--hot-rgb), 0.035), transparent 82px),
+    var(--panel);
   box-shadow: var(--shadow);
 }
 
 .hero-card {
-  background: var(--panel);
+  background:
+    linear-gradient(180deg, rgba(var(--hot-rgb), 0.035), transparent 82px),
+    var(--panel);
 }
 
 .score-card {
@@ -1926,6 +1928,7 @@ body,
 
 .attached-tabs button {
   display: grid;
+  place-items: center;
   min-width: 0;
   min-height: 38px;
   border: 0;
