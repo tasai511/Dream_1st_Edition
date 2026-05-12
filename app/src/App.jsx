@@ -901,12 +901,6 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
   return (
     <>
       <section className="panel hero-card score-card">
-        <div className="section-row tight">
-          <div>
-            <h2>スコア</h2>
-            <p>{range === RANGE_ALL ? "全期間" : `直近${rangeLabel}`}</p>
-          </div>
-        </div>
         <div className="dashboard-controls">
           <label className="field-label bat-field">
             バット
@@ -929,15 +923,23 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
           </div>
         </div>
 
-        <div className="total-card">
-          <SwingSilhouette />
-          <div className="metric-label"><Icon type="count" />総スイング</div>
-          <strong>{total.toLocaleString("ja-JP")}<span>回</span></strong>
-        </div>
-        <div className="metric-grid">
-          <Metric icon="avg" label="平均" value={avg} unit="点" />
-          <Metric icon="best" label="ベスト" value={best} unit="点" />
-        </div>
+        <section className="score-summary-card">
+          <div className="section-row tight">
+            <div>
+              <h2>スコア</h2>
+              <p>{range === RANGE_ALL ? "全期間" : `直近${rangeLabel}`}</p>
+            </div>
+          </div>
+          <div className="total-card">
+            <SwingSilhouette />
+            <div className="metric-label"><Icon type="count" />総スイング</div>
+            <strong>{total.toLocaleString("ja-JP")}<span>回</span></strong>
+          </div>
+          <div className="metric-grid">
+            <Metric icon="avg" label="平均" value={avg} unit="点" />
+            <Metric icon="best" label="ベスト" value={best} unit="点" />
+          </div>
+        </section>
 
         <section className="dashboard-section">
           <div className="section-row tight">

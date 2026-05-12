@@ -259,6 +259,15 @@ p {
   padding: 12px;
 }
 
+.score-summary-card {
+  border: 1px solid rgba(var(--hot-rgb), 0.2);
+  border-radius: var(--radius);
+  padding: 14px;
+  background:
+    linear-gradient(145deg, rgba(var(--hot-rgb), 0.15), rgba(255, 255, 255, 0.035)),
+    rgba(0, 0, 0, 0.18);
+}
+
 .section-row {
   margin-bottom: 14px;
 }
