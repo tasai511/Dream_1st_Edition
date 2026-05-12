@@ -819,7 +819,6 @@ export default function App() {
     <div className={`app theme-${db.theme || "red"}`}>
       <div className="phone-shell">
         <header className="app-header">
-          <img className="dream-logo" src="./images/dream-logo.png" alt="Dream" />
           <strong className="app-title">SWING LOG</strong>
           <button className="active-player" type="button" onClick={() => setTab("settings")}><SvgIcon type="person" />{currentName || "未選択"}</button>
         </header>

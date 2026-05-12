@@ -135,6 +135,7 @@ svg text {
 
 .app-title {
   position: relative;
+  grid-column: 2;
   justify-self: center;
   padding: 1px 1px 6px;
   color: rgba(255, 255, 255, 0.96);
@@ -158,15 +159,9 @@ svg text {
   content: "";
 }
 
-.dream-logo {
-  display: block;
-  flex: 0 1 auto;
-  justify-self: start;
-  width: min(130px, 34vw);
-  height: 38px;
-  object-fit: contain;
-  object-position: left center;
-  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.28));
+.app-header .active-player {
+  grid-column: 3;
+  justify-self: end;
 }
 
 .eyebrow {
