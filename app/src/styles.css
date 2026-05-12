@@ -719,19 +719,19 @@ input::placeholder {
 .bar-fill {
   width: 100%;
   border-radius: 6px;
-  background: #44d7a8;
-  box-shadow: 0 0 18px rgba(68, 215, 168, 0.16);
+  background: var(--hot);
+  box-shadow: 0 0 18px rgba(var(--hot-rgb), 0.2);
   transition: height 260ms ease, background-color 260ms ease, box-shadow 260ms ease;
 }
 
 .mode-best .bar-fill {
-  background: #4d8dff;
-  box-shadow: 0 0 18px rgba(77, 141, 255, 0.18);
+  background: rgba(var(--hot-rgb), 0.72);
+  box-shadow: 0 0 18px rgba(var(--hot-rgb), 0.18);
 }
 
 .mode-count .bar-fill {
-  background: #44d7a8;
-  box-shadow: 0 0 18px rgba(68, 215, 168, 0.16);
+  background: var(--hot);
+  box-shadow: 0 0 18px rgba(var(--hot-rgb), 0.2);
 }
 
 .bar-item strong {
@@ -924,7 +924,7 @@ input::placeholder {
 }
 
 .best-line {
-  background: #fff;
+  background: rgba(var(--hot-rgb), 0.52);
 }
 
 .chart-wrap {
@@ -971,7 +971,7 @@ input::placeholder {
 }
 
 .best-path {
-  stroke: white;
+  stroke: rgba(var(--hot-rgb), 0.56);
   stroke-width: 1.7;
 }
 
@@ -1011,7 +1011,7 @@ input::placeholder {
 }
 
 .chart-active-point.best {
-  stroke: rgba(255, 255, 255, 0.55);
+  stroke: rgba(var(--hot-rgb), 0.56);
 }
 
 .chart-point:focus {
