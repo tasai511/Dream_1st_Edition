@@ -1231,8 +1231,9 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
   const avg = range === RANGE_TODAY ? periodSummary.avg : periodSummary.badgeAvg;
   const best = periodSummary.best;
   const practiceDays = periodSummary.days;
-  const avgUnit = range === RANGE_TOTAL ? "点" : `点／${periodSummary.spanDays}日`;
-  const practiceUnit = `日／${periodSummary.spanDays}日`;
+  const periodDayLabel = `${periodSummary.spanDays}日目`;
+  const avgUnit = range === RANGE_TODAY || range === RANGE_TOTAL ? "点" : `点＠${periodDayLabel}`;
+  const practiceUnit = `／${periodDayLabel}`;
   const badgeCounts = collectBadgeCounts(allForName, badgeFilter);
   const groupedBadges = badgeGroups(badgeCounts);
   const chartData = filledChartExtent(chartDaily);
@@ -1286,14 +1287,14 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
           <div className="achievement-summary all-period">
             <AchievementMetric icon="count" label="スイング数" value={total} unit="回" kind="count" range={range} showMeter={range !== RANGE_TOTAL} />
             {range === RANGE_TOTAL ? (
-              <AchievementMetric icon="log" label="継続日数" value={practiceDays} unit="日" kind="days" range={range} showMeter={false} />
+              <AchievementMetric icon="log" label="練習した日数" value={practiceDays} unit="日" kind="days" range={range} showMeter={false} />
             ) : (
               <AchievementMetric icon="avg" label="平均" value={avg} unit={avgUnit} kind="avg" range={range} />
             )}
             {range === RANGE_TODAY || range === RANGE_TOTAL ? (
               <AchievementMetric icon="best" label="ベスト" value={best} unit="点" kind="best" range={range} showMeter={range !== RANGE_TOTAL} />
             ) : (
-              <AchievementMetric icon="log" label="練習した日" value={practiceDays} unit={practiceUnit} kind="days" range={range} variableTarget={periodSummary.spanDays} />
+              <AchievementMetric icon="log" label="練習した日数" value={practiceDays} unit={practiceUnit} kind="days" range={range} variableTarget={periodSummary.spanDays} />
             )}
             {range === RANGE_TODAY && (
               <AchievementMetric icon="log" label="毎日練習" value={currentStreak} unit="日目" kind="streak" range={range} />
