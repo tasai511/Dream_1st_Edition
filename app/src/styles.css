@@ -1926,9 +1926,8 @@ body,
 
 .attached-tabs button {
   display: grid;
-  gap: 2px;
   min-width: 0;
-  min-height: 44px;
+  min-height: 38px;
   border: 0;
   border-radius: 12px;
   padding: 6px 4px;
@@ -1944,9 +1943,11 @@ body,
   transform: none;
 }
 
-.attached-tabs button small {
-  color: currentColor;
-  opacity: 0.76;
+.period-heading {
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 900;
 }
 
 .score-card .dashboard-section {
@@ -2046,6 +2047,29 @@ select,
 .meter-ring span {
   color: var(--text);
   text-shadow: none;
+}
+
+.meter-glow-wide,
+.meter-glow-core {
+  display: none;
+}
+
+.bar-fill,
+.mode-best .bar-fill,
+.mode-count .bar-fill {
+  box-shadow: none;
+}
+
+.swing-silhouette,
+.dream-logo {
+  filter: none;
+}
+
+.calendar-badges i,
+.calendar-badges i.count,
+.calendar-badges i.score,
+.calendar-badges i.streak {
+  box-shadow: none;
 }
 
 .bottom-nav {

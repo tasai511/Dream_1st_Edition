@@ -617,9 +617,6 @@ function RecordPanel({ daily, range }) {
   return (
     <section className="dashboard-section record-section">
       <div className="section-row tight">
-        <div>
-          <h2>記録</h2>
-        </div>
         <div className="record-tabs" role="tablist" aria-label="記録表示">
           <button type="button" className={mode === "count" ? "selected" : ""} onClick={() => setMode("count")}>回数</button>
           <button type="button" className={mode === "score" ? "selected" : ""} onClick={() => setMode("score")}>スコア</button>
@@ -1251,9 +1248,9 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
   const groupedBadges = badgeGroups(badgeCounts);
   const chartData = filledChartExtent(chartDaily);
   const rangeOptions = [
-    [RANGE_TODAY, "今日", rangeWindow(RANGE_TODAY).label],
-    [RANGE_WEEK, "今週", rangeWindow(RANGE_WEEK).label],
-    [RANGE_MONTH, "今月", rangeWindow(RANGE_MONTH).label],
+    [RANGE_TODAY, "今日"],
+    [RANGE_WEEK, "今週"],
+    [RANGE_MONTH, "今月"],
   ];
   const badgeTotal = badgeCounts.reduce((sum, [, count]) => sum + count, 0);
   const badgeFilterOptions = [
@@ -1281,14 +1278,14 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
         </div>
 
         <div className="attached-tabs" role="tablist" aria-label="実績期間">
-          {rangeOptions.map(([value, label, sublabel]) => (
+          {rangeOptions.map(([value, label]) => (
             <button key={value} type="button" className={range === value ? "selected" : ""} onClick={() => setRange(value)}>
               <span>{label}</span>
-              <small>{sublabel}</small>
             </button>
           ))}
         </div>
         <section className="score-summary-card">
+          <p className="period-heading">{achievementWindow.label}</p>
           <div className="achievement-summary all-period">
             <AchievementMetric icon="count" label="スイング数" value={total} unit="回" kind="count" range={range} showMeter={range !== RANGE_TOTAL} />
             {range === RANGE_TOTAL ? (
