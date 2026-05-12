@@ -275,7 +275,7 @@ p {
 
 .achievement-metric {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 138px;
+  grid-template-columns: minmax(0, 1fr) 116px;
   align-items: center;
   gap: 12px;
   min-width: 0;
@@ -308,25 +308,26 @@ p {
 }
 
 .progress-meter {
-  display: grid;
-  grid-template-columns: 1fr 34px;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
+  --meter-size: 72px;
+  --meter-center: 78px;
+  position: relative;
+  display: block;
+  width: 116px;
+  min-height: var(--meter-size);
 }
 
 .progress-meter.count {
-  grid-template-columns: 1fr 34px;
-  width: 100%;
+  --meter-size: 96px;
+  min-height: 96px;
 }
 
 .meter-ring {
   position: relative;
   display: grid;
   place-items: center;
-  justify-self: center;
-  width: 72px;
-  height: 72px;
+  width: var(--meter-size);
+  height: var(--meter-size);
+  margin-left: calc(var(--meter-center) - (var(--meter-size) / 2));
   border-radius: 50%;
   background: none !important;
   box-shadow: none;
@@ -335,8 +336,8 @@ p {
 .meter-ring svg {
   position: absolute;
   inset: 0;
-  width: 72px;
-  height: 72px;
+  width: var(--meter-size);
+  height: var(--meter-size);
   overflow: visible;
   pointer-events: none;
 }
@@ -375,16 +376,6 @@ p {
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.42);
 }
 
-.progress-meter.count .meter-ring {
-  width: 96px;
-  height: 96px;
-}
-
-.progress-meter.count .meter-ring svg {
-  width: 96px;
-  height: 96px;
-}
-
 .progress-meter.count .meter-track,
 .progress-meter.count .meter-value {
   stroke-width: 11;
@@ -395,14 +386,17 @@ p {
 }
 
 .meter-badges {
+  position: absolute;
+  top: 50%;
+  right: 0;
   display: flex;
   flex-wrap: wrap;
   gap: 3px;
   align-items: center;
   align-content: center;
-  width: 34px;
+  width: 32px;
   min-height: 36px;
-  justify-self: start;
+  transform: translateY(-50%);
 }
 
 .meter-badge {
