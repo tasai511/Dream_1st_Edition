@@ -2169,6 +2169,10 @@ select,
 }
 
 .record-section .bar-item > span:not(.bar-fill) {
+  display: block;
+}
+
+.record-section .bar-item em {
   display: none;
 }
 
@@ -2205,4 +2209,32 @@ body,
 
 .add-row .primary:hover {
   background: #2d3340;
+}
+
+.bottom-nav {
+  padding: 5px;
+}
+
+.bottom-nav button {
+  min-height: 38px;
+}
+
+.bottom-nav svg {
+  width: 24px;
+  height: 24px;
+}
+
+.score-summary-card,
+.attached-tabs button,
+.attached-tabs button.selected,
+.cumulative-summary,
+.score-card .dashboard-section,
+.total-card,
+.metric-card,
+.record-card {
+  border-color: var(--line);
+}
+
+.score-card .dashboard-section {
+  background: transparent;
 }
