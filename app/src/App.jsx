@@ -645,19 +645,20 @@ function ProgressMeter({ kind, value, range, variableTarget, targets }) {
             transform="rotate(-90 36 36)"
           />
         </svg>
-        <span>-{info.remaining.toLocaleString("ja-JP")}</span>
-        <button
-          className={`meter-badge rarity-${targetBadge.rarity.toLowerCase()}`}
-          type="button"
-          aria-label={`${targetBadge.label}の詳細`}
-          onClick={() => setSelectedBadge({ ...targetBadge, earnedCount: 0, lockedSecret: false })}
-        >
-          <RarityIcon rarity={targetBadge.rarity} />
-        </button>
+        <span className="meter-remaining"><em>あと</em><b>{info.remaining.toLocaleString("ja-JP")}</b></span>
         {selectedBadge && (
           <BadgeDetailPopover badge={selectedBadge} onClose={() => setSelectedBadge(null)} />
         )}
       </div>
+      <button
+        className={`meter-badge rarity-${targetBadge.rarity.toLowerCase()}`}
+        type="button"
+        aria-label={`${targetBadge.label}の詳細`}
+        onClick={() => setSelectedBadge({ ...targetBadge, earnedCount: 0, lockedSecret: false })}
+      >
+        <RarityIcon rarity={targetBadge.rarity} />
+        <span>獲得まで</span>
+      </button>
     </div>
   );
 }
@@ -1751,7 +1752,7 @@ function CompletionMeter({ earned, total }) {
             transform="rotate(-90 36 36)"
           />
         </svg>
-        <span>{remaining}</span>
+        <span className="meter-remaining"><em>あと</em><b>{remaining.toLocaleString("ja-JP")}</b></span>
       </div>
       <small>完成まで</small>
     </div>

@@ -454,6 +454,32 @@ p {
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.42);
 }
 
+.meter-ring .meter-remaining {
+  gap: 2px;
+  align-content: center;
+  justify-items: center;
+  text-align: center;
+}
+
+.meter-ring .meter-remaining em,
+.meter-ring .meter-remaining b {
+  display: block;
+  font-style: normal;
+  line-height: 1.05;
+}
+
+.meter-ring .meter-remaining em {
+  color: var(--muted);
+  font-size: 0.56rem;
+  font-weight: 900;
+}
+
+.meter-ring .meter-remaining b {
+  color: var(--text);
+  font-size: 0.78rem;
+  font-weight: 950;
+}
+
 .progress-meter.count .meter-track,
 .progress-meter.count .meter-value {
   stroke-width: 7;
@@ -471,6 +497,10 @@ p {
 
 .progress-meter.count .meter-ring > span:not(.meter-badge-popover) {
   font-size: 0.92rem;
+}
+
+.progress-meter.count .meter-ring .meter-remaining b {
+  font-size: 1rem;
 }
 
 .progress-meter.count .meter-ring {
@@ -1457,10 +1487,17 @@ input::placeholder {
 
 .completion-meter .meter-ring > span {
   color: var(--text);
-  font-size: 0.94rem;
   font-weight: 950;
   line-height: 1;
   text-shadow: none;
+}
+
+.completion-meter .meter-ring .meter-remaining em {
+  font-size: 0.68rem;
+}
+
+.completion-meter .meter-ring .meter-remaining b {
+  font-size: 1.1rem;
 }
 
 .completion-meter small {
@@ -2867,28 +2904,42 @@ body,
 }
 
 .meter-badge {
-  right: -9px;
-  bottom: -7px;
-  transform: none;
+  position: static;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: end;
+  gap: 5px;
+  width: auto;
+  height: 24px;
+  margin-top: 5px;
   border-color: color-mix(in srgb, currentColor 40%, var(--line));
+  border-radius: 999px;
+  padding: 0 7px;
   background: #202633;
-  line-height: 0;
+  color: currentColor;
+  font-size: 0.6rem;
+  font-weight: 900;
+  line-height: 1;
   box-shadow: none;
 }
 
 .meter-badge .rarity-icon {
-  width: 14px;
-  height: 14px;
+  width: 13px;
+  height: 13px;
+}
+
+.meter-badge span {
+  color: var(--muted);
+  white-space: nowrap;
 }
 
 .progress-meter.count .meter-badge {
-  right: -2px;
-  bottom: -3px;
+  margin-right: 0;
 }
 
 .cumulative-summary .progress-meter.count .meter-badge {
-  right: -9px;
-  bottom: -7px;
+  margin-right: 0;
 }
 
 .meter-badge.rarity-c { color: #9aa3af; }
