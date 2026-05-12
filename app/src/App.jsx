@@ -654,6 +654,10 @@ function ScoreLineBuckets({ buckets }) {
             </g>
           );
         })}
+        {buckets.map((bucket, index) => {
+          const x = pad.left + (buckets.length <= 1 ? plotW / 2 : (plotW * index) / (buckets.length - 1));
+          return <line key={`grid-${bucket.label}`} x1={x} y1={pad.top} x2={x} y2={height - pad.bottom} className="grid-line vertical" />;
+        })}
         <path className="avg-path" d={pathFromPoints(avgPoints)} />
         <path className="best-path" d={pathFromPoints(bestPoints)} />
         {buckets.map((bucket, index) => {
@@ -931,14 +935,17 @@ function Chart({ data, initialRange }) {
         {yLabels.map((tick) => (
           <g key={tick.value}>
             <line x1={pad.left} y1={tick.y} x2={width - pad.right} y2={tick.y} className="grid-line" />
-            <line x1={pad.left - 5} y1={tick.y} x2={pad.left} y2={tick.y} className="axis-tick" />
             <text x={pad.left - 9} y={tick.y + 3} textAnchor="end" className="chart-axis-label">{tick.value}</text>
           </g>
         ))}
-        <text x={pad.left - 4} y={pad.top - 8} textAnchor="end" className="chart-axis-label axis-unit">点</text>
         <line x1={pad.left} y1={pad.top} x2={pad.left} y2={height - pad.bottom} className="axis-line" />
         <line x1={pad.left} y1={height - pad.bottom} x2={width - pad.right} y2={height - pad.bottom} className="axis-line" />
         <g clipPath="url(#chartPlotClip)">
+          {data.map((item, index) => {
+            const x = pad.left + ((data.length <= 1 ? plotW / 2 : (plotW * index) / (data.length - 1)) * chartView.scale) + chartView.offset;
+            if (x < pad.left || x > width - pad.right) return null;
+            return <line key={`v-${item.date}`} x1={x} y1={pad.top} x2={x} y2={height - pad.bottom} className="grid-line vertical" />;
+          })}
           {avgDisplayPoints.length > 1 && <path className="area" d={`${avgPath} L ${avgDisplayPoints.at(-1).x} ${height - pad.bottom} L ${avgDisplayPoints[0].x} ${height - pad.bottom} Z`} />}
           <path className="avg-path" d={avgPath} />
           <path className="best-path" d={bestPath} />
