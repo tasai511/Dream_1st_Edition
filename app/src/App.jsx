@@ -9,6 +9,37 @@ const RANGE_MONTH = "month";
 const RANGE_TOTAL = "total";
 const kMinChartVisibleDays = 7;
 const kMaxChartVisibleDays = 365;
+const RARITY_ORDER = ["C", "U", "R", "RR", "SR", "AR", "SAR", "UR"];
+const RARITY_LABELS = {
+  C: "Common",
+  U: "Uncommon",
+  R: "Rare",
+  RR: "Double Rare",
+  SR: "Super Rare",
+  AR: "Art Rare",
+  SAR: "Special Art Rare",
+  UR: "Ultra Rare",
+};
+const RARITY_POINTS = {
+  C: 1,
+  U: 2,
+  R: 3,
+  RR: 5,
+  SR: 10,
+  AR: 15,
+  SAR: 30,
+  UR: 50,
+};
+const RARITY_ICON_FILES = {
+  C: "rarity_c_common.svg",
+  U: "rarity_u_uncommon.svg",
+  R: "rarity_r_rare.svg",
+  RR: "rarity_rr_double_rare.svg",
+  SR: "rarity_sr_super_rare.svg",
+  AR: "rarity_ar_art_rare.svg",
+  SAR: "rarity_sar_special_art_rare.svg",
+  UR: "rarity_ur_ultra_rare.svg",
+};
 const UNIQUE_TOTAL_COUNT_TARGETS = [100, 500, 1000, 3000, 5000, 10000, 30000, 50000, 100000];
 const UNIQUE_BEST_TARGETS = [500, 600, 700, 800, 900, 999];
 const UNIQUE_STREAK_TARGETS = [2, 3, 7, 14, 30, 60, 100, 365];
@@ -42,6 +73,40 @@ const UNIQUE_BADGE_DEFINITIONS = [
   ...UNIQUE_TOTAL_COUNT_TARGETS.map((target) => ({ metric: "count", target, label: `累計${target}回` })),
   ...UNIQUE_BEST_TARGETS.map((target) => ({ metric: "best", target, label: `初${target}点` })),
 ];
+const CONTEXT_START_BADGES = ["はじめの一歩", "初めての50回", "初めての100回"];
+const CONTEXT_STREAK_BADGES = UNIQUE_STREAK_TARGETS.map((target) => `${target}日連続`);
+const CONTEXT_BAT_BADGES = ["相棒100回", "相棒1000回", "相棒5000回", "バットコレクター", "全バット練習"];
+const CONTEXT_GROWTH_BADGES = ["先週より多く振った", "先月より多く振った", "先週より平均アップ", "先月より平均アップ"];
+const CONTEXT_SECRET_BADGES = [
+  "ラッキー7",
+  "スリーナイン",
+  "ぴったり500",
+  "777スイング",
+  "七日目の覚醒",
+  "大晦日の素振り",
+  "元日の一振り",
+  "復活の一振り",
+];
+const META_BADGE_DEFINITIONS = [
+  ...[100, 300, 500, 1000, 2000, 5000, 10000].map((target) => ({
+    metric: "points",
+    target,
+    label: `バッジポイント${target}`,
+    description: `バッジポイント${target}pt到達`,
+  })),
+  ...[10, 25, 50, 75, 100].map((target) => ({
+    metric: "types",
+    target,
+    label: `バッジ${target}種類`,
+    description: `バッジを${target}種類集める`,
+  })),
+  ...[50, 100, 300, 500, 1000, 3000].map((target) => ({
+    metric: "instances",
+    target,
+    label: `バッジ${target}個`,
+    description: `重複を含めてバッジを${target}個集める`,
+  })),
+];
 
 const defaultDb = {
   activeName: "遥太",
@@ -57,6 +122,7 @@ function SvgIcon({ type }) {
   if (type === "home") return <svg {...props}><path d="M4 11.5 12 5l8 6.5" /><path d="M6.5 10.5V20h11v-9.5" /><path d="M9.5 20v-5h5v5" /></svg>;
   if (type === "log") return <svg {...props}><rect x="4" y="5" width="16" height="15" rx="3" /><path d="M8 3v4M16 3v4M4 10h16" /></svg>;
   if (type === "settings") return <svg {...props}><circle cx="12" cy="12" r="3.2" /><path d="M19 12a7 7 0 0 0-.1-1l2-1.6-2-3.4-2.4 1a7 7 0 0 0-1.8-1L14.4 3h-4.8l-.3 3a7 7 0 0 0-1.8 1l-2.4-1-2 3.4 2 1.6A7 7 0 0 0 5 12a7 7 0 0 0 .1 1l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 1.8 1l.3 3h4.8l.3-3a7 7 0 0 0 1.8-1l2.4 1 2-3.4-2-1.6c.1-.3.1-.7.1-1Z" /></svg>;
+  if (type === "collection") return <svg {...props}><path d="M7 4h10a2 2 0 0 1 2 2v14l-7-3-7 3V6a2 2 0 0 1 2-2Z" /><path d="M12 8l1.4 2.8 3.1.5-2.2 2.2.5 3.1-2.8-1.5-2.8 1.5.5-3.1-2.2-2.2 3.1-.5L12 8Z" /></svg>;
   if (type === "person") return <svg {...props}><circle cx="12" cy="7.4" r="3.4" /><path d="M5 21c.8-4.6 3.2-7 7-7s6.2 2.4 7 7" /></svg>;
   if (type === "count") return <svg {...props}><path d="M4 7h16M4 12h16M4 17h10" /></svg>;
   if (type === "avg") return <svg {...props}><path d="M4 17 9 12l4 4 7-9" /><path d="M16 7h4v4" /></svg>;
@@ -535,24 +601,16 @@ function progressInfo(kind, value, range, variableTarget, targets = null) {
 }
 
 function ProgressMeter({ kind, value, range, variableTarget, targets }) {
-  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [selectedBadge, setSelectedBadge] = useState(null);
   const meterRef = useRef(null);
   const info = progressInfo(kind, Number(value || 0), range, variableTarget, targets);
+  const targetBadge = makeBadgeDefinition(info.badgeLabel, {
+    description: info.badgeDescription,
+  });
   const span = Math.max(1, info.goal - info.previous);
   const ratio = clamp((Number(value || 0) - info.previous) / span, 0, 1);
   const circumference = 169.65;
   const dashOffset = circumference * (1 - ratio);
-
-  useEffect(() => {
-    if (!detailsOpen) return undefined;
-    const closeOnOutside = (event) => {
-      if (!meterRef.current?.contains(event.target)) {
-        setDetailsOpen(false);
-      }
-    };
-    document.addEventListener("pointerdown", closeOnOutside);
-    return () => document.removeEventListener("pointerdown", closeOnOutside);
-  }, [detailsOpen]);
 
   return (
     <div className={`progress-meter ${kind}`} ref={meterRef}>
@@ -588,11 +646,16 @@ function ProgressMeter({ kind, value, range, variableTarget, targets }) {
           />
         </svg>
         <span>-{info.remaining.toLocaleString("ja-JP")}</span>
-        {detailsOpen && (
-          <span className={`meter-badge-popover badge-${kind}`} role="tooltip">
-            <strong>{info.badgeLabel}</strong>
-            <small>{info.badgeDescription}</small>
-          </span>
+        <button
+          className={`meter-badge rarity-${targetBadge.rarity.toLowerCase()}`}
+          type="button"
+          aria-label={`${targetBadge.label}の詳細`}
+          onClick={() => setSelectedBadge({ ...targetBadge, earnedCount: 0, lockedSecret: false })}
+        >
+          <RarityIcon rarity={targetBadge.rarity} />
+        </button>
+        {selectedBadge && (
+          <BadgeDetailPopover badge={selectedBadge} onClose={() => setSelectedBadge(null)} />
         )}
       </div>
     </div>
@@ -606,8 +669,10 @@ function AchievementMetric({ icon, label, value, unit, kind, range, showMeter = 
         <div className="metric-label"><Icon type={icon} />{label}</div>
         <strong>
           {Number(value || 0).toLocaleString("ja-JP")}
-          <span>{unit}</span>
-          {pending && <em className="pending-label">未確定</em>}
+          <span className="metric-unit-wrap">
+            {pending && <em className="pending-label">未確定</em>}
+            <span>{unit}</span>
+          </span>
         </strong>
       </div>
       {showMeter && <ProgressMeter kind={kind} value={value} range={range} variableTarget={variableTarget} targets={targets} />}
@@ -1262,6 +1327,9 @@ export default function App() {
               addRecord={addRecord}
             />
           )}
+          {tab === "badges" && (
+            <BadgeCollectionView allForName={allForName} />
+          )}
           {tab === "settings" && (
             <SettingsView
               db={db}
@@ -1285,7 +1353,6 @@ export default function App() {
 }
 
 function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHomeBat }) {
-  const [badgeFilter, setBadgeFilter] = useState(RANGE_TODAY);
   const allFiltered = db.records.filter((record) => (
     record.name === currentName &&
     record.date <= todayISO() &&
@@ -1329,8 +1396,8 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
   const cumulativeBestTargets = isBatFiltered
     ? BAT_BADGE_DEFINITIONS.filter((definition) => definition.metric === "best")
     : UNIQUE_BEST_TARGETS.map((target) => ({ target, label: `初${target}点`, description: `ベスト${target}点到達` }));
-  const badgeCounts = collectBadgeCounts(allForName, badgeFilter);
-  const groupedBadges = badgeGroups(badgeCounts);
+  const badgeCounts = collectBadgeCounts(allFiltered, range);
+  const sortedBadgeCounts = [...badgeCounts].sort((a, b) => compareBadgesByRarity(a[0], b[0]));
   const chartData = filledChartExtent(chartDaily);
   const rangeOptions = [
     [RANGE_TODAY, "今日"],
@@ -1338,13 +1405,6 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
     [RANGE_MONTH, "今月"],
   ];
   const badgeTotal = badgeCounts.reduce((sum, [, count]) => sum + count, 0);
-  const badgeFilterOptions = [
-    [RANGE_TODAY, "今日"],
-    [RANGE_WEEK, "今週"],
-    [RANGE_MONTH, "今月"],
-    ["year", "今年"],
-    [RANGE_ALL, "全期間"],
-  ];
   return (
     <>
       <div className={`dashboard-controls home-bat-filter ${homeBat === ALL ? "all-selected" : ""}`}>
@@ -1390,59 +1450,33 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
             )}
           </div>
           <RecordPanel daily={chartData} range={range} />
-        </section>
-
-        <section className="panel cumulative-summary">
-          <div className="section-row tight">
-            <div>
-              <h2>累計</h2>
+          <div className="badge-inline-section">
+            <div className="section-row">
+              <h2>獲得バッジ</h2>
             </div>
-          </div>
-          <div className="achievement-summary compact-metrics">
-            <AchievementMetric icon="count" label="スイング数" value={cumulativeSummary.count} unit="回" kind="count" range={RANGE_TOTAL} targets={cumulativeCountTargets} />
-            <AchievementMetric icon="log" label={isBatFiltered ? "相棒日数" : "練習した日数"} value={cumulativeSummary.days} unit="日" kind="days" range={RANGE_TOTAL} targets={cumulativeDaysTargets} />
-            <AchievementMetric icon="best" label={isBatFiltered ? "相棒ベスト" : "過去最高点"} value={cumulativeSummary.best} unit="点" kind="best" range={RANGE_TOTAL} targets={cumulativeBestTargets} />
+            <div className="badge-total"><strong>{badgeTotal.toLocaleString("ja-JP")}</strong><span>個</span></div>
+            {badgeCounts.length ? (
+              <div className="badge-list two-col">
+                {sortedBadgeCounts.map(([label, count]) => (
+                  <BadgeChip label={label} count={count} key={label} />
+                ))}
+              </div>
+            ) : <p className="empty">まだバッジはありません。</p>}
           </div>
         </section>
       </section>
 
-      <section className="panel">
-        <div className="section-row">
-          <h2>獲得バッジ</h2>
-          <p>表示中の合計</p>
-        </div>
-        <div className="badge-filter-tabs" role="tablist" aria-label="バッジ期間">
-          {badgeFilterOptions.map(([value, label]) => (
-            <button key={value} type="button" className={badgeFilter === value ? "selected" : ""} onClick={() => setBadgeFilter(value)}>{label}</button>
-          ))}
-        </div>
-        <div className="badge-total"><strong>{badgeTotal.toLocaleString("ja-JP")}</strong><span>個</span></div>
-        {badgeCounts.length ? (
-          <div className="badge-groups">
-            {groupedBadges.filter((group) => group.total > 0).map((group) => (
-              <section className={`badge-group ${group.key}`} key={group.key}>
-                <div className="badge-group-title">
-                  <h3>{group.label}</h3>
-                  <strong>{group.total.toLocaleString("ja-JP")}個</strong>
-                </div>
-                <div className="badge-period-grid">
-                  {group.sections.map((section) => (
-                    <section className={`badge-subgroup ${section.key}`} key={section.key}>
-                      <div className="badge-list two-col">
-                        {section.badges.length ? section.badges.map(([label, count]) => (
-                          <span className="badge-chip-wrap" key={label}>
-                            <span className={`badge ${section.key}`}><Icon type="badge" />{formatBadgeLabel(label)}</span>
-                            <b>{count > 1 ? `x${count}` : ""}</b>
-                          </span>
-                        )) : <span className="badge-empty">-</span>}
-                      </div>
-                    </section>
-                  ))}
-                </div>
-              </section>
-            ))}
+      <section className="panel cumulative-summary">
+        <div className="section-row tight">
+          <div>
+            <h2>累計</h2>
           </div>
-        ) : <p className="empty">まだバッジはありません。</p>}
+        </div>
+        <div className="achievement-summary compact-metrics">
+          <AchievementMetric icon="count" label="スイング数" value={cumulativeSummary.count} unit="回" kind="count" range={RANGE_TOTAL} targets={cumulativeCountTargets} />
+          <AchievementMetric icon="log" label={isBatFiltered ? "相棒日数" : "練習した日数"} value={cumulativeSummary.days} unit="日" kind="days" range={RANGE_TOTAL} targets={cumulativeDaysTargets} />
+          <AchievementMetric icon="best" label={isBatFiltered ? "相棒ベスト" : "過去最高点"} value={cumulativeSummary.best} unit="点" kind="best" range={RANGE_TOTAL} targets={cumulativeBestTargets} />
+        </div>
       </section>
     </>
   );
@@ -1521,8 +1555,360 @@ function badgeSortKey(label) {
   return [period, metric, value || 9999, label];
 }
 
+function compareBadgesByRarity(a, b) {
+  const aLabel = canonicalBadgeLabel(a);
+  const bLabel = canonicalBadgeLabel(b);
+  const rarityDiff = RARITY_ORDER.indexOf(rarityForBadge(bLabel)) - RARITY_ORDER.indexOf(rarityForBadge(aLabel));
+  if (rarityDiff !== 0) return rarityDiff;
+  const aKey = badgeSortKey(aLabel);
+  const bKey = badgeSortKey(bLabel);
+  return aKey[0] - bKey[0] ||
+    aKey[1] - bKey[1] ||
+    aKey[2] - bKey[2] ||
+    String(aKey[3]).localeCompare(String(bKey[3]), "ja");
+}
+
 function formatBadgeLabel(label) {
-  return label;
+  return canonicalBadgeLabel(label);
+}
+
+function canonicalBadgeLabel(label) {
+  const batBadgeIndex = label.indexOf(" 相棒");
+  return batBadgeIndex >= 0 ? label.slice(batBadgeIndex + 1) : label;
+}
+
+function badgeTypeForLabel(label) {
+  if (
+    label.startsWith("初") ||
+    label.startsWith("累計") ||
+    label.startsWith("バッジポイント") ||
+    /^バッジ\d/.test(label) ||
+    label.includes("日連続") ||
+    label === "はじめの一歩" ||
+    label.startsWith("初めて") ||
+    label === "バットコレクター" ||
+    label === "全バット練習" ||
+    label === "ラッキー7" ||
+    label === "スリーナイン" ||
+    label === "七日目の覚醒"
+  ) {
+    return "unique";
+  }
+  return "repeatable";
+}
+
+function rarityForBadge(label) {
+  const value = badgeValue(label);
+  if (label.startsWith("バッジポイント")) {
+    if (value >= 10000) return "UR";
+    if (value >= 5000) return "SAR";
+    if (value >= 2000) return "AR";
+    if (value >= 1000) return "SR";
+    if (value >= 500) return "RR";
+    if (value >= 300) return "R";
+    if (value >= 100) return "U";
+    return "C";
+  }
+  if (/^バッジ\d+種類/.test(label)) {
+    if (value >= 100) return "UR";
+    if (value >= 75) return "SAR";
+    if (value >= 50) return "AR";
+    if (value >= 25) return "R";
+    return "U";
+  }
+  if (/^バッジ\d+個/.test(label)) {
+    if (value >= 3000) return "UR";
+    if (value >= 1000) return "SAR";
+    if (value >= 500) return "AR";
+    if (value >= 300) return "SR";
+    if (value >= 100) return "R";
+    return "U";
+  }
+  if (["ラッキー7", "スリーナイン", "七日目の覚醒"].includes(label) || value >= 50000 || label.includes("365日")) return "UR";
+  if (["ぴったり500", "777スイング", "復活の一振り"].includes(label) || label.includes("100日") || label.includes("999")) return "SAR";
+  if (["大晦日の素振り", "元日の一振り"].includes(label) || label.includes("初700") || label.includes("初800") || label.includes("初900") || label.includes("30日")) return "AR";
+  if (label.includes("月平均600") || label.includes("週平均600") || value >= 10000 || label.includes("60日") || label.includes("相棒5000")) return "SR";
+  if (label.includes("今日300") || label.includes("今日500") || label.includes("日平均600") || label.includes("日平均700") || label.includes("今週1000") || label.includes("今週2000") || label.includes("月間2000") || label.includes("月間3000") || label.includes("月間5000") || label.includes("14日")) return "RR";
+  if (label.includes("日平均500") || label.includes("今日200") || label.includes("今日ベスト700") || label.includes("今週500") || label.includes("週平均500") || label.includes("月平均500") || label.includes("月平均400") || label.includes("月間1000") || label.includes("7日") || value >= 3000) return "R";
+  if (label.includes("今日100") || label.includes("日平均400") || label.includes("今日ベスト600") || label.includes("今週300") || label.includes("週平均400") || label.includes("月間500") || label.includes("今週3日") || label.includes("今週5日") || label.includes("今月5日") || label.includes("3日") || label.includes("初めて")) return "U";
+  return "C";
+}
+
+function badgeDescriptionFor(label, type) {
+  if (label === "はじめの一歩") return "初めて記録する";
+  if (label.includes("ひみつ")) return "条件はひみつ";
+  if (label.startsWith("バッジポイント")) return `${label.replace("バッジポイント", "")}ptまで集める`;
+  if (/^バッジ\d+種類/.test(label)) return `${label.replace("バッジ", "")}集める`;
+  if (/^バッジ\d+個/.test(label)) return `重複を含めて${label.replace("バッジ", "")}集める`;
+  if (label.includes("平均")) return `${label}を達成`;
+  if (label.includes("ベスト") || label.startsWith("初")) return `${label}を達成`;
+  if (label.includes("連続")) return `${label}で練習する`;
+  if (label.includes("相棒")) return `${label}を達成`;
+  if (label.includes("多く振った") || label.includes("平均アップ")) return `${label}ときに獲得`;
+  return `${label}を${type === "unique" ? "1回だけ獲得可" : "達成するたび獲得可"}`;
+}
+
+function makeBadgeDefinition(label, options = {}) {
+  const type = options.type || badgeTypeForLabel(label);
+  return {
+    id: label,
+    label,
+    type,
+    rarity: options.rarity || rarityForBadge(label),
+    secret: Boolean(options.secret),
+    description: options.description || badgeDescriptionFor(label, type),
+  };
+}
+
+function allBadgeDefinitions() {
+  const definitions = [
+    ...HOME_BADGE_DEFINITIONS.map((definition) => makeBadgeDefinition(definition.label, { type: "repeatable" })),
+    ...UNIQUE_BADGE_DEFINITIONS.map((definition) => makeBadgeDefinition(definition.label, { type: "unique" })),
+    ...CONTEXT_START_BADGES.map((label) => makeBadgeDefinition(label, { type: "unique" })),
+    ...CONTEXT_STREAK_BADGES.map((label) => makeBadgeDefinition(label, { type: "unique" })),
+    ...CONTEXT_BAT_BADGES.map((label) => makeBadgeDefinition(label, { type: label.includes("コレクター") || label.includes("全バット") ? "unique" : "repeatable" })),
+    ...BAT_BADGE_DEFINITIONS.map((definition) => makeBadgeDefinition(definition.label, { type: "unique", description: definition.description })),
+    ...CONTEXT_GROWTH_BADGES.map((label) => makeBadgeDefinition(label, { type: "repeatable" })),
+    ...CONTEXT_SECRET_BADGES.map((label) => makeBadgeDefinition(label, { type: label === "ラッキー7" || label === "スリーナイン" || label === "七日目の覚醒" ? "unique" : "repeatable", secret: true })),
+    ...META_BADGE_DEFINITIONS.map((definition) => makeBadgeDefinition(definition.label, { type: "unique", description: definition.description })),
+  ];
+  const map = new Map();
+  definitions.forEach((definition) => {
+    if (!map.has(definition.label)) {
+      map.set(definition.label, definition);
+    }
+  });
+  return [...map.values()].sort((a, b) => (
+    RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity) ||
+    badgeSortKey(a.label)[1] - badgeSortKey(b.label)[1] ||
+    badgeSortKey(a.label)[2] - badgeSortKey(b.label)[2] ||
+    a.label.localeCompare(b.label, "ja")
+  ));
+}
+
+function earnedCountForDefinition(definition, badgeCounts, metaStats = null) {
+  if (metaStats) {
+    const metaDefinition = META_BADGE_DEFINITIONS.find((item) => item.label === definition.label);
+    if (metaDefinition) {
+      return metaStats[metaDefinition.metric] >= metaDefinition.target ? 1 : 0;
+    }
+  }
+  const exact = badgeCounts.get(definition.label) || 0;
+  if (exact) return exact;
+  if (definition.label.startsWith("相棒")) {
+    return [...badgeCounts.entries()]
+      .filter(([label]) => label.endsWith(definition.label))
+      .reduce((sum, [, count]) => sum + count, 0);
+  }
+  return 0;
+}
+
+function RarityIcon({ rarity }) {
+  return (
+    <span
+      className={`rarity-icon rarity-${rarity.toLowerCase()}`}
+      style={{ "--rarity-icon": `url("./images/${RARITY_ICON_FILES[rarity]}")` }}
+      aria-hidden="true"
+    />
+  );
+}
+
+function CompletionMeter({ earned, total }) {
+  const circumference = 169.65;
+  const ratio = total > 0 ? clamp(earned / total, 0, 1) : 0;
+  const dashOffset = circumference * (1 - ratio);
+  const remaining = Math.max(0, total - earned);
+  return (
+    <div className="completion-meter" aria-label={`コンプリートまであと${remaining}種類`}>
+      <div className="meter-ring">
+        <svg viewBox="0 0 72 72" aria-hidden="true">
+          <circle className="meter-track" cx="36" cy="36" r="27" />
+          <circle
+            className="meter-glow meter-glow-wide"
+            cx="36"
+            cy="36"
+            r="27"
+            strokeDasharray={circumference}
+            strokeDashoffset={dashOffset}
+            transform="rotate(-90 36 36)"
+          />
+          <circle
+            className="meter-glow meter-glow-core"
+            cx="36"
+            cy="36"
+            r="27"
+            strokeDasharray={circumference}
+            strokeDashoffset={dashOffset}
+            transform="rotate(-90 36 36)"
+          />
+          <circle
+            className="meter-value"
+            cx="36"
+            cy="36"
+            r="27"
+            strokeDasharray={circumference}
+            strokeDashoffset={dashOffset}
+            transform="rotate(-90 36 36)"
+          />
+        </svg>
+        <span>{remaining}</span>
+      </div>
+      <small>完成まで</small>
+    </div>
+  );
+}
+
+function BadgeDetailPopover({ badge, onClose }) {
+  return (
+    <div className="collection-popover-backdrop" onPointerDown={onClose}>
+      <aside
+        className={`collection-popover rarity-${badge.rarity.toLowerCase()}`}
+        role="dialog"
+        aria-modal="true"
+        onPointerDown={(event) => event.stopPropagation()}
+      >
+        <div className="collection-popover-head">
+          <RarityIcon rarity={badge.rarity} />
+          <div>
+            <strong>{badge.lockedSecret ? "???" : badge.label}</strong>
+            <span>{badge.rarity} / {RARITY_LABELS[badge.rarity]}</span>
+          </div>
+          <button type="button" aria-label="閉じる" onClick={onClose}>×</button>
+        </div>
+        <p>{badge.lockedSecret ? "ひみつ" : badge.description}</p>
+        <small>
+          {badge.type === "unique" ? "達成時に1回だけ獲得可" : "達成したら何回でも獲得可"}
+          {" / "}
+          {badge.earnedCount > 0 ? (
+            <span className="earned-count">獲得 {badge.earnedCount}回</span>
+          ) : (
+            "未取得"
+          )}
+        </small>
+      </aside>
+    </div>
+  );
+}
+
+function BadgeChip({ label, count = 1 }) {
+  const [selectedBadge, setSelectedBadge] = useState(null);
+  const canonicalLabel = canonicalBadgeLabel(label);
+  const definition = makeBadgeDefinition(canonicalLabel);
+  return (
+    <>
+      <span className="badge-chip-wrap">
+      <button
+        className={`badge collection-badge rarity-${definition.rarity.toLowerCase()}`}
+        type="button"
+        onClick={() => setSelectedBadge({ ...definition, earnedCount: count, lockedSecret: false })}
+      >
+        <RarityIcon rarity={definition.rarity} />
+        {definition.label}
+      </button>
+        <b>{count > 1 ? `x${count}` : ""}</b>
+      </span>
+      {selectedBadge && (
+        <BadgeDetailPopover badge={selectedBadge} onClose={() => setSelectedBadge(null)} />
+      )}
+    </>
+  );
+}
+
+function BadgeCollectionView({ allForName }) {
+  const [selectedBadge, setSelectedBadge] = useState(null);
+  const badgeCounts = useMemo(() => new Map(collectBadgeCounts(allForName, RANGE_ALL)), [allForName]);
+  const definitions = useMemo(() => allBadgeDefinitions(), []);
+  const baseDefinitions = definitions.filter((definition) => !META_BADGE_DEFINITIONS.some((item) => item.label === definition.label));
+  const basePointTotal = baseDefinitions.reduce((sum, definition) => {
+    const earnedCount = earnedCountForDefinition(definition, badgeCounts);
+    return sum + (earnedCount * RARITY_POINTS[definition.rarity]);
+  }, 0);
+  const baseEarnedTotal = baseDefinitions.reduce((sum, definition) => (
+    sum + Math.min(1, earnedCountForDefinition(definition, badgeCounts))
+  ), 0);
+  const baseEarnedInstanceTotal = baseDefinitions.reduce((sum, definition) => (
+    sum + earnedCountForDefinition(definition, badgeCounts)
+  ), 0);
+  const metaStats = {
+    points: basePointTotal,
+    types: baseEarnedTotal,
+    instances: baseEarnedInstanceTotal,
+  };
+  const badgePointTotal = definitions.reduce((sum, definition) => {
+    const earnedCount = earnedCountForDefinition(definition, badgeCounts, metaStats);
+    return sum + (earnedCount * RARITY_POINTS[definition.rarity]);
+  }, 0);
+  const earnedTotal = definitions.reduce((sum, definition) => (
+    sum + Math.min(1, earnedCountForDefinition(definition, badgeCounts, metaStats))
+  ), 0);
+  const earnedInstanceTotal = definitions.reduce((sum, definition) => (
+    sum + earnedCountForDefinition(definition, badgeCounts, metaStats)
+  ), 0);
+  return (
+    <section className="badge-collection">
+      <div className="badge-point-card">
+        <div>
+          <p>バッジポイント</p>
+          <strong>{badgePointTotal.toLocaleString("ja-JP")}</strong>
+          <span className="badge-point-meta"><b>{earnedTotal}</b>/{definitions.length} 種類</span>
+          <span className="badge-point-meta"><b>{earnedInstanceTotal.toLocaleString("ja-JP")}</b>個</span>
+        </div>
+        <CompletionMeter earned={earnedTotal} total={definitions.length} />
+      </div>
+      <section className="collection-main-card">
+        <div className="collection-card-heading">
+          <p>コレクション</p>
+        </div>
+        <div className="collection-groups">
+          {RARITY_ORDER.map((rarity) => {
+            const items = definitions.filter((definition) => definition.rarity === rarity);
+            if (!items.length) return null;
+            const rarityEarnedTotal = items.reduce((sum, definition) => sum + Math.min(1, earnedCountForDefinition(definition, badgeCounts, metaStats)), 0);
+            const rarityPointTotal = items.reduce((sum, definition) => (
+              sum + (earnedCountForDefinition(definition, badgeCounts, metaStats) * RARITY_POINTS[rarity])
+            ), 0);
+            return (
+              <section className={`collection-group rarity-${rarity.toLowerCase()}`} key={rarity}>
+                <div className="collection-group-title">
+                  <RarityIcon rarity={rarity} />
+                  <div>
+                    <h3>{rarity}</h3>
+                    <p>{RARITY_LABELS[rarity]} / {RARITY_POINTS[rarity]}pt</p>
+                  </div>
+                  <strong>{rarityEarnedTotal}/{items.length}<span>{rarityPointTotal}pt</span></strong>
+                </div>
+                <div className="collection-grid">
+                  {items.map((definition) => {
+                    const earnedCount = earnedCountForDefinition(definition, badgeCounts, metaStats);
+                    const lockedSecret = definition.secret && earnedCount === 0;
+                    return (
+                      <button
+                        className={`collection-card ${earnedCount ? "earned" : "locked"} ${definition.secret ? "secret" : ""}`}
+                        key={definition.label}
+                        type="button"
+                        onClick={() => setSelectedBadge({ ...definition, earnedCount, lockedSecret })}
+                      >
+                        <RarityIcon rarity={definition.rarity} />
+                        <div>
+                          <strong>{lockedSecret ? "???" : definition.label}</strong>
+                          <span>{definition.type === "unique" ? "1回だけ" : "何回でも"}</span>
+                        </div>
+                        <em>{definition.rarity}</em>
+                        {earnedCount > 1 && <b>x{earnedCount}</b>}
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+            );
+          })}
+        </div>
+      </section>
+      {selectedBadge && (
+        <BadgeDetailPopover badge={selectedBadge} onClose={() => setSelectedBadge(null)} />
+      )}
+    </section>
+  );
 }
 
 function badgeGroups(badgeCounts) {
@@ -1618,15 +2004,8 @@ function RecordView({ db, allForName, badgeMap, selectedDate, setSelectedDate, m
           {selectedByBat.length ? selectedByBat.map((item) => <RecordSummary key={item.bat} item={item} />) : <p className="empty">この日の記録はまだありません。</p>}
         </div>
         <div className="badge-list day-badges">
-          {[...(badgeMap.get(selectedDate) || [])].sort((a, b) => {
-            const aKey = badgeSortKey(a);
-            const bKey = badgeSortKey(b);
-            return aKey[0] - bKey[0] || aKey[1] - bKey[1] || String(aKey[2]).localeCompare(String(bKey[2]), "ja");
-          }).map((badge) => (
-            <span className="badge-chip-wrap" key={badge}>
-              <span className={`badge ${badgeCategory(badge)}`}><Icon type="badge" />{formatBadgeLabel(badge)}</span>
-              <b />
-            </span>
+          {[...(badgeMap.get(selectedDate) || [])].sort(compareBadgesByRarity).map((badge) => (
+            <BadgeChip label={badge} key={badge} />
           ))}
         </div>
       </section>
@@ -1775,6 +2154,7 @@ function BottomNav({ tab, setTab }) {
   const tabs = [
     ["home", "home"],
     ["record", "log"],
+    ["badges", "collection"],
     ["settings", "settings"],
   ];
   return (

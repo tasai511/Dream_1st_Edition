@@ -1,4 +1,4 @@
-const CACHE_NAME = "swing-log-v61";
+const CACHE_NAME = "swing-log-v63";
 const ASSETS = [
   "./",
   "./index.html",
@@ -8,7 +8,14 @@ const ASSETS = [
   "./icons/apple-touch-icon.svg",
   "./icons/apple-touch-icon.png",
   "./images/bat-icon.svg",
-  "./images/swing-line.png",
+  "./images/rarity_c_common.svg",
+  "./images/rarity_u_uncommon.svg",
+  "./images/rarity_r_rare.svg",
+  "./images/rarity_rr_double_rare.svg",
+  "./images/rarity_sr_super_rare.svg",
+  "./images/rarity_ar_art_rare.svg",
+  "./images/rarity_sar_special_art_rare.svg",
+  "./images/rarity_ur_ultra_rare.svg",
 ];
 
 self.addEventListener("install", (event) => {

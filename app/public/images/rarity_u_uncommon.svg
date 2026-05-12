@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title>U Uncommon</title>
+  <desc>Dream badge rarity icon: U Uncommon</desc>
+  <g fill="currentColor">
+
+    <path d="M32 7L57 32 32 57 7 32 32 7z"/>
+    <path d="M32 20l12 12-12 12-12-12 12-12z" fill="white" opacity=".24"/>
+
+  </g>
+</svg>

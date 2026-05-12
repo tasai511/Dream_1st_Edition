@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title>RR Double Rare</title>
+  <desc>Dream badge rarity icon: RR Double Rare</desc>
+  <g fill="currentColor">
+
+    <path d="M24 6l5.9 14 15.1 1.2-11.5 9.9 3.5 14.8L24 38.1 11 45.9l3.5-14.8L3 21.2 18.1 20 24 6z"/>
+    <path d="M42 12l4.8 11.3 12.2 1-9.3 8 2.8 12L42 38l-10.5 6.3 2.8-12-9.3-8 12.2-1L42 12z" opacity=".78"/>
+
+  </g>
+</svg>
