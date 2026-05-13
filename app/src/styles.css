@@ -5487,6 +5487,29 @@ select:focus,
   grid-template-columns: minmax(0, 1fr) 116px;
 }
 
+/* Final authority: count bars show 7 fixed-width days and scroll horizontally. */
+.record-section .record-scroll {
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  touch-action: pan-x !important;
+}
+
+.record-section .count-bars {
+  --count-bar-width: clamp(42px, calc((100vw - 56px) / 7), 54px);
+  display: flex !important;
+  width: max-content !important;
+  min-width: max-content !important;
+  gap: 6px !important;
+}
+
+.record-section .bar-item {
+  flex: 0 0 var(--count-bar-width) !important;
+  width: var(--count-bar-width) !important;
+  min-width: var(--count-bar-width) !important;
+  max-width: var(--count-bar-width) !important;
+  grid-template-rows: 108px auto auto !important;
+}
+
 .achievement-metric.count {
   grid-template-columns: minmax(0, 1fr) 128px;
 }
