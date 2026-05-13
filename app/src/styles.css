@@ -5475,6 +5475,19 @@ select:focus,
   grid-template-rows: 108px auto auto !important;
 }
 
+/* Final authority: score points are inverse pairs. */
+.record-section .chart-active-point.avg,
+.record-section .chart-today-point.avg {
+  fill: #ffffff !important;
+  stroke: var(--active-graph-color, var(--hot)) !important;
+}
+
+.record-section .chart-active-point.best,
+.record-section .chart-today-point.best {
+  fill: var(--active-graph-color, var(--hot)) !important;
+  stroke: #ffffff !important;
+}
+
 .achievement-metric.count {
   grid-template-columns: minmax(0, 1fr) 128px;
 }

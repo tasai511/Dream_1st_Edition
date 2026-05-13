@@ -1443,7 +1443,14 @@ function Chart({ data, initialRange }) {
     { x: width - pad.right, anchor: "end", label: data[visibleIndexAt(plotW)]?.label || data.at(-1).label },
   ].filter((item, index, array) => item.label && array.findIndex((candidate) => candidate.label === item.label) === index);
   const hoveredInPlot = hovered && hovered.x >= pad.left && hovered.x <= width - pad.right;
-  const tooltipLeft = hovered ? `${(clamp(hovered.x + 10, 8, width - 156) / width) * 100}%` : "0%";
+  const tooltipWidth = 148;
+  const tooltipGap = 14;
+  const tooltipX = hovered
+    ? hovered.x + tooltipGap + tooltipWidth <= width - 8
+      ? hovered.x + tooltipGap
+      : hovered.x - tooltipGap - tooltipWidth
+    : 0;
+  const tooltipLeft = `${(clamp(tooltipX, 8, width - tooltipWidth - 8) / width) * 100}%`;
   const tooltipTop = hovered ? `${(clamp(hovered.y - 74, 10, height - 82) / height) * 100}%` : "0%";
   const clientXToSvgX = (clientX) => {
     const rect = svgRef.current?.getBoundingClientRect();
