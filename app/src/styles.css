@@ -1168,12 +1168,12 @@ input::placeholder {
   display: grid;
   width: 148px;
   gap: 3px;
-  border: 1px solid rgba(var(--hot-rgb), 0.38);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: var(--radius);
   padding: 8px 9px;
-  color: white;
-  background: rgba(17, 18, 24, 0.96);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.36);
+  color: var(--text);
+  background: rgba(45, 51, 64, 0.96);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.24);
   pointer-events: none;
 }
 
@@ -3196,6 +3196,11 @@ select:focus,
 .ghost .button-icon,
 .file-control .button-icon {
   color: var(--hot);
+}
+
+.tool-grid .ghost .button-icon,
+.tool-grid .file-control .button-icon {
+  color: currentColor;
 }
 
 .danger {

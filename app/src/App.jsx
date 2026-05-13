@@ -1169,8 +1169,8 @@ function Chart({ data, initialRange }) {
       {hoveredInPlot && (
         <div className="chart-tooltip-card" style={{ "--tooltip-x": tooltipLeft, "--tooltip-y": tooltipTop }}>
           <strong>{hovered.item.label}</strong>
-          <span>平均: {Number(hovered.item.avg || 0).toLocaleString("ja-JP")}点</span>
           <span>ベスト: {Number(hovered.item.best || 0).toLocaleString("ja-JP")}点</span>
+          <span>平均: {Number(hovered.item.avg || 0).toLocaleString("ja-JP")}点</span>
         </div>
       )}
     </div>
