@@ -877,6 +877,8 @@ function RecordPanel({ daily, range }) {
   const buckets = useMemo(() => comparisonBuckets(daily, range), [daily, range]);
   const visibleBuckets = useMemo(() => [...buckets].reverse(), [buckets]);
   const visibleRange = range === RANGE_WEEK ? 5 : range === RANGE_MONTH ? 6 : 7;
+  const scoreVisibleRange = range === RANGE_WEEK ? 4 : range === RANGE_MONTH ? 4 : 5;
+  const periodUnit = range === RANGE_WEEK ? "週" : range === RANGE_MONTH ? "月" : "日";
   const scoreData = useMemo(() => visibleBuckets.map((bucket) => ({
     date: bucket.label,
     label: bucket.label,
@@ -888,16 +890,15 @@ function RecordPanel({ daily, range }) {
   return (
     <section className="dashboard-section record-section">
       <div className="section-row tight">
-        <h2>履歴</h2>
         <div className="record-tabs" role="tablist" aria-label="記録表示">
-          <button type="button" className={mode === "count" ? "selected" : ""} onClick={() => setMode("count")}>回数</button>
-          <button type="button" className={mode === "score" ? "selected" : ""} onClick={() => setMode("score")}>スコア</button>
+          <button type="button" className={mode === "count" ? "selected" : ""} onClick={() => setMode("count")}>毎{periodUnit}のスイング数</button>
+          <button type="button" className={mode === "score" ? "selected" : ""} onClick={() => setMode("score")}>毎{periodUnit}のスコア</button>
         </div>
       </div>
       {visibleBuckets.length ? (
         mode === "count"
           ? <CountBars buckets={visibleBuckets} />
-          : <Chart data={scoreData} initialRange={Math.min(scoreData.length, visibleRange)} />
+          : <Chart data={scoreData} initialRange={Math.min(scoreData.length, scoreVisibleRange)} />
       ) : <p className="empty compact-empty">記録がありません。</p>}
     </section>
   );
@@ -924,21 +925,33 @@ function EarnedBadgesCard({ badgeCounts }) {
           <h2>獲得バッジ</h2>
           {!expanded && badgeCounts.length > 4 && <p>New</p>}
         </div>
-        {badgeCounts.length > 4 && (
-          <button type="button" className="ghost badge-expand-toggle" onClick={toggleExpanded}>
-            {expanded ? "閉じる" : "全部みる"}
-          </button>
-        )}
       </div>
       <div className="badge-total"><strong>{badgeTotal.toLocaleString("ja-JP")}</strong><span>個</span></div>
       {badgeCounts.length ? (
-        <div className="badge-list two-col">
-          {visibleBadges.map(([label, count]) => (
-            <span className="badge-motion-item" style={{ viewTransitionName: `badge-${badgeDomId(label)}` }} key={label}>
-              <BadgeChip label={label} count={count} />
-            </span>
-          ))}
-        </div>
+        <>
+          <div className="badge-list two-col">
+            {visibleBadges.map(([label, count], index) => (
+              <span
+                className="badge-motion-item"
+                style={{ viewTransitionName: `badge-${badgeDomId(label)}`, "--badge-index": index }}
+                key={label}
+              >
+                <BadgeChip label={label} count={count} />
+              </span>
+            ))}
+          </div>
+          {badgeCounts.length > 4 && (
+            <button
+              type="button"
+              className={`badge-expand-bar ${expanded ? "expanded" : ""}`}
+              onClick={toggleExpanded}
+              aria-label={expanded ? "バッジを閉じる" : "全部のバッジを見る"}
+              title={expanded ? "閉じる" : "全部みる"}
+            >
+              <SvgIcon type="chevronDown" />
+            </button>
+          )}
+        </>
       ) : <p className="empty">まだバッジはありません。</p>}
     </section>
   );

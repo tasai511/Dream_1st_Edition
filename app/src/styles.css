@@ -557,6 +557,13 @@ p {
   animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.28s;
+  animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+  mix-blend-mode: normal;
+}
+
 .achievement-metric {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 136px;
@@ -1443,7 +1450,11 @@ input::placeholder {
 }
 
 .badge-motion-item {
-  display: contents;
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  animation: badgeReveal 0.24s ease both;
+  animation-delay: min(calc(var(--badge-index, 0) * 24ms), 180ms);
 }
 
 .badge-groups {
@@ -1458,6 +1469,11 @@ input::placeholder {
   margin-top: 18px;
   border-top: 1px solid var(--line);
   padding-top: 18px;
+  transition: gap 0.22s ease;
+}
+
+.badge-inline-section.expanded {
+  gap: 14px;
 }
 
 .badge-inline-section .section-row {
@@ -1567,15 +1583,43 @@ input::placeholder {
   gap: 8px;
 }
 
-.badge-inline-section.expanded .badge-list.two-col {
+.badge-expand-bar {
   display: grid;
-  grid-template-columns: 1fr;
+  place-items: center;
+  width: 100%;
+  min-height: 22px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.055);
+  cursor: pointer;
 }
 
-.badge-expand-toggle {
-  min-height: 34px;
-  padding: 0 11px;
-  font-size: 0.68rem;
+.badge-expand-bar svg {
+  width: 17px;
+  height: 17px;
+  transition: transform 0.22s ease, color 0.22s ease;
+}
+
+.badge-expand-bar:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.085);
+}
+
+.badge-expand-bar.expanded svg {
+  transform: rotate(180deg);
+}
+
+@keyframes badgeReveal {
+  from {
+    opacity: 0;
+    transform: translateY(7px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .badge-subgroup.score .badge-list.two-col {
@@ -2897,28 +2941,44 @@ select,
 }
 
 .record-section .section-row {
-  justify-content: flex-end;
+  justify-content: stretch;
 }
 
 .record-section .record-tabs {
-  margin-left: auto;
+  width: 100%;
+  min-width: 0;
+  margin-left: 0;
+}
+
+.record-section .record-tabs button {
+  min-height: 34px;
+  padding-inline: 8px;
+  overflow-wrap: anywhere;
+  line-height: 1.12;
+}
+
+.record-section {
+  padding-inline: 10px;
 }
 
 .record-scroll,
 .chart-wrap {
-  min-height: 230px;
+  box-sizing: border-box;
+  height: 178px;
+  min-height: 178px;
 }
 
 .chart-wrap svg {
-  height: 230px;
+  height: 100%;
 }
 
 .record-section .bar-item {
-  grid-template-rows: 150px auto;
+  flex-basis: 60px;
+  grid-template-rows: 112px auto;
 }
 
 .record-section .bar-track {
-  height: 150px;
+  height: 112px;
 }
 
 .record-section .bar-item > span:not(.bar-fill) {
