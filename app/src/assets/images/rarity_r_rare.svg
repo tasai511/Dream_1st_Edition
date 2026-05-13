@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title>R Rare</title>
+  <desc>Dream badge rarity icon: R Rare</desc>
+  <g fill="currentColor">
+
+    <path d="M32 5l7.4 16.9 18.4 1.7-13.9 12.2 4.1 18L32 44.6 16 53.8l4.1-18L6.2 23.6l18.4-1.7L32 5z"/>
+    <circle cx="32" cy="32" r="7" fill="white" opacity=".20"/>
+
+  </g>
+</svg>

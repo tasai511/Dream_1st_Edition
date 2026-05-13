@@ -1,4 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import batIconUrl from "./assets/images/bat-icon.svg";
+import rarityArIconUrl from "./assets/images/rarity_ar_art_rare.svg";
+import rarityCIconUrl from "./assets/images/rarity_c_common.svg";
+import rarityRrIconUrl from "./assets/images/rarity_rr_double_rare.svg";
+import rarityRIconUrl from "./assets/images/rarity_r_rare.svg";
+import raritySarIconUrl from "./assets/images/rarity_sar_special_art_rare.svg";
+import raritySrIconUrl from "./assets/images/rarity_sr_super_rare.svg";
+import rarityUIconUrl from "./assets/images/rarity_u_uncommon.svg";
+import rarityUrIconUrl from "./assets/images/rarity_ur_ultra_rare.svg";
 
 const STORAGE_KEY = "dream1-swing-tracker-v1";
 const ALL = "__all__";
@@ -30,17 +39,16 @@ const RARITY_POINTS = {
   SAR: 30,
   UR: 50,
 };
-const RARITY_ICON_FILES = {
-  C: "rarity_c_common.svg",
-  U: "rarity_u_uncommon.svg",
-  R: "rarity_r_rare.svg",
-  RR: "rarity_rr_double_rare.svg",
-  SR: "rarity_sr_super_rare.svg",
-  AR: "rarity_ar_art_rare.svg",
-  SAR: "rarity_sar_special_art_rare.svg",
-  UR: "rarity_ur_ultra_rare.svg",
+const RARITY_ICON_URLS = {
+  C: rarityCIconUrl,
+  U: rarityUIconUrl,
+  R: rarityRIconUrl,
+  RR: rarityRrIconUrl,
+  SR: raritySrIconUrl,
+  AR: rarityArIconUrl,
+  SAR: raritySarIconUrl,
+  UR: rarityUrIconUrl,
 };
-const publicAsset = (path) => `${import.meta.env.BASE_URL}${path.replace(/^\/+/, "")}`;
 const UNIQUE_TOTAL_COUNT_TARGETS = [100, 500, 1000, 3000, 5000, 10000, 30000, 50000, 100000];
 const UNIQUE_BEST_TARGETS = [500, 600, 700, 800, 900, 999];
 const UNIQUE_STREAK_TARGETS = [2, 3, 7, 14, 30, 60, 100, 365];
@@ -128,7 +136,7 @@ function SvgIcon({ type }) {
   if (type === "count") return <svg {...props}><path d="M4 7h16M4 12h16M4 17h10" /></svg>;
   if (type === "avg") return <svg {...props}><path d="M4 17 9 12l4 4 7-9" /><path d="M16 7h4v4" /></svg>;
   if (type === "best") return <svg {...props}><path d="M12 3 9.5 8.5 4 9l4.2 3.8L7 18.5l5-3 5 3-1.2-5.7L20 9l-5.5-.5L12 3Z" /></svg>;
-  if (type === "bat") return <img className="bat-image-icon" src={publicAsset("images/bat-icon.svg?v=2")} alt="" aria-hidden="true" />;
+  if (type === "bat") return <img className="bat-image-icon" src={batIconUrl} alt="" aria-hidden="true" />;
   if (type === "badge") return <svg {...props}><circle cx="12" cy="8" r="4" /><path d="m9 12-2 8 5-3 5 3-2-8" /></svg>;
   if (type === "plus") return <svg {...props}><path d="M12 5v14M5 12h14" /></svg>;
   if (type === "trash") return <svg {...props}><path d="M4 7h16" /><path d="M10 11v6M14 11v6" /><path d="M6 7l1 14h10l1-14" /><path d="M9 7V4h6v3" /></svg>;
@@ -1715,7 +1723,7 @@ function RarityIcon({ rarity }) {
   return (
     <span
       className={`rarity-icon rarity-${rarity.toLowerCase()}`}
-      style={{ "--rarity-icon": `url("${publicAsset(`images/${RARITY_ICON_FILES[rarity]}`)}")` }}
+      style={{ "--rarity-icon": `url("${RARITY_ICON_URLS[rarity]}")` }}
       aria-hidden="true"
     />
   );
