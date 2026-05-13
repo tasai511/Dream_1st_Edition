@@ -2874,7 +2874,6 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
       </section>
 
       <section className="panel">
-        <fieldset className="settings-fieldset" disabled={!hasNames}>
         <div className="section-row">
           <h2>データ管理</h2>
           <p>この端末に保存</p>
@@ -2885,7 +2884,6 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
         </div>
         <button type="button" className="ghost wide" onClick={() => setDb(demoDb())}>デモデータを作成</button>
         <button type="button" className="danger wide" onClick={() => setPendingDelete({ type: "all", value: "全データ" })}>全データ削除</button>
-        </fieldset>
       </section>
     </div>
   );
