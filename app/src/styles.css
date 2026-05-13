@@ -1,5 +1,7 @@
 :root {
   color-scheme: dark;
+  --app-scale: 1;
+  --app-visual-width: min(480px, 100vw);
   --bg: #111218;
   --panel: rgba(255, 255, 255, 0.055);
   --panel-strong: rgba(255, 255, 255, 0.085);
@@ -68,7 +70,7 @@ svg text {
 }
 
 .app {
-  min-height: 100vh;
+  min-height: 100svh;
   background: var(--app-bg, transparent);
 }
 
@@ -108,6 +110,7 @@ svg text {
   min-height: 100vh;
   margin: 0 auto;
   padding: max(14px, env(safe-area-inset-top)) 14px calc(78px + env(safe-area-inset-bottom));
+  zoom: var(--app-scale);
 }
 
 .app-header,
@@ -333,6 +336,7 @@ p {
 .achievement-card-stack {
   display: grid;
   gap: 12px;
+  position: relative;
 }
 
 .achievement-focus-card,
@@ -349,6 +353,8 @@ p {
 }
 
 .achievement-focus-card {
+  position: relative;
+  z-index: 2;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 122px;
   align-items: center;
@@ -357,6 +363,7 @@ p {
   padding: 18px;
   color: currentColor;
   background: #242936;
+  overflow: visible;
 }
 
 .achievement-focus-copy {
@@ -457,6 +464,8 @@ p {
 
 
 .achievement-compact-grid {
+  position: relative;
+  z-index: 1;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
@@ -2010,7 +2019,7 @@ input::placeholder {
 .collection-popover-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 45;
+  z-index: 120;
   display: grid;
   place-items: center;
   padding: 18px;
@@ -2460,9 +2469,9 @@ input::placeholder {
 
 .bottom-nav {
   position: fixed;
-  right: max(14px, calc((100vw - 480px) / 2 + 14px));
+  right: max(14px, calc((100vw - var(--app-visual-width)) / 2 + 14px));
   bottom: max(10px, env(safe-area-inset-bottom));
-  left: max(14px, calc((100vw - 480px) / 2 + 14px));
+  left: max(14px, calc((100vw - var(--app-visual-width)) / 2 + 14px));
   z-index: 35;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -2559,43 +2568,27 @@ input::placeholder {
 @media (orientation: landscape) and (max-height: 520px) {
   .app {
     min-height: 100svh;
-    overflow: auto;
+    overflow: hidden;
   }
 
   .phone-shell {
-    width: min(900px, 100vw);
-    height: 100svh;
-    max-width: none;
-    padding-inline: max(18px, env(safe-area-inset-left), env(safe-area-inset-right));
-    padding-bottom: calc(70px + env(safe-area-inset-bottom));
-    overflow-y: auto;
+    pointer-events: none;
+    filter: blur(8px);
   }
 
-  .bottom-nav {
-    right: max(18px, env(safe-area-inset-right));
-    left: max(18px, env(safe-area-inset-left));
-  }
-
-  .content {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .bat-dashboard {
-    grid-template-columns: minmax(0, 1fr) minmax(300px, 0.9fr);
-    align-items: start;
-  }
-
-  .dashboard-controls {
-    grid-column: 1 / -1;
-  }
-
-  .bat-dashboard .dashboard-section:first-of-type,
-  .bat-dashboard .comparison-section {
-    grid-column: auto;
-  }
-
-  .bat-dashboard .dashboard-section:last-of-type {
-    grid-column: 1 / -1;
+  body::before {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    color: #ffffff;
+    background: rgba(16, 18, 23, 0.92);
+    font-size: 1rem;
+    font-weight: 950;
+    text-align: center;
+    content: "縦向きで使ってください";
   }
 }
 

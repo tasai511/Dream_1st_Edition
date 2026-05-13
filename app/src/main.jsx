@@ -6,11 +6,24 @@ import "./styles.css";
 const fallback = document.getElementById("vite-fallback");
 if (fallback) fallback.remove();
 
+const BASE_APP_WIDTH = 480;
+const MAX_APP_WIDTH = 720;
+
+const updateAppScale = () => {
+  const viewportWidth = window.visualViewport?.width || window.innerWidth || BASE_APP_WIDTH;
+  const visualWidth = viewportWidth > BASE_APP_WIDTH ? Math.min(MAX_APP_WIDTH, viewportWidth) : viewportWidth;
+  const scale = viewportWidth > BASE_APP_WIDTH ? visualWidth / BASE_APP_WIDTH : 1;
+  document.documentElement.style.setProperty("--app-scale", scale.toFixed(4));
+  document.documentElement.style.setProperty("--app-visual-width", `${visualWidth}px`);
+};
+
 const lockPortrait = () => {
   if (screen.orientation?.lock) {
-    screen.orientation.lock("portrait").catch(() => {});
+    screen.orientation.lock("portrait-primary").catch(() => {});
   }
 };
+
+updateAppScale();
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -24,3 +37,11 @@ window.addEventListener("load", () => {
     navigator.serviceWorker.register(`${import.meta.env.BASE_URL}service-worker.js`).catch(() => {});
   }
 });
+
+window.visualViewport?.addEventListener("resize", updateAppScale);
+window.addEventListener("resize", updateAppScale);
+window.addEventListener("orientationchange", () => {
+  updateAppScale();
+  lockPortrait();
+});
+window.addEventListener("pointerdown", lockPortrait, { once: true });
