@@ -2680,6 +2680,8 @@ input::placeholder {
   overflow: hidden;
   border-radius: var(--radius);
   background: rgba(0, 0, 0, 0.13);
+  touch-action: none;
+  user-select: none;
 }
 
 .chart-wrap svg {

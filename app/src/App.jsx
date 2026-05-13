@@ -1160,10 +1160,7 @@ function ScoreComparison({ daily, range }) {
 function RecordPanel({ daily, range, filterControl = null, graphColor = null }) {
   const [mode, setMode] = useState("count");
   const buckets = useMemo(() => comparisonBuckets(daily, range), [daily, range]);
-  const visibleBuckets = useMemo(() => {
-    const next = range === RANGE_TODAY ? buckets.slice(0, 7) : buckets;
-    return [...next].reverse();
-  }, [buckets, range]);
+  const visibleBuckets = useMemo(() => [...buckets].reverse(), [buckets]);
   const scoreVisibleRange = range === RANGE_TODAY ? 7 : range === RANGE_WEEK ? 4 : range === RANGE_MONTH ? 4 : 5;
   const periodUnit = range === RANGE_WEEK ? "週" : range === RANGE_MONTH ? "月" : "日";
   const scoreData = useMemo(() => visibleBuckets.map((bucket) => ({
