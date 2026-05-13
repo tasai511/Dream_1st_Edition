@@ -1073,6 +1073,7 @@ function DailyResultCard({ card, showBadges }) {
 function DailyBadgeMark({ label, description }) {
   const [selectedBadge, setSelectedBadge] = useState(null);
   const definition = makeBadgeDefinition(canonicalBadgeLabel(label), { description });
+  const labelParts = splitDailyBadgeLabel(definition.label);
   return (
     <>
       <button
@@ -1083,7 +1084,9 @@ function DailyBadgeMark({ label, description }) {
       >
         <RarityIcon rarity={definition.rarity} />
         <b className="daily-badge-rarity-mark" aria-hidden="true">{definition.rarity}</b>
-        <span className="daily-badge-label">{definition.label}</span>
+        <span className="daily-badge-label">
+          {labelParts.map((part) => <span key={part}>{part}</span>)}
+        </span>
         <i className="daily-badge-get-stamp" aria-hidden="true">GET!</i>
       </button>
       {selectedBadge && (
@@ -2888,6 +2891,13 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
       </section>
     </div>
   );
+}
+
+function splitDailyBadgeLabel(label) {
+  const prefixes = ["毎日", "毎週", "毎月"];
+  const prefix = prefixes.find((item) => label.startsWith(item));
+  if (!prefix || label.length <= prefix.length) return [label];
+  return [prefix, label.slice(prefix.length)];
 }
 
 function BottomNav({ tab, setTab }) {
