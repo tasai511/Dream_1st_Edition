@@ -990,7 +990,7 @@ function DailyResultCards({ summary, showBadges = true, selected = false, onSele
   if (onSelect) {
     return (
       <article
-        className={`daily-result-group-card record-card-button ${selected ? "selected" : ""}`}
+        className="daily-result-group-card record-card-button"
         onClick={(event) => {
           if (event.target.closest("button")) return;
           onSelect();
