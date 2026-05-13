@@ -37,13 +37,14 @@ const RARITY_COLORS = {
   SR: "#d7dee8",
   UR: "#ffd700",
 };
+const PUBLIC_ASSET_BASE = import.meta.env.BASE_URL || "./";
 const RARITY_ICON_URLS = {
-  C: "/images/rarity_c_common.svg?v=7",
-  U: "/images/rarity_u_uncommon.svg?v=7",
-  R: "/images/rarity_r_rare.svg?v=7",
-  RR: "/images/rarity_rr_double_rare.svg?v=7",
-  SR: "/images/rarity_sr_super_rare.svg?v=7",
-  UR: "/images/rarity_ur_ultra_rare.svg?v=7",
+  C: `${PUBLIC_ASSET_BASE}images/rarity_c_common.svg?v=8`,
+  U: `${PUBLIC_ASSET_BASE}images/rarity_u_uncommon.svg?v=8`,
+  R: `${PUBLIC_ASSET_BASE}images/rarity_r_rare.svg?v=8`,
+  RR: `${PUBLIC_ASSET_BASE}images/rarity_rr_double_rare.svg?v=8`,
+  SR: `${PUBLIC_ASSET_BASE}images/rarity_sr_super_rare.svg?v=8`,
+  UR: `${PUBLIC_ASSET_BASE}images/rarity_ur_ultra_rare.svg?v=8`,
 };
 const UNIQUE_TOTAL_COUNT_TARGETS = [100, 500, 1000, 3000, 5000, 10000, 30000, 50000, 100000];
 const UNIQUE_BEST_TARGETS = [500, 600, 700, 800, 900, 999];

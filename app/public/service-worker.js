@@ -1,4 +1,4 @@
-const CACHE_NAME = "swing-log-v67";
+const CACHE_NAME = "swing-log-v68";
 const ASSETS = [
   "./",
   "./index.html",
@@ -13,8 +13,6 @@ const ASSETS = [
   "./images/rarity_r_rare.svg",
   "./images/rarity_rr_double_rare.svg",
   "./images/rarity_sr_super_rare.svg",
-  "./images/rarity_ar_art_rare.svg",
-  "./images/rarity_sar_special_art_rare.svg",
   "./images/rarity_ur_ultra_rare.svg",
 ];
 
