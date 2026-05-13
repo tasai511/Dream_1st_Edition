@@ -3376,16 +3376,6 @@ select:focus,
   background: var(--hot);
 }
 
-.record-edit-toggle {
-  border-color: transparent;
-  color: #fff;
-  background: var(--hot);
-}
-
-.record-edit-toggle:hover {
-  background: var(--hot-dark);
-}
-
 .progress-meter > .meter-badge.rarity-c { color: #9aa3af; }
 .progress-meter > .meter-badge.rarity-u { color: #4cc38a; }
 .progress-meter > .meter-badge.rarity-r { color: #4d8dff; }
