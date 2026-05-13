@@ -1,10 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
-  <title>C Common</title>
-  <desc>Dream badge rarity icon: C Common</desc>
-  <g fill="currentColor">
-
-    <circle cx="32" cy="32" r="22"/>
-    <circle cx="32" cy="32" r="13" fill="none" stroke="white" stroke-width="4" opacity=".28"/>
-
+  <title>COMMON</title>
+  <desc>Dream-1 badge rarity icon: COMMON</desc>
+  <g color="#ffffff" stroke-linecap="round">
+    <circle cx="32" cy="32" r="20" fill="currentColor" fill-opacity="0.5" stroke="currentColor" stroke-width="4"/>
+    <circle cx="32" cy="32" r="6" fill="currentColor" opacity="0.9"/>
   </g>
 </svg>

@@ -13,14 +13,10 @@ const updateAppScale = () => {
   const viewportWidth = window.visualViewport?.width || window.innerWidth || BASE_APP_WIDTH;
   const visualWidth = viewportWidth > BASE_APP_WIDTH ? Math.min(MAX_APP_WIDTH, viewportWidth) : viewportWidth;
   const scale = viewportWidth > BASE_APP_WIDTH ? visualWidth / BASE_APP_WIDTH : 1;
+  const fontScale = 1 + ((scale - 1) * 0.8);
   document.documentElement.style.setProperty("--app-scale", scale.toFixed(4));
+  document.documentElement.style.setProperty("--app-font-scale", fontScale.toFixed(4));
   document.documentElement.style.setProperty("--app-visual-width", `${visualWidth}px`);
-};
-
-const lockPortrait = () => {
-  if (screen.orientation?.lock) {
-    screen.orientation.lock("portrait-primary").catch(() => {});
-  }
 };
 
 updateAppScale();
@@ -32,7 +28,6 @@ createRoot(document.getElementById("root")).render(
 );
 
 window.addEventListener("load", () => {
-  lockPortrait();
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register(`${import.meta.env.BASE_URL}service-worker.js`).catch(() => {});
   }
@@ -40,8 +35,4 @@ window.addEventListener("load", () => {
 
 window.visualViewport?.addEventListener("resize", updateAppScale);
 window.addEventListener("resize", updateAppScale);
-window.addEventListener("orientationchange", () => {
-  updateAppScale();
-  lockPortrait();
-});
-window.addEventListener("pointerdown", lockPortrait, { once: true });
+window.addEventListener("orientationchange", updateAppScale);

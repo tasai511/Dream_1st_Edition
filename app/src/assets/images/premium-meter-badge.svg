@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 260" role="img" aria-label="Rare badge">
+  <defs>
+    <linearGradient id="gold" x1="35" x2="205" y1="20" y2="238" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#e4f1ff"/>
+      <stop offset=".26" stop-color="#4d8dff"/>
+      <stop offset=".52" stop-color="#9acaff"/>
+      <stop offset=".78" stop-color="#2158bc"/>
+      <stop offset="1" stop-color="#6aa7ff"/>
+    </linearGradient>
+    <linearGradient id="inner" x1="58" x2="188" y1="56" y2="203" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#d9ecff"/>
+      <stop offset=".55" stop-color="#4d8dff"/>
+      <stop offset="1" stop-color="#1f5fcf"/>
+    </linearGradient>
+    <filter id="shine" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="2"/>
+      <feOffset dy="2"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope=".35"/>
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <path d="M120 11c43 0 80 13 103 34v124c0 31-44 63-103 82-59-19-103-51-103-82V45c23-21 60-34 103-34Z" fill="#173a83"/>
+  <path d="M120 19c39 0 73 12 94 30v116c0 27-39 56-94 74-55-18-94-47-94-74V49c21-18 55-30 94-30Z" fill="url(#gold)" filter="url(#shine)"/>
+  <path d="M120 45c31 0 58 8 76 22v91c0 20-31 42-76 58-45-16-76-38-76-58V67c18-14 45-22 76-22Z" fill="url(#inner)" opacity=".88"/>
+  <path d="M55 74c34-18 96-20 130 0" fill="none" stroke="#10285f" stroke-linecap="round" stroke-width="6" opacity=".74"/>
+  <g fill="#10285f">
+    <path d="m120 74 8 16 18 3-13 13 3 18-16-8-16 8 3-18-13-13 18-3z"/>
+    <path d="m82 83 5 10 11 2-8 8 2 11-10-5-10 5 2-11-8-8 11-2z"/>
+    <path d="m158 83 5 10 11 2-8 8 2 11-10-5-10 5 2-11-8-8 11-2z"/>
+  </g>
+  <text x="120" y="156" fill="#0f2559" font-family="Georgia, serif" font-size="44" font-weight="700" text-anchor="middle">GET</text>
+  <path d="M65 170h110" stroke="#10285f" stroke-linecap="round" stroke-width="5" opacity=".7"/>
+  <g fill="#10285f" opacity=".9">
+    <path d="m88 190 5 10 11 2-8 8 2 11-10-5-10 5 2-11-8-8 11-2z"/>
+    <path d="m120 190 5 10 11 2-8 8 2 11-10-5-10 5 2-11-8-8 11-2z"/>
+    <path d="m152 190 5 10 11 2-8 8 2 11-10-5-10 5 2-11-8-8 11-2z"/>
+  </g>
+</svg>

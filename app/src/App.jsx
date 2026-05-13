@@ -1,13 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import batIconUrl from "./assets/images/bat-icon.svg";
-import rarityArIconUrl from "./assets/images/rarity_ar_art_rare.svg";
-import rarityCIconUrl from "./assets/images/rarity_c_common.svg";
-import rarityRrIconUrl from "./assets/images/rarity_rr_double_rare.svg";
-import rarityRIconUrl from "./assets/images/rarity_r_rare.svg";
-import raritySarIconUrl from "./assets/images/rarity_sar_special_art_rare.svg";
-import raritySrIconUrl from "./assets/images/rarity_sr_super_rare.svg";
-import rarityUIconUrl from "./assets/images/rarity_u_uncommon.svg";
-import rarityUrIconUrl from "./assets/images/rarity_ur_ultra_rare.svg";
+import premiumMeterBadgeUrl from "./assets/images/premium-meter-badge.svg";
 
 const STORAGE_KEY = "dream1-swing-tracker-v1";
 const ALL = "__all__";
@@ -18,15 +12,13 @@ const RANGE_MONTH = "month";
 const RANGE_TOTAL = "total";
 const kMinChartVisibleDays = 7;
 const kMaxChartVisibleDays = 365;
-const RARITY_ORDER = ["C", "U", "R", "RR", "SR", "AR", "SAR", "UR"];
+const RARITY_ORDER = ["C", "U", "R", "RR", "SR", "UR"];
 const RARITY_LABELS = {
   C: "Common",
   U: "Uncommon",
   R: "Rare",
   RR: "Double Rare",
   SR: "Super Rare",
-  AR: "Art Rare",
-  SAR: "Special Art Rare",
   UR: "Ultra Rare",
 };
 const RARITY_POINTS = {
@@ -35,19 +27,23 @@ const RARITY_POINTS = {
   R: 3,
   RR: 5,
   SR: 10,
-  AR: 15,
-  SAR: 30,
-  UR: 50,
+  UR: 30,
+};
+const RARITY_COLORS = {
+  C: "#b47a42",
+  U: "#4cc38a",
+  R: "#4d8dff",
+  RR: "#a878ff",
+  SR: "#d7dee8",
+  UR: "#ffd700",
 };
 const RARITY_ICON_URLS = {
-  C: rarityCIconUrl,
-  U: rarityUIconUrl,
-  R: rarityRIconUrl,
-  RR: rarityRrIconUrl,
-  SR: raritySrIconUrl,
-  AR: rarityArIconUrl,
-  SAR: raritySarIconUrl,
-  UR: rarityUrIconUrl,
+  C: "/images/rarity_c_common.svg?v=7",
+  U: "/images/rarity_u_uncommon.svg?v=7",
+  R: "/images/rarity_r_rare.svg?v=7",
+  RR: "/images/rarity_rr_double_rare.svg?v=7",
+  SR: "/images/rarity_sr_super_rare.svg?v=7",
+  UR: "/images/rarity_ur_ultra_rare.svg?v=7",
 };
 const UNIQUE_TOTAL_COUNT_TARGETS = [100, 500, 1000, 3000, 5000, 10000, 30000, 50000, 100000];
 const UNIQUE_BEST_TARGETS = [500, 600, 700, 800, 900, 999];
@@ -67,16 +63,16 @@ const BADGE_PERIODS = [
   ["total", "累計バッジ"],
 ];
 const HOME_BADGE_DEFINITIONS = [
-  ...[50, 100, 200, 300, 500].map((target) => ({ period: RANGE_TODAY, group: "daily", metric: "count", target, label: `今日${target}回` })),
-  ...[300, 400, 500, 600, 700].map((target) => ({ period: RANGE_TODAY, group: "daily", metric: "avg", target, label: `日平均${target}` })),
-  ...[500, 600, 700, 800, 900].map((target) => ({ period: RANGE_TODAY, group: "daily", metric: "best", target, label: `今日ベスト${target}` })),
+  ...[50, 100, 200, 300, 500].map((target) => ({ period: RANGE_TODAY, group: "daily", metric: "count", target, label: `毎日${target}回` })),
+  ...[300, 400, 500, 600, 700].map((target) => ({ period: RANGE_TODAY, group: "daily", metric: "avg", target, label: `毎日平均${target}` })),
+  ...[500, 600, 700, 800, 900].map((target) => ({ period: RANGE_TODAY, group: "daily", metric: "best", target, label: `毎日ベスト${target}` })),
   ...[2, 3, 7, 14, 30, 60, 100, 365].map((target) => ({ period: RANGE_TODAY, group: "daily", metric: "streak", target, label: `${target}日連続練習`, trigger: "exact" })),
-  ...[300, 500, 1000, 2000].map((target) => ({ period: RANGE_WEEK, group: "weekly", metric: "count", target, label: `今週${target}回` })),
-  ...[300, 400, 500, 600].map((target) => ({ period: RANGE_WEEK, group: "weekly", metric: "avg", target, label: `週平均${target}` })),
-  ...[[3, "今週3日練習"], [5, "今週5日練習"], [7, "今週皆勤"]].map(([target, label]) => ({ period: RANGE_WEEK, group: "weekly", metric: "days", target, label })),
-  ...[500, 1000, 2000, 3000, 5000].map((target) => ({ period: RANGE_MONTH, group: "monthly", metric: "count", target, label: `月間${target}回` })),
-  ...[300, 400, 500, 600].map((target) => ({ period: RANGE_MONTH, group: "monthly", metric: "avg", target, label: `月平均${target}` })),
-  ...[[5, "今月5日練習"], [10, "今月10日練習"], [20, "今月20日練習"], ["all", "今月毎日練習"]].map(([target, label]) => ({ period: RANGE_MONTH, group: "monthly", metric: "days", target, label })),
+  ...[300, 500, 1000, 2000].map((target) => ({ period: RANGE_WEEK, group: "weekly", metric: "count", target, label: `毎週${target}回` })),
+  ...[300, 400, 500, 600].map((target) => ({ period: RANGE_WEEK, group: "weekly", metric: "avg", target, label: `毎週平均${target}` })),
+  ...[[3, "毎週3日練習"], [5, "毎週5日練習"], [7, "毎週皆勤"]].map(([target, label]) => ({ period: RANGE_WEEK, group: "weekly", metric: "days", target, label })),
+  ...[500, 1000, 2000, 3000, 5000].map((target) => ({ period: RANGE_MONTH, group: "monthly", metric: "count", target, label: `毎月${target}回` })),
+  ...[300, 400, 500, 600].map((target) => ({ period: RANGE_MONTH, group: "monthly", metric: "avg", target, label: `毎月平均${target}` })),
+  ...[[5, "毎月5日練習"], [10, "毎月10日練習"], [20, "毎月20日練習"], ["all", "毎月毎日練習"]].map(([target, label]) => ({ period: RANGE_MONTH, group: "monthly", metric: "days", target, label })),
 ];
 const UNIQUE_BADGE_DEFINITIONS = [
   ...UNIQUE_TOTAL_COUNT_TARGETS.map((target) => ({ metric: "count", target, label: `累計${target}回` })),
@@ -118,13 +114,119 @@ const META_BADGE_DEFINITIONS = [
 ];
 
 const defaultDb = {
-  activeName: "遥太",
-  names: ["遥太"],
-  bats: ["赤バット", "黒バット"],
-  defaultBat: "赤バット",
-  theme: "red",
+  activeName: "",
+  names: [],
+  nameColors: {},
+  bats: [],
+  batColors: {},
+  defaultBat: "",
+  theme: "#ff7a45",
   records: [],
 };
+
+const BAT_COLOR_PALETTE = [
+  "#ff3044",
+  "#ff9f1c",
+  "#f4d35e",
+  "#8ac926",
+  "#249c68",
+  "#31c7c7",
+  "#2f86ff",
+  "#4d5bff",
+  "#a26bff",
+  "#f472b6",
+  "#b8834b",
+  "#8d95a4",
+];
+
+function normalizeHexColor(value, fallback = BAT_COLOR_PALETTE[0]) {
+  const color = String(value || "").trim();
+  return /^#[0-9a-f]{6}$/i.test(color) ? color : fallback;
+}
+
+function hexToRgb(value) {
+  const color = normalizeHexColor(value).slice(1);
+  return {
+    r: Number.parseInt(color.slice(0, 2), 16),
+    g: Number.parseInt(color.slice(2, 4), 16),
+    b: Number.parseInt(color.slice(4, 6), 16),
+  };
+}
+
+function rgbStringForHex(value) {
+  const { r, g, b } = hexToRgb(value);
+  return `${r}, ${g}, ${b}`;
+}
+
+function darkenHex(value, ratio = 0.62) {
+  const { r, g, b } = hexToRgb(value);
+  const channel = (next) => Math.max(0, Math.min(255, Math.round(next * ratio))).toString(16).padStart(2, "0");
+  return `#${channel(r)}${channel(g)}${channel(b)}`;
+}
+
+function themeColorFor(theme) {
+  if (theme === "red") return "#ff7a45";
+  if (theme === "blue") return "#4cc9f0";
+  if (theme === "green") return "#7ddf8a";
+  return normalizeHexColor(theme, BAT_COLOR_PALETTE[0]);
+}
+
+function themeStyleFor(theme) {
+  const color = themeColorFor(theme);
+  const rgb = rgbStringForHex(color);
+  return {
+    "--hot": color,
+    "--hot-rgb": rgb,
+    "--hot-dark": darkenHex(color),
+    "--line-hot": `rgba(${rgb}, 0.36)`,
+    "--app-bg": `radial-gradient(circle at 50% -14%, rgba(${rgb}, 0.2), transparent 32%), linear-gradient(180deg, #15161d 0%, #08090d 100%)`,
+  };
+}
+
+function fallbackBatColor(bat, index = 0) {
+  const name = String(bat || "");
+  if (name.includes("赤")) return "#ff4055";
+  if (name.includes("黒")) return "#8d95a4";
+  if (name.includes("青")) return "#3b8dff";
+  if (name.includes("緑")) return "#249c68";
+  if (name.includes("黄") || name.includes("金")) return "#f6b73c";
+  return BAT_COLOR_PALETTE[index % BAT_COLOR_PALETTE.length];
+}
+
+function normalizeBatColors(source, bats) {
+  return bats.reduce((colors, bat, index) => ({
+    ...colors,
+    [bat]: normalizeHexColor(source?.[bat], fallbackBatColor(bat, index)),
+  }), {});
+}
+
+function firstAvailableColor(usedColors, fallback = BAT_COLOR_PALETTE[0]) {
+  return BAT_COLOR_PALETTE.find((color) => !usedColors.has(color)) || fallback;
+}
+
+function normalizeNameColors(source, names, legacyTheme = BAT_COLOR_PALETTE[0]) {
+  const used = new Set();
+  return names.reduce((colors, name, index) => {
+    const fallback = index === 0 ? normalizeHexColor(legacyTheme, BAT_COLOR_PALETTE[0]) : firstAvailableColor(used);
+    const color = normalizeHexColor(source?.[name], fallback);
+    used.add(color);
+    return {
+      ...colors,
+      [name]: color,
+    };
+  }, {});
+}
+
+function batColorFor(db, bat) {
+  const index = Math.max(0, db.bats.indexOf(bat));
+  return normalizeHexColor(db.batColors?.[bat], fallbackBatColor(bat, index));
+}
+
+function nameColorFor(db, name) {
+  const legacyTheme = themeColorFor(db.theme);
+  const index = Math.max(0, db.names.indexOf(name));
+  return normalizeHexColor(db.nameColors?.[name], index === 0 ? legacyTheme : BAT_COLOR_PALETTE[index % BAT_COLOR_PALETTE.length]);
+}
 
 function SvgIcon({ type }) {
   const props = { viewBox: "0 0 24 24", "aria-hidden": "true" };
@@ -147,6 +249,10 @@ function SvgIcon({ type }) {
 
 function Icon({ type }) {
   return <span className="icon"><SvgIcon type={type} /></span>;
+}
+
+function BatIcon({ color = "#8d95a4" }) {
+  return <span className="bat-color-icon" style={{ "--bat-icon-color": normalizeHexColor(color, "#8d95a4") }} aria-hidden="true" />;
 }
 
 function ButtonIcon({ type }) {
@@ -258,12 +364,17 @@ function loadDb() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return structuredClone(defaultDb);
     const parsed = JSON.parse(raw);
+    const bats = Array.isArray(parsed.bats) ? parsed.bats : [];
+    const names = Array.isArray(parsed.names) ? parsed.names : [];
+    const legacyTheme = ["red", "blue", "green"].includes(parsed.theme) ? themeColorFor(parsed.theme) : normalizeHexColor(parsed.theme, BAT_COLOR_PALETTE[0]);
     return {
-      activeName: parsed.activeName || parsed.names?.[0] || "",
-      names: Array.isArray(parsed.names) ? parsed.names : [],
-      bats: Array.isArray(parsed.bats) ? parsed.bats : [],
+      activeName: parsed.activeName || names[0] || "",
+      names,
+      nameColors: normalizeNameColors(parsed.nameColors, names, legacyTheme),
+      bats,
+      batColors: normalizeBatColors(parsed.batColors, bats),
       defaultBat: parsed.bats?.includes(parsed.defaultBat) ? parsed.defaultBat : parsed.bats?.[0] || "",
-      theme: ["red", "blue", "green"].includes(parsed.theme) ? parsed.theme : "red",
+      theme: legacyTheme,
       records: Array.isArray(parsed.records) ? parsed.records : [],
     };
   } catch {
@@ -561,8 +672,8 @@ function comparisonBuckets(daily, range) {
     return {
       label: compareLabel(bucketIndex, range) || (range === RANGE_MONTH ? monthLabel(start) : formatRangeDate(start)),
       rangeLabel: `${toISO(start).slice(5).replace("-", "/")}-${toISO(end).slice(5).replace("-", "/")}`,
-      avg: avgDays ? Math.round(avgTotal / avgDays) : 0,
-      best,
+      avg: avgDays ? Math.round(avgTotal / avgDays) : null,
+      best: count ? best : null,
       count,
     };
   });
@@ -652,7 +763,16 @@ function buildAchievementCardWithTargets({ key, icon, label, value, unit, kind, 
   };
 }
 
-function ProgressMeter({ kind, value, range, variableTarget, targets }) {
+function progressUnitForKind(kind) {
+  if (kind === "count") return "回";
+  if (kind === "avg" || kind === "best") return "点";
+  if (kind === "streak" || kind === "days") return "日";
+  if (kind === "badge-points") return "pt";
+  if (kind === "badge-types") return "種類";
+  return "";
+}
+
+function ProgressMeter({ kind, value, range, variableTarget, targets, focus = false }) {
   const [selectedBadge, setSelectedBadge] = useState(null);
   const meterRef = useRef(null);
   const info = progressInfo(kind, Number(value || 0), range, variableTarget, targets);
@@ -704,7 +824,16 @@ function ProgressMeter({ kind, value, range, variableTarget, targets }) {
             transform={meterRotation}
           />
         </svg>
-        <span className="meter-remaining"><em>あと</em><b>{info.remaining.toLocaleString("ja-JP")}</b></span>
+        {focus ? (
+          <div className="meter-premium-badge">
+            <img src={premiumMeterBadgeUrl} alt="" aria-hidden="true" />
+          </div>
+        ) : (
+          <span className="meter-remaining">
+            <em>あと</em>
+            <b>{info.remaining.toLocaleString("ja-JP")}</b>
+          </span>
+        )}
         <button
           className={`meter-badge ring-meter-badge rarity-${targetBadge.rarity.toLowerCase()}`}
           type="button"
@@ -773,14 +902,10 @@ function AchievementFocusCard({ card }) {
       <div className="achievement-focus-copy">
         <div className="metric-label"><Icon type={card.icon} />{card.label}</div>
         <strong>{card.value.toLocaleString("ja-JP")}<span>{card.unit}</span></strong>
-        {card.info && <p>{card.info.badgeLabel}まで</p>}
-        <div className="focus-progress-bar" aria-hidden="true">
-          <span style={{ width: `${Math.round(card.ratio * 100)}%` }} />
-        </div>
-        {card.info && <small>あと{card.info.remaining.toLocaleString("ja-JP")}でバッジ獲得！</small>}
+        {card.info && <BadgeChip label={card.info.badgeLabel} count={0} description={card.info.badgeDescription} />}
       </div>
       {card.badgeEligible && (
-        <ProgressMeter kind={card.kind} value={card.value} range={card.range} variableTarget={card.variableTarget} targets={card.targets} />
+        <ProgressMeter kind={card.kind} value={card.value} range={card.range} variableTarget={card.variableTarget} targets={card.targets} focus />
       )}
     </article>
   );
@@ -808,6 +933,162 @@ function AchievementCompactCard({ card, onSelect }) {
         <small>自己ベスト更新中！</small>
       )}
     </button>
+  );
+}
+
+function dailyBadgeMilestones(metric, value, targets = null) {
+  const definitions = targets || HOME_BADGE_DEFINITIONS
+    .filter((definition) => definition.period === RANGE_TODAY && definition.metric === metric && typeof definition.target === "number");
+  return definitions
+    .sort((a, b) => a.target - b.target)
+    .map((definition) => ({
+      ...definition,
+      earned: value >= definition.target,
+      position: value > 0 ? clamp((definition.target / value) * 100, 0, 100) : 0,
+    }));
+}
+
+function dailyResultBadge(metric, value, targets = null) {
+  return [...dailyBadgeMilestones(metric, value, targets)].reverse().find((definition) => definition.earned) || null;
+}
+
+function milestoneAlpha(position) {
+  const ratio = clamp(position / 100, 0, 1);
+  if (ratio <= 0.28) return clamp((ratio / 0.28) * 0.18, 0.04, 0.18);
+  if (ratio <= 0.68) return 0.18 + ((ratio - 0.28) / 0.4) * 0.5;
+  return 0.68 + ((ratio - 0.68) / 0.32) * 0.32;
+}
+
+function DailyResultCards({ summary, showBadges = true, selected = false, onSelect = null }) {
+  const cards = [
+    {
+      key: "count",
+      icon: "count",
+      label: "スイング数",
+      value: summary.count || 0,
+      unit: "回",
+      metric: "count",
+    },
+    {
+      key: "avg",
+      icon: "avg",
+      label: "平均スコア",
+      value: summary.avg || 0,
+      unit: "点",
+      metric: "avg",
+    },
+    {
+      key: "best",
+      icon: "best",
+      label: "ベストスコア",
+      value: summary.best || 0,
+      unit: "点",
+      metric: "best",
+    },
+  ];
+
+  if (onSelect) {
+    return (
+      <article
+        className={`daily-result-group-card record-card-button ${selected ? "selected" : ""}`}
+        onClick={(event) => {
+          if (event.target.closest("button")) return;
+          onSelect();
+        }}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            onSelect();
+          }
+        }}
+        role="button"
+        tabIndex={0}
+        aria-pressed={selected}
+      >
+        <div className="daily-result-group-title">
+          <span className="icon all-bat-icon"><BatIcon color="var(--hot)" /></span>
+          <strong>全バット合計</strong>
+        </div>
+        <div className="daily-result-grid">
+          {cards.map((card) => <DailyResultCard card={card} showBadges={showBadges} key={card.key} />)}
+        </div>
+      </article>
+    );
+  }
+
+  return <div className="daily-result-grid">{cards.map((card) => <DailyResultCard card={card} showBadges={showBadges} key={card.key} />)}</div>;
+}
+
+function DailyResultCard({ card, showBadges }) {
+  const milestones = dailyBadgeMilestones(card.metric, card.value);
+  const earnedBadge = dailyResultBadge(card.metric, card.value);
+  const visibleMilestones = milestones.filter((milestone) => milestone.earned);
+
+  return (
+    <article className={`daily-result-card ${card.key}`}>
+      <div className="metric-label"><Icon type={card.icon} />{card.label}</div>
+      {showBadges && (
+        <>
+          <div className="daily-score-row">
+            <strong>{Number(card.value || 0).toLocaleString("ja-JP")}<span>{card.unit}</span></strong>
+            <div
+              className="daily-badge-stage"
+              style={earnedBadge ? { "--daily-stage-badge-color": rarityColorFor(rarityForBadge(earnedBadge.label)) } : null}
+            >
+              {earnedBadge ? (
+                <DailyBadgeMark label={earnedBadge.label} description={earnedBadge.description || `${earnedBadge.label}をゲット`} />
+              ) : (
+                <span className="daily-badge-empty">今日はまだ未獲得</span>
+              )}
+            </div>
+          </div>
+          <div className={`milestone-track ${visibleMilestones.length ? "earned" : ""}`} aria-hidden="true">
+            <span className="milestone-fill" />
+            {visibleMilestones.map((milestone) => {
+              const alpha = milestoneAlpha(milestone.position);
+              return (
+              <i
+                className={`milestone-dot ${earnedBadge?.label === milestone.label ? "current" : ""}`}
+                style={{
+                  left: `${milestone.position}%`,
+                  "--milestone-alpha": alpha.toFixed(2),
+                  "--milestone-ring-alpha": Math.max(0.08, alpha * 0.7).toFixed(2),
+                }}
+                key={milestone.label}
+              >
+                <RarityIcon rarity={rarityForBadge(milestone.label)} />
+                <span>{milestone.target}</span>
+              </i>
+              );
+            })}
+          </div>
+        </>
+      )}
+      {!showBadges && <strong>{Number(card.value || 0).toLocaleString("ja-JP")}<span>{card.unit}</span></strong>}
+    </article>
+  );
+}
+
+function DailyBadgeMark({ label, description }) {
+  const [selectedBadge, setSelectedBadge] = useState(null);
+  const definition = makeBadgeDefinition(canonicalBadgeLabel(label), { description });
+  return (
+    <>
+      <button
+        type="button"
+        className={`daily-badge-mark rarity-${definition.rarity.toLowerCase()}`}
+        onClick={() => setSelectedBadge({ ...definition, earnedCount: 0, lockedSecret: false })}
+        aria-label={`${definition.label}の詳細`}
+      >
+        <RarityIcon rarity={definition.rarity} />
+        <b className="daily-badge-rarity-mark" aria-hidden="true">{definition.rarity}</b>
+        <span className="daily-badge-label">{definition.label}</span>
+        <i className="daily-badge-get-stamp" aria-hidden="true">GET!</i>
+      </button>
+      {selectedBadge && (
+        <BadgeDetailPopover badge={selectedBadge} onClose={() => setSelectedBadge(null)} />
+      )}
+    </>
   );
 }
 
@@ -872,49 +1153,49 @@ function ScoreComparison({ daily, range }) {
   );
 }
 
-function RecordPanel({ daily, range }) {
+function RecordPanel({ daily, range, filterControl = null, graphColor = null }) {
   const [mode, setMode] = useState("count");
   const buckets = useMemo(() => comparisonBuckets(daily, range), [daily, range]);
-  const visibleBuckets = useMemo(() => [...buckets].reverse(), [buckets]);
-  const visibleRange = range === RANGE_WEEK ? 5 : range === RANGE_MONTH ? 6 : 7;
-  const scoreVisibleRange = range === RANGE_WEEK ? 4 : range === RANGE_MONTH ? 4 : 5;
+  const visibleBuckets = useMemo(() => {
+    const next = range === RANGE_TODAY ? buckets.slice(0, 7) : buckets;
+    return [...next].reverse();
+  }, [buckets, range]);
+  const scoreVisibleRange = range === RANGE_TODAY ? 7 : range === RANGE_WEEK ? 4 : range === RANGE_MONTH ? 4 : 5;
   const periodUnit = range === RANGE_WEEK ? "週" : range === RANGE_MONTH ? "月" : "日";
   const scoreData = useMemo(() => visibleBuckets.map((bucket) => ({
-    date: bucket.label,
-    label: bucket.label,
-    count: bucket.count,
-    avg: bucket.avg,
-    best: bucket.best,
+      date: bucket.label,
+      label: bucket.label,
+      isToday: bucket.label === "今日",
+      count: bucket.count,
+      avg: bucket.avg,
+      best: bucket.best,
   })), [visibleBuckets]);
 
   return (
-    <section className="dashboard-section record-section">
-      <div className="section-row tight">
-        <div className="record-tabs" role="tablist" aria-label="記録表示">
-          <button type="button" className={mode === "count" ? "selected" : ""} onClick={() => setMode("count")}>毎{periodUnit}のスイング数</button>
-          <button type="button" className={mode === "score" ? "selected" : ""} onClick={() => setMode("score")}>毎{periodUnit}のスコア</button>
-        </div>
-      </div>
+    <section className="dashboard-section record-section" style={graphColor ? { "--graph-color": graphColor } : undefined}>
       {visibleBuckets.length ? (
         mode === "count"
           ? <CountBars buckets={visibleBuckets} />
           : <Chart data={scoreData} initialRange={Math.min(scoreData.length, scoreVisibleRange)} />
       ) : <p className="empty compact-empty">記録がありません。</p>}
+      <div className={`section-row tight ${filterControl ? "graph-control-row" : ""}`}>
+        {filterControl}
+        <div className="record-tabs" role="tablist" aria-label="記録表示">
+          <button type="button" className={mode === "count" ? "selected" : ""} onClick={() => setMode("count")}>毎{periodUnit}のスイング数</button>
+          <button type="button" className={mode === "score" ? "selected" : ""} onClick={() => setMode("score")}>毎{periodUnit}のスコア</button>
+        </div>
+      </div>
     </section>
   );
 }
 
 function EarnedBadgesCard({ badgeCounts }) {
   const [expanded, setExpanded] = useState(false);
-  const recentBadges = useMemo(() => [...badgeCounts].slice(-4).reverse(), [badgeCounts]);
   const allBadges = useMemo(() => [...badgeCounts].sort((a, b) => compareBadgesByRarity(a[0], b[0])), [badgeCounts]);
-  const visibleBadges = expanded ? allBadges : recentBadges;
-  const badgeTotal = badgeCounts.reduce((sum, [, count]) => sum + count, 0);
+  const featuredBadges = useMemo(() => allBadges.slice(0, 6), [allBadges]);
+  const visibleBadges = expanded ? allBadges : featuredBadges;
+  const badgeTotal = badgeCounts.length;
   const toggleExpanded = () => {
-    if (document.startViewTransition) {
-      document.startViewTransition(() => setExpanded((value) => !value));
-      return;
-    }
     setExpanded((value) => !value);
   };
 
@@ -923,32 +1204,33 @@ function EarnedBadgesCard({ badgeCounts }) {
       <div className="section-row tight">
         <div>
           <h2>獲得バッジ</h2>
-          {!expanded && badgeCounts.length > 4 && <p>New</p>}
         </div>
+        <div className="badge-heading-count"><strong>{badgeTotal.toLocaleString("ja-JP")}</strong><span>種類</span></div>
       </div>
-      <div className="badge-total"><strong>{badgeTotal.toLocaleString("ja-JP")}</strong><span>個</span></div>
       {badgeCounts.length ? (
         <>
-          <div className="badge-list two-col">
-            {visibleBadges.map(([label, count], index) => (
-              <span
-                className="badge-motion-item"
-                style={{ viewTransitionName: `badge-${badgeDomId(label)}`, "--badge-index": index }}
-                key={label}
-              >
-                <BadgeChip label={label} count={count} />
-              </span>
-            ))}
+          <div className="badge-list-window">
+            <div className="badge-list two-col">
+              {visibleBadges.map(([label, count], index) => (
+                <span
+                  className="badge-motion-item"
+                  style={{ "--badge-index": index }}
+                  key={label}
+                >
+                  <BadgeChip label={label} count={count} />
+                </span>
+              ))}
+            </div>
           </div>
-          {badgeCounts.length > 4 && (
+          {badgeCounts.length > 6 && (
             <button
               type="button"
               className={`badge-expand-bar ${expanded ? "expanded" : ""}`}
               onClick={toggleExpanded}
               aria-label={expanded ? "バッジを閉じる" : "全部のバッジを見る"}
-              title={expanded ? "閉じる" : "全部みる"}
+              title={expanded ? "閉じる" : "すべて見る"}
             >
-              <SvgIcon type="chevronDown" />
+              {expanded ? "閉じる" : "すべて見る"}
             </button>
           )}
         </>
@@ -977,7 +1259,7 @@ function CountBars({ buckets }) {
         {buckets.map((bucket) => {
           const height = bucket.count > 0 ? Math.max(10, (bucket.count / max) * 100) : 0;
           return (
-            <article className="bar-item" key={bucket.label}>
+            <article className={`bar-item ${bucket.label === "今日" ? "today" : ""}`} key={bucket.label}>
               <div className="bar-track">
                 <span className="bar-fill" style={{ height: `${height}%` }} />
               </div>
@@ -1060,14 +1342,14 @@ function ScoreLineBuckets({ buckets }) {
 function Chart({ data, initialRange }) {
   const [hovered, setHovered] = useState(null);
   const [view, setView] = useState({ scale: 1, offset: 0 });
-  const [chartWidth, setChartWidth] = useState(360);
+  const [chartSize, setChartSize] = useState({ width: 360, height: 178 });
   const wrapRef = useRef(null);
   const svgRef = useRef(null);
   const pointersRef = useRef(new Map());
   const gestureRef = useRef(null);
-  const width = chartWidth;
-  const height = 230;
-  const pad = { left: 42, right: 18, top: 22, bottom: 42 };
+  const width = chartSize.width;
+  const height = chartSize.height;
+  const pad = { left: 34, right: 12, top: 22, bottom: 36 };
   const plotW = width - pad.left - pad.right;
   const plotH = height - pad.top - pad.bottom;
   const minScale = minChartScale(data.length);
@@ -1080,7 +1362,11 @@ function Chart({ data, initialRange }) {
     if (!node) return undefined;
 
     const updateWidth = () => {
-      setChartWidth(Math.max(360, Math.round(node.getBoundingClientRect().width)));
+      const rect = node.getBoundingClientRect();
+      setChartSize({
+        width: Math.max(360, Math.round(rect.width)),
+        height: Math.max(160, Math.round(rect.height)),
+      });
     };
     updateWidth();
 
@@ -1301,17 +1587,17 @@ function Chart({ data, initialRange }) {
       >
         <defs>
           <linearGradient id="avgFill" x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0%" stopColor="currentColor" stopOpacity=".25" />
-            <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
+            <stop offset="0%" stopColor="var(--active-graph-color, var(--graph-color, var(--hot)))" stopOpacity=".25" />
+            <stop offset="100%" stopColor="var(--active-graph-color, var(--graph-color, var(--hot)))" stopOpacity="0" />
           </linearGradient>
           <clipPath id="chartPlotClip">
-            <rect x={pad.left} y={pad.top} width={plotW} height={plotH} />
+            <rect x={pad.left - 8} y={pad.top - 8} width={plotW + 16} height={plotH + 16} />
           </clipPath>
         </defs>
         {yLabels.map((tick) => (
           <g key={tick.value}>
             <line x1={pad.left} y1={tick.y} x2={width - pad.right} y2={tick.y} className="grid-line" />
-            <text x={pad.left - 9} y={tick.y + 3} textAnchor="end" className="chart-axis-label">{tick.value}</text>
+            <text x={pad.left - 6} y={tick.y + 3} textAnchor="end" className="chart-axis-label">{tick.value}</text>
           </g>
         ))}
         <g clipPath="url(#chartPlotClip)">
@@ -1321,8 +1607,14 @@ function Chart({ data, initialRange }) {
             return <line key={`v-${item.date}`} x1={x} y1={pad.top} x2={x} y2={height - pad.bottom} className="grid-line vertical" />;
           })}
           {avgDisplayPoints.length > 1 && <path className="area" d={`${avgPath} L ${avgDisplayPoints.at(-1).x} ${height - pad.bottom} L ${avgDisplayPoints[0].x} ${height - pad.bottom} Z`} />}
-          <path className="avg-path" d={avgPath} />
-          <path className="best-path" d={bestPath} />
+          {avgDisplayPoints.length > 1 && <path className="avg-path" d={avgPath} />}
+          {bestDisplayPoints.length > 1 && <path className="best-path" d={bestPath} />}
+          {avgDisplayPoints.filter((pointItem) => pointItem.item.isToday).map((pointItem) => (
+            <circle className="chart-today-point avg" cx={pointItem.x} cy={pointItem.y} r="5.5" key={`today-avg-${pointItem.item.label}`} />
+          ))}
+          {bestDisplayPoints.filter((pointItem) => pointItem.item.isToday).map((pointItem) => (
+            <circle className="chart-today-point best" cx={pointItem.x} cy={pointItem.y} r="5.5" key={`today-best-${pointItem.item.label}`} />
+          ))}
         </g>
         {hoveredInPlot && (
           <>
@@ -1351,34 +1643,123 @@ function Chart({ data, initialRange }) {
 }
 
 function demoDb() {
-  const names = ["遥太", "颯太"];
-  const bats = ["赤バット", "黒バット", "軽量バット"];
-  const demoDays = 730;
+  const names = ["はるた", "おとー"];
+  const bats = ["しきバット", "だめバット", "ミニバット"];
+  const demoDays = 729;
   const end = parseISO(todayISO());
   const records = [];
-  for (let ago = demoDays; ago >= 0; ago -= 1) {
-    const date = toISO(addDays(end, -ago));
+  const nameColors = {
+    "はるた": "#2f86ff",
+    "おとー": "#249c68",
+  };
+  const batColors = {
+    "しきバット": "#ff9f1c",
+    "だめバット": "#a26bff",
+    "ミニバット": "#8d95a4",
+  };
+  const rand = (seed) => {
+    const value = Math.sin(seed * 12.9898) * 43758.5453;
+    return value - Math.floor(value);
+  };
+  const batFor = (nameIndex, elapsed, progress, pick) => {
+    if (nameIndex === 0) {
+      const miniBias = progress < 0.22 ? 0.24 : 0.12;
+      if (pick < miniBias) return "ミニバット";
+      if (pick < 0.72) return "しきバット";
+      return "だめバット";
+    }
+    if (pick < 0.42) return "ミニバット";
+    if (pick < 0.74) return "しきバット";
+    return "だめバット";
+  };
+
+  for (let elapsed = 0; elapsed <= demoDays; elapsed += 1) {
+    const dateObj = addDays(end, elapsed - demoDays);
+    const date = toISO(dateObj);
+    const day = dateObj.getDay();
+    const month = dateObj.getMonth();
+    const progress = elapsed / demoDays;
+
     names.forEach((name, nameIndex) => {
-      const elapsed = demoDays - ago;
-      const growth = Math.floor(elapsed * 0.33);
-      const seasonal = Math.floor(28 * Math.sin(elapsed / 38));
-      const count = 35 + ((ago * 13 + nameIndex * 17) % 76) + (ago % 24 === 0 ? 210 : 0);
-      const avg = Math.min(820, 330 + nameIndex * 35 + growth + seasonal + ((ago * 7) % 80));
-      const best = Math.min(965, avg + 55 + ((ago * 11) % 115));
-      records.push({ id: uid(), name, bat: bats[(ago + nameIndex) % bats.length], date, count, avg, best });
+      const seed = elapsed + nameIndex * 1000;
+      const campBlock = elapsed % 91 >= 8 && elapsed % 91 <= 20;
+      const vacation = month === 7 && elapsed % 17 < 3;
+      const regularDay = nameIndex === 0
+        ? [1, 2, 4, 5, 6].includes(day)
+        : [0, 3, 6].includes(day);
+      const bonusDay = rand(seed + 1) > (nameIndex === 0 ? 0.74 : 0.86);
+      const restDay = !campBlock && (!regularDay || rand(seed + 2) < (nameIndex === 0 ? 0.16 : 0.28) || vacation);
+      if (restDay && !bonusDay) return;
+
+      const bigDay = campBlock || elapsed % 53 === 0 || rand(seed + 3) > 0.92;
+      const baseCount = nameIndex === 0 ? 58 + progress * 128 : 28 + progress * 66;
+      const countNoise = Math.round(rand(seed + 4) * (nameIndex === 0 ? 88 : 52));
+      const countBoost = bigDay ? (nameIndex === 0 ? 118 + Math.round(rand(seed + 5) * 215) : 55 + Math.round(rand(seed + 5) * 105)) : 0;
+      const totalCount = Math.round(clamp(baseCount + countNoise + countBoost, nameIndex === 0 ? 35 : 18, nameIndex === 0 ? 540 : 260));
+      const seasonal = Math.round(24 * Math.sin(elapsed / 34) + 12 * Math.cos(elapsed / 19));
+      const slump = elapsed % 143 > 126 ? -38 : 0;
+      const avgBase = nameIndex === 0 ? 318 + progress * 330 : 278 + progress * 185;
+      const avg = Math.round(clamp(avgBase + seasonal + slump + rand(seed + 6) * 72, nameIndex === 0 ? 260 : 230, nameIndex === 0 ? 760 : 650));
+      const bestSpike = bigDay ? 95 + rand(seed + 7) * 120 : 54 + rand(seed + 7) * 88;
+      const best = Math.round(clamp(avg + bestSpike, avg + 20, nameIndex === 0 ? 940 : 820));
+      const mainBat = batFor(nameIndex, elapsed, progress, rand(seed + 8));
+      const split = bigDay && totalCount >= (nameIndex === 0 ? 180 : 115);
+      const secondBat = mainBat === "しきバット" ? "だめバット" : "しきバット";
+      const isToday = elapsed === demoDays;
+      const chunks = isToday
+        ? [
+            ["しきバット", Math.round(totalCount * 0.48)],
+            ["だめバット", Math.round(totalCount * 0.32)],
+            ["ミニバット", 0],
+          ]
+        : split
+        ? [
+            [mainBat, Math.round(totalCount * (0.62 + rand(seed + 9) * 0.16))],
+            [secondBat, 0],
+          ]
+        : [[mainBat, totalCount]];
+      if (isToday) chunks[2][1] = totalCount - chunks[0][1] - chunks[1][1];
+      if (!isToday && split) chunks[1][1] = totalCount - chunks[0][1];
+
+      chunks.forEach(([bat, count], index) => {
+        if (count <= 0) return;
+        const batOffset = bat === "しきバット" ? 12 : bat === "だめバット" ? -6 : -18;
+        const recordAvg = Math.round(clamp(avg + batOffset + (rand(seed + 10 + index) - 0.5) * 34, 180, 999));
+        const recordBest = Math.round(clamp(best + batOffset + (rand(seed + 20 + index) - 0.5) * 38, recordAvg, 999));
+        records.push({
+          id: `demo-${name}-${date}-${bat}-${index}`,
+          name,
+          bat,
+          date,
+          count,
+          avg: recordAvg,
+          best: recordBest,
+        });
+      });
     });
   }
-  return { activeName: names[0], names, bats, defaultBat: bats[0], theme: "red", records };
+
+  return {
+    activeName: names[0],
+    names,
+    nameColors,
+    bats,
+    batColors,
+    defaultBat: bats[0],
+    theme: nameColors[names[0]],
+    records,
+  };
 }
 
 export default function App() {
   const [db, setDbState] = useState(loadDb);
-  const [tab, setTab] = useState("home");
+  const [tab, setTab] = useState(() => (localStorage.getItem(STORAGE_KEY) ? "home" : "settings"));
   const [range, setRange] = useState(RANGE_WEEK);
   const [homeBat, setHomeBat] = useState(ALL);
   const [selectedDate, setSelectedDate] = useState(todayISO);
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
   const [pendingDelete, setPendingDelete] = useState(null);
+  const [isNameMenuOpen, setIsNameMenuOpen] = useState(false);
 
   const setDb = (next) => {
     setDbState(next);
@@ -1389,7 +1770,21 @@ export default function App() {
   const allForName = useMemo(() => db.records.filter((record) => record.name === currentName), [db.records, currentName]);
   const badgeMap = useMemo(() => badgesFor(allForName), [allForName]);
 
-  const addRecord = (event) => {
+  useEffect(() => {
+    if (!db.names.length && tab !== "settings") setTab("settings");
+  }, [db.names.length, tab]);
+
+  useEffect(() => {
+    if (!isNameMenuOpen) return undefined;
+    const closeOnOutsideTap = (event) => {
+      if (event.target.closest?.(".player-switcher")) return;
+      setIsNameMenuOpen(false);
+    };
+    document.addEventListener("pointerdown", closeOnOutsideTap, true);
+    return () => document.removeEventListener("pointerdown", closeOnOutsideTap, true);
+  }, [isNameMenuOpen]);
+
+  const addRecord = (event, date = selectedDate) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     const bat = String(form.get("bat") || "");
@@ -1398,7 +1793,7 @@ export default function App() {
       id: uid(),
       name: currentName,
       bat,
-      date: selectedDate,
+      date,
       count: Math.max(1, Number(form.get("count")) || 1),
       avg: Math.max(0, Math.min(999, Number(form.get("avg")) || 0)),
       best: Math.max(0, Math.min(999, Number(form.get("best")) || 0)),
@@ -1412,7 +1807,19 @@ export default function App() {
     event.preventDefault();
     const value = String(new FormData(event.currentTarget).get("name") || "").trim();
     if (!value || db.names.includes(value)) return;
-    setDb({ ...db, activeName: value, names: [...db.names, value] });
+    const usedColors = new Set([
+      ...Object.values(normalizeNameColors(db.nameColors, db.names)),
+      ...Object.values(normalizeBatColors(db.batColors, db.bats)),
+    ]);
+    setDb({
+      ...db,
+      activeName: value,
+      names: [...db.names, value],
+      nameColors: {
+        ...normalizeNameColors(db.nameColors, db.names),
+        [value]: firstAvailableColor(usedColors),
+      },
+    });
     event.currentTarget.reset();
   };
 
@@ -1420,7 +1827,16 @@ export default function App() {
     event.preventDefault();
     const value = String(new FormData(event.currentTarget).get("bat") || "").trim();
     if (!value || db.bats.includes(value)) return;
-    setDb({ ...db, bats: [...db.bats, value], defaultBat: db.defaultBat || value });
+    const nextBats = [...db.bats, value];
+    setDb({
+      ...db,
+      bats: nextBats,
+      batColors: {
+        ...normalizeBatColors(db.batColors, db.bats),
+        [value]: fallbackBatColor(value, nextBats.length - 1),
+      },
+      defaultBat: db.defaultBat || value,
+    });
     event.currentTarget.reset();
   };
 
@@ -1429,23 +1845,27 @@ export default function App() {
     setPendingDelete(null);
     if (!pending) return;
     if (pending.type === "all") {
-      setDb({ activeName: "", names: [], bats: [], defaultBat: "", theme: db.theme || "red", records: [] });
+      setDb({ activeName: "", names: [], nameColors: {}, bats: [], batColors: {}, defaultBat: "", theme: BAT_COLOR_PALETTE[0], records: [] });
       return;
     }
     if (pending.type === "name") {
       const names = db.names.filter((name) => name !== pending.value);
+      const nameColors = normalizeNameColors(db.nameColors, names, db.theme);
       setDb({
         ...db,
         names,
+        nameColors,
         activeName: db.activeName === pending.value ? (names[0] || "") : db.activeName,
         records: db.records.filter((record) => record.name !== pending.value),
       });
     }
     if (pending.type === "bat") {
       const bats = db.bats.filter((bat) => bat !== pending.value);
+      const batColors = normalizeBatColors(db.batColors, bats);
       setDb({
         ...db,
         bats,
+        batColors,
         defaultBat: db.defaultBat === pending.value ? bats[0] || "" : db.defaultBat,
         records: db.records.filter((record) => record.bat !== pending.value),
       });
@@ -1471,11 +1891,17 @@ export default function App() {
     const file = event.target.files?.[0];
     if (!file) return;
     const rows = parseCsv(await file.text()).slice(1);
-    const next = { ...db, names: [...db.names], bats: [...db.bats], records: [...db.records] };
+    const next = { ...db, names: [...db.names], nameColors: normalizeNameColors(db.nameColors, db.names, db.theme), bats: [...db.bats], batColors: normalizeBatColors(db.batColors, db.bats), records: [...db.records] };
     rows.forEach(([name, bat, date, count, avg, best]) => {
       if (!name || !bat || !/^\d{4}-\d{2}-\d{2}$/.test(date || "")) return;
-      if (!next.names.includes(name)) next.names.push(name);
-      if (!next.bats.includes(bat)) next.bats.push(bat);
+      if (!next.names.includes(name)) {
+        next.names.push(name);
+        next.nameColors[name] = firstAvailableColor(new Set([...Object.values(next.nameColors), ...Object.values(next.batColors)]));
+      }
+      if (!next.bats.includes(bat)) {
+        next.bats.push(bat);
+        next.batColors[bat] = fallbackBatColor(bat, next.bats.length - 1);
+      }
       next.records.push({ id: uid(), name, bat, date, count: Number(count) || 0, avg: Number(avg) || 0, best: Number(best) || 0 });
     });
     if (!next.activeName && next.names[0]) next.activeName = next.names[0];
@@ -1485,11 +1911,41 @@ export default function App() {
   };
 
   return (
-    <div className={`app theme-${db.theme || "red"}`}>
+    <div className={`app theme-${["red", "blue", "green"].includes(db.theme) ? db.theme : "custom"}`} style={themeStyleFor(currentName ? nameColorFor(db, currentName) : db.theme)}>
       <div className="phone-shell">
         <header className="app-header">
           <strong className="app-title">SWING LOG</strong>
-          <button className="active-player" type="button" onClick={() => setTab("settings")}><SvgIcon type="person" />{currentName || "未選択"}</button>
+          <div className="player-switcher">
+            <button
+              className="active-player"
+              type="button"
+              aria-expanded={isNameMenuOpen}
+              onClick={() => setIsNameMenuOpen((value) => !value)}
+            >
+              <SvgIcon type="person" />{currentName || "未選択"}
+            </button>
+            {isNameMenuOpen && (
+              <div className="player-menu" role="menu" aria-label="名前を切り替え">
+                {db.names.length ? db.names.map((name) => (
+                  <button
+                    type="button"
+                    className={name === currentName ? "selected" : ""}
+                    onClick={() => {
+                      setDb({ ...db, activeName: name });
+                      setIsNameMenuOpen(false);
+                    }}
+                    role="menuitem"
+                    key={name}
+                  >
+                    <SvgIcon type="person" />
+                    <span>{name}</span>
+                  </button>
+                )) : (
+                  <button type="button" onClick={() => setTab("settings")} role="menuitem">名前を追加</button>
+                )}
+              </div>
+            )}
+          </div>
         </header>
 
         <main className="content">
@@ -1498,10 +1954,9 @@ export default function App() {
               db={db}
               currentName={currentName}
               allForName={allForName}
-              range={range}
-              setRange={setRange}
               homeBat={homeBat}
               setHomeBat={setHomeBat}
+              addRecord={addRecord}
             />
           )}
           {tab === "record" && (
@@ -1541,147 +1996,87 @@ export default function App() {
   );
 }
 
-function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHomeBat }) {
+function HomeView({ db, currentName, allForName, homeBat, setHomeBat, addRecord }) {
+  const [isInputOpen, setIsInputOpen] = useState(false);
   const allFiltered = db.records.filter((record) => (
     record.name === currentName &&
-    record.date <= todayISO() &&
-    (homeBat === ALL || record.bat === homeBat)
+    record.date <= todayISO()
   ));
-  const achievementWindow = rangeWindow(range);
-  const from = toISO(achievementWindow.start);
-  const to = toISO(achievementWindow.end);
-  const filtered = allFiltered.filter((record) => (
-    record.date >= from &&
-    record.date <= to
-  ));
-  const daily = aggregate(filtered);
-  const periodSummary = periodSummaryFromDaily(
-    new Map(daily.map((day) => [day.date, day])),
-    achievementWindow.start,
-    achievementWindow.end,
-  );
-  const chartDaily = aggregate(allFiltered);
-  const currentStreak = streakByDate(chartDaily).get(todayISO()) || 0;
-  const cumulativeSummary = periodSummaryFromDaily(
-    new Map(chartDaily.map((day) => [day.date, day])),
-    chartDaily.length ? parseISO(chartDaily[0].date) : parseISO(todayISO()),
-    parseISO(todayISO()),
-  );
-  const total = periodSummary.count;
-  const avg = range === RANGE_TODAY ? periodSummary.avg : periodSummary.badgeAvg;
-  const best = periodSummary.best;
-  const practiceDays = periodSummary.days;
-  const periodDayLabel = `${periodSummary.spanDays}日目`;
-  const avgUnit = range === RANGE_TODAY || range === RANGE_TOTAL ? "点" : `点＠${periodDayLabel}`;
-  const practiceUnit = `／${periodDayLabel}`;
-  const cardPeriodDayLabel = `${periodSummary.spanDays}日目`;
-  const cardAvgUnit = range === RANGE_TODAY ? "点" : `点@${cardPeriodDayLabel}`;
-  const cardPracticeUnit = `/${cardPeriodDayLabel}`;
-  const isPeriodComplete = achievementWindow.end <= parseISO(todayISO());
-  const isBatFiltered = homeBat !== ALL;
-  const cumulativeCountTargets = isBatFiltered
-    ? BAT_BADGE_DEFINITIONS.filter((definition) => definition.metric === "count")
-    : UNIQUE_TOTAL_COUNT_TARGETS.map((target) => ({ target, label: `累計${target}回`, description: `累計${target}回スイング` }));
-  const cumulativeDaysTargets = isBatFiltered
-    ? BAT_BADGE_DEFINITIONS.filter((definition) => definition.metric === "days")
-    : UNIQUE_STREAK_TARGETS.map((target) => ({ target, label: `${target}日連続`, description: `${target}日連続で記録` }));
-  const cumulativeBestTargets = isBatFiltered
-    ? BAT_BADGE_DEFINITIONS.filter((definition) => definition.metric === "best")
-    : UNIQUE_BEST_TARGETS.map((target) => ({ target, label: `初${target}点`, description: `ベスト${target}点到達` }));
-  const badgeCounts = collectBadgeCounts(allFiltered, range);
+  const chartFiltered = allFiltered.filter((record) => homeBat === ALL || record.bat === homeBat);
+  const todayRecords = allFiltered.filter((record) => record.date === todayISO());
+  const todaySummary = aggregate(todayRecords)[0] || { date: todayISO(), count: 0, avg: 0, best: 0, bats: [] };
+  const hasTodayRecord = todayRecords.length > 0;
+  const todayByBat = aggregateByBat(todayRecords);
+  const chartDaily = aggregate(chartFiltered);
+  const todayEarnedBadges = badgesFor(allForName.filter((record) => record.date <= todayISO())).get(todayISO()) || [];
+  const badgeCounts = [...todayEarnedBadges.reduce((map, label) => {
+    map.set(label, (map.get(label) || 0) + 1);
+    return map;
+  }, new Map()).entries()].sort(([a], [b]) => compareBadgesByRarity(a, b));
   const chartData = filledChartExtent(chartDaily);
-  const rangeOptions = [
-    [RANGE_TODAY, "今日"],
-    [RANGE_WEEK, "今週"],
-    [RANGE_MONTH, "今月"],
-  ];
-  const achievementCards = [
-    buildAchievementCard({ key: "count", icon: "count", label: "スイング数", value: total, unit: "回", kind: "count", range }),
-    range === RANGE_TODAY
-      ? buildAchievementCard({ key: "streak", icon: "log", label: "毎日練習", value: currentStreak, unit: "日目", kind: "streak", range })
-      : buildAchievementCard({ key: "days", icon: "log", label: "練習日数", value: practiceDays, unit: cardPracticeUnit, kind: "days", range, variableTarget: periodSummary.spanDays }),
-    buildAchievementCard({ key: "avg", icon: "avg", label: "平均スコア", value: avg, unit: cardAvgUnit, kind: "avg", range, pending: !isPeriodComplete && range !== RANGE_TODAY }),
-    buildAchievementCard({ key: "best", icon: "best", label: "ベストスコア", value: best, unit: "点", kind: "best", range, badgeEligible: range === RANGE_TODAY }),
-  ];
-  const cumulativeCards = [
-    buildAchievementCardWithTargets({ key: "total-count", icon: "count", label: "スイング数", value: cumulativeSummary.count, unit: "回", kind: "count", range: RANGE_TOTAL, targets: cumulativeCountTargets }),
-    buildAchievementCardWithTargets({ key: "total-days", icon: "log", label: isBatFiltered ? "相棒日数" : "練習した日数", value: cumulativeSummary.days, unit: "日", kind: "days", range: RANGE_TOTAL, targets: cumulativeDaysTargets }),
-    buildAchievementCardWithTargets({ key: "total-best", icon: "best", label: isBatFiltered ? "相棒ベスト" : "過去最高点", value: cumulativeSummary.best, unit: "点", kind: "best", range: RANGE_TOTAL, targets: cumulativeBestTargets }),
-  ];
+  const handleRecordSubmit = (event) => {
+    if (addRecord(event, todayISO())) {
+      setIsInputOpen(false);
+    }
+  };
+  useEffect(() => {
+    setIsInputOpen(!hasTodayRecord);
+  }, [currentName, hasTodayRecord]);
+
   return (
     <>
-      <div className={`dashboard-controls home-bat-filter ${homeBat === ALL ? "all-selected" : ""}`}>
-        <label className="field-label bat-field">
-          <span className="select-shell">
-            <span className="select-leading"><SvgIcon type="bat" /></span>
-            <select value={homeBat} onChange={(event) => setHomeBat(event.target.value)}>
-              <option value={ALL}>すべてのバット</option>
-              {db.bats.map((bat) => <option key={bat} value={bat}>{bat}</option>)}
-            </select>
-            <span className="select-caret" aria-hidden="true"><SvgIcon type="chevronDown" /></span>
-          </span>
-        </label>
-      </div>
+      <section className={`panel input-panel home-input-panel ${isInputOpen ? "open" : ""}`}>
+        <div className="input-panel-title">
+          <h2>今日の記録</h2>
+        </div>
+        <div className="input-panel-layout">
+          <SwingForm bats={db.bats} defaultBat={db.defaultBat} onSubmit={handleRecordSubmit} submitLabel={hasTodayRecord ? "追加する" : "記録する"} />
+        </div>
+        <button
+          type="button"
+          className={`badge-expand-bar input-expand-bar ${isInputOpen ? "expanded" : ""}`}
+          onClick={() => setIsInputOpen((value) => !value)}
+          aria-label={isInputOpen ? "入力フォームを閉じる" : "入力フォームを開く"}
+        >
+          {isInputOpen ? "閉じる" : "入力する"}
+        </button>
+      </section>
 
       <section className="score-card">
         <section className="panel score-summary-card">
-          <div className="attached-tabs" role="tablist" aria-label="実績期間">
-            {rangeOptions.map(([value, label]) => (
-              <button key={value} type="button" className={range === value ? "selected" : ""} onClick={() => setRange(value)}>
-                <span>{label}</span>
-              </button>
-            ))}
+          <div className="section-row tight">
+            <div>
+              <h2>今日の結果</h2>
+            </div>
           </div>
-          <AchievementCards cards={achievementCards} />
-          <p className="period-heading legacy-period-heading">{achievementWindow.label}</p>
-          <div className="achievement-summary all-period">
-            <AchievementMetric icon="count" label="スイング数" value={total} unit="回" kind="count" range={range} showMeter={range !== RANGE_TOTAL} />
-            {range === RANGE_TODAY && (
-              <AchievementMetric icon="log" label="毎日練習" value={currentStreak} unit="日目" kind="streak" range={range} />
-            )}
-            {range === RANGE_TODAY && (
-              <>
-                <AchievementMetric icon="avg" label="平均" value={avg} unit={avgUnit} kind="avg" range={range} />
-                <AchievementMetric icon="best" label="ベスト" value={best} unit="点" kind="best" range={range} />
-              </>
-            )}
-            {range !== RANGE_TODAY && range !== RANGE_TOTAL && (
-              <>
-                <AchievementMetric icon="log" label="練習日数" value={practiceDays} unit={practiceUnit} kind="days" range={range} variableTarget={periodSummary.spanDays} />
-                <AchievementMetric icon="avg" label="平均" value={avg} unit={avgUnit} kind="avg" range={range} pending={!isPeriodComplete} />
-                <AchievementMetric icon="best" label="ベスト" value={best} unit="点" kind="best" range={range} showMeter={false} />
-              </>
-            )}
+          <DailyResultCards summary={todaySummary} selected={homeBat === ALL} onSelect={() => setHomeBat(ALL)} />
+          <div className="home-bat-records">
+            {todayByBat.length ? todayByBat.map((item) => (
+              <RecordSummary
+                key={item.bat}
+                item={item}
+                batColor={batColorFor(db, item.bat)}
+                selected={homeBat === item.bat}
+                onSelect={() => setHomeBat((value) => value === item.bat ? ALL : item.bat)}
+              />
+            )) : <p className="empty compact-empty">今日のバット別記録はまだありません。</p>}
           </div>
-          <RecordPanel daily={chartData} range={range} />
+          <RecordPanel
+            daily={chartData}
+            range={RANGE_TODAY}
+            graphColor={homeBat === ALL ? null : batColorFor(db, homeBat)}
+          />
           <EarnedBadgesCard badgeCounts={badgeCounts} />
         </section>
-      </section>
-
-      <section className="panel cumulative-summary">
-        <div className="section-row tight">
-          <div>
-            <h2>累計</h2>
-          </div>
-        </div>
-        <AchievementCards cards={cumulativeCards} />
-        <div className="achievement-summary compact-metrics legacy-cumulative-summary">
-          <AchievementMetric icon="count" label="スイング数" value={cumulativeSummary.count} unit="回" kind="count" range={RANGE_TOTAL} targets={cumulativeCountTargets} />
-          <AchievementMetric icon="log" label={isBatFiltered ? "相棒日数" : "練習した日数"} value={cumulativeSummary.days} unit="日" kind="days" range={RANGE_TOTAL} targets={cumulativeDaysTargets} />
-          <AchievementMetric icon="best" label={isBatFiltered ? "相棒ベスト" : "過去最高点"} value={cumulativeSummary.best} unit="点" kind="best" range={RANGE_TOTAL} targets={cumulativeBestTargets} />
-        </div>
       </section>
     </>
   );
 }
 
 function filledChartExtent(daily) {
-  if (!daily.length) {
-    return [];
-  }
   const map = new Map(daily.map((day) => [day.date, day]));
-  const start = parseISO(daily[0].date);
   const end = parseISO(todayISO());
+  const start = daily.length ? parseISO(daily[0].date) : addDays(end, -6);
   const days = Math.max(1, Math.floor((end - start) / 86400000) + 1);
   return Array.from({ length: days }, (_, index) => {
     const date = toISO(addDays(start, index));
@@ -1725,9 +2120,9 @@ function badgePeriod(label) {
   if (label.includes("相棒")) return "total";
   if (label.startsWith("累計") || label.startsWith("初")) return "total";
   if (label.includes("日連続練習")) return "daily";
-  if (label.startsWith("今日") || label.startsWith("日平均")) return "daily";
-  if (label.startsWith("今週") || label.startsWith("週平均")) return "weekly";
-  if (label.startsWith("月間")) return "monthly";
+  if (label.startsWith("毎日") || label.startsWith("今日") || label.startsWith("日平均")) return "daily";
+  if (label.startsWith("毎週") || label.startsWith("今週") || label.startsWith("週平均")) return "weekly";
+  if (label.startsWith("毎月") || label.startsWith("月間")) return "monthly";
   if (label.startsWith("月平均") || label.startsWith("今月")) return "monthly";
   return "other";
 }
@@ -1767,7 +2162,17 @@ function formatBadgeLabel(label) {
 
 function canonicalBadgeLabel(label) {
   const batBadgeIndex = label.indexOf(" 相棒");
-  return batBadgeIndex >= 0 ? label.slice(batBadgeIndex + 1) : label;
+  const baseLabel = batBadgeIndex >= 0 ? label.slice(batBadgeIndex + 1) : label;
+  return baseLabel
+    .replace(/^今日(?=\d+回)/, "毎日")
+    .replace(/^日平均(?=\d+)/, "毎日平均")
+    .replace(/^今日ベスト(?=\d+)/, "毎日ベスト")
+    .replace(/^今週(?=\d+回)/, "毎週")
+    .replace(/^週平均(?=\d+)/, "毎週平均")
+    .replace(/^今週(?=\d+日練習|皆勤)/, "毎週")
+    .replace(/^月間(?=\d+回)/, "毎月")
+    .replace(/^月平均(?=\d+)/, "毎月平均")
+    .replace(/^今月(?=\d+日練習|毎日練習)/, "毎月");
 }
 
 function badgeTypeForLabel(label) {
@@ -1794,37 +2199,37 @@ function rarityForBadge(label) {
   const value = badgeValue(label);
   if (label.startsWith("バッジポイント")) {
     if (value >= 10000) return "UR";
-    if (value >= 5000) return "SAR";
-    if (value >= 2000) return "AR";
-    if (value >= 1000) return "SR";
-    if (value >= 500) return "RR";
-    if (value >= 300) return "R";
-    if (value >= 100) return "U";
+    if (value >= 3000) return "SR";
+    if (value >= 1000) return "RR";
+    if (value >= 500) return "R";
+    if (value >= 300) return "U";
     return "C";
   }
   if (/^バッジ\d+種類/.test(label)) {
     if (value >= 100) return "UR";
-    if (value >= 75) return "SAR";
-    if (value >= 50) return "AR";
+    if (value >= 75) return "SR";
+    if (value >= 50) return "RR";
     if (value >= 25) return "R";
     return "U";
   }
   if (/^バッジ\d+個/.test(label)) {
     if (value >= 3000) return "UR";
-    if (value >= 1000) return "SAR";
-    if (value >= 500) return "AR";
-    if (value >= 300) return "SR";
+    if (value >= 1000) return "SR";
+    if (value >= 500) return "RR";
     if (value >= 100) return "R";
     return "U";
   }
   if (["ラッキー7", "スリーナイン", "七日目の覚醒"].includes(label) || value >= 50000 || label.includes("365日")) return "UR";
-  if (["ぴったり500", "777スイング", "復活の一振り"].includes(label) || label.includes("100日") || label.includes("999")) return "SAR";
-  if (["大晦日の素振り", "元日の一振り"].includes(label) || label.includes("初700") || label.includes("初800") || label.includes("初900") || label.includes("30日")) return "AR";
-  if (label.includes("月平均600") || label.includes("週平均600") || value >= 10000 || label.includes("60日") || label.includes("相棒5000")) return "SR";
-  if (label.includes("今日300") || label.includes("今日500") || label.includes("日平均600") || label.includes("日平均700") || label.includes("今週1000") || label.includes("今週2000") || label.includes("月間2000") || label.includes("月間3000") || label.includes("月間5000") || label.includes("14日")) return "RR";
-  if (label.includes("日平均500") || label.includes("今日200") || label.includes("今日ベスト700") || label.includes("今週500") || label.includes("週平均500") || label.includes("月平均500") || label.includes("月平均400") || label.includes("月間1000") || label.includes("7日") || value >= 3000) return "R";
-  if (label.includes("今日100") || label.includes("日平均400") || label.includes("今日ベスト600") || label.includes("今週300") || label.includes("週平均400") || label.includes("月間500") || label.includes("今週3日") || label.includes("今週5日") || label.includes("今月5日") || label.includes("3日") || label.includes("初めて")) return "U";
+  if (["ぴったり500", "777スイング", "復活の一振り"].includes(label) || label.includes("100日") || label.includes("999")) return "UR";
+  if (["大晦日の素振り", "元日の一振り"].includes(label) || label.includes("初800") || label.includes("初900") || label.includes("30日") || label.includes("毎月平均600") || label.includes("毎週平均600") || value >= 10000 || label.includes("60日") || label.includes("相棒5000")) return "SR";
+  if (label.includes("毎日300") || label.includes("毎日500") || label.includes("毎日平均600") || label.includes("毎日平均700") || label.includes("毎週1000") || label.includes("毎週2000") || label.includes("毎月2000") || label.includes("毎月3000") || label.includes("毎月5000") || label.includes("14日")) return "RR";
+  if (label.includes("毎日平均500") || label.includes("毎日200") || label.includes("毎日ベスト700") || label.includes("初700") || label.includes("毎週500") || label.includes("毎週平均500") || label.includes("毎月平均500") || label.includes("毎月平均400") || label.includes("毎月1000") || label.includes("7日") || value >= 3000) return "R";
+  if (label.includes("毎日100") || label.includes("毎日平均400") || label.includes("毎日ベスト600") || label.includes("毎週300") || label.includes("毎週平均400") || label.includes("毎月500") || label.includes("毎週3日") || label.includes("毎週5日") || label.includes("毎月5日") || label.includes("3日") || label.includes("初めて")) return "U";
   return "C";
+}
+
+function rarityColorFor(rarity) {
+  return RARITY_COLORS[rarity] || RARITY_COLORS.C;
 }
 
 function badgeDescriptionFor(label, type) {
@@ -1907,7 +2312,7 @@ function RarityIcon({ rarity }) {
 }
 
 function BadgeDetailPopover({ badge, onClose }) {
-  return (
+  return createPortal(
     <div className="collection-popover-backdrop" onPointerDown={onClose}>
       <aside
         className={`collection-popover rarity-${badge.rarity.toLowerCase()}`}
@@ -1921,7 +2326,17 @@ function BadgeDetailPopover({ badge, onClose }) {
             <strong>{badge.lockedSecret ? "???" : badge.label}</strong>
             <span>{badge.rarity} / {RARITY_LABELS[badge.rarity]}</span>
           </div>
-          <button type="button" aria-label="閉じる" onClick={onClose}>×</button>
+          <button
+            type="button"
+            aria-label="閉じる"
+            onPointerDown={(event) => {
+              event.stopPropagation();
+              onClose();
+            }}
+            onClick={(event) => event.stopPropagation()}
+          >
+            ×
+          </button>
         </div>
         <p>{badge.lockedSecret ? "ひみつ" : badge.description}</p>
         <small>
@@ -1934,29 +2349,30 @@ function BadgeDetailPopover({ badge, onClose }) {
           )}
         </small>
       </aside>
-    </div>
+    </div>,
+    document.body
   );
 }
 
-function BadgeChip({ label, count = 1 }) {
+function BadgeChip({ label, count = 1, description = null, lockedSecret = false }) {
   const [selectedBadge, setSelectedBadge] = useState(null);
   const canonicalLabel = canonicalBadgeLabel(label);
-  const definition = makeBadgeDefinition(canonicalLabel);
+  const definition = makeBadgeDefinition(canonicalLabel, description ? { description } : {});
   return (
     <>
       <span className="badge-chip-wrap">
-      <button
-        className={`badge collection-badge rarity-${definition.rarity.toLowerCase()}`}
-        type="button"
-        onClick={() => setSelectedBadge({ ...definition, earnedCount: count, lockedSecret: false })}
-      >
-        <RarityIcon rarity={definition.rarity} />
-        {definition.label}
-      </button>
+        <button
+          className={`badge collection-badge rarity-${definition.rarity.toLowerCase()}`}
+          type="button"
+          onClick={() => setSelectedBadge({ ...definition, earnedCount: count, lockedSecret: false })}
+        >
+          <RarityIcon rarity={definition.rarity} />
+          {lockedSecret ? "???" : definition.label}
+        </button>
         <b>{count > 1 ? `x${count}` : ""}</b>
       </span>
       {selectedBadge && (
-        <BadgeDetailPopover badge={selectedBadge} onClose={() => setSelectedBadge(null)} />
+        <BadgeDetailPopover badge={{ ...selectedBadge, lockedSecret }} onClose={() => setSelectedBadge(null)} />
       )}
     </>
   );
@@ -2055,20 +2471,14 @@ function BadgeCollectionView({ allForName }) {
                     const earnedCount = earnedCountForDefinition(definition, badgeCounts, metaStats);
                     const lockedSecret = definition.secret && earnedCount === 0;
                     return (
-                      <button
+                      <div
                         className={`collection-card ${earnedCount ? "earned" : "locked"} ${definition.secret ? "secret" : ""}`}
                         key={definition.label}
-                        type="button"
-                        onClick={() => setSelectedBadge({ ...definition, earnedCount, lockedSecret })}
                       >
-                        <RarityIcon rarity={definition.rarity} />
-                        <div>
-                          <strong>{lockedSecret ? "???" : definition.label}</strong>
-                          <span>{definition.type === "unique" ? "1回だけ" : "何回でも"}</span>
-                        </div>
+                        <BadgeChip label={definition.label} count={earnedCount} description={definition.description} lockedSecret={lockedSecret} />
+                        <span>{definition.type === "unique" ? "1回だけ" : "何回でも"}</span>
                         <em>{definition.rarity}</em>
-                        {earnedCount > 1 && <b>x{earnedCount}</b>}
-                      </button>
+                      </div>
                     );
                   })}
                 </div>
@@ -2174,7 +2584,7 @@ function RecordView({ db, allForName, badgeMap, selectedDate, setSelectedDate, m
           <Metric icon="bat" label="バット数" value={selectedAgg.bats.length} unit="本" />
         </div>
         <div className="record-list">
-          {selectedByBat.length ? selectedByBat.map((item) => <RecordSummary key={item.bat} item={item} />) : <p className="empty">この日の記録はまだありません。</p>}
+          {selectedByBat.length ? selectedByBat.map((item) => <RecordSummary key={item.bat} item={item} batColor={batColorFor(db, item.bat)} />) : <p className="empty">この日の記録はまだありません。</p>}
         </div>
         <div className="badge-list day-badges">
           {[...(badgeMap.get(selectedDate) || [])].sort(compareBadgesByRarity).map((badge) => (
@@ -2231,44 +2641,176 @@ function Calendar({ records, badgeMap, month, selectedDate, setSelectedDate }) {
   );
 }
 
-function RecordSummary({ item }) {
-  return (
-    <article className="record-card">
-      <div className="record-title"><Icon type="bat" /><strong>{item.bat}</strong></div>
+function RecordSummary({ item, batColor = "#8d95a4", selected = false, onSelect = null }) {
+  const color = normalizeHexColor(batColor, "#8d95a4");
+  const content = (
+    <>
+      <div className="record-title"><span className="icon bat-card-icon" style={{ "--bat-icon-color": color }}><BatIcon color={color} /></span><strong>{item.bat}</strong></div>
       <div className="mini-grid">
         <span><b>回数</b>{item.count}<small>回</small></span>
         <span><b>平均</b>{item.avg}<small>点</small></span>
         <span><b>ベスト</b>{item.best}<small>点</small></span>
       </div>
+    </>
+  );
+  if (onSelect) {
+    return (
+      <button
+        type="button"
+        className={`record-card record-card-button ${selected ? "selected" : ""}`}
+        style={{ "--bat-icon-color": color }}
+        onClick={onSelect}
+        aria-pressed={selected}
+      >
+        <span className="record-card-radio" aria-hidden="true" />
+        {content}
+      </button>
+    );
+  }
+  return (
+    <article className="record-card" style={{ "--bat-icon-color": color }}>
+      {content}
     </article>
   );
 }
 
 function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, importCsv, setPendingDelete }) {
+  const [openBatPalette, setOpenBatPalette] = useState(null);
+  const [palettePosition, setPalettePosition] = useState(null);
+  const hasNames = db.names.length > 0;
+  const nameColorEntries = db.names.map((name) => [name, nameColorFor(db, name)]);
+  const batColorEntries = db.bats.map((bat) => [bat, batColorFor(db, bat)]);
+  const usedNameColors = new Set(nameColorEntries.map(([, color]) => color));
+  const usedBatColors = new Set(batColorEntries.map(([, color]) => color));
+  useEffect(() => {
+    if (!openBatPalette) return undefined;
+    const closeOnOutsideTap = (event) => {
+      if (event.target.closest?.(".bat-color-menu, .name-color-menu")) return;
+      setOpenBatPalette(null);
+      setPalettePosition(null);
+    };
+    const closeOnViewportChange = () => {
+      setOpenBatPalette(null);
+      setPalettePosition(null);
+    };
+    document.addEventListener("pointerdown", closeOnOutsideTap, true);
+    window.addEventListener("resize", closeOnViewportChange);
+    window.addEventListener("scroll", closeOnViewportChange, true);
+    return () => {
+      document.removeEventListener("pointerdown", closeOnOutsideTap, true);
+      window.removeEventListener("resize", closeOnViewportChange);
+      window.removeEventListener("scroll", closeOnViewportChange, true);
+    };
+  }, [openBatPalette]);
+
+  const togglePalette = (id, event) => {
+    if (openBatPalette === id) {
+      setOpenBatPalette(null);
+      setPalettePosition(null);
+      return;
+    }
+
+    const rect = event.currentTarget.getBoundingClientRect();
+    const paletteWidth = 172;
+    const paletteHeight = 72;
+    const left = Math.min(Math.max(rect.left + rect.width / 2, paletteWidth / 2 + 8), window.innerWidth - paletteWidth / 2 - 8);
+    const belowTop = rect.bottom + 8;
+    const top = belowTop + paletteHeight > window.innerHeight - 8 ? Math.max(8, rect.top - paletteHeight - 8) : belowTop;
+    setPalettePosition({ left, top });
+    setOpenBatPalette(id);
+  };
+
+  const updateNameColor = (name, color) => {
+    setDb({
+      ...db,
+      nameColors: {
+        ...normalizeNameColors(db.nameColors, db.names, db.theme),
+        [name]: normalizeHexColor(color, nameColorFor(db, name)),
+      },
+      theme: currentName === name ? normalizeHexColor(color, nameColorFor(db, name)) : db.theme,
+    });
+    setOpenBatPalette(null);
+    setPalettePosition(null);
+  };
+
+  const updateBatColor = (bat, color) => {
+    setDb({
+      ...db,
+      batColors: {
+        ...normalizeBatColors(db.batColors, db.bats),
+        [bat]: normalizeHexColor(color, batColorFor(db, bat)),
+      },
+    });
+    setOpenBatPalette(null);
+    setPalettePosition(null);
+  };
+
   return (
-    <>
-      <section className="panel">
+    <div className="settings-view">
+      <section className={`panel ${String(openBatPalette).startsWith("name:") ? "palette-panel-open" : ""}`}>
         <div className="section-row">
           <h2>名前</h2>
-          <p>使う人を切り替え</p>
+          <p>使う人とテーマカラー</p>
         </div>
         <form className="add-row" onSubmit={addName}>
           <input name="name" type="text" autoComplete="off" placeholder="名前を追加" />
           <button type="submit" className="primary"><ButtonIcon type="plus" /></button>
         </form>
+        {!hasNames && <p className="settings-error">最初に名前を登録してください。</p>}
         <div className="chip-list">
           {db.names.map((name) => (
-            <span key={name} className={`chip ${name === currentName ? "active" : ""}`}>
+            <span
+              key={name}
+              className={`chip name-settings-chip ${name === currentName ? "active" : ""} ${openBatPalette === `name:${name}` ? "palette-open" : ""}`}
+              style={{ "--name-chip-color": nameColorFor(db, name) }}
+            >
               <button type="button" onClick={() => setDb({ ...db, activeName: name })}>
                 {name}{name === currentName ? <small>選択中</small> : null}
               </button>
+              <span className="name-color-menu">
+                <button
+                  type="button"
+                  className="name-color-trigger"
+                  aria-label={`${name}のテーマカラーを選ぶ`}
+                  aria-expanded={openBatPalette === `name:${name}`}
+                  onClick={(event) => togglePalette(`name:${name}`, event)}
+                />
+                {openBatPalette === `name:${name}` && (
+                  <span
+                    className="bat-color-palette"
+                    style={palettePosition ? { "--palette-left": `${palettePosition.left}px`, "--palette-top": `${palettePosition.top}px` } : undefined}
+                    role="listbox"
+                    aria-label={`${name}のテーマカラー`}
+                  >
+                    {BAT_COLOR_PALETTE.map((color) => {
+                      const normalizedColor = normalizeHexColor(color);
+                      const currentColor = nameColorFor(db, name);
+                      const usedElsewhere = usedBatColors.has(normalizedColor) || nameColorEntries.some(([otherName, otherColor]) => otherName !== name && otherColor === normalizedColor);
+                      const disabled = usedElsewhere && normalizedColor !== currentColor;
+                      return (
+                        <button
+                          type="button"
+                          className={normalizedColor === currentColor ? "selected" : ""}
+                          style={{ "--swatch-color": normalizedColor }}
+                          aria-label={`${name}を${normalizedColor}にする`}
+                          aria-pressed={normalizedColor === currentColor}
+                          disabled={disabled}
+                          onClick={() => updateNameColor(name, normalizedColor)}
+                          key={normalizedColor}
+                        />
+                      );
+                    })}
+                  </span>
+                )}
+              </span>
               <button type="button" className="chip-delete" aria-label={`${name}を削除`} onClick={() => setPendingDelete({ type: "name", value: name })}><SvgIcon type="trash" /></button>
             </span>
           ))}
         </div>
       </section>
 
-      <section className="panel">
+      <section className={`panel ${db.bats.includes(openBatPalette) ? "palette-panel-open" : ""}`}>
+        <fieldset className="settings-fieldset" disabled={!hasNames}>
         <div className="section-row">
           <h2>バット</h2>
           <p>全員で共有 / 入力時の初期値</p>
@@ -2279,35 +2821,60 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
         </form>
         <div className="chip-list">
           {db.bats.map((bat) => (
-            <span key={bat} className={`chip ${bat === db.defaultBat ? "active default" : ""}`}>
+            <span
+              key={bat}
+              className={`chip bat-settings-chip ${bat === db.defaultBat ? "active default" : ""} ${openBatPalette === bat ? "palette-open" : ""}`}
+              style={{ "--bat-chip-color": batColorFor(db, bat) }}
+            >
               <button type="button" onClick={() => setDb({ ...db, defaultBat: bat })}>
-                {bat}{bat === db.defaultBat ? <small>デフォルト</small> : null}
+                <BatIcon color={batColorFor(db, bat)} />
+                <span>{bat}{bat === db.defaultBat ? <small>デフォルト</small> : null}</span>
               </button>
+              <span className="bat-color-menu">
+                <button
+                  type="button"
+                  className="bat-color-trigger"
+                  aria-label={`${bat}の色を選ぶ`}
+                  aria-expanded={openBatPalette === bat}
+                  onClick={(event) => togglePalette(bat, event)}
+                />
+                {openBatPalette === bat && (
+                  <span
+                    className="bat-color-palette"
+                    style={palettePosition ? { "--palette-left": `${palettePosition.left}px`, "--palette-top": `${palettePosition.top}px` } : undefined}
+                    role="listbox"
+                    aria-label={`${bat}の色`}
+                  >
+                    {BAT_COLOR_PALETTE.map((color) => {
+                      const normalizedColor = normalizeHexColor(color);
+                      const currentColor = batColorFor(db, bat);
+                      const usedElsewhere = usedNameColors.has(normalizedColor) || batColorEntries.some(([otherBat, otherColor]) => otherBat !== bat && otherColor === normalizedColor);
+                      const disabled = usedElsewhere && normalizedColor !== currentColor;
+                      return (
+                        <button
+                          type="button"
+                          className={normalizedColor === currentColor ? "selected" : ""}
+                          style={{ "--swatch-color": normalizedColor }}
+                          aria-label={`${bat}を${normalizedColor}にする`}
+                          aria-pressed={normalizedColor === currentColor}
+                          disabled={disabled}
+                          onClick={() => updateBatColor(bat, normalizedColor)}
+                          key={normalizedColor}
+                        />
+                      );
+                    })}
+                  </span>
+                )}
+              </span>
               <button type="button" className="chip-delete" aria-label={`${bat}を削除`} onClick={() => setPendingDelete({ type: "bat", value: bat })}><SvgIcon type="trash" /></button>
             </span>
           ))}
         </div>
+        </fieldset>
       </section>
 
       <section className="panel">
-        <div className="section-row">
-          <h2>テーマ</h2>
-          <p>アクセントカラー</p>
-        </div>
-        <div className="theme-switch">
-          {[
-            ["red", "赤", "#ff4055", "255,64,85"],
-            ["blue", "青", "#3b8dff", "59,141,255"],
-            ["green", "緑", "#249c68", "36,156,104"],
-          ].map(([theme, label, color, rgb]) => (
-            <button key={theme} type="button" className={(db.theme || "red") === theme ? "selected" : ""} onClick={() => setDb({ ...db, theme })} aria-label={`テーマ: ${label}`} title={`テーマ: ${label}`}>
-              <span className="theme-dot" style={{ "--theme-dot": color, "--theme-dot-rgb": rgb }} aria-hidden="true" />
-            </button>
-          ))}
-        </div>
-      </section>
-
-      <section className="panel">
+        <fieldset className="settings-fieldset" disabled={!hasNames}>
         <div className="section-row">
           <h2>データ管理</h2>
           <p>この端末に保存</p>
@@ -2318,8 +2885,9 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
         </div>
         <button type="button" className="ghost wide" onClick={() => setDb(demoDb())}>デモデータを作成</button>
         <button type="button" className="danger wide" onClick={() => setPendingDelete({ type: "all", value: "全データ" })}>全データ削除</button>
+        </fieldset>
       </section>
-    </>
+    </div>
   );
 }
 
