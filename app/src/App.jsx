@@ -1390,9 +1390,15 @@ function Chart({ data, initialRange }) {
 
   useEffect(() => {
     const clearHover = () => setHovered(null);
+    const clearHoverOnOutsideTap = (event) => {
+      if (wrapRef.current?.contains(event.target)) return;
+      setHovered(null);
+    };
+    document.addEventListener("pointerdown", clearHoverOnOutsideTap, true);
     window.addEventListener("scroll", clearHover, { passive: true });
     window.addEventListener("resize", clearHover);
     return () => {
+      document.removeEventListener("pointerdown", clearHoverOnOutsideTap, true);
       window.removeEventListener("scroll", clearHover);
       window.removeEventListener("resize", clearHover);
     };

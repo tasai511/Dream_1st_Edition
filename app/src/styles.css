@@ -1659,18 +1659,18 @@ p {
   place-items: center;
   min-width: 43px;
   min-height: 19px;
-  border: 2.5px solid rgba(255, 255, 255, 0.92);
+  border: 2.5px solid rgba(255, 255, 255, 0.72);
   border-radius: 4px;
   padding: 2px 6px 3px;
   color: #fff;
-  background: rgba(255, 55, 80, 0.58);
+  background: rgba(255, 255, 255, 0.08);
   font-size: 0.64rem;
   font-style: normal;
   font-weight: 950;
   letter-spacing: 0;
   line-height: 1;
   opacity: 1;
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.58), 0 0 10px rgba(255, 255, 255, 0.34);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.58), 0 0 12px rgba(255, 255, 255, 0.48);
   transform: rotate(-9deg);
   pointer-events: none;
 }
