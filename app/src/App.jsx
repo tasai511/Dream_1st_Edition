@@ -610,55 +610,61 @@ function ProgressMeter({ kind, value, range, variableTarget, targets }) {
   const span = Math.max(1, info.goal - info.previous);
   const ratio = clamp((Number(value || 0) - info.previous) / span, 0, 1);
   const circumference = 169.65;
-  const dashOffset = circumference * (1 - ratio);
+  const gap = 22;
+  const arc = circumference - gap;
+  const valueArc = arc * ratio;
+  const meterRotation = "rotate(-90 36 36)";
 
   return (
     <div className={`progress-meter ${kind}`} ref={meterRef}>
       <div className="meter-ring">
         <svg viewBox="0 0 72 72" aria-hidden="true">
-          <circle className="meter-track" cx="36" cy="36" r="27" />
+          <circle
+            className="meter-track"
+            cx="36"
+            cy="36"
+            r="27"
+            strokeDasharray={`${arc} ${gap}`}
+            transform={meterRotation}
+          />
           <circle
             className="meter-glow meter-glow-wide"
             cx="36"
             cy="36"
             r="27"
-            strokeDasharray={circumference}
-            strokeDashoffset={dashOffset}
-            transform="rotate(-90 36 36)"
+            strokeDasharray={`${valueArc} ${circumference - valueArc}`}
+            transform={meterRotation}
           />
           <circle
             className="meter-glow meter-glow-core"
             cx="36"
             cy="36"
             r="27"
-            strokeDasharray={circumference}
-            strokeDashoffset={dashOffset}
-            transform="rotate(-90 36 36)"
+            strokeDasharray={`${valueArc} ${circumference - valueArc}`}
+            transform={meterRotation}
           />
           <circle
             className="meter-value"
             cx="36"
             cy="36"
             r="27"
-            strokeDasharray={circumference}
-            strokeDashoffset={dashOffset}
-            transform="rotate(-90 36 36)"
+            strokeDasharray={`${valueArc} ${circumference - valueArc}`}
+            transform={meterRotation}
           />
         </svg>
         <span className="meter-remaining"><em>あと</em><b>{info.remaining.toLocaleString("ja-JP")}</b></span>
+        <button
+          className={`meter-badge ring-meter-badge rarity-${targetBadge.rarity.toLowerCase()}`}
+          type="button"
+          aria-label={`${targetBadge.label}の詳細`}
+          onClick={() => setSelectedBadge({ ...targetBadge, earnedCount: 0, lockedSecret: false })}
+        >
+          <span className="meter-badge-icon"><RarityIcon rarity={targetBadge.rarity} /></span>
+        </button>
         {selectedBadge && (
           <BadgeDetailPopover badge={selectedBadge} onClose={() => setSelectedBadge(null)} />
         )}
       </div>
-      <button
-        className={`meter-badge rarity-${targetBadge.rarity.toLowerCase()}`}
-        type="button"
-        aria-label={`${targetBadge.label}の詳細`}
-        onClick={() => setSelectedBadge({ ...targetBadge, earnedCount: 0, lockedSecret: false })}
-      >
-        <span className="meter-badge-icon"><RarityIcon rarity={targetBadge.rarity} /></span>
-        <span>獲得まで</span>
-      </button>
     </div>
   );
 }
@@ -1714,51 +1720,6 @@ function RarityIcon({ rarity }) {
   );
 }
 
-function CompletionMeter({ earned, total }) {
-  const circumference = 169.65;
-  const ratio = total > 0 ? clamp(earned / total, 0, 1) : 0;
-  const dashOffset = circumference * (1 - ratio);
-  const remaining = Math.max(0, total - earned);
-  return (
-    <div className="completion-meter" aria-label={`コンプリートまであと${remaining}種類`}>
-      <div className="meter-ring">
-        <svg viewBox="0 0 72 72" aria-hidden="true">
-          <circle className="meter-track" cx="36" cy="36" r="27" />
-          <circle
-            className="meter-glow meter-glow-wide"
-            cx="36"
-            cy="36"
-            r="27"
-            strokeDasharray={circumference}
-            strokeDashoffset={dashOffset}
-            transform="rotate(-90 36 36)"
-          />
-          <circle
-            className="meter-glow meter-glow-core"
-            cx="36"
-            cy="36"
-            r="27"
-            strokeDasharray={circumference}
-            strokeDashoffset={dashOffset}
-            transform="rotate(-90 36 36)"
-          />
-          <circle
-            className="meter-value"
-            cx="36"
-            cy="36"
-            r="27"
-            strokeDasharray={circumference}
-            strokeDashoffset={dashOffset}
-            transform="rotate(-90 36 36)"
-          />
-        </svg>
-        <span className="meter-remaining"><em>あと</em><b>{remaining.toLocaleString("ja-JP")}</b></span>
-      </div>
-      <small>完成まで</small>
-    </div>
-  );
-}
-
 function BadgeDetailPopover({ badge, onClose }) {
   return (
     <div className="collection-popover-backdrop" onPointerDown={onClose}>
@@ -1845,6 +1806,8 @@ function BadgeCollectionView({ allForName }) {
   const earnedInstanceTotal = definitions.reduce((sum, definition) => (
     sum + earnedCountForDefinition(definition, badgeCounts, metaStats)
   ), 0);
+  const badgePointTargets = META_BADGE_DEFINITIONS.filter((definition) => definition.metric === "points");
+  const badgeTypeTargets = META_BADGE_DEFINITIONS.filter((definition) => definition.metric === "types");
   return (
     <section className="badge-collection">
       <div className="badge-point-card">
@@ -1854,7 +1817,10 @@ function BadgeCollectionView({ allForName }) {
           <span className="badge-point-meta"><b>{earnedTotal}</b>/{definitions.length} 種類</span>
           <span className="badge-point-meta"><b>{earnedInstanceTotal.toLocaleString("ja-JP")}</b>個</span>
         </div>
-        <CompletionMeter earned={earnedTotal} total={definitions.length} />
+        <div className="badge-point-meters" aria-label="次に狙うバッジ">
+          <ProgressMeter kind="badge-points" value={basePointTotal} range={RANGE_TOTAL} targets={badgePointTargets} />
+          <ProgressMeter kind="badge-types" value={baseEarnedTotal} range={RANGE_TOTAL} targets={badgeTypeTargets} />
+        </div>
       </div>
       <section className="collection-main-card">
         <div className="collection-card-heading">
@@ -1990,7 +1956,7 @@ function RecordView({ db, allForName, badgeMap, selectedDate, setSelectedDate, m
             <h2>{isToday ? "今日の記録" : selectedDateLabel}</h2>
           </div>
           {canEdit && !isEditing && (
-            <button type="button" className="ghost edit-toggle" onClick={() => setIsEditing((value) => !value)}>
+            <button type="button" className="ghost edit-toggle record-edit-toggle" onClick={() => setIsEditing((value) => !value)}>
               {isToday ? "入力" : "修正"}
             </button>
           )}

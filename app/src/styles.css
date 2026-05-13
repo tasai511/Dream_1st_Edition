@@ -1476,6 +1476,43 @@ input::placeholder {
   font-weight: 950;
 }
 
+.badge-point-meters {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 10px;
+  flex: 0 0 auto;
+}
+
+.badge-point-meters .progress-meter {
+  --meter-size: 72px;
+  width: var(--meter-size);
+  min-height: auto;
+}
+
+.badge-point-meters .meter-ring {
+  width: var(--meter-size);
+  height: var(--meter-size);
+}
+
+.badge-point-meters .meter-ring svg {
+  width: var(--meter-size);
+  height: var(--meter-size);
+}
+
+.badge-point-card .badge-point-meters span {
+  display: inline-grid;
+  margin-top: 0;
+}
+
+.badge-point-card .badge-point-meters .meter-remaining {
+  display: grid !important;
+}
+
+.badge-point-card .badge-point-meters .meter-badge {
+  display: inline-flex;
+}
+
 .completion-meter {
   display: grid;
   justify-items: center;
@@ -3221,4 +3258,227 @@ select:focus,
 .calendar-day.selected.has-record {
   border-color: var(--hot);
   background: var(--hot);
+}
+
+/* Final alignment fixes for the flat dashboard. Keep these at the end so
+   meter labels and calendar states win over the older theme layers above. */
+.meter-ring > span.meter-remaining:not(.meter-badge-popover),
+.completion-meter .meter-ring > span.meter-remaining:not(.meter-badge-popover) {
+  position: absolute;
+  inset: auto;
+  top: 50%;
+  left: 50%;
+  right: auto;
+  bottom: auto;
+  z-index: 2;
+  display: grid !important;
+  width: max-content;
+  height: auto;
+  place-items: center;
+  gap: 1px;
+  text-align: center;
+  transform: translate(-50%, -50%);
+}
+
+.completion-meter .meter-ring > span.meter-remaining:not(.meter-badge-popover) {
+  transform: translate(-50%, -50%);
+}
+
+.meter-ring .meter-remaining em,
+.meter-ring .meter-remaining b {
+  display: block;
+  line-height: 1;
+}
+
+.progress-meter {
+  display: grid;
+  grid-template-columns: var(--meter-size);
+  justify-items: end;
+  align-items: center;
+  align-content: start;
+  column-gap: 0;
+  row-gap: 0;
+  width: var(--meter-size);
+}
+
+.progress-meter > .meter-ring,
+.progress-meter > .meter-badge {
+  margin-right: 0;
+  margin-left: 0;
+}
+
+.progress-meter > .meter-ring {
+  grid-column: 1;
+  justify-self: end;
+}
+
+.achievement-summary.all-period .progress-meter .meter-ring,
+.achievement-summary.all-period .progress-meter.count .meter-ring,
+.cumulative-summary .meter-ring {
+  margin-left: 0;
+}
+
+.meter-badge-icon {
+  color: inherit;
+  width: 28px;
+  height: 28px;
+}
+
+.meter-badge .rarity-icon {
+  width: 25px;
+  height: 25px;
+  color: currentColor;
+}
+
+.meter-badge > span:not(.meter-badge-icon) {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 950;
+}
+
+.cumulative-summary .achievement-metric.count > div > strong,
+.cumulative-summary .compact-metrics .achievement-metric.count > div > strong {
+  font-size: 1.8rem !important;
+  line-height: 1 !important;
+}
+
+.cumulative-summary .progress-meter.count {
+  --meter-size: 72px;
+  min-height: var(--meter-size);
+}
+
+.cumulative-summary .progress-meter.count .meter-track,
+.cumulative-summary .progress-meter.count .meter-value {
+  stroke-width: 8;
+}
+
+.cumulative-summary .progress-meter.count .meter-ring .meter-remaining b {
+  font-size: 0.78rem;
+}
+
+.calendar-day.has-record {
+  border-color: rgba(var(--hot-rgb), 0.3);
+  background: rgba(var(--hot-rgb), 0.12);
+}
+
+.calendar-day.has-record small {
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.calendar-day.selected,
+.calendar-day.selected.has-record {
+  border-color: var(--hot);
+  background: var(--hot);
+}
+
+.record-edit-toggle {
+  border-color: transparent;
+  color: #fff;
+  background: var(--hot);
+}
+
+.record-edit-toggle:hover {
+  background: var(--hot-dark);
+}
+
+.progress-meter > .meter-badge.rarity-c { color: #9aa3af; }
+.progress-meter > .meter-badge.rarity-u { color: #4cc38a; }
+.progress-meter > .meter-badge.rarity-r { color: #4d8dff; }
+.progress-meter > .meter-badge.rarity-rr { color: #a878ff; }
+.progress-meter > .meter-badge.rarity-sr { color: #ffbf47; }
+.progress-meter > .meter-badge.rarity-ar { color: #ff7a45; }
+.progress-meter > .meter-badge.rarity-sar { color: #ff4f8f; }
+.progress-meter > .meter-badge.rarity-ur { color: #f6f2d4; }
+
+.meter-ring > .meter-badge.rarity-c { color: #9aa3af; }
+.meter-ring > .meter-badge.rarity-u { color: #4cc38a; }
+.meter-ring > .meter-badge.rarity-r { color: #4d8dff; }
+.meter-ring > .meter-badge.rarity-rr { color: #a878ff; }
+.meter-ring > .meter-badge.rarity-sr { color: #ffbf47; }
+.meter-ring > .meter-badge.rarity-ar { color: #ff7a45; }
+.meter-ring > .meter-badge.rarity-sar { color: #ff4f8f; }
+.meter-ring > .meter-badge.rarity-ur { color: #f6f2d4; }
+
+.progress-meter > .meter-badge .meter-badge-icon,
+.meter-ring > .meter-badge .meter-badge-icon {
+  border-color: transparent;
+  background: transparent;
+}
+
+.meter-ring > .ring-meter-badge {
+  position: absolute !important;
+  top: 9% !important;
+  left: 50% !important;
+  z-index: 4;
+  display: grid !important;
+  place-items: center;
+  width: 30px !important;
+  min-width: 0 !important;
+  height: 30px !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  transform: translate(-100%, -50%);
+}
+
+.meter-ring > .ring-meter-badge.rarity-c { color: #9aa3af; }
+.meter-ring > .ring-meter-badge.rarity-u { color: #4cc38a; }
+.meter-ring > .ring-meter-badge.rarity-r { color: #4d8dff; }
+.meter-ring > .ring-meter-badge.rarity-rr { color: #a878ff; }
+.meter-ring > .ring-meter-badge.rarity-sr { color: #ffbf47; }
+.meter-ring > .ring-meter-badge.rarity-ar { color: #ff7a45; }
+.meter-ring > .ring-meter-badge.rarity-sar { color: #ff4f8f; }
+.meter-ring > .ring-meter-badge.rarity-ur { color: #f6f2d4; }
+
+.ring-meter-badge .meter-badge-icon,
+.ring-meter-badge .rarity-icon {
+  width: 27px;
+  height: 27px;
+}
+
+.progress-meter > .meter-badge > span:not(.meter-badge-icon) {
+  color: currentColor;
+}
+
+.achievement-metric {
+  grid-template-columns: minmax(0, 1fr) 116px;
+}
+
+.achievement-metric.count {
+  grid-template-columns: minmax(0, 1fr) 128px;
+}
+
+.cumulative-summary .achievement-metric,
+.cumulative-summary .achievement-metric.count {
+  grid-template-columns: minmax(0, 1fr) 116px;
+}
+
+.badge-point-card {
+  align-items: flex-start;
+}
+
+.completion-meter {
+  gap: 5px;
+}
+
+.completion-meter small {
+  order: -1;
+  color: var(--muted);
+  font-size: 0.62rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.completion-meter .meter-ring > span.meter-remaining:not(.meter-badge-popover) {
+  inset: auto;
+  top: 50%;
+  left: 50%;
+  right: auto;
+  bottom: auto;
+  width: max-content;
+  height: auto;
+  transform: translate(-50%, -60%);
 }
