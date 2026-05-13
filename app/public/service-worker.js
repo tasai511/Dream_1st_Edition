@@ -1,4 +1,4 @@
-const CACHE_NAME = "swing-log-v72";
+const CACHE_NAME = "swing-log-v73";
 const ASSETS = [
   "./",
   "./index.html",
