@@ -1649,41 +1649,6 @@ p {
   display: block;
 }
 
-.daily-badge-get-stamp {
-  position: absolute;
-  right: -17px;
-  bottom: -11px;
-  top: auto;
-  z-index: 3;
-  display: inline-grid;
-  place-items: center;
-  min-width: 43px;
-  min-height: 19px;
-  border: 2.5px solid rgba(255, 255, 255, 0.72);
-  border-radius: 4px;
-  padding: 2px 6px 3px;
-  color: #fff;
-  background: rgba(255, 255, 255, 0.08);
-  font-size: 0.64rem;
-  font-style: normal;
-  font-weight: 950;
-  letter-spacing: 0;
-  line-height: 1;
-  opacity: 1;
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.58), 0 0 12px rgba(255, 255, 255, 0.48);
-  transform: rotate(-9deg);
-  pointer-events: none;
-}
-
-.daily-badge-get-stamp::before {
-  position: absolute;
-  inset: 2px;
-  border: 1px solid currentColor;
-  border-radius: 2px;
-  content: "";
-  opacity: 0.45;
-}
-
 .daily-badge-empty {
   display: inline-flex;
   align-items: center;

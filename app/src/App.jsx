@@ -1087,7 +1087,6 @@ function DailyBadgeMark({ label, description }) {
         <span className="daily-badge-label">
           {labelParts.map((part) => <span key={part}>{part}</span>)}
         </span>
-        <i className="daily-badge-get-stamp" aria-hidden="true">GET!</i>
       </button>
       {selectedBadge && (
         <BadgeDetailPopover badge={selectedBadge} onClose={() => setSelectedBadge(null)} />
