@@ -2316,13 +2316,19 @@ function RarityIcon({ rarity }) {
 }
 
 function BadgeDetailPopover({ badge, onClose }) {
+  const closePopover = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    onClose();
+  };
   return createPortal(
-    <div className="collection-popover-backdrop" onPointerDown={onClose}>
+    <div className="collection-popover-backdrop" onClick={closePopover}>
       <aside
         className={`collection-popover rarity-${badge.rarity.toLowerCase()}`}
         role="dialog"
         aria-modal="true"
         onPointerDown={(event) => event.stopPropagation()}
+        onClick={(event) => event.stopPropagation()}
       >
         <div className="collection-popover-head">
           <RarityIcon rarity={badge.rarity} />
@@ -2335,9 +2341,8 @@ function BadgeDetailPopover({ badge, onClose }) {
             aria-label="閉じる"
             onPointerDown={(event) => {
               event.stopPropagation();
-              onClose();
             }}
-            onClick={(event) => event.stopPropagation()}
+            onClick={closePopover}
           >
             ×
           </button>
