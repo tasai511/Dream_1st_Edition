@@ -3407,8 +3407,8 @@ select:focus,
 
 .meter-ring > .ring-meter-badge {
   position: absolute !important;
-  top: 9% !important;
-  left: 50% !important;
+  top: 24.5% !important;
+  left: 22.5% !important;
   z-index: 4;
   display: grid !important;
   place-items: center;
@@ -3421,7 +3421,7 @@ select:focus,
   padding: 0;
   color: inherit;
   background: transparent;
-  transform: translate(-100%, -50%);
+  transform: translate(-50%, -50%);
 }
 
 .meter-ring > .ring-meter-badge.rarity-c { color: #9aa3af; }
