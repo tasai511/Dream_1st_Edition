@@ -40,6 +40,7 @@ const RARITY_ICON_FILES = {
   SAR: "rarity_sar_special_art_rare.svg",
   UR: "rarity_ur_ultra_rare.svg",
 };
+const publicAsset = (path) => `${import.meta.env.BASE_URL}${path.replace(/^\/+/, "")}`;
 const UNIQUE_TOTAL_COUNT_TARGETS = [100, 500, 1000, 3000, 5000, 10000, 30000, 50000, 100000];
 const UNIQUE_BEST_TARGETS = [500, 600, 700, 800, 900, 999];
 const UNIQUE_STREAK_TARGETS = [2, 3, 7, 14, 30, 60, 100, 365];
@@ -127,7 +128,7 @@ function SvgIcon({ type }) {
   if (type === "count") return <svg {...props}><path d="M4 7h16M4 12h16M4 17h10" /></svg>;
   if (type === "avg") return <svg {...props}><path d="M4 17 9 12l4 4 7-9" /><path d="M16 7h4v4" /></svg>;
   if (type === "best") return <svg {...props}><path d="M12 3 9.5 8.5 4 9l4.2 3.8L7 18.5l5-3 5 3-1.2-5.7L20 9l-5.5-.5L12 3Z" /></svg>;
-  if (type === "bat") return <img className="bat-image-icon" src="./images/bat-icon.svg?v=2" alt="" aria-hidden="true" />;
+  if (type === "bat") return <img className="bat-image-icon" src={publicAsset("images/bat-icon.svg?v=2")} alt="" aria-hidden="true" />;
   if (type === "badge") return <svg {...props}><circle cx="12" cy="8" r="4" /><path d="m9 12-2 8 5-3 5 3-2-8" /></svg>;
   if (type === "plus") return <svg {...props}><path d="M12 5v14M5 12h14" /></svg>;
   if (type === "trash") return <svg {...props}><path d="M4 7h16" /><path d="M10 11v6M14 11v6" /><path d="M6 7l1 14h10l1-14" /><path d="M9 7V4h6v3" /></svg>;
@@ -1714,7 +1715,7 @@ function RarityIcon({ rarity }) {
   return (
     <span
       className={`rarity-icon rarity-${rarity.toLowerCase()}`}
-      style={{ "--rarity-icon": `url("./images/${RARITY_ICON_FILES[rarity]}")` }}
+      style={{ "--rarity-icon": `url("${publicAsset(`images/${RARITY_ICON_FILES[rarity]}`)}")` }}
       aria-hidden="true"
     />
   );
