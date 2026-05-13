@@ -1965,7 +1965,7 @@ function RecordView({ db, allForName, badgeMap, selectedDate, setSelectedDate, m
             <h2>{isToday ? "今日の記録" : selectedDateLabel}</h2>
           </div>
           {canEdit && !isEditing && (
-            <button type="button" className="ghost edit-toggle record-edit-toggle" onClick={() => setIsEditing((value) => !value)}>
+            <button type="button" className={`ghost edit-toggle ${isToday ? "record-edit-toggle" : ""}`} onClick={() => setIsEditing((value) => !value)}>
               {isToday ? "入力" : "修正"}
             </button>
           )}
