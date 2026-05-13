@@ -1492,7 +1492,7 @@ p {
   top: 50%;
   right: clamp(0px, 6%, 44px);
   z-index: 1;
-  width: 76px;
+  width: 70px;
   min-width: 0;
   min-height: 0;
   align-items: center;
@@ -1502,17 +1502,7 @@ p {
 }
 
 .daily-badge-stage::before {
-  position: absolute;
-  inset: -24px -28px -20px -136px;
-  z-index: 0;
-  border-radius: 999px;
-  background:
-    radial-gradient(circle at 74% 46%, color-mix(in srgb, var(--daily-stage-badge-color, currentColor) 50%, transparent) 0%, color-mix(in srgb, var(--daily-stage-badge-color, currentColor) 24%, transparent) 34%, color-mix(in srgb, var(--daily-stage-badge-color, currentColor) 8%, transparent) 58%, transparent 76%),
-    linear-gradient(90deg, transparent 0%, color-mix(in srgb, var(--daily-stage-badge-color, currentColor) 12%, transparent) 42%, transparent 100%);
-  content: "";
-  filter: blur(12px);
-  opacity: 1;
-  pointer-events: none;
+  content: none;
 }
 
 .daily-badge-mark {
@@ -1526,11 +1516,11 @@ p {
   justify-items: center;
   align-content: center;
   gap: 0;
-  width: 76px;
+  width: 70px;
   min-width: 0;
-  min-height: 60px;
+  min-height: 55px;
   border: 2px solid var(--daily-badge-color);
-  border-radius: 14px;
+  border-radius: 13px;
   padding: 2px;
   overflow: visible;
   color: currentColor;
@@ -1574,8 +1564,8 @@ p {
 .daily-badge-mark .rarity-icon {
   isolation: isolate;
   position: relative;
-  width: 62px;
-  height: 62px;
+  width: 56px;
+  height: 56px;
   margin-bottom: 0;
   background:
     radial-gradient(circle at 28% 18%, rgba(255, 255, 255, 0.58) 0 7%, rgba(255, 255, 255, 0.22) 17%, transparent 35%),
@@ -1612,8 +1602,8 @@ p {
   right: -2px;
   z-index: 3;
   display: grid;
-  min-width: 28px;
-  height: 26px;
+  min-width: 26px;
+  height: 24px;
   padding: 0 5px;
   place-items: center;
   color: transparent;
@@ -1623,7 +1613,7 @@ p {
     var(--daily-badge-color);
   -webkit-background-clip: text;
   background-clip: text;
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 950;
   letter-spacing: 0;
   line-height: 1;
@@ -1635,7 +1625,7 @@ p {
 
 .daily-badge-label {
   position: absolute;
-  right: calc(100% + 6px);
+  right: calc(100% + 5px);
   top: 50%;
   z-index: 2;
   overflow: hidden;
@@ -1657,13 +1647,13 @@ p {
 
 .daily-badge-get-stamp {
   position: absolute;
-  right: calc(100% + 38px);
-  top: calc(50% + 15px);
+  right: calc(100% + 28px);
+  top: calc(50% + 12px);
   z-index: 3;
   display: inline-grid;
   place-items: center;
-  min-width: 50px;
-  min-height: 22px;
+  min-width: 48px;
+  min-height: 21px;
   border: 2px solid #ff4b5f;
   border-radius: 4px;
   padding: 2px 7px 3px;
