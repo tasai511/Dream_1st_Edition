@@ -2407,6 +2407,25 @@ body,
   transform: none;
 }
 
+.rarity-tabs {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.rarity-tabs button {
+  grid-template-columns: auto auto;
+  column-gap: 5px;
+  min-height: 42px;
+}
+
+.rarity-tabs .rarity-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.rarity-tabs button span {
+  line-height: 1;
+}
+
 .period-heading {
   margin: 0 0 14px;
   color: var(--muted);
@@ -3412,8 +3431,8 @@ select:focus,
 
 .meter-ring > .ring-meter-badge {
   position: absolute !important;
-  top: 24.5% !important;
-  left: 22.5% !important;
+  left: -18px !important;
+  bottom: -2px !important;
   z-index: 4;
   display: grid !important;
   place-items: center;
@@ -3426,7 +3445,7 @@ select:focus,
   padding: 0;
   color: inherit;
   background: transparent;
-  transform: translate(-50%, -50%);
+  transform: none;
 }
 
 .meter-ring > .ring-meter-badge.rarity-c { color: #9aa3af; }

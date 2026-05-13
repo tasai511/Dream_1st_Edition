@@ -1787,6 +1787,7 @@ function BadgeChip({ label, count = 1 }) {
 
 function BadgeCollectionView({ allForName }) {
   const [selectedBadge, setSelectedBadge] = useState(null);
+  const [selectedRarity, setSelectedRarity] = useState(RARITY_ORDER[0]);
   const badgeCounts = useMemo(() => new Map(collectBadgeCounts(allForName, RANGE_ALL)), [allForName]);
   const definitions = useMemo(() => allBadgeDefinitions(), []);
   const baseDefinitions = definitions.filter((definition) => !META_BADGE_DEFINITIONS.some((item) => item.label === definition.label));
@@ -1817,6 +1818,15 @@ function BadgeCollectionView({ allForName }) {
   ), 0);
   const badgePointTargets = META_BADGE_DEFINITIONS.filter((definition) => definition.metric === "points");
   const badgeTypeTargets = META_BADGE_DEFINITIONS.filter((definition) => definition.metric === "types");
+  const raritySummaries = RARITY_ORDER.map((rarity) => {
+    const items = definitions.filter((definition) => definition.rarity === rarity);
+    const earnedTotal = items.reduce((sum, definition) => sum + Math.min(1, earnedCountForDefinition(definition, badgeCounts, metaStats)), 0);
+    const pointTotal = items.reduce((sum, definition) => (
+      sum + (earnedCountForDefinition(definition, badgeCounts, metaStats) * RARITY_POINTS[rarity])
+    ), 0);
+    return { rarity, items, earnedTotal, pointTotal };
+  }).filter((summary) => summary.items.length);
+  const activeRaritySummary = raritySummaries.find((summary) => summary.rarity === selectedRarity) || raritySummaries[0];
   return (
     <section className="badge-collection">
       <div className="badge-point-card">
@@ -1832,17 +1842,27 @@ function BadgeCollectionView({ allForName }) {
         </div>
       </div>
       <section className="collection-main-card">
+        <div className="attached-tabs rarity-tabs" role="tablist" aria-label="バッジレア度">
+          {raritySummaries.map(({ rarity }) => (
+            <button
+              key={rarity}
+              type="button"
+              role="tab"
+              aria-selected={activeRaritySummary?.rarity === rarity}
+              className={activeRaritySummary?.rarity === rarity ? "selected" : ""}
+              onClick={() => setSelectedRarity(rarity)}
+            >
+              <RarityIcon rarity={rarity} />
+              <span>{rarity}</span>
+            </button>
+          ))}
+        </div>
         <div className="collection-card-heading">
           <p>コレクション</p>
         </div>
         <div className="collection-groups">
-          {RARITY_ORDER.map((rarity) => {
-            const items = definitions.filter((definition) => definition.rarity === rarity);
-            if (!items.length) return null;
-            const rarityEarnedTotal = items.reduce((sum, definition) => sum + Math.min(1, earnedCountForDefinition(definition, badgeCounts, metaStats)), 0);
-            const rarityPointTotal = items.reduce((sum, definition) => (
-              sum + (earnedCountForDefinition(definition, badgeCounts, metaStats) * RARITY_POINTS[rarity])
-            ), 0);
+          {activeRaritySummary && (() => {
+            const { rarity, items, earnedTotal: rarityEarnedTotal, pointTotal: rarityPointTotal } = activeRaritySummary;
             return (
               <section className={`collection-group rarity-${rarity.toLowerCase()}`} key={rarity}>
                 <div className="collection-group-title">
@@ -1877,7 +1897,7 @@ function BadgeCollectionView({ allForName }) {
                 </div>
               </section>
             );
-          })}
+          })()}
         </div>
       </section>
       {selectedBadge && (
