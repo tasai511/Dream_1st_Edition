@@ -624,11 +624,31 @@ function buildAchievementCard({ key, icon, label, value, unit, kind, range, vari
     unit,
     kind,
     range,
+    targets: null,
     variableTarget,
     pending,
     badgeEligible,
     info,
     ratio: info ? progressRatioFor(info, value) : -1,
+  };
+}
+
+function buildAchievementCardWithTargets({ key, icon, label, value, unit, kind, range, targets }) {
+  const info = progressInfo(kind, Number(value || 0), range, null, targets);
+  return {
+    icon,
+    key: key || kind,
+    label,
+    value: Number(value || 0),
+    unit,
+    kind,
+    range,
+    targets,
+    variableTarget: null,
+    pending: false,
+    badgeEligible: true,
+    info,
+    ratio: progressRatioFor(info, value),
   };
 }
 
@@ -760,7 +780,7 @@ function AchievementFocusCard({ card }) {
         {card.info && <small>あと{card.info.remaining.toLocaleString("ja-JP")}でバッジ獲得！</small>}
       </div>
       {card.badgeEligible && (
-        <ProgressMeter kind={card.kind} value={card.value} range={card.range} variableTarget={card.variableTarget} />
+        <ProgressMeter kind={card.kind} value={card.value} range={card.range} variableTarget={card.variableTarget} targets={card.targets} />
       )}
     </article>
   );
@@ -881,6 +901,51 @@ function RecordPanel({ daily, range }) {
       ) : <p className="empty compact-empty">記録がありません。</p>}
     </section>
   );
+}
+
+function EarnedBadgesCard({ badgeCounts }) {
+  const [expanded, setExpanded] = useState(false);
+  const recentBadges = useMemo(() => [...badgeCounts].slice(-4).reverse(), [badgeCounts]);
+  const allBadges = useMemo(() => [...badgeCounts].sort((a, b) => compareBadgesByRarity(a[0], b[0])), [badgeCounts]);
+  const visibleBadges = expanded ? allBadges : recentBadges;
+  const badgeTotal = badgeCounts.reduce((sum, [, count]) => sum + count, 0);
+  const toggleExpanded = () => {
+    if (document.startViewTransition) {
+      document.startViewTransition(() => setExpanded((value) => !value));
+      return;
+    }
+    setExpanded((value) => !value);
+  };
+
+  return (
+    <section className={`dashboard-section badge-inline-section ${expanded ? "expanded" : ""}`}>
+      <div className="section-row tight">
+        <div>
+          <h2>獲得バッジ</h2>
+          {!expanded && badgeCounts.length > 4 && <p>New</p>}
+        </div>
+        {badgeCounts.length > 4 && (
+          <button type="button" className="ghost badge-expand-toggle" onClick={toggleExpanded}>
+            {expanded ? "閉じる" : "全部みる"}
+          </button>
+        )}
+      </div>
+      <div className="badge-total"><strong>{badgeTotal.toLocaleString("ja-JP")}</strong><span>個</span></div>
+      {badgeCounts.length ? (
+        <div className="badge-list two-col">
+          {visibleBadges.map(([label, count]) => (
+            <span className="badge-motion-item" style={{ viewTransitionName: `badge-${badgeDomId(label)}` }} key={label}>
+              <BadgeChip label={label} count={count} />
+            </span>
+          ))}
+        </div>
+      ) : <p className="empty">まだバッジはありません。</p>}
+    </section>
+  );
+}
+
+function badgeDomId(label) {
+  return label.replace(/[^\w-]/g, (char) => `-${char.codePointAt(0).toString(16)}-`);
 }
 
 function CountBars({ buckets }) {
@@ -1511,14 +1576,12 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
     ? BAT_BADGE_DEFINITIONS.filter((definition) => definition.metric === "best")
     : UNIQUE_BEST_TARGETS.map((target) => ({ target, label: `初${target}点`, description: `ベスト${target}点到達` }));
   const badgeCounts = collectBadgeCounts(allFiltered, range);
-  const sortedBadgeCounts = [...badgeCounts].sort((a, b) => compareBadgesByRarity(a[0], b[0]));
   const chartData = filledChartExtent(chartDaily);
   const rangeOptions = [
     [RANGE_TODAY, "今日"],
     [RANGE_WEEK, "今週"],
     [RANGE_MONTH, "今月"],
   ];
-  const badgeTotal = badgeCounts.reduce((sum, [, count]) => sum + count, 0);
   const achievementCards = [
     buildAchievementCard({ key: "count", icon: "count", label: "スイング数", value: total, unit: "回", kind: "count", range }),
     range === RANGE_TODAY
@@ -1526,6 +1589,11 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
       : buildAchievementCard({ key: "days", icon: "log", label: "練習日数", value: practiceDays, unit: cardPracticeUnit, kind: "days", range, variableTarget: periodSummary.spanDays }),
     buildAchievementCard({ key: "avg", icon: "avg", label: "平均スコア", value: avg, unit: cardAvgUnit, kind: "avg", range, pending: !isPeriodComplete && range !== RANGE_TODAY }),
     buildAchievementCard({ key: "best", icon: "best", label: "ベストスコア", value: best, unit: "点", kind: "best", range, badgeEligible: range === RANGE_TODAY }),
+  ];
+  const cumulativeCards = [
+    buildAchievementCardWithTargets({ key: "total-count", icon: "count", label: "スイング数", value: cumulativeSummary.count, unit: "回", kind: "count", range: RANGE_TOTAL, targets: cumulativeCountTargets }),
+    buildAchievementCardWithTargets({ key: "total-days", icon: "log", label: isBatFiltered ? "相棒日数" : "練習した日数", value: cumulativeSummary.days, unit: "日", kind: "days", range: RANGE_TOTAL, targets: cumulativeDaysTargets }),
+    buildAchievementCardWithTargets({ key: "total-best", icon: "best", label: isBatFiltered ? "相棒ベスト" : "過去最高点", value: cumulativeSummary.best, unit: "点", kind: "best", range: RANGE_TOTAL, targets: cumulativeBestTargets }),
   ];
   return (
     <>
@@ -1573,19 +1641,7 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
             )}
           </div>
           <RecordPanel daily={chartData} range={range} />
-          <div className="badge-inline-section">
-            <div className="section-row">
-              <h2>獲得バッジ</h2>
-            </div>
-            <div className="badge-total"><strong>{badgeTotal.toLocaleString("ja-JP")}</strong><span>個</span></div>
-            {badgeCounts.length ? (
-              <div className="badge-list two-col">
-                {sortedBadgeCounts.map(([label, count]) => (
-                  <BadgeChip label={label} count={count} key={label} />
-                ))}
-              </div>
-            ) : <p className="empty">まだバッジはありません。</p>}
-          </div>
+          <EarnedBadgesCard badgeCounts={badgeCounts} />
         </section>
       </section>
 
@@ -1595,7 +1651,8 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
             <h2>累計</h2>
           </div>
         </div>
-        <div className="achievement-summary compact-metrics">
+        <AchievementCards cards={cumulativeCards} />
+        <div className="achievement-summary compact-metrics legacy-cumulative-summary">
           <AchievementMetric icon="count" label="スイング数" value={cumulativeSummary.count} unit="回" kind="count" range={RANGE_TOTAL} targets={cumulativeCountTargets} />
           <AchievementMetric icon="log" label={isBatFiltered ? "相棒日数" : "練習した日数"} value={cumulativeSummary.days} unit="日" kind="days" range={RANGE_TOTAL} targets={cumulativeDaysTargets} />
           <AchievementMetric icon="best" label={isBatFiltered ? "相棒ベスト" : "過去最高点"} value={cumulativeSummary.best} unit="点" kind="best" range={RANGE_TOTAL} targets={cumulativeBestTargets} />

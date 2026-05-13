@@ -325,7 +325,8 @@ p {
 }
 
 .legacy-period-heading,
-.legacy-period-heading + .achievement-summary {
+.legacy-period-heading + .achievement-summary,
+.legacy-cumulative-summary {
   display: none;
 }
 
@@ -354,10 +355,8 @@ p {
   gap: 10px;
   min-height: 178px;
   padding: 18px;
-  color: #fff;
-  background:
-    radial-gradient(circle at 78% 18%, rgba(255, 255, 255, 0.28), transparent 20%),
-    linear-gradient(145deg, #3d91ff 0%, #286dff 52%, #1347c7 100%);
+  color: currentColor;
+  background: #242936;
 }
 
 .achievement-focus-copy {
@@ -367,19 +366,30 @@ p {
 }
 
 .achievement-focus-card .metric-label {
-  color: rgba(255, 255, 255, 0.9);
+  color: currentColor;
 }
 
 .achievement-focus-card .metric-label .icon {
-  background: rgba(255, 255, 255, 0.18);
+  background: color-mix(in srgb, currentColor 18%, transparent);
 }
 
 .achievement-focus-card .metric-label svg {
-  color: #fff;
+  color: currentColor;
+}
+
+.achievement-focus-card .metric-label .icon,
+.achievement-compact-card .metric-label .icon {
+  color: currentColor;
+  background: color-mix(in srgb, currentColor 16%, transparent);
+}
+
+.achievement-focus-card .metric-label svg,
+.achievement-compact-card .metric-label svg {
+  color: currentColor;
 }
 
 .achievement-focus-card strong {
-  color: #fff;
+  color: var(--text);
   font-size: 2.75rem;
   font-weight: 950;
   line-height: 1;
@@ -394,7 +404,7 @@ p {
 .achievement-focus-card p,
 .achievement-focus-card small {
   margin: 0;
-  color: rgba(255, 255, 255, 0.82);
+  color: currentColor;
   font-size: 0.72rem;
   font-weight: 900;
 }
@@ -404,7 +414,7 @@ p {
   overflow: hidden;
   height: 12px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .focus-progress-bar span,
@@ -413,7 +423,7 @@ p {
   width: 0;
   height: 100%;
   border-radius: inherit;
-  background: #fff;
+  background: currentColor;
 }
 
 .achievement-focus-card .progress-meter {
@@ -432,23 +442,28 @@ p {
 }
 
 .achievement-focus-card .meter-track {
-  stroke: rgba(255, 255, 255, 0.26);
+  stroke: color-mix(in srgb, currentColor 24%, transparent);
 }
 
 .achievement-focus-card .meter-value,
 .achievement-focus-card .meter-glow {
-  stroke: #fff;
+  stroke: currentColor;
 }
 
 .achievement-focus-card .meter-ring .meter-remaining em,
 .achievement-focus-card .meter-ring .meter-remaining b {
-  color: #fff;
+  color: var(--text);
 }
+
 
 .achievement-compact-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
+}
+
+.cumulative-summary .achievement-compact-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .achievement-compact-card {
@@ -512,11 +527,16 @@ p {
   background: currentColor;
 }
 
+.achievement-focus-card.count,
+.achievement-compact-card.count { color: #ff4055; }
+.achievement-focus-card.streak,
+.achievement-focus-card.days,
 .achievement-compact-card.streak,
-.achievement-compact-card.days { color: #62c86b; }
-.achievement-compact-card.avg { color: #a878ff; }
-.achievement-compact-card.best { color: #ff9d24; }
-.achievement-compact-card.count { color: var(--hot); }
+.achievement-compact-card.days { color: #3b8dff; }
+.achievement-focus-card.avg,
+.achievement-compact-card.avg { color: #35c46f; }
+.achievement-focus-card.best,
+.achievement-compact-card.best { color: #a878ff; }
 
 ::view-transition-old(achievement-count),
 ::view-transition-new(achievement-count),
@@ -531,6 +551,10 @@ p {
   animation-duration: 0.34s;
   animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
   mix-blend-mode: normal;
+}
+
+::view-transition-group(*) {
+  animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .achievement-metric {
@@ -1418,19 +1442,33 @@ input::placeholder {
   gap: 8px;
 }
 
+.badge-motion-item {
+  display: contents;
+}
+
 .badge-groups {
   display: grid;
   gap: 14px;
 }
 
 .badge-inline-section {
+  display: grid;
+  gap: 12px;
+  overflow: hidden;
   margin-top: 18px;
   border-top: 1px solid var(--line);
   padding-top: 18px;
 }
 
 .badge-inline-section .section-row {
-  margin-bottom: 10px;
+  margin-bottom: 0;
+}
+
+.badge-inline-section .section-row p {
+  margin-top: 4px;
+  color: var(--hot);
+  font-size: 0.68rem;
+  font-weight: 950;
 }
 
 .badge-filter-tabs {
@@ -1464,7 +1502,7 @@ input::placeholder {
   display: flex;
   align-items: baseline;
   gap: 5px;
-  margin-bottom: 14px;
+  margin-bottom: 0;
   color: var(--hot);
 }
 
@@ -1527,6 +1565,17 @@ input::placeholder {
   align-content: start;
   align-items: center;
   gap: 8px;
+}
+
+.badge-inline-section.expanded .badge-list.two-col {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+.badge-expand-toggle {
+  min-height: 34px;
+  padding: 0 11px;
+  font-size: 0.68rem;
 }
 
 .badge-subgroup.score .badge-list.two-col {
@@ -3728,15 +3777,15 @@ select:focus,
 }
 
 .achievement-focus-card .meter-track {
-  stroke: rgba(255, 255, 255, 0.26);
+  stroke: color-mix(in srgb, currentColor 24%, transparent);
 }
 
 .achievement-focus-card .meter-value,
 .achievement-focus-card .meter-glow {
-  stroke: #fff;
+  stroke: currentColor;
 }
 
 .achievement-focus-card .meter-ring .meter-remaining em,
 .achievement-focus-card .meter-ring .meter-remaining b {
-  color: #fff;
+  color: var(--text);
 }
