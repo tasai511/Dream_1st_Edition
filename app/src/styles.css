@@ -324,6 +324,215 @@ p {
   min-width: 0;
 }
 
+.legacy-period-heading,
+.legacy-period-heading + .achievement-summary {
+  display: none;
+}
+
+.achievement-card-stack {
+  display: grid;
+  gap: 12px;
+}
+
+.achievement-focus-card,
+.achievement-compact-card {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius);
+  background: #242936;
+  box-shadow: none;
+  transition:
+    transform 0.22s ease,
+    opacity 0.22s ease,
+    border-color 0.22s ease,
+    background 0.22s ease;
+}
+
+.achievement-focus-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 122px;
+  align-items: center;
+  gap: 10px;
+  min-height: 178px;
+  padding: 18px;
+  color: #fff;
+  background:
+    radial-gradient(circle at 78% 18%, rgba(255, 255, 255, 0.28), transparent 20%),
+    linear-gradient(145deg, #3d91ff 0%, #286dff 52%, #1347c7 100%);
+}
+
+.achievement-focus-copy {
+  display: grid;
+  min-width: 0;
+  gap: 8px;
+}
+
+.achievement-focus-card .metric-label {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.achievement-focus-card .metric-label .icon {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.achievement-focus-card .metric-label svg {
+  color: #fff;
+}
+
+.achievement-focus-card strong {
+  color: #fff;
+  font-size: 2.75rem;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.achievement-focus-card strong span {
+  margin-left: 5px;
+  font-size: 0.8rem;
+  font-weight: 900;
+}
+
+.achievement-focus-card p,
+.achievement-focus-card small {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.focus-progress-bar,
+.compact-progress-bar {
+  overflow: hidden;
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.focus-progress-bar span,
+.compact-progress-bar span {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: #fff;
+}
+
+.achievement-focus-card .progress-meter {
+  --meter-size: 118px;
+  width: 122px;
+  min-height: 118px;
+}
+
+.achievement-focus-card .progress-meter.count {
+  --meter-size: 118px;
+  min-height: 118px;
+}
+
+.achievement-focus-card .meter-ring {
+  margin-left: 0;
+}
+
+.achievement-focus-card .meter-track {
+  stroke: rgba(255, 255, 255, 0.26);
+}
+
+.achievement-focus-card .meter-value,
+.achievement-focus-card .meter-glow {
+  stroke: #fff;
+}
+
+.achievement-focus-card .meter-ring .meter-remaining em,
+.achievement-focus-card .meter-ring .meter-remaining b {
+  color: #fff;
+}
+
+.achievement-compact-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.achievement-compact-card {
+  display: grid;
+  align-content: start;
+  min-height: 134px;
+  width: 100%;
+  gap: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 12px 10px;
+  color: inherit;
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+}
+
+.achievement-compact-card:hover {
+  border-color: color-mix(in srgb, currentColor 42%, rgba(255, 255, 255, 0.12));
+  transform: translateY(-2px);
+}
+
+.achievement-compact-card:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.achievement-compact-card .metric-label {
+  justify-content: center;
+  color: currentColor;
+  font-size: 0.68rem;
+}
+
+.achievement-compact-card strong {
+  color: var(--text);
+  font-size: 1.9rem;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.achievement-compact-card strong span {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 900;
+}
+
+.achievement-compact-card small,
+.achievement-compact-card em {
+  color: currentColor;
+  font-size: 0.66rem;
+  font-style: normal;
+  font-weight: 950;
+}
+
+.achievement-compact-card .compact-progress-bar {
+  height: 7px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.achievement-compact-card .compact-progress-bar span {
+  background: currentColor;
+}
+
+.achievement-compact-card.streak,
+.achievement-compact-card.days { color: #62c86b; }
+.achievement-compact-card.avg { color: #a878ff; }
+.achievement-compact-card.best { color: #ff9d24; }
+.achievement-compact-card.count { color: var(--hot); }
+
+::view-transition-old(achievement-count),
+::view-transition-new(achievement-count),
+::view-transition-old(achievement-streak),
+::view-transition-new(achievement-streak),
+::view-transition-old(achievement-days),
+::view-transition-new(achievement-days),
+::view-transition-old(achievement-avg),
+::view-transition-new(achievement-avg),
+::view-transition-old(achievement-best),
+::view-transition-new(achievement-best) {
+  animation-duration: 0.34s;
+  animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+  mix-blend-mode: normal;
+}
+
 .achievement-metric {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 136px;
@@ -3505,4 +3714,29 @@ select:focus,
   width: max-content;
   height: auto;
   transform: translate(-50%, -60%);
+}
+
+.achievement-focus-card .progress-meter,
+.achievement-focus-card .progress-meter.count {
+  --meter-size: 118px;
+  width: var(--meter-size);
+  min-height: var(--meter-size);
+}
+
+.achievement-focus-card .meter-ring {
+  margin-left: 0;
+}
+
+.achievement-focus-card .meter-track {
+  stroke: rgba(255, 255, 255, 0.26);
+}
+
+.achievement-focus-card .meter-value,
+.achievement-focus-card .meter-glow {
+  stroke: #fff;
+}
+
+.achievement-focus-card .meter-ring .meter-remaining em,
+.achievement-focus-card .meter-ring .meter-remaining b {
+  color: #fff;
 }

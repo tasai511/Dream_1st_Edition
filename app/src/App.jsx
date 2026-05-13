@@ -609,6 +609,29 @@ function progressInfo(kind, value, range, variableTarget, targets = null) {
   };
 }
 
+function progressRatioFor(info, value) {
+  const span = Math.max(1, info.goal - info.previous);
+  return clamp((Number(value || 0) - info.previous) / span, 0, 1);
+}
+
+function buildAchievementCard({ key, icon, label, value, unit, kind, range, variableTarget = null, pending = false, badgeEligible = true }) {
+  const info = badgeEligible ? progressInfo(kind, Number(value || 0), range, variableTarget) : null;
+  return {
+    icon,
+    key: key || kind,
+    label,
+    value: Number(value || 0),
+    unit,
+    kind,
+    range,
+    variableTarget,
+    pending,
+    badgeEligible,
+    info,
+    ratio: info ? progressRatioFor(info, value) : -1,
+  };
+}
+
 function ProgressMeter({ kind, value, range, variableTarget, targets }) {
   const [selectedBadge, setSelectedBadge] = useState(null);
   const meterRef = useRef(null);
@@ -693,6 +716,78 @@ function AchievementMetric({ icon, label, value, unit, kind, range, showMeter = 
       </div>
       {showMeter && <ProgressMeter kind={kind} value={value} range={range} variableTarget={variableTarget} targets={targets} />}
     </div>
+  );
+}
+
+function AchievementCards({ cards }) {
+  const automaticFeatured = cards
+    .filter((card) => card.badgeEligible)
+    .sort((a, b) => b.ratio - a.ratio || a.info.remaining - b.info.remaining)[0] || cards[0];
+  const [featuredKey, setFeaturedKey] = useState(automaticFeatured?.key);
+  useEffect(() => {
+    setFeaturedKey(automaticFeatured?.key);
+  }, [automaticFeatured?.key, cards.map((card) => card.key).join(":")]);
+  const featured = cards.find((card) => card.key === featuredKey) || automaticFeatured;
+  const compactCards = cards.filter((card) => card.key !== featured.key);
+  const selectCard = (card) => {
+    if (card.key === featured.key) return;
+    if (document.startViewTransition) {
+      document.startViewTransition(() => setFeaturedKey(card.key));
+      return;
+    }
+    setFeaturedKey(card.key);
+  };
+  return (
+    <div className="achievement-card-stack">
+      {featured && <AchievementFocusCard card={featured} />}
+      <div className="achievement-compact-grid">
+        {compactCards.map((card) => <AchievementCompactCard card={card} onSelect={() => selectCard(card)} key={card.key} />)}
+      </div>
+    </div>
+  );
+}
+
+function AchievementFocusCard({ card }) {
+  return (
+    <article className={`achievement-focus-card ${card.kind}`} style={{ viewTransitionName: `achievement-${card.key}` }}>
+      <div className="achievement-focus-copy">
+        <div className="metric-label"><Icon type={card.icon} />{card.label}</div>
+        <strong>{card.value.toLocaleString("ja-JP")}<span>{card.unit}</span></strong>
+        {card.info && <p>{card.info.badgeLabel}まで</p>}
+        <div className="focus-progress-bar" aria-hidden="true">
+          <span style={{ width: `${Math.round(card.ratio * 100)}%` }} />
+        </div>
+        {card.info && <small>あと{card.info.remaining.toLocaleString("ja-JP")}でバッジ獲得！</small>}
+      </div>
+      {card.badgeEligible && (
+        <ProgressMeter kind={card.kind} value={card.value} range={card.range} variableTarget={card.variableTarget} />
+      )}
+    </article>
+  );
+}
+
+function AchievementCompactCard({ card, onSelect }) {
+  return (
+    <button
+      className={`achievement-compact-card ${card.kind} ${card.badgeEligible ? "" : "no-badge"} ${card.pending ? "pending" : ""}`}
+      type="button"
+      onClick={onSelect}
+      style={{ viewTransitionName: `achievement-${card.key}` }}
+    >
+      <div className="metric-label"><Icon type={card.icon} />{card.label}</div>
+      <strong>{card.value.toLocaleString("ja-JP")}<span>{card.unit}</span></strong>
+      {card.pending && <em>未確定</em>}
+      {card.info ? (
+        <>
+          <div className="compact-progress-bar" aria-hidden="true">
+            <span style={{ width: `${Math.round(card.ratio * 100)}%` }} />
+          </div>
+          <small>あと{card.info.remaining.toLocaleString("ja-JP")}！</small>
+        </>
+      ) : (
+        <small>自己ベスト更新中！</small>
+      )}
+    </button>
   );
 }
 
@@ -1401,6 +1496,9 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
   const periodDayLabel = `${periodSummary.spanDays}日目`;
   const avgUnit = range === RANGE_TODAY || range === RANGE_TOTAL ? "点" : `点＠${periodDayLabel}`;
   const practiceUnit = `／${periodDayLabel}`;
+  const cardPeriodDayLabel = `${periodSummary.spanDays}日目`;
+  const cardAvgUnit = range === RANGE_TODAY ? "点" : `点@${cardPeriodDayLabel}`;
+  const cardPracticeUnit = `/${cardPeriodDayLabel}`;
   const isPeriodComplete = achievementWindow.end <= parseISO(todayISO());
   const isBatFiltered = homeBat !== ALL;
   const cumulativeCountTargets = isBatFiltered
@@ -1421,6 +1519,14 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
     [RANGE_MONTH, "今月"],
   ];
   const badgeTotal = badgeCounts.reduce((sum, [, count]) => sum + count, 0);
+  const achievementCards = [
+    buildAchievementCard({ key: "count", icon: "count", label: "スイング数", value: total, unit: "回", kind: "count", range }),
+    range === RANGE_TODAY
+      ? buildAchievementCard({ key: "streak", icon: "log", label: "毎日練習", value: currentStreak, unit: "日目", kind: "streak", range })
+      : buildAchievementCard({ key: "days", icon: "log", label: "練習日数", value: practiceDays, unit: cardPracticeUnit, kind: "days", range, variableTarget: periodSummary.spanDays }),
+    buildAchievementCard({ key: "avg", icon: "avg", label: "平均スコア", value: avg, unit: cardAvgUnit, kind: "avg", range, pending: !isPeriodComplete && range !== RANGE_TODAY }),
+    buildAchievementCard({ key: "best", icon: "best", label: "ベストスコア", value: best, unit: "点", kind: "best", range, badgeEligible: range === RANGE_TODAY }),
+  ];
   return (
     <>
       <div className={`dashboard-controls home-bat-filter ${homeBat === ALL ? "all-selected" : ""}`}>
@@ -1445,7 +1551,8 @@ function HomeView({ db, currentName, allForName, range, setRange, homeBat, setHo
               </button>
             ))}
           </div>
-          <p className="period-heading">{achievementWindow.label}</p>
+          <AchievementCards cards={achievementCards} />
+          <p className="period-heading legacy-period-heading">{achievementWindow.label}</p>
           <div className="achievement-summary all-period">
             <AchievementMetric icon="count" label="スイング数" value={total} unit="回" kind="count" range={range} showMeter={range !== RANGE_TOTAL} />
             {range === RANGE_TODAY && (
