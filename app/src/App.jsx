@@ -1094,7 +1094,11 @@ function DailyBadgeMark({ label, description }) {
         <img className="daily-badge-image" src={DAILY_RARITY_IMAGE_URLS[definition.rarity]} alt="" aria-hidden="true" />
         <b className="daily-badge-rarity-label" aria-hidden="true">{definition.rarity}</b>
         <span className="daily-badge-label">
-          {labelParts.map((part) => <span key={part}>{part}</span>)}
+          {labelParts.map((part, index) => (
+            <span className={part.kind === "number" ? "daily-badge-label-number" : undefined} key={`${part.kind}-${part.text}-${index}`}>
+              {part.text}
+            </span>
+          ))}
         </span>
       </button>
       {selectedBadge && (
@@ -2939,8 +2943,21 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
 function splitDailyBadgeLabel(label) {
   const prefixes = ["毎日", "毎週", "毎月"];
   const prefix = prefixes.find((item) => label.startsWith(item));
-  if (!prefix || label.length <= prefix.length) return [label];
-  return [prefix, label.slice(prefix.length)];
+  if (!prefix || label.length <= prefix.length) return [{ kind: "text", text: label }];
+
+  const rest = label.slice(prefix.length);
+  const endingNumber = rest.match(/^(.+?)([0-9]+)$/);
+  if (endingNumber) {
+    return [
+      { kind: "text", text: `${prefix}${endingNumber[1]}` },
+      { kind: "number", text: endingNumber[2] },
+    ];
+  }
+
+  return [
+    { kind: "text", text: prefix },
+    { kind: "text", text: rest },
+  ];
 }
 
 function BottomNav({ tab, setTab }) {

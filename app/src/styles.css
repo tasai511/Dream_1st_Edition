@@ -1639,7 +1639,7 @@ p {
   background: transparent;
   font-size: 0.9rem;
   font-weight: 950;
-  line-height: 1.05;
+  line-height: 1.02;
   text-shadow: none;
   text-align: right;
   white-space: normal;
@@ -1648,6 +1648,11 @@ p {
 
 .daily-badge-label span {
   display: block;
+}
+
+.daily-badge-label-number {
+  font-size: 1.35rem;
+  line-height: 0.9;
 }
 
 .daily-badge-empty {
