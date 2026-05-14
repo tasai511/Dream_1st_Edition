@@ -1546,7 +1546,14 @@ p {
 .daily-badge-mark.rarity-ur { --daily-badge-color: #ffd700; color: var(--daily-badge-color); }
 
 .daily-badge-mark::before {
-  content: none;
+  position: absolute;
+  inset: 8px;
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--daily-badge-color) 48%, transparent) 0 34%, transparent 72%);
+  filter: blur(7px);
+  opacity: 0.42;
+  content: "";
 }
 
 .daily-badge-mark::after {
@@ -1557,6 +1564,7 @@ p {
   display: block;
   width: 66px;
   height: 66px;
+  filter: drop-shadow(0 7px 8px rgba(0, 0, 0, 0.38));
   object-fit: contain;
 }
 
