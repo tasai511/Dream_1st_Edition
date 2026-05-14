@@ -1629,13 +1629,13 @@ p {
   z-index: 2;
   display: grid;
   overflow: visible;
-  width: 92px;
-  max-width: 92px;
+  width: 104px;
+  max-width: 104px;
   border: 0;
   padding: 0;
   color: var(--daily-badge-color);
   background: transparent;
-  font-size: 0.78rem;
+  font-size: 0.9rem;
   font-weight: 950;
   line-height: 1.05;
   text-shadow: none;
