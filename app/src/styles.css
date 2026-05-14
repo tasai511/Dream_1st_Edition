@@ -5856,6 +5856,7 @@ select:focus,
   border-radius: 5px;
   font-size: 0.68rem;
   transform: rotate(-11deg);
+  animation-delay: 520ms;
 }
 
 @keyframes get-stamp-pop {
