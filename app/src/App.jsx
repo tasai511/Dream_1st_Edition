@@ -2738,7 +2738,6 @@ function RecordSummary({ item, batColor = "#8d95a4", selected = false, onSelect 
         onClick={onSelect}
         aria-pressed={selected}
       >
-        <span className="record-card-radio" aria-hidden="true" />
         {content}
       </button>
     );

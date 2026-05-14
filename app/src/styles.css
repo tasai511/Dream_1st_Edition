@@ -1261,43 +1261,6 @@ p {
   transform: scale(0.985);
 }
 
-.record-card-radio {
-  position: absolute;
-  top: 50%;
-  left: -22px;
-  display: grid;
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.34);
-  border-radius: 50%;
-  place-items: center;
-  transform: translateY(-50%);
-}
-
-.record-card-radio::after {
-  width: 8px;
-  height: 8px;
-  border-radius: inherit;
-  background: var(--hot);
-  content: "";
-  opacity: 0;
-  transform: scale(0.62);
-  transition: opacity 160ms ease, transform 160ms ease;
-}
-
-.record-card-button.selected .record-card-radio,
-.daily-result-summary.selected .record-card-radio,
-.daily-result-group-card.selected .record-card-radio {
-  border-color: rgba(255, 255, 255, 0.82);
-}
-
-.record-card-button.selected .record-card-radio::after,
-.daily-result-summary.selected .record-card-radio::after,
-.daily-result-group-card.selected .record-card-radio::after {
-  opacity: 1;
-  transform: scale(1);
-}
-
 .home-bat-records .record-title {
   margin-bottom: 0;
   min-width: 0;
