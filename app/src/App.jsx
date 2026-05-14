@@ -2544,8 +2544,7 @@ function BadgeCollectionView({ allForName }) {
                 <div className="collection-group-title">
                   <RarityIcon rarity={rarity} />
                   <div>
-                    <h3>{rarity}</h3>
-                    <p>{RARITY_LABELS[rarity]} / {RARITY_POINTS[rarity]}pt</p>
+                    <h3>{RARITY_LABELS[rarity]} / {RARITY_POINTS[rarity]}pt</h3>
                   </div>
                   <strong>{rarityEarnedTotal}/{items.length}<span>{rarityPointTotal}pt</span></strong>
                 </div>
@@ -2560,7 +2559,6 @@ function BadgeCollectionView({ allForName }) {
                       >
                         <BadgeChip label={definition.label} count={earnedCount} description={definition.description} lockedSecret={lockedSecret} />
                         <span>{definition.type === "unique" ? "1回だけ" : "何回でも"}</span>
-                        <em>{definition.rarity}</em>
                       </div>
                     );
                   })}
