@@ -1445,9 +1445,7 @@ p {
   font-size: 3.08rem;
   font-weight: 950;
   line-height: 1;
-  text-shadow:
-    0 0 14px rgba(var(--hot-rgb), 0.26),
-    0 0 28px rgba(var(--hot-rgb), 0.12);
+  text-shadow: none;
 }
 
 .daily-result-card strong span {
@@ -1492,7 +1490,7 @@ p {
   top: 50%;
   right: clamp(0px, 6%, 44px);
   z-index: 1;
-  width: 64px;
+  width: 66px;
   min-width: 0;
   min-height: 0;
   align-items: center;
@@ -1516,10 +1514,10 @@ p {
   justify-items: center;
   align-content: center;
   gap: 0;
-  width: 64px;
-  height: 64px;
+  width: 66px;
+  height: 66px;
   min-width: 0;
-  min-height: 64px;
+  min-height: 66px;
   border: 2px solid var(--daily-badge-color);
   border-radius: 13px;
   padding: 2px;
@@ -1565,8 +1563,8 @@ p {
 .daily-badge-mark .rarity-icon {
   isolation: isolate;
   position: relative;
-  width: 50px;
-  height: 50px;
+  width: 52px;
+  height: 52px;
   margin-bottom: 0;
   background:
     radial-gradient(circle at 28% 18%, rgba(255, 255, 255, 0.58) 0 7%, rgba(255, 255, 255, 0.22) 17%, transparent 35%),
@@ -1603,24 +1601,17 @@ p {
   right: 0;
   z-index: 3;
   display: grid;
-  min-width: 22px;
-  height: 20px;
+  min-width: 25px;
+  height: 23px;
   padding: 0 5px;
   place-items: center;
-  color: transparent;
-  background:
-    radial-gradient(circle at 28% 18%, rgba(255, 255, 255, 0.62) 0 13%, rgba(255, 255, 255, 0.22) 24%, transparent 42%),
-    linear-gradient(135deg, rgba(255, 255, 255, 0.24) 0 22%, transparent 50%),
-    var(--daily-badge-color);
-  -webkit-background-clip: text;
-  background-clip: text;
-  font-size: 0.62rem;
+  color: var(--daily-badge-color);
+  background: transparent;
+  font-size: 0.7rem;
   font-weight: 950;
   letter-spacing: 0;
   line-height: 1;
-  text-shadow:
-    -1px -1px 0 rgba(255, 255, 255, 0.24),
-    1.2px 1.2px 0 rgba(0, 0, 0, 0.34);
+  text-shadow: none;
   pointer-events: none;
 }
 
@@ -3660,21 +3651,17 @@ input::placeholder {
 
 .home-input-panel {
   display: grid;
-  gap: 0;
-  max-height: 36px;
-  border-width: 0;
-  padding: 0;
-  background: transparent !important;
+  gap: 10px;
+  max-height: 126px;
+  border-width: 1px;
+  padding: 14px;
   opacity: 1;
   transform: none;
 }
 
 .home-input-panel.open {
   max-height: 560px;
-  border-width: 1px;
-  gap: 10px;
-  padding: 12px;
-  background: #1b202a !important;
+  padding: 16px;
 }
 
 .input-panel-title {
@@ -3683,26 +3670,6 @@ input::placeholder {
 
 .home-input-panel .input-panel-title {
   margin-bottom: 0;
-}
-
-.home-input-toggle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: auto;
-  min-height: 30px;
-  border: 0;
-  border-radius: 999px;
-  padding: 0 2px;
-  color: var(--hot);
-  background: transparent;
-  font-size: 0.78rem;
-  font-weight: 950;
-}
-
-.home-input-panel.open .home-input-toggle {
-  align-self: start;
-  padding-inline: 0;
 }
 
 .home-input-panel .input-panel-layout {

@@ -2,12 +2,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import batIconUrl from "./assets/images/bat-icon.svg";
 import premiumMeterBadgeUrl from "./assets/images/premium-meter-badge.svg";
-import rarityCUrl from "./assets/images/rarity_c_common.svg";
-import rarityUUrl from "./assets/images/rarity_u_uncommon.svg";
-import rarityRUrl from "./assets/images/rarity_r_rare.svg";
-import rarityRrUrl from "./assets/images/rarity_rr_double_rare.svg";
-import raritySrUrl from "./assets/images/rarity_sr_super_rare.svg";
-import rarityUrUrl from "./assets/images/rarity_ur_ultra_rare.svg";
 
 const STORAGE_KEY = "dream1-swing-tracker-v1";
 const ALL = "__all__";
@@ -43,13 +37,14 @@ const RARITY_COLORS = {
   SR: "#d7dee8",
   UR: "#ffd700",
 };
+const PUBLIC_ASSET_BASE = import.meta.env.BASE_URL || "./";
 const RARITY_ICON_URLS = {
-  C: rarityCUrl,
-  U: rarityUUrl,
-  R: rarityRUrl,
-  RR: rarityRrUrl,
-  SR: raritySrUrl,
-  UR: rarityUrUrl,
+  C: `${PUBLIC_ASSET_BASE}images/rarity_c_common.svg?v=8`,
+  U: `${PUBLIC_ASSET_BASE}images/rarity_u_uncommon.svg?v=8`,
+  R: `${PUBLIC_ASSET_BASE}images/rarity_r_rare.svg?v=8`,
+  RR: `${PUBLIC_ASSET_BASE}images/rarity_rr_double_rare.svg?v=8`,
+  SR: `${PUBLIC_ASSET_BASE}images/rarity_sr_super_rare.svg?v=8`,
+  UR: `${PUBLIC_ASSET_BASE}images/rarity_ur_ultra_rare.svg?v=8`,
 };
 const UNIQUE_TOTAL_COUNT_TARGETS = [100, 500, 1000, 3000, 5000, 10000, 30000, 50000, 100000];
 const UNIQUE_BEST_TARGETS = [500, 600, 700, 800, 900, 999];
@@ -2045,19 +2040,19 @@ function HomeView({ db, currentName, allForName, homeBat, setHomeBat, addRecord 
     <>
       <section className={`panel input-panel home-input-panel ${isInputOpen ? "open" : ""}`}>
         <div className="input-panel-title">
-          <button
-            type="button"
-            className="home-input-toggle"
-            onClick={() => setIsInputOpen((value) => !value)}
-            aria-expanded={isInputOpen}
-            aria-label={isInputOpen ? "今日の記録入力を閉じる" : "今日の記録を追加"}
-          >
-            {isInputOpen ? "閉じる" : "今日の記録を追加"}
-          </button>
+          <h2>今日の記録</h2>
         </div>
         <div className="input-panel-layout">
           <SwingForm bats={db.bats} defaultBat={db.defaultBat} onSubmit={handleRecordSubmit} submitLabel={hasTodayRecord ? "追加する" : "記録する"} />
         </div>
+        <button
+          type="button"
+          className={`badge-expand-bar input-expand-bar ${isInputOpen ? "expanded" : ""}`}
+          onClick={() => setIsInputOpen((value) => !value)}
+          aria-label={isInputOpen ? "入力フォームを閉じる" : "入力フォームを開く"}
+        >
+          {isInputOpen ? "閉じる" : "入力する"}
+        </button>
       </section>
 
       <section className="score-card">
