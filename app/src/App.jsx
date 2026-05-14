@@ -956,6 +956,33 @@ function dailyResultBadge(metric, value, targets = null) {
   return [...dailyBadgeMilestones(metric, value, targets)].reverse().find((definition) => definition.earned) || null;
 }
 
+function emptyDailySummary(date = todayISO()) {
+  return { date, count: 0, avg: 0, best: 0, bats: [] };
+}
+
+function interpolateNumber(from, to, progress) {
+  return from + ((to - from) * progress);
+}
+
+function interpolateDailySummary(from, to, progress) {
+  return {
+    date: to.date || from.date || todayISO(),
+    count: Math.round(interpolateNumber(from.count || 0, to.count || 0, progress)),
+    avg: Math.round(interpolateNumber(from.avg || 0, to.avg || 0, progress)),
+    best: Math.round(interpolateNumber(from.best || 0, to.best || 0, progress)),
+    bats: to.bats || from.bats || [],
+  };
+}
+
+function animationScale(fromValue, toValue) {
+  return Math.max(1, fromValue || 0, toValue || 0);
+}
+
+function animationFillRatio(fromValue, toValue, progress) {
+  const current = interpolateNumber(fromValue || 0, toValue || 0, progress);
+  return clamp(current / animationScale(fromValue, toValue), 0, 1);
+}
+
 function milestoneAlpha(position) {
   const ratio = clamp(position / 100, 0, 1);
   if (ratio <= 0.28) return clamp((ratio / 0.28) * 0.18, 0.04, 0.18);
@@ -963,7 +990,7 @@ function milestoneAlpha(position) {
   return 0.68 + ((ratio - 0.68) / 0.32) * 0.32;
 }
 
-function DailyResultCards({ summary, showBadges = true, selected = false, onSelect = null }) {
+function DailyResultCards({ summary, showBadges = true, selected = false, onSelect = null, animation = null }) {
   const cards = [
     {
       key: "count",
@@ -972,6 +999,8 @@ function DailyResultCards({ summary, showBadges = true, selected = false, onSele
       value: summary.count || 0,
       unit: "回",
       metric: "count",
+      fillRatio: animation?.fillRatios?.count,
+      revealBadge: !animation?.active,
     },
     {
       key: "avg",
@@ -980,6 +1009,8 @@ function DailyResultCards({ summary, showBadges = true, selected = false, onSele
       value: summary.avg || 0,
       unit: "点",
       metric: "avg",
+      fillRatio: animation?.fillRatios?.avg,
+      revealBadge: !animation?.active,
     },
     {
       key: "best",
@@ -988,6 +1019,8 @@ function DailyResultCards({ summary, showBadges = true, selected = false, onSele
       value: summary.best || 0,
       unit: "点",
       metric: "best",
+      fillRatio: animation?.fillRatios?.best,
+      revealBadge: !animation?.active,
     },
   ];
 
@@ -1027,9 +1060,10 @@ function DailyResultCard({ card, showBadges }) {
   const milestones = dailyBadgeMilestones(card.metric, card.value);
   const earnedBadge = dailyResultBadge(card.metric, card.value);
   const visibleMilestones = milestones.filter((milestone) => milestone.earned);
+  const revealBadge = card.revealBadge !== false;
 
   return (
-    <article className={`daily-result-card ${card.key}`}>
+    <article className={`daily-result-card ${card.key}`} style={{ "--milestone-fill-width": `${Math.round((card.fillRatio ?? 1) * 100)}%` }}>
       <div className="metric-label"><Icon type={card.icon} />{card.label}</div>
       {showBadges && (
         <>
@@ -1037,16 +1071,14 @@ function DailyResultCard({ card, showBadges }) {
             <strong>{Number(card.value || 0).toLocaleString("ja-JP")}<span>{card.unit}</span></strong>
             <div
               className="daily-badge-stage"
-              style={earnedBadge ? { "--daily-stage-badge-color": rarityColorFor(rarityForBadge(earnedBadge.label)) } : null}
+              style={earnedBadge && revealBadge ? { "--daily-stage-badge-color": rarityColorFor(rarityForBadge(earnedBadge.label)) } : null}
             >
-              {earnedBadge ? (
+              {earnedBadge && revealBadge ? (
                 <>
                   <DailyBadgeMark label={earnedBadge.label} description={earnedBadge.description || `${earnedBadge.label}をゲット`} />
                   <span className="daily-badge-get-stamp" aria-hidden="true">GET!</span>
                 </>
-              ) : (
-                <span className="daily-badge-empty">今日はまだ未獲得</span>
-              )}
+              ) : null}
             </div>
           </div>
           <div className={`milestone-track ${visibleMilestones.length ? "earned" : ""}`} aria-hidden="true">
@@ -1795,6 +1827,7 @@ export default function App() {
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
   const [pendingDelete, setPendingDelete] = useState(null);
   const [isNameMenuOpen, setIsNameMenuOpen] = useState(false);
+  const [scoreAnimation, setScoreAnimation] = useState(null);
 
   const setDb = (next) => {
     setDbState(next);
@@ -1833,7 +1866,17 @@ export default function App() {
       avg: Math.max(0, Math.min(999, Number(form.get("avg")) || 0)),
       best: Math.max(0, Math.min(999, Number(form.get("best")) || 0)),
     };
-    setDb({ ...db, records: [...db.records, record] });
+    const nextRecords = [...db.records, record];
+    if (date === todayISO()) {
+      const todayRecordsBefore = db.records.filter((item) => item.name === currentName && item.date === date);
+      const todayRecordsAfter = nextRecords.filter((item) => item.name === currentName && item.date === date);
+      const fromSummary = aggregate(todayRecordsBefore)[0] || emptyDailySummary(date);
+      const toSummary = aggregate(todayRecordsAfter)[0] || emptyDailySummary(date);
+      const fromBat = aggregateByBat(todayRecordsBefore).find((item) => item.bat === bat) || { bat, count: 0, avg: 0, best: 0 };
+      const toBat = aggregateByBat(todayRecordsAfter).find((item) => item.bat === bat) || { bat, count: 0, avg: 0, best: 0 };
+      setScoreAnimation({ id: uid(), bat, fromSummary, toSummary, fromBat, toBat });
+    }
+    setDb({ ...db, records: nextRecords });
     event.currentTarget.reset();
     return true;
   };
@@ -1992,6 +2035,8 @@ export default function App() {
               homeBat={homeBat}
               setHomeBat={setHomeBat}
               addRecord={addRecord}
+              scoreAnimation={scoreAnimation}
+              onScoreAnimationComplete={() => setScoreAnimation(null)}
             />
           )}
           {tab === "record" && (
@@ -2031,8 +2076,9 @@ export default function App() {
   );
 }
 
-function HomeView({ db, currentName, allForName, homeBat, setHomeBat, addRecord }) {
+function HomeView({ db, currentName, allForName, homeBat, setHomeBat, addRecord, scoreAnimation, onScoreAnimationComplete }) {
   const [isInputOpen, setIsInputOpen] = useState(false);
+  const [scoreAnimationProgress, setScoreAnimationProgress] = useState(1);
   const allFiltered = db.records.filter((record) => (
     record.name === currentName &&
     record.date <= todayISO()
@@ -2042,6 +2088,24 @@ function HomeView({ db, currentName, allForName, homeBat, setHomeBat, addRecord 
   const todaySummary = aggregate(todayRecords)[0] || { date: todayISO(), count: 0, avg: 0, best: 0, bats: [] };
   const hasTodayRecord = todayRecords.length > 0;
   const todayByBat = aggregateByBat(todayRecords);
+  const isScoreAnimating = Boolean(scoreAnimation && scoreAnimationProgress < 1);
+  const displayTodaySummary = scoreAnimation
+    ? interpolateDailySummary(scoreAnimation.fromSummary, scoreAnimation.toSummary, scoreAnimationProgress)
+    : todaySummary;
+  const scoreCardAnimation = scoreAnimation ? {
+    active: isScoreAnimating,
+    fillRatios: {
+      count: animationFillRatio(scoreAnimation.fromSummary.count, scoreAnimation.toSummary.count, scoreAnimationProgress),
+      avg: animationFillRatio(scoreAnimation.fromSummary.avg, scoreAnimation.toSummary.avg, scoreAnimationProgress),
+      best: animationFillRatio(scoreAnimation.fromSummary.best, scoreAnimation.toSummary.best, scoreAnimationProgress),
+    },
+  } : null;
+  const animatedBatSummary = scoreAnimation
+    ? {
+        bat: scoreAnimation.bat,
+        ...interpolateDailySummary(scoreAnimation.fromBat, scoreAnimation.toBat, scoreAnimationProgress),
+      }
+    : null;
   const chartDaily = aggregate(chartFiltered);
   const todayEarnedBadges = badgesFor(allForName.filter((record) => record.date <= todayISO())).get(todayISO()) || [];
   const badgeCounts = [...todayEarnedBadges.reduce((map, label) => {
@@ -2057,6 +2121,32 @@ function HomeView({ db, currentName, allForName, homeBat, setHomeBat, addRecord 
   useEffect(() => {
     setIsInputOpen(!hasTodayRecord);
   }, [currentName, hasTodayRecord]);
+
+  useEffect(() => {
+    if (!scoreAnimation) {
+      setScoreAnimationProgress(1);
+      return undefined;
+    }
+
+    const duration = 1250;
+    let frameId = 0;
+    const startedAt = performance.now();
+
+    const tick = (now) => {
+      const rawProgress = clamp((now - startedAt) / duration, 0, 1);
+      const easedProgress = 1 - Math.pow(1 - rawProgress, 3);
+      setScoreAnimationProgress(easedProgress);
+      if (rawProgress < 1) {
+        frameId = requestAnimationFrame(tick);
+      } else {
+        onScoreAnimationComplete?.();
+      }
+    };
+
+    setScoreAnimationProgress(0);
+    frameId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frameId);
+  }, [scoreAnimation?.id]);
 
   return (
     <>
@@ -2084,12 +2174,12 @@ function HomeView({ db, currentName, allForName, homeBat, setHomeBat, addRecord 
               <h2>今日の結果</h2>
             </div>
           </div>
-          <DailyResultCards summary={todaySummary} selected={homeBat === ALL} onSelect={() => setHomeBat(ALL)} />
+          <DailyResultCards summary={displayTodaySummary} selected={homeBat === ALL} onSelect={() => setHomeBat(ALL)} animation={scoreCardAnimation} />
           <div className="home-bat-records">
             {todayByBat.length ? todayByBat.map((item) => (
               <RecordSummary
                 key={item.bat}
-                item={item}
+                item={animatedBatSummary?.bat === item.bat ? animatedBatSummary : item}
                 batColor={batColorFor(db, item.bat)}
                 selected={homeBat === item.bat}
                 onSelect={() => setHomeBat((value) => value === item.bat ? ALL : item.bat)}
