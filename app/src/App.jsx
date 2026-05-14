@@ -71,15 +71,16 @@ const BADGE_PERIODS = [
   ["monthly", "毎月バッジ"],
   ["total", "累計バッジ"],
 ];
+const periodCountBadgeLabel = (prefix, target) => `${prefix}回数${target}`;
 const HOME_BADGE_DEFINITIONS = [
-  ...[50, 100, 200, 300, 500].map((target) => ({ period: RANGE_TODAY, group: "daily", metric: "count", target, label: `毎日${target}回` })),
+  ...[50, 100, 200, 300, 500].map((target) => ({ period: RANGE_TODAY, group: "daily", metric: "count", target, label: periodCountBadgeLabel("毎日", target) })),
   ...[300, 400, 500, 600, 700].map((target) => ({ period: RANGE_TODAY, group: "daily", metric: "avg", target, label: `毎日平均${target}` })),
   ...[500, 600, 700, 800, 900].map((target) => ({ period: RANGE_TODAY, group: "daily", metric: "best", target, label: `毎日ベスト${target}` })),
   ...[2, 3, 7, 14, 30, 60, 100, 365].map((target) => ({ period: RANGE_TODAY, group: "daily", metric: "streak", target, label: `${target}日連続練習`, trigger: "exact" })),
-  ...[300, 500, 1000, 2000].map((target) => ({ period: RANGE_WEEK, group: "weekly", metric: "count", target, label: `毎週${target}回` })),
+  ...[300, 500, 1000, 2000].map((target) => ({ period: RANGE_WEEK, group: "weekly", metric: "count", target, label: periodCountBadgeLabel("毎週", target) })),
   ...[300, 400, 500, 600].map((target) => ({ period: RANGE_WEEK, group: "weekly", metric: "avg", target, label: `毎週平均${target}` })),
   ...[[3, "毎週3日練習"], [5, "毎週5日練習"], [7, "毎週皆勤"]].map(([target, label]) => ({ period: RANGE_WEEK, group: "weekly", metric: "days", target, label })),
-  ...[500, 1000, 2000, 3000, 5000].map((target) => ({ period: RANGE_MONTH, group: "monthly", metric: "count", target, label: `毎月${target}回` })),
+  ...[500, 1000, 2000, 3000, 5000].map((target) => ({ period: RANGE_MONTH, group: "monthly", metric: "count", target, label: periodCountBadgeLabel("毎月", target) })),
   ...[300, 400, 500, 600].map((target) => ({ period: RANGE_MONTH, group: "monthly", metric: "avg", target, label: `毎月平均${target}` })),
   ...[[5, "毎月5日練習"], [10, "毎月10日練習"], [20, "毎月20日練習"], ["all", "毎月毎日練習"]].map(([target, label]) => ({ period: RANGE_MONTH, group: "monthly", metric: "days", target, label })),
 ];
@@ -2173,7 +2174,7 @@ function badgeValue(label) {
 function badgeSortKey(label) {
   const value = badgeValue(label);
   const period = badgePeriod(label) === "daily" ? 0 : badgePeriod(label) === "weekly" ? 1 : badgePeriod(label) === "monthly" ? 2 : badgePeriod(label) === "total" ? 3 : 9;
-  const metric = label.includes("平均") ? 1 : label.includes("ベスト") ? 2 : label.includes("練習") || label.includes("皆勤") || label.includes("毎日") ? 3 : 0;
+  const metric = label.includes("回数") || /回$/.test(label) ? 0 : label.includes("平均") ? 1 : label.includes("ベスト") ? 2 : label.includes("練習") || label.includes("皆勤") || label.includes("毎日") ? 3 : 0;
   return [period, metric, value || 9999, label];
 }
 
@@ -2198,13 +2199,19 @@ function canonicalBadgeLabel(label) {
   const batBadgeIndex = label.indexOf(" 相棒");
   const baseLabel = batBadgeIndex >= 0 ? label.slice(batBadgeIndex + 1) : label;
   return baseLabel
-    .replace(/^今日(?=\d+回)/, "毎日")
+    .replace(/^今日(?=\d+回)/, "毎日回数")
+    .replace(/^毎日(?=\d+回)/, "毎日回数")
+    .replace(/^毎日回数([\d,.]+)回$/, "毎日回数$1")
     .replace(/^日平均(?=\d+)/, "毎日平均")
     .replace(/^今日ベスト(?=\d+)/, "毎日ベスト")
-    .replace(/^今週(?=\d+回)/, "毎週")
+    .replace(/^今週(?=\d+回)/, "毎週回数")
+    .replace(/^毎週(?=\d+回)/, "毎週回数")
+    .replace(/^毎週回数([\d,.]+)回$/, "毎週回数$1")
     .replace(/^週平均(?=\d+)/, "毎週平均")
     .replace(/^今週(?=\d+日練習|皆勤)/, "毎週")
-    .replace(/^月間(?=\d+回)/, "毎月")
+    .replace(/^月間(?=\d+回)/, "毎月回数")
+    .replace(/^毎月(?=\d+回)/, "毎月回数")
+    .replace(/^毎月回数([\d,.]+)回$/, "毎月回数$1")
     .replace(/^月平均(?=\d+)/, "毎月平均")
     .replace(/^今月(?=\d+日練習|毎日練習)/, "毎月");
 }
@@ -2256,9 +2263,9 @@ function rarityForBadge(label) {
   if (["ラッキー7", "スリーナイン", "七日目の覚醒"].includes(label) || value >= 50000 || label.includes("365日")) return "UR";
   if (["ぴったり500", "777スイング", "復活の一振り"].includes(label) || label.includes("100日") || label.includes("999")) return "UR";
   if (["大晦日の素振り", "元日の一振り"].includes(label) || label.includes("初800") || label.includes("初900") || label.includes("30日") || label.includes("毎月平均600") || label.includes("毎週平均600") || value >= 10000 || label.includes("60日") || label.includes("相棒5000")) return "SR";
-  if (label.includes("毎日300") || label.includes("毎日500") || label.includes("毎日平均600") || label.includes("毎日平均700") || label.includes("毎週1000") || label.includes("毎週2000") || label.includes("毎月2000") || label.includes("毎月3000") || label.includes("毎月5000") || label.includes("14日")) return "RR";
-  if (label.includes("毎日平均500") || label.includes("毎日200") || label.includes("毎日ベスト700") || label.includes("初700") || label.includes("毎週500") || label.includes("毎週平均500") || label.includes("毎月平均500") || label.includes("毎月平均400") || label.includes("毎月1000") || label.includes("7日") || value >= 3000) return "R";
-  if (label.includes("毎日100") || label.includes("毎日平均400") || label.includes("毎日ベスト600") || label.includes("毎週300") || label.includes("毎週平均400") || label.includes("毎月500") || label.includes("毎週3日") || label.includes("毎週5日") || label.includes("毎月5日") || label.includes("3日") || label.includes("初めて")) return "U";
+  if (label.includes("毎日回数300") || label.includes("毎日回数500") || label.includes("毎日平均600") || label.includes("毎日平均700") || label.includes("毎週回数1000") || label.includes("毎週回数2000") || label.includes("毎月回数2000") || label.includes("毎月回数3000") || label.includes("毎月回数5000") || label.includes("14日")) return "RR";
+  if (label.includes("毎日平均500") || label.includes("毎日回数200") || label.includes("毎日ベスト700") || label.includes("初700") || label.includes("毎週回数500") || label.includes("毎週平均500") || label.includes("毎月平均500") || label.includes("毎月平均400") || label.includes("毎月回数1000") || label.includes("7日") || value >= 3000) return "R";
+  if (label.includes("毎日回数100") || label.includes("毎日平均400") || label.includes("毎日ベスト600") || label.includes("毎週回数300") || label.includes("毎週平均400") || label.includes("毎月回数500") || label.includes("毎週3日") || label.includes("毎週5日") || label.includes("毎月5日") || label.includes("3日") || label.includes("初めて")) return "U";
   return "C";
 }
 
