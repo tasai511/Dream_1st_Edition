@@ -2033,26 +2033,26 @@ function HomeView({ db, currentName, allForName, homeBat, setHomeBat, addRecord 
     }
   };
   useEffect(() => {
-    setIsInputOpen(!hasTodayRecord);
-  }, [currentName, hasTodayRecord]);
+    setIsInputOpen(false);
+  }, [currentName]);
 
   return (
     <>
       <section className={`panel input-panel home-input-panel ${isInputOpen ? "open" : ""}`}>
         <div className="input-panel-title">
-          <h2>今日の記録</h2>
+          <button
+            type="button"
+            className="home-input-toggle"
+            onClick={() => setIsInputOpen((value) => !value)}
+            aria-expanded={isInputOpen}
+            aria-label={isInputOpen ? "今日の記録入力を閉じる" : "今日の記録を追加"}
+          >
+            {isInputOpen ? "閉じる" : "＋今日の記録を追加"}
+          </button>
         </div>
         <div className="input-panel-layout">
           <SwingForm bats={db.bats} defaultBat={db.defaultBat} onSubmit={handleRecordSubmit} submitLabel={hasTodayRecord ? "追加する" : "記録する"} />
         </div>
-        <button
-          type="button"
-          className={`badge-expand-bar input-expand-bar ${isInputOpen ? "expanded" : ""}`}
-          onClick={() => setIsInputOpen((value) => !value)}
-          aria-label={isInputOpen ? "入力フォームを閉じる" : "入力フォームを開く"}
-        >
-          {isInputOpen ? "閉じる" : "入力する"}
-        </button>
       </section>
 
       <section className="score-card">

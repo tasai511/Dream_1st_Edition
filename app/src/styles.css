@@ -3659,17 +3659,18 @@ input::placeholder {
 
 .home-input-panel {
   display: grid;
-  gap: 10px;
-  max-height: 126px;
+  gap: 0;
+  max-height: 54px;
   border-width: 1px;
-  padding: 14px;
+  padding: 8px 10px;
   opacity: 1;
   transform: none;
 }
 
 .home-input-panel.open {
   max-height: 560px;
-  padding: 16px;
+  gap: 10px;
+  padding: 12px;
 }
 
 .input-panel-title {
@@ -3678,6 +3679,21 @@ input::placeholder {
 
 .home-input-panel .input-panel-title {
   margin-bottom: 0;
+}
+
+.home-input-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 36px;
+  border: 1px solid rgba(var(--hot-rgb), 0.28);
+  border-radius: var(--radius);
+  padding: 0 12px;
+  color: var(--text);
+  background: rgba(var(--hot-rgb), 0.12);
+  font-size: 0.82rem;
+  font-weight: 950;
 }
 
 .home-input-panel .input-panel-layout {
