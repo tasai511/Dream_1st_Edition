@@ -774,7 +774,7 @@ function progressUnitForKind(kind) {
   return "";
 }
 
-function ProgressMeter({ kind, value, range, variableTarget, targets, focus = false }) {
+function ProgressMeter({ kind, value, range, variableTarget, targets, focus = false, showBadgeIcon = true }) {
   const [selectedBadge, setSelectedBadge] = useState(null);
   const meterRef = useRef(null);
   const info = progressInfo(kind, Number(value || 0), range, variableTarget, targets);
@@ -836,14 +836,16 @@ function ProgressMeter({ kind, value, range, variableTarget, targets, focus = fa
             <b>{info.remaining.toLocaleString("ja-JP")}</b>
           </span>
         )}
-        <button
-          className={`meter-badge ring-meter-badge rarity-${targetBadge.rarity.toLowerCase()}`}
-          type="button"
-          aria-label={`${targetBadge.label}の詳細`}
-          onClick={() => setSelectedBadge({ ...targetBadge, earnedCount: 0, lockedSecret: false })}
-        >
-          <span className="meter-badge-icon"><RarityIcon rarity={targetBadge.rarity} /></span>
-        </button>
+        {showBadgeIcon && (
+          <button
+            className={`meter-badge ring-meter-badge rarity-${targetBadge.rarity.toLowerCase()}`}
+            type="button"
+            aria-label={`${targetBadge.label}の詳細`}
+            onClick={() => setSelectedBadge({ ...targetBadge, earnedCount: 0, lockedSecret: false })}
+          >
+            <span className="meter-badge-icon"><RarityIcon rarity={targetBadge.rarity} /></span>
+          </button>
+        )}
         {selectedBadge && (
           <BadgeDetailPopover badge={selectedBadge} onClose={() => setSelectedBadge(null)} />
         )}
@@ -2515,8 +2517,8 @@ function BadgeCollectionView({ allForName }) {
           <span className="badge-point-meta"><b>{earnedInstanceTotal.toLocaleString("ja-JP")}</b>個</span>
         </div>
         <div className="badge-point-meters" aria-label="次に狙うバッジ">
-          <ProgressMeter kind="badge-points" value={basePointTotal} range={RANGE_TOTAL} targets={badgePointTargets} />
-          <ProgressMeter kind="badge-types" value={baseEarnedTotal} range={RANGE_TOTAL} targets={badgeTypeTargets} />
+          <ProgressMeter kind="badge-points" value={basePointTotal} range={RANGE_TOTAL} targets={badgePointTargets} showBadgeIcon={false} />
+          <ProgressMeter kind="badge-types" value={baseEarnedTotal} range={RANGE_TOTAL} targets={badgeTypeTargets} showBadgeIcon={false} />
         </div>
       </div>
       <section className="collection-main-card">
