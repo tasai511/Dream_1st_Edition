@@ -124,7 +124,10 @@ const defaultDb = {
   defaultBat: "",
   theme: "#ff7a45",
   records: [],
+  testInputDefaults: false,
 };
+
+const TEST_RECORD_VALUES = { count: 60, avg: 520, best: 640 };
 
 const BAT_COLOR_PALETTE = [
   "#ff3044",
@@ -378,6 +381,7 @@ function loadDb() {
       defaultBat: parsed.bats?.includes(parsed.defaultBat) ? parsed.defaultBat : parsed.bats?.[0] || "",
       theme: legacyTheme,
       records: Array.isArray(parsed.records) ? parsed.records : [],
+      testInputDefaults: Boolean(parsed.testInputDefaults),
     };
   } catch {
     return structuredClone(defaultDb);
@@ -1818,6 +1822,27 @@ function demoDb() {
   };
 }
 
+function animationTestDb() {
+  const names = ["テストプレイヤー"];
+  const bats = ["メインバット", "サブバット"];
+  return {
+    activeName: names[0],
+    names,
+    nameColors: {
+      [names[0]]: "#2f86ff",
+    },
+    bats,
+    batColors: {
+      [bats[0]]: "#ff9f1c",
+      [bats[1]]: "#a26bff",
+    },
+    defaultBat: bats[0],
+    theme: "#2f86ff",
+    records: [],
+    testInputDefaults: true,
+  };
+}
+
 export default function App() {
   const [db, setDbState] = useState(loadDb);
   const [tab, setTab] = useState(() => (localStorage.getItem(STORAGE_KEY) ? "home" : "settings"));
@@ -1879,6 +1904,14 @@ export default function App() {
     setDb({ ...db, records: nextRecords });
     event.currentTarget.reset();
     return true;
+  };
+
+  const loadAnimationTestDb = () => {
+    setDb(animationTestDb());
+    setHomeBat(ALL);
+    setSelectedDate(todayISO());
+    setScoreAnimation(null);
+    setTab("home");
   };
 
   const addName = (event) => {
@@ -2063,6 +2096,7 @@ export default function App() {
               addBat={addBat}
               exportCsv={exportCsv}
               importCsv={importCsv}
+              loadAnimationTestDb={loadAnimationTestDb}
               setPendingDelete={setPendingDelete}
             />
           )}
@@ -2155,7 +2189,13 @@ function HomeView({ db, currentName, allForName, homeBat, setHomeBat, addRecord,
           <h2>今日の記録</h2>
         </div>
         <div className="input-panel-layout">
-          <SwingForm bats={db.bats} defaultBat={db.defaultBat} onSubmit={handleRecordSubmit} submitLabel={hasTodayRecord ? "追加する" : "記録する"} />
+          <SwingForm
+            bats={db.bats}
+            defaultBat={db.defaultBat}
+            defaultValues={db.testInputDefaults ? TEST_RECORD_VALUES : null}
+            onSubmit={handleRecordSubmit}
+            submitLabel={hasTodayRecord ? "追加する" : "記録する"}
+          />
         </div>
         <button
           type="button"
@@ -2762,14 +2802,14 @@ function RecordView({ db, allForName, badgeMap, selectedDate, setSelectedDate, m
   );
 }
 
-function SwingForm({ bats, defaultBat, onSubmit, submitLabel }) {
+function SwingForm({ bats, defaultBat, onSubmit, submitLabel, defaultValues = null }) {
   const selectedBat = bats.includes(defaultBat) ? defaultBat : bats[0] || "";
   return (
     <form className="input-grid swing-form" onSubmit={onSubmit}>
       <label className="field-label"><span className="field-title"><Icon type="bat" />バット</span><select key={selectedBat} name="bat" required defaultValue={selectedBat}>{bats.map((bat) => <option key={bat}>{bat}</option>)}</select></label>
-      <label className="field-label"><span className="field-title"><Icon type="count" />回数</span><input name="count" type="number" inputMode="numeric" min="1" step="1" required /></label>
-      <label className="field-label"><span className="field-title"><Icon type="avg" />平均</span><input name="avg" type="number" inputMode="numeric" min="0" max="999" step="1" required /></label>
-      <label className="field-label"><span className="field-title"><Icon type="best" />ベスト</span><input name="best" type="number" inputMode="numeric" min="0" max="999" step="1" required /></label>
+      <label className="field-label"><span className="field-title"><Icon type="count" />回数</span><input name="count" type="number" inputMode="numeric" min="1" step="1" required defaultValue={defaultValues?.count ?? ""} /></label>
+      <label className="field-label"><span className="field-title"><Icon type="avg" />平均</span><input name="avg" type="number" inputMode="numeric" min="0" max="999" step="1" required defaultValue={defaultValues?.avg ?? ""} /></label>
+      <label className="field-label"><span className="field-title"><Icon type="best" />ベスト</span><input name="best" type="number" inputMode="numeric" min="0" max="999" step="1" required defaultValue={defaultValues?.best ?? ""} /></label>
       <button className="primary wide" type="submit"><ButtonIcon type="plus" />{submitLabel}</button>
     </form>
   );
@@ -2839,7 +2879,7 @@ function RecordSummary({ item, batColor = "#8d95a4", selected = false, onSelect 
   );
 }
 
-function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, importCsv, setPendingDelete }) {
+function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, importCsv, loadAnimationTestDb, setPendingDelete }) {
   const [openBatPalette, setOpenBatPalette] = useState(null);
   const [palettePosition, setPalettePosition] = useState(null);
   const hasNames = db.names.length > 0;
@@ -3047,6 +3087,7 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
           <button type="button" className="ghost" onClick={exportCsv}><ButtonIcon type="download" />CSV出力</button>
           <label className="file-control ghost"><ButtonIcon type="upload" />CSV読込<input type="file" accept=".csv,text/csv" onChange={importCsv} /></label>
         </div>
+        <button type="button" className="ghost wide" onClick={loadAnimationTestDb}>演出テスト用データを作成</button>
         <button type="button" className="ghost wide" onClick={() => setDb(demoDb())}>デモデータを作成</button>
         <button type="button" className="danger wide" onClick={() => setPendingDelete({ type: "all", value: "全データ" })}>全データ削除</button>
       </section>
