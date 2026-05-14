@@ -2033,8 +2033,8 @@ function HomeView({ db, currentName, allForName, homeBat, setHomeBat, addRecord 
     }
   };
   useEffect(() => {
-    setIsInputOpen(false);
-  }, [currentName]);
+    setIsInputOpen(!hasTodayRecord);
+  }, [currentName, hasTodayRecord]);
 
   return (
     <>
@@ -2047,7 +2047,7 @@ function HomeView({ db, currentName, allForName, homeBat, setHomeBat, addRecord 
             aria-expanded={isInputOpen}
             aria-label={isInputOpen ? "今日の記録入力を閉じる" : "今日の記録を追加"}
           >
-            {isInputOpen ? "閉じる" : "＋今日の記録を追加"}
+            {isInputOpen ? "閉じる" : "今日の記録を追加"}
           </button>
         </div>
         <div className="input-panel-layout">

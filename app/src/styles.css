@@ -3661,17 +3661,20 @@ input::placeholder {
 .home-input-panel {
   display: grid;
   gap: 0;
-  max-height: 54px;
-  border-width: 1px;
-  padding: 8px 10px;
+  max-height: 36px;
+  border-width: 0;
+  padding: 0;
+  background: transparent !important;
   opacity: 1;
   transform: none;
 }
 
 .home-input-panel.open {
   max-height: 560px;
+  border-width: 1px;
   gap: 10px;
   padding: 12px;
+  background: #1b202a !important;
 }
 
 .input-panel-title {
@@ -3686,15 +3689,20 @@ input::placeholder {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
-  min-height: 36px;
-  border: 1px solid rgba(var(--hot-rgb), 0.28);
-  border-radius: var(--radius);
-  padding: 0 12px;
-  color: var(--text);
-  background: rgba(var(--hot-rgb), 0.12);
-  font-size: 0.82rem;
+  width: auto;
+  min-height: 30px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0 2px;
+  color: var(--hot);
+  background: transparent;
+  font-size: 0.78rem;
   font-weight: 950;
+}
+
+.home-input-panel.open .home-input-toggle {
+  align-self: start;
+  padding-inline: 0;
 }
 
 .home-input-panel .input-panel-layout {
