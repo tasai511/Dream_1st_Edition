@@ -1517,11 +1517,11 @@ p {
   display: grid;
   justify-items: center;
   align-content: center;
-  gap: 0;
+  gap: 5px;
   width: 66px;
-  height: 66px;
+  height: auto;
   min-width: 0;
-  min-height: 66px;
+  min-height: 0;
   border: 0;
   border-radius: 0;
   padding: 0;
@@ -1606,13 +1606,20 @@ p {
 
 .daily-badge-image {
   display: block;
-  width: 66px;
-  height: 66px;
+  width: min(54px, 100%);
+  height: min(54px, 100%);
   filter:
     drop-shadow(0 0 var(--daily-badge-glow-core) color-mix(in srgb, var(--daily-badge-color) var(--daily-badge-glow-core-mix), transparent))
     drop-shadow(0 0 var(--daily-badge-glow-aura) color-mix(in srgb, var(--daily-badge-color) var(--daily-badge-glow-aura-mix), transparent))
     drop-shadow(0 7px 8px rgba(0, 0, 0, 0.38));
   object-fit: contain;
+}
+
+.daily-badge-rarity-label {
+  color: currentColor;
+  font-size: 0.7rem;
+  font-weight: 950;
+  line-height: 1;
 }
 
 .daily-badge-label {
@@ -3171,18 +3178,6 @@ input::placeholder {
   gap: 5px;
   cursor: default;
   pointer-events: none;
-}
-
-.preview-badge-mark .daily-badge-image {
-  width: min(54px, 100%);
-  height: min(54px, 100%);
-}
-
-.preview-badge-mark b {
-  color: currentColor;
-  font-size: 0.7rem;
-  font-weight: 950;
-  line-height: 1;
 }
 
 .badge-point-card {
