@@ -1640,7 +1640,7 @@ p {
   font-size: 0.78rem;
   font-weight: 950;
   line-height: 1.05;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.42);
+  text-shadow: none;
   text-align: right;
   white-space: normal;
   transform: translateY(-50%);
