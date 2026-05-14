@@ -1440,6 +1440,7 @@ p {
 .daily-score-row > strong {
   position: relative;
   z-index: 2;
+  pointer-events: none;
 }
 
 .daily-result-summary .daily-result-metric strong {
@@ -1568,7 +1569,7 @@ p {
 }
 
 .daily-badge-mark.rarity-c {
-  --daily-badge-color: #b47a42;
+  --daily-badge-color: #8a5430;
   --daily-badge-glow-core: 0;
   --daily-badge-glow-aura: 0;
   --daily-badge-glow-core-mix: 0%;
@@ -1577,7 +1578,7 @@ p {
 }
 
 .daily-badge-mark.rarity-u {
-  --daily-badge-color: #4cc38a;
+  --daily-badge-color: #2f8f62;
   --daily-badge-glow-core: 0;
   --daily-badge-glow-aura: 0;
   --daily-badge-glow-core-mix: 0%;
@@ -1668,12 +1669,14 @@ p {
 
 .milestone-fill {
   position: absolute;
-  inset: 0 auto 0 0;
-  width: var(--milestone-fill-width, 100%);
+  inset: 0;
+  width: 100%;
   border-radius: inherit;
   background: linear-gradient(90deg, rgb(from currentColor r g b / 0.02) 0%, rgb(from currentColor r g b / 0.12) 28%, rgb(from currentColor r g b / 0.58) 68%, rgb(from currentColor r g b / 1) 100%);
   opacity: 1;
-  transition: width 80ms linear;
+  transform: scaleX(var(--milestone-fill-ratio, 1));
+  transform-origin: left center;
+  transition: transform 80ms linear;
 }
 
 .milestone-dot {
@@ -3007,6 +3010,8 @@ input::placeholder {
   font-weight: 950;
   line-height: 1;
   letter-spacing: 0;
+  transition: transform 120ms ease, color 160ms ease, background-color 160ms ease;
+  transform-origin: center;
 }
 
 .badge-expand-bar svg {
@@ -3574,8 +3579,8 @@ input::placeholder {
   overflow: visible;
 }
 
-.rarity-c { color: #b47a42; }
-.rarity-u { color: #4cc38a; }
+.rarity-c { color: #8a5430; }
+.rarity-u { color: #2f8f62; }
 .rarity-r { color: #4d8dff; }
 .rarity-rr { color: #a878ff; }
 .rarity-sr { color: #d7dee8; }
@@ -3594,12 +3599,25 @@ input::placeholder {
   color: currentColor;
 }
 
-.badge.collection-badge.rarity-c { color: #b47a42; }
-.badge.collection-badge.rarity-u { color: #4cc38a; }
+.badge.collection-badge.rarity-c { color: #8a5430; }
+.badge.collection-badge.rarity-u { color: #2f8f62; }
 .badge.collection-badge.rarity-r { color: #4d8dff; }
 .badge.collection-badge.rarity-rr { color: #a878ff; }
 .badge.collection-badge.rarity-sr { color: #d7dee8; }
 .badge.collection-badge.rarity-ur { color: #ffd700; }
+
+.collection-card.locked .badge.collection-badge,
+.collection-card.secret.locked .badge.collection-badge {
+  border-color: var(--line);
+  color: #596272;
+  background: transparent;
+}
+
+.collection-card.locked .badge.collection-badge .rarity-icon,
+.collection-card.secret.locked .badge.collection-badge .rarity-icon {
+  color: #596272;
+  opacity: 0.72;
+}
 
 .day-badges {
   margin-top: 12px;
@@ -3757,8 +3775,15 @@ input::placeholder {
 }
 
 .field-title .icon {
+  display: grid;
   width: 22px;
   height: 22px;
+  place-items: center;
+}
+
+.field-title .bat-color-icon {
+  width: 18px;
+  height: 18px;
 }
 
 .input-close {
@@ -4976,8 +5001,8 @@ body,
   margin-right: 0;
 }
 
-.meter-badge.rarity-c { color: #b47a42; }
-.meter-badge.rarity-u { color: #4cc38a; }
+.meter-badge.rarity-c { color: #8a5430; }
+.meter-badge.rarity-u { color: #2f8f62; }
 .meter-badge.rarity-r { color: #4d8dff; }
 .meter-badge.rarity-rr { color: #a878ff; }
 .meter-badge.rarity-sr { color: #d7dee8; }
@@ -5379,15 +5404,15 @@ select:focus,
   background: var(--hot-dark);
 }
 
-.progress-meter > .meter-badge.rarity-c { color: #b47a42; }
-.progress-meter > .meter-badge.rarity-u { color: #4cc38a; }
+.progress-meter > .meter-badge.rarity-c { color: #8a5430; }
+.progress-meter > .meter-badge.rarity-u { color: #2f8f62; }
 .progress-meter > .meter-badge.rarity-r { color: #4d8dff; }
 .progress-meter > .meter-badge.rarity-rr { color: #a878ff; }
 .progress-meter > .meter-badge.rarity-sr { color: #d7dee8; }
 .progress-meter > .meter-badge.rarity-ur { color: #ffd700; }
 
-.meter-ring > .meter-badge.rarity-c { color: #b47a42; }
-.meter-ring > .meter-badge.rarity-u { color: #4cc38a; }
+.meter-ring > .meter-badge.rarity-c { color: #8a5430; }
+.meter-ring > .meter-badge.rarity-u { color: #2f8f62; }
 .meter-ring > .meter-badge.rarity-r { color: #4d8dff; }
 .meter-ring > .meter-badge.rarity-rr { color: #a878ff; }
 .meter-ring > .meter-badge.rarity-sr { color: #d7dee8; }
@@ -5418,8 +5443,8 @@ select:focus,
   transform: none;
 }
 
-.meter-ring > .ring-meter-badge.rarity-c { color: #b47a42; }
-.meter-ring > .ring-meter-badge.rarity-u { color: #4cc38a; }
+.meter-ring > .ring-meter-badge.rarity-c { color: #8a5430; }
+.meter-ring > .ring-meter-badge.rarity-u { color: #2f8f62; }
 .meter-ring > .ring-meter-badge.rarity-r { color: #4d8dff; }
 .meter-ring > .ring-meter-badge.rarity-rr { color: #a878ff; }
 .meter-ring > .ring-meter-badge.rarity-sr { color: #d7dee8; }
@@ -5702,6 +5727,16 @@ select:focus,
   color: var(--active-graph-color) !important;
 }
 
+.record-section .count-bars .bar-item.today strong {
+  justify-self: center;
+  width: min-content;
+  max-width: 100%;
+  overflow: visible;
+  text-overflow: clip;
+  font-size: 0.68rem;
+  transform: none;
+}
+
 .record-section .avg-path,
 .record-section .chart-single-point.avg,
 .record-section .chart-active-point.avg,
@@ -5806,15 +5841,16 @@ select:focus,
 
 .daily-badge-stage {
   right: clamp(4px, 4%, 30px);
+  z-index: 5;
   transform: translateY(-72%);
   pointer-events: auto;
 }
 
 .daily-badge-get-stamp {
   right: auto;
-  top: auto;
-  bottom: 4px;
-  left: -16px;
+  top: 2px;
+  bottom: auto;
+  left: -14px;
   width: 42px;
   height: 24px;
   border-radius: 5px;
@@ -5834,7 +5870,11 @@ select:focus,
 }
 
 .milestone-fill {
-  width: var(--milestone-fill-width, 0%);
+  transform: scaleX(var(--milestone-fill-ratio, 0));
+}
+
+.daily-result-card.animating .milestone-fill {
+  transition: none;
 }
 
 .record-section {
@@ -5842,29 +5882,34 @@ select:focus,
   padding-top: 6px !important;
 }
 
-.record-section .record-scroll {
-  max-width: min(100%, 420px);
+.record-section .record-scroll:not(.score-record-scroll) {
+  container-type: inline-size;
+  width: min(100%, 390px);
+  max-width: 100%;
   margin-inline: auto;
-  padding-inline: 2px;
+  padding-inline: 0;
 }
 
 .record-section .count-bars {
-  --count-bar-width: clamp(35px, calc((100vw - 108px) / 7), 46px) !important;
-  gap: 7px !important;
+  --count-bar-slot: calc(100cqw / 7.5);
+  --count-bar-width: calc(var(--count-bar-slot) * 0.72);
+  gap: calc(var(--count-bar-slot) - var(--count-bar-width)) !important;
+  width: max-content !important;
+  min-width: max-content !important;
   background: transparent !important;
 }
 
 .record-section .bar-item {
-  grid-template-rows: 104px auto auto !important;
+  grid-template-rows: 136px auto auto !important;
 }
 
 .record-section .bar-item .bar-track,
 .record-section .bar-item.today .bar-track {
   position: relative;
-  height: 104px;
+  height: 136px;
   border: 0 !important;
-  border-radius: 8px;
-  padding: 0 5px;
+  border-radius: 8px 8px 0 0;
+  padding: 0;
   background: transparent !important;
   overflow: hidden;
 }
@@ -5875,6 +5920,7 @@ select:focus,
   inset: 0;
   z-index: 3;
   border: 1px solid color-mix(in srgb, var(--active-graph-color, var(--hot)) 14%, rgba(255, 255, 255, 0.16));
+  border-bottom-width: 1px;
   border-radius: inherit;
   background: transparent;
   content: "";
@@ -5886,6 +5932,39 @@ select:focus,
 }
 
 .record-section .bar-item.clipped .bar-fill {
+  height: 100% !important;
+  transform: none;
+  border-top-left-radius: 0 !important;
+  border-top-right-radius: 0 !important;
+  -webkit-mask:
+    repeating-linear-gradient(
+      90deg,
+      #000 0 4px,
+      transparent 4px 6px
+    ) 0 0 / 6px 2px repeat-x,
+    linear-gradient(#000 0 0) 0 2px / 100% calc(100% - 2px) no-repeat;
+  mask:
+    repeating-linear-gradient(
+      90deg,
+      #000 0 4px,
+      transparent 4px 6px
+    ) 0 0 / 6px 2px repeat-x,
+    linear-gradient(#000 0 0) 0 2px / 100% calc(100% - 2px) no-repeat;
+}
+
+.record-section .bar-item.clipped .bar-track {
+  --clipped-stripe-color: color-mix(in srgb, var(--active-graph-color) 34%, transparent);
+  overflow: visible;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.record-section .bar-item.clipped.today .bar-track {
+  --clipped-stripe-color: var(--active-graph-color);
+}
+
+.record-section .bar-item.clipped .bar-track::after {
+  border-top: 0;
   border-top-left-radius: 0;
   border-top-right-radius: 0;
 }
@@ -5953,4 +6032,246 @@ select:focus,
   width: 29px !important;
   height: 29px !important;
   stroke-width: 1.75 !important;
+}
+
+.daily-badge-mark:active {
+  transform: none;
+}
+
+.daily-badge-mark .daily-badge-image,
+.daily-badge-mark .daily-badge-rarity-label,
+.milestone-dot .rarity-icon {
+  transition: transform 120ms ease, opacity 160ms ease;
+}
+
+.daily-badge-mark:active .daily-badge-image,
+.daily-badge-mark:active .daily-badge-rarity-label {
+  transform: scale(0.9);
+}
+
+.milestone-dot {
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 0;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 160ms ease;
+}
+
+.milestone-dot:active {
+  transform: translate(-50%, -50%) !important;
+}
+
+.milestone-dot:active .rarity-icon {
+  transform: scale(0.82) !important;
+}
+
+.collection-popover {
+  animation: popover-tap-in 160ms ease-out both;
+}
+
+.collection-popover-head button {
+  transition: transform 120ms ease, background-color 160ms ease;
+}
+
+.collection-popover-head button:active {
+  transform: scale(0.9);
+}
+
+.badge-chip-wrap .collection-badge {
+  transition: transform 120ms ease, background-color 160ms ease, border-color 160ms ease;
+  transform-origin: center;
+}
+
+.badge-chip-wrap .collection-badge:active {
+  transform: scale(0.96);
+}
+
+.badge-chip-wrap .collection-badge:active .rarity-icon {
+  transform: scale(0.9);
+}
+
+.bottom-nav button:active,
+.badge-expand-bar:active,
+.input-close:active,
+.record-card-button:active {
+  transform: scale(0.97);
+}
+
+.bottom-nav button:active {
+  transform: none;
+}
+
+.badge-expand-bar:active {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.daily-result-group-card.record-card-button:active {
+  transform: scale(0.97) !important;
+}
+
+.daily-result-group-card.record-card-button.badge-active:active {
+  transform: none !important;
+}
+
+.active-player,
+.app-header .active-player {
+  display: grid !important;
+  grid-template-columns: 14px 4em !important;
+  gap: 5px !important;
+  width: calc(14px + 5px + 4em + 18px) !important;
+  min-width: 0 !important;
+  min-height: 32px !important;
+  padding: 0 9px !important;
+  font-size: 0.74rem !important;
+  line-height: 1 !important;
+}
+
+.active-player span {
+  display: block;
+  width: 4em;
+  min-width: 0;
+  overflow: hidden;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.active-player svg {
+  width: 14px !important;
+  height: 14px !important;
+  stroke-width: 2.25 !important;
+}
+
+.collection-popover-head button {
+  width: 32px !important;
+  height: 32px !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  color: rgba(255, 255, 255, 0.72) !important;
+  background: rgba(255, 255, 255, 0.045) !important;
+}
+
+.collection-popover-head button svg {
+  width: 17px;
+  height: 17px;
+  stroke-width: 2;
+}
+
+.collection-popover-head button:hover {
+  color: var(--text) !important;
+  background: rgba(255, 255, 255, 0.075) !important;
+}
+
+.bottom-nav {
+  padding: 5px 14px calc(5px + env(safe-area-inset-bottom)) !important;
+  background: rgba(36, 41, 54, 0.82) !important;
+  box-shadow: 0 -6px 18px rgba(0, 0, 0, 0.18) !important;
+}
+
+.bottom-nav button {
+  gap: 1px !important;
+  min-height: 52px !important;
+  background: transparent;
+}
+
+.bottom-nav button.active {
+  background: color-mix(in srgb, var(--hot) 88%, transparent) !important;
+}
+
+.bottom-nav svg {
+  width: 34px !important;
+  height: 34px !important;
+  stroke-width: 1.65 !important;
+  transition: transform 120ms ease, opacity 160ms ease;
+}
+
+.bottom-nav button span {
+  font-size: 0.54rem;
+}
+
+.bottom-nav button:active {
+  transform: none !important;
+}
+
+.bottom-nav button:active svg {
+  transform: translateY(1px) scale(0.84);
+}
+
+.daily-badge-mark:active {
+  transform: none !important;
+}
+
+.daily-badge-mark:active .daily-badge-image,
+.daily-badge-mark:active .daily-badge-rarity-label {
+  transform: scale(0.9) !important;
+}
+
+.milestone-dot:active {
+  transform: translate(-50%, -50%) !important;
+}
+
+.milestone-dot:active .rarity-icon {
+  transform: scale(0.82) !important;
+}
+
+@keyframes popover-tap-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Final tap feedback authority: visual only, no sound. */
+button:not(:disabled),
+[role="button"],
+[role="tab"],
+.file-control,
+select,
+input[type="file"]::file-selector-button {
+  transition:
+    transform 120ms ease,
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    opacity 160ms ease;
+  transform-origin: center;
+}
+
+button:not(:disabled):active,
+[role="button"]:active,
+[role="tab"]:active,
+.file-control:active,
+select:active,
+input[type="file"]::file-selector-button:active {
+  transform: scale(0.97);
+}
+
+.square:not(:disabled):active,
+.chip-delete:not(:disabled):active,
+.collection-popover-head button:not(:disabled):active {
+  transform: scale(0.9);
+}
+
+.daily-badge-mark:active {
+  transform: none !important;
+}
+
+.daily-badge-mark:active .daily-badge-image,
+.daily-badge-mark:active .daily-badge-rarity-label {
+  transform: scale(0.9) !important;
+}
+
+.milestone-dot:active {
+  transform: translate(-50%, -50%) !important;
+}
+
+.milestone-dot:active .rarity-icon {
+  transform: scale(0.82) !important;
+}
+
+.daily-result-group-card.record-card-button.badge-active:active {
+  transform: none !important;
 }

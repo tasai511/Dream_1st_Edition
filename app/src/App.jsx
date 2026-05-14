@@ -30,8 +30,8 @@ const RARITY_POINTS = {
   UR: 30,
 };
 const RARITY_COLORS = {
-  C: "#b47a42",
-  U: "#4cc38a",
+  C: "#8a5430",
+  U: "#2f8f62",
   R: "#4d8dff",
   RR: "#a878ff",
   SR: "#d7dee8",
@@ -234,13 +234,18 @@ function nameColorFor(db, name) {
   return normalizeHexColor(db.nameColors?.[name], index === 0 ? legacyTheme : BAT_COLOR_PALETTE[index % BAT_COLOR_PALETTE.length]);
 }
 
+function compactPlayerName(name) {
+  const chars = [...String(name || "未選択")];
+  return chars.length > 4 ? `${chars.slice(0, 3).join("")}…` : chars.join("");
+}
+
 function SvgIcon({ type }) {
   const props = { viewBox: "0 0 24 24", "aria-hidden": "true" };
-  if (type === "home") return <svg {...props}><path d="M4 11.5 12 5l8 6.5" /><path d="M6.5 10.5V20h11v-9.5" /><path d="M9.5 20v-5h5v5" /></svg>;
-  if (type === "challenge") return <svg {...props}><path d="M7 4h10l-1 6a4 4 0 0 1-8 0L7 4Z" /><path d="M7 6H4.5a2 2 0 0 0 2 4H8" /><path d="M17 6h2.5a2 2 0 0 1-2 4H16" /><path d="M12 14v4" /><path d="M8.5 20h7" /></svg>;
+  if (type === "home") return <svg {...props}><path d="M3.8 11.2 12 4.6l8.2 6.6" /><path d="M6.2 10.2v9.1h11.6v-9.1" /><path d="M9.4 19.3v-5.2h5.2v5.2" /><path d="M9.4 7.2h5.2" /></svg>;
+  if (type === "challenge") return <svg {...props}><path d="M7 5.2h10v5.1a5 5 0 0 1-10 0V5.2Z" /><path d="M7 7H4.4v2.1A3.4 3.4 0 0 0 7.8 12" /><path d="M17 7h2.6v2.1a3.4 3.4 0 0 1-3.4 2.9" /><path d="M12 15.2v3.2" /><path d="M8.6 20.2h6.8" /><path d="m10.2 9.2 1.2 1.2 2.5-2.6" /></svg>;
   if (type === "log") return <svg {...props}><rect x="4" y="5" width="16" height="15" rx="3" /><path d="M8 3v4M16 3v4M4 10h16" /></svg>;
   if (type === "settings") return <svg {...props}><circle cx="12" cy="12" r="3.2" /><path d="M19 12a7 7 0 0 0-.1-1l2-1.6-2-3.4-2.4 1a7 7 0 0 0-1.8-1L14.4 3h-4.8l-.3 3a7 7 0 0 0-1.8 1l-2.4-1-2 3.4 2 1.6A7 7 0 0 0 5 12a7 7 0 0 0 .1 1l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 1.8 1l.3 3h4.8l.3-3a7 7 0 0 0 1.8-1l2.4 1 2-3.4-2-1.6c.1-.3.1-.7.1-1Z" /></svg>;
-  if (type === "collection") return <svg {...props}><path d="M7 4h10a2 2 0 0 1 2 2v14l-7-3-7 3V6a2 2 0 0 1 2-2Z" /><path d="M12 8l1.4 2.8 3.1.5-2.2 2.2.5 3.1-2.8-1.5-2.8 1.5.5-3.1-2.2-2.2 3.1-.5L12 8Z" /></svg>;
+  if (type === "collection") return <svg {...props}><circle cx="12" cy="9" r="4.6" /><path d="M9.4 13.1 7.6 20l4.4-2.5 4.4 2.5-1.8-6.9" /><path d="M12 6.8l.7 1.4 1.5.2-1.1 1.1.3 1.5-1.4-.8-1.4.8.3-1.5-1.1-1.1 1.5-.2L12 6.8Z" /></svg>;
   if (type === "person") return <svg {...props}><circle cx="12" cy="7.4" r="3.4" /><path d="M5 21c.8-4.6 3.2-7 7-7s6.2 2.4 7 7" /></svg>;
   if (type === "count") return <svg {...props}><path d="M4 7h16M4 12h16M4 17h10" /></svg>;
   if (type === "avg") return <svg {...props}><path d="M4 17 9 12l4 4 7-9" /><path d="M16 7h4v4" /></svg>;
@@ -259,35 +264,13 @@ function Icon({ type }) {
 }
 
 function BatIcon({ color = "#8d95a4" }) {
-  return <span className="bat-color-icon" style={{ "--bat-icon-color": normalizeHexColor(color, "#8d95a4") }} aria-hidden="true" />;
+  const iconColor = String(color || "").trim();
+  const resolvedColor = iconColor.startsWith("var(") ? iconColor : normalizeHexColor(iconColor, "#8d95a4");
+  return <span className="bat-color-icon" style={{ "--bat-icon-color": resolvedColor }} aria-hidden="true" />;
 }
 
 function ButtonIcon({ type }) {
   return <span className="button-icon"><SvgIcon type={type} /></span>;
-}
-
-function playTapSound() {
-  try {
-    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContextClass) return;
-    const context = playTapSound.context || new AudioContextClass();
-    playTapSound.context = context;
-    if (context.state === "suspended") context.resume();
-    const oscillator = context.createOscillator();
-    const gain = context.createGain();
-    const now = context.currentTime;
-    oscillator.type = "sine";
-    oscillator.frequency.setValueAtTime(720, now);
-    oscillator.frequency.exponentialRampToValueAtTime(520, now + 0.035);
-    gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.exponentialRampToValueAtTime(0.045, now + 0.004);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.055);
-    oscillator.connect(gain).connect(context.destination);
-    oscillator.start(now);
-    oscillator.stop(now + 0.06);
-  } catch {
-    // Audio feedback is optional.
-  }
 }
 
 function todayISO() {
@@ -675,7 +658,7 @@ function comparisonBuckets(daily, range) {
   const diffUnit = range === RANGE_MONTH
     ? ((startAnchor.getFullYear() - firstAnchor.getFullYear()) * 12) + (startAnchor.getMonth() - firstAnchor.getMonth())
     : Math.floor((startAnchor - firstAnchor) / 86400000 / bucketRange);
-  const minBuckets = range === RANGE_WEEK ? 5 : range === RANGE_MONTH ? 6 : 7;
+  const minBuckets = range === RANGE_TODAY ? 8 : range === RANGE_WEEK ? 5 : range === RANGE_MONTH ? 6 : 7;
   const bucketCount = Math.max(minBuckets, diffUnit + 1);
 
   return Array.from({ length: bucketCount }, (_, bucketIndex) => {
@@ -1055,13 +1038,20 @@ function DailyResultCards({ summary, showBadges = true, selected = false, onSele
   ];
 
   if (onSelect) {
+    const handleSelect = (event) => {
+      if (event.target.closest("button")) return;
+      onSelect();
+    };
     return (
       <article
         className={`daily-result-group-card record-card-button ${selected ? "selected" : ""}`}
-        onClick={(event) => {
-          if (event.target.closest("button")) return;
-          onSelect();
+        onPointerDown={(event) => {
+          event.currentTarget.classList.toggle("badge-active", Boolean(event.target.closest(".daily-badge-mark, .milestone-dot")));
         }}
+        onPointerUp={(event) => event.currentTarget.classList.remove("badge-active")}
+        onPointerCancel={(event) => event.currentTarget.classList.remove("badge-active")}
+        onPointerLeave={(event) => event.currentTarget.classList.remove("badge-active")}
+        onClick={handleSelect}
         onKeyDown={(event) => {
           if (event.key === "Enter" || event.key === " ") {
             event.preventDefault();
@@ -1083,13 +1073,14 @@ function DailyResultCards({ summary, showBadges = true, selected = false, onSele
 }
 
 function DailyResultCard({ card, showBadges }) {
+  const [selectedBadge, setSelectedBadge] = useState(null);
   const milestones = dailyBadgeMilestones(card.metric, card.value);
   const earnedBadge = dailyResultBadge(card.metric, card.value);
   const visibleMilestones = milestones.filter((milestone) => milestone.earned);
   const revealBadge = card.revealBadge !== false;
 
   return (
-    <article className={`daily-result-card ${card.key}`} style={{ "--milestone-fill-width": `${Math.round((card.fillRatio ?? 1) * 100)}%` }}>
+    <article className={`daily-result-card ${card.key} ${card.revealBadge === false ? "animating" : ""}`} style={{ "--milestone-fill-ratio": String(card.fillRatio ?? 1) }}>
       <div className="metric-label"><Icon type={card.icon} />{card.label}</div>
       {showBadges && (
         <>
@@ -1107,26 +1098,33 @@ function DailyResultCard({ card, showBadges }) {
               ) : null}
             </div>
           </div>
-          <div className={`milestone-track ${visibleMilestones.length ? "earned" : ""}`} aria-hidden="true">
+          <div className={`milestone-track ${visibleMilestones.length ? "earned" : ""}`}>
             <span className="milestone-fill" />
             {visibleMilestones.map((milestone) => {
               const alpha = milestoneAlpha(milestone.position);
+              const definition = makeBadgeDefinition(canonicalBadgeLabel(milestone.label), { description: milestone.description || `${milestone.label}をゲット` });
               return (
-              <i
+              <button
+                type="button"
                 className={`milestone-dot ${earnedBadge?.label === milestone.label ? "current" : ""}`}
                 style={{
                   left: `${milestone.position}%`,
                   "--milestone-alpha": alpha.toFixed(2),
                   "--milestone-ring-alpha": Math.max(0.08, alpha * 0.7).toFixed(2),
                 }}
+                onClick={() => setSelectedBadge({ ...definition, earnedCount: 0, lockedSecret: false })}
+                aria-label={`${definition.label}の詳細`}
                 key={milestone.label}
               >
                 <RarityIcon rarity={rarityForBadge(milestone.label)} />
                 <span>{milestone.target}</span>
-              </i>
+              </button>
               );
             })}
           </div>
+          {selectedBadge && (
+            <BadgeDetailPopover badge={selectedBadge} onClose={() => setSelectedBadge(null)} />
+          )}
         </>
       )}
       {!showBadges && <strong>{Number(card.value || 0).toLocaleString("ja-JP")}<span>{card.unit}</span></strong>}
@@ -1329,10 +1327,16 @@ function CountBars({ buckets }) {
   const average = counts.length ? counts.reduce((sum, count) => sum + count, 0) / counts.length : 0;
   const cap = Math.max(1, Math.min(Math.max(1, ...counts), Math.max(1, average * 2)));
 
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollLeft = scrollRef.current.scrollWidth;
-    }
+  useLayoutEffect(() => {
+    const node = scrollRef.current;
+    if (!node) return undefined;
+    let frameId = 0;
+    const scrollToRightEdge = () => {
+      node.scrollLeft = Math.max(0, node.scrollWidth - node.clientWidth);
+    };
+    scrollToRightEdge();
+    frameId = requestAnimationFrame(scrollToRightEdge);
+    return () => cancelAnimationFrame(frameId);
   }, [buckets.length, buckets[0]?.label, buckets.at(-1)?.label]);
 
   return (
@@ -1906,16 +1910,6 @@ export default function App() {
     return () => document.removeEventListener("pointerdown", closeOnOutsideTap, true);
   }, [isNameMenuOpen]);
 
-  useEffect(() => {
-    const playForInteractiveTap = (event) => {
-      const target = event.target.closest?.("button, a, label, input, select, [role='button'], [role='tab']");
-      if (!target || target.disabled || target.getAttribute?.("aria-disabled") === "true") return;
-      playTapSound();
-    };
-    document.addEventListener("pointerup", playForInteractiveTap, true);
-    return () => document.removeEventListener("pointerup", playForInteractiveTap, true);
-  }, []);
-
   const addRecord = (event, date = selectedDate) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
@@ -2072,7 +2066,7 @@ export default function App() {
               aria-expanded={isNameMenuOpen}
               onClick={() => setIsNameMenuOpen((value) => !value)}
             >
-              <SvgIcon type="person" />{currentName || "未選択"}
+              <SvgIcon type="person" /><span>{compactPlayerName(currentName)}</span>
             </button>
             {isNameMenuOpen && (
               <div className="player-menu" role="menu" aria-label="名前を切り替え">
@@ -2152,6 +2146,7 @@ export default function App() {
 function HomeView({ db, currentName, allForName, homeBat, setHomeBat, addRecord, scoreAnimation, onScoreAnimationComplete }) {
   const [isInputOpen, setIsInputOpen] = useState(false);
   const [scoreAnimationProgress, setScoreAnimationProgress] = useState(1);
+  const activeScoreAnimationIdRef = useRef(null);
   const allFiltered = db.records.filter((record) => (
     record.name === currentName &&
     record.date <= todayISO()
@@ -2161,22 +2156,24 @@ function HomeView({ db, currentName, allForName, homeBat, setHomeBat, addRecord,
   const todaySummary = aggregate(todayRecords)[0] || { date: todayISO(), count: 0, avg: 0, best: 0, bats: [] };
   const hasTodayRecord = todayRecords.length > 0;
   const todayByBat = aggregateByBat(todayRecords);
-  const isScoreAnimating = Boolean(scoreAnimation && scoreAnimationProgress < 1);
+  const isFreshScoreAnimation = Boolean(scoreAnimation && activeScoreAnimationIdRef.current !== scoreAnimation.id);
+  const effectiveScoreAnimationProgress = isFreshScoreAnimation ? 0 : scoreAnimationProgress;
+  const isScoreAnimating = Boolean(scoreAnimation && effectiveScoreAnimationProgress < 1);
   const displayTodaySummary = scoreAnimation
-    ? interpolateDailySummary(scoreAnimation.fromSummary, scoreAnimation.toSummary, scoreAnimationProgress)
+    ? interpolateDailySummary(scoreAnimation.fromSummary, scoreAnimation.toSummary, effectiveScoreAnimationProgress)
     : todaySummary;
   const scoreCardAnimation = scoreAnimation ? {
     active: isScoreAnimating,
     fillRatios: {
-      count: animationFillRatio(scoreAnimation.fromSummary.count, scoreAnimation.toSummary.count, scoreAnimationProgress),
-      avg: animationFillRatio(scoreAnimation.fromSummary.avg, scoreAnimation.toSummary.avg, scoreAnimationProgress),
-      best: animationFillRatio(scoreAnimation.fromSummary.best, scoreAnimation.toSummary.best, scoreAnimationProgress),
+      count: animationFillRatio(scoreAnimation.fromSummary.count, scoreAnimation.toSummary.count, effectiveScoreAnimationProgress),
+      avg: animationFillRatio(scoreAnimation.fromSummary.avg, scoreAnimation.toSummary.avg, effectiveScoreAnimationProgress),
+      best: animationFillRatio(scoreAnimation.fromSummary.best, scoreAnimation.toSummary.best, effectiveScoreAnimationProgress),
     },
   } : null;
   const animatedBatSummary = scoreAnimation
     ? {
         bat: scoreAnimation.bat,
-        ...interpolateDailySummary(scoreAnimation.fromBat, scoreAnimation.toBat, scoreAnimationProgress),
+        ...interpolateDailySummary(scoreAnimation.fromBat, scoreAnimation.toBat, effectiveScoreAnimationProgress),
       }
     : null;
   const chartDaily = aggregate(chartFiltered);
@@ -2199,11 +2196,13 @@ function HomeView({ db, currentName, allForName, homeBat, setHomeBat, addRecord,
 
   useLayoutEffect(() => {
     if (!scoreAnimation) {
+      activeScoreAnimationIdRef.current = null;
       setScoreAnimationProgress(1);
       return undefined;
     }
 
-    const duration = 1600;
+    activeScoreAnimationIdRef.current = scoreAnimation.id;
+    const duration = 5000;
     let frameId = 0;
     let startedAt = 0;
 
@@ -2589,7 +2588,10 @@ function BadgeDetailPopover({ badge, onClose }) {
             }}
             onClick={closePopover}
           >
-            ×
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M7.5 7.5 16.5 16.5" />
+              <path d="M16.5 7.5 7.5 16.5" />
+            </svg>
           </button>
         </div>
         <p>{badge.lockedSecret ? "ひみつ" : badge.description}</p>
@@ -2845,7 +2847,7 @@ function SwingForm({ bats, defaultBat, onSubmit, submitLabel, defaultValues = nu
   const selectedBat = bats.includes(defaultBat) ? defaultBat : bats[0] || "";
   return (
     <form className="input-grid swing-form" onSubmit={onSubmit}>
-      <label className="field-label"><span className="field-title"><Icon type="bat" />バット</span><select key={selectedBat} name="bat" required defaultValue={selectedBat}>{bats.map((bat) => <option key={bat}>{bat}</option>)}</select></label>
+      <label className="field-label"><span className="field-title"><span className="icon"><BatIcon color="var(--hot)" /></span>バット</span><select key={selectedBat} name="bat" required defaultValue={selectedBat}>{bats.map((bat) => <option key={bat}>{bat}</option>)}</select></label>
       <label className="field-label"><span className="field-title"><Icon type="count" />回数</span><input name="count" type="number" inputMode="numeric" min="1" step="1" required defaultValue={defaultValues?.count ?? ""} /></label>
       <label className="field-label"><span className="field-title"><Icon type="avg" />平均</span><input name="avg" type="number" inputMode="numeric" min="0" max="999" step="1" required defaultValue={defaultValues?.avg ?? ""} /></label>
       <label className="field-label"><span className="field-title"><Icon type="best" />ベスト</span><input name="best" type="number" inputMode="numeric" min="0" max="999" step="1" required defaultValue={defaultValues?.best ?? ""} /></label>
