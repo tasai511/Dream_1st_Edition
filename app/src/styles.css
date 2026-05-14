@@ -1544,55 +1544,55 @@ p {
 
 .daily-badge-mark.rarity-c {
   --daily-badge-color: #b47a42;
-  --daily-badge-glow-core: 3px;
-  --daily-badge-glow-aura: 7px;
-  --daily-badge-glow-core-mix: 42%;
-  --daily-badge-glow-aura-mix: 16%;
+  --daily-badge-glow-core: 0;
+  --daily-badge-glow-aura: 0;
+  --daily-badge-glow-core-mix: 0%;
+  --daily-badge-glow-aura-mix: 0%;
   color: var(--daily-badge-color);
 }
 
 .daily-badge-mark.rarity-u {
   --daily-badge-color: #4cc38a;
-  --daily-badge-glow-core: 4px;
-  --daily-badge-glow-aura: 9px;
-  --daily-badge-glow-core-mix: 48%;
-  --daily-badge-glow-aura-mix: 20%;
+  --daily-badge-glow-core: 0;
+  --daily-badge-glow-aura: 0;
+  --daily-badge-glow-core-mix: 0%;
+  --daily-badge-glow-aura-mix: 0%;
   color: var(--daily-badge-color);
 }
 
 .daily-badge-mark.rarity-r {
   --daily-badge-color: #4d8dff;
   --daily-badge-glow-core: 5px;
-  --daily-badge-glow-aura: 12px;
-  --daily-badge-glow-core-mix: 56%;
-  --daily-badge-glow-aura-mix: 28%;
+  --daily-badge-glow-aura: 13px;
+  --daily-badge-glow-core-mix: 72%;
+  --daily-badge-glow-aura-mix: 44%;
   color: var(--daily-badge-color);
 }
 
 .daily-badge-mark.rarity-rr {
   --daily-badge-color: #a878ff;
   --daily-badge-glow-core: 6px;
-  --daily-badge-glow-aura: 15px;
-  --daily-badge-glow-core-mix: 62%;
-  --daily-badge-glow-aura-mix: 34%;
+  --daily-badge-glow-aura: 16px;
+  --daily-badge-glow-core-mix: 78%;
+  --daily-badge-glow-aura-mix: 50%;
   color: var(--daily-badge-color);
 }
 
 .daily-badge-mark.rarity-sr {
   --daily-badge-color: #d7dee8;
-  --daily-badge-glow-core: 7px;
-  --daily-badge-glow-aura: 18px;
-  --daily-badge-glow-core-mix: 68%;
-  --daily-badge-glow-aura-mix: 40%;
+  --daily-badge-glow-core: 8px;
+  --daily-badge-glow-aura: 24px;
+  --daily-badge-glow-core-mix: 86%;
+  --daily-badge-glow-aura-mix: 60%;
   color: var(--daily-badge-color);
 }
 
 .daily-badge-mark.rarity-ur {
   --daily-badge-color: #ffd700;
-  --daily-badge-glow-core: 8px;
-  --daily-badge-glow-aura: 22px;
-  --daily-badge-glow-core-mix: 76%;
-  --daily-badge-glow-aura-mix: 48%;
+  --daily-badge-glow-core: 10px;
+  --daily-badge-glow-aura: 30px;
+  --daily-badge-glow-core-mix: 92%;
+  --daily-badge-glow-aura-mix: 66%;
   color: var(--daily-badge-color);
 }
 
