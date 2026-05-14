@@ -6162,14 +6162,14 @@ select:focus,
 }
 
 .bottom-nav {
-  padding: 5px 14px calc(5px + env(safe-area-inset-bottom)) !important;
+  padding: 3px 14px calc(3px + env(safe-area-inset-bottom)) !important;
   background: rgba(36, 41, 54, 0.82) !important;
   box-shadow: 0 -6px 18px rgba(0, 0, 0, 0.18) !important;
 }
 
 .bottom-nav button {
   gap: 1px !important;
-  min-height: 52px !important;
+  min-height: 44px !important;
   background: transparent;
 }
 
@@ -6178,14 +6178,14 @@ select:focus,
 }
 
 .bottom-nav svg {
-  width: 34px !important;
-  height: 34px !important;
+  width: 31px !important;
+  height: 31px !important;
   stroke-width: 1.65 !important;
   transition: transform 120ms ease, opacity 160ms ease;
 }
 
 .bottom-nav button span {
-  font-size: 0.54rem;
+  font-size: 0.5rem;
 }
 
 .bottom-nav button:active {
