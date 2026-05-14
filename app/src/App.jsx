@@ -2128,7 +2128,7 @@ function HomeView({ db, currentName, allForName, homeBat, setHomeBat, addRecord,
       return undefined;
     }
 
-    const duration = 1250;
+    const duration = 3000;
     let frameId = 0;
     const startedAt = performance.now();
 
