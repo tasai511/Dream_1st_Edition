@@ -3197,18 +3197,28 @@ input::placeholder {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 12px 10px 10px;
-  background: #202633;
+  background: #171b24;
 }
 
 .preview-badge-mark {
+  appearance: none;
+  -webkit-appearance: none;
   width: 100%;
   min-width: 0;
   height: auto;
   min-height: 0;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 6px 2px 5px;
   justify-items: center;
   gap: 5px;
-  cursor: default;
-  pointer-events: none;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.preview-badge-mark.selected {
+  border-color: color-mix(in srgb, var(--daily-badge-color) 58%, transparent);
+  background: color-mix(in srgb, var(--daily-badge-color) 12%, transparent);
 }
 
 .preview-badge-mark .daily-badge-image {

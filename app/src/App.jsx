@@ -1105,16 +1105,23 @@ function DailyBadgeMark({ label, description }) {
   );
 }
 
-function RarityBadgePreview() {
+function RarityBadgePreview({ summaries, activeRarity, onSelect }) {
   return (
-    <section className="rarity-badge-preview" aria-label="バッジ表示プレビュー">
-      {RARITY_ORDER.map((rarity) => (
-        <span className={`daily-badge-mark rarity-${rarity.toLowerCase()} preview-badge-mark`} key={rarity}>
+    <div className="rarity-badge-preview" role="tablist" aria-label="バッジレア度">
+      {summaries.map(({ rarity }) => (
+        <button
+          className={`daily-badge-mark rarity-${rarity.toLowerCase()} preview-badge-mark ${activeRarity === rarity ? "selected" : ""}`}
+          type="button"
+          role="tab"
+          aria-selected={activeRarity === rarity}
+          onClick={() => onSelect(rarity)}
+          key={rarity}
+        >
           <img className="daily-badge-image" src={DAILY_RARITY_IMAGE_URLS[rarity]} alt="" aria-hidden="true" />
           <b className="daily-badge-rarity-label">{rarity}</b>
-        </span>
+        </button>
       ))}
-    </section>
+    </div>
   );
 }
 
@@ -2508,7 +2515,6 @@ function BadgeCollectionView({ allForName }) {
   const activeRaritySummary = raritySummaries.find((summary) => summary.rarity === selectedRarity) || raritySummaries[0];
   return (
     <section className="badge-collection">
-      <RarityBadgePreview />
       <div className="badge-point-card">
         <div>
           <p>バッジポイント</p>
@@ -2522,21 +2528,11 @@ function BadgeCollectionView({ allForName }) {
         </div>
       </div>
       <section className="collection-main-card">
-        <div className="attached-tabs rarity-tabs" role="tablist" aria-label="バッジレア度">
-          {raritySummaries.map(({ rarity }) => (
-            <button
-              key={rarity}
-              type="button"
-              role="tab"
-              aria-selected={activeRaritySummary?.rarity === rarity}
-              className={activeRaritySummary?.rarity === rarity ? "selected" : ""}
-              onClick={() => setSelectedRarity(rarity)}
-            >
-              <RarityIcon rarity={rarity} />
-              <span>{rarity}</span>
-            </button>
-          ))}
-        </div>
+        <RarityBadgePreview
+          summaries={raritySummaries}
+          activeRarity={activeRaritySummary?.rarity}
+          onSelect={setSelectedRarity}
+        />
         <div className="collection-card-heading">
           <p>コレクション</p>
         </div>
