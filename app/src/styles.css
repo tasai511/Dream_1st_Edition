@@ -1505,6 +1505,10 @@ p {
 
 .daily-badge-mark {
   --daily-badge-color: currentColor;
+  --daily-badge-glow-core: 4px;
+  --daily-badge-glow-aura: 10px;
+  --daily-badge-glow-core-mix: 54%;
+  --daily-badge-glow-aura-mix: 26%;
   appearance: none;
   -webkit-appearance: none;
   -webkit-tap-highlight-color: transparent;
@@ -1538,12 +1542,59 @@ p {
   transform: none;
 }
 
-.daily-badge-mark.rarity-c { --daily-badge-color: #b47a42; color: var(--daily-badge-color); }
-.daily-badge-mark.rarity-u { --daily-badge-color: #4cc38a; color: var(--daily-badge-color); }
-.daily-badge-mark.rarity-r { --daily-badge-color: #4d8dff; color: var(--daily-badge-color); }
-.daily-badge-mark.rarity-rr { --daily-badge-color: #a878ff; color: var(--daily-badge-color); }
-.daily-badge-mark.rarity-sr { --daily-badge-color: #d7dee8; color: var(--daily-badge-color); }
-.daily-badge-mark.rarity-ur { --daily-badge-color: #ffd700; color: var(--daily-badge-color); }
+.daily-badge-mark.rarity-c {
+  --daily-badge-color: #b47a42;
+  --daily-badge-glow-core: 3px;
+  --daily-badge-glow-aura: 7px;
+  --daily-badge-glow-core-mix: 42%;
+  --daily-badge-glow-aura-mix: 16%;
+  color: var(--daily-badge-color);
+}
+
+.daily-badge-mark.rarity-u {
+  --daily-badge-color: #4cc38a;
+  --daily-badge-glow-core: 4px;
+  --daily-badge-glow-aura: 9px;
+  --daily-badge-glow-core-mix: 48%;
+  --daily-badge-glow-aura-mix: 20%;
+  color: var(--daily-badge-color);
+}
+
+.daily-badge-mark.rarity-r {
+  --daily-badge-color: #4d8dff;
+  --daily-badge-glow-core: 5px;
+  --daily-badge-glow-aura: 12px;
+  --daily-badge-glow-core-mix: 56%;
+  --daily-badge-glow-aura-mix: 28%;
+  color: var(--daily-badge-color);
+}
+
+.daily-badge-mark.rarity-rr {
+  --daily-badge-color: #a878ff;
+  --daily-badge-glow-core: 6px;
+  --daily-badge-glow-aura: 15px;
+  --daily-badge-glow-core-mix: 62%;
+  --daily-badge-glow-aura-mix: 34%;
+  color: var(--daily-badge-color);
+}
+
+.daily-badge-mark.rarity-sr {
+  --daily-badge-color: #d7dee8;
+  --daily-badge-glow-core: 7px;
+  --daily-badge-glow-aura: 18px;
+  --daily-badge-glow-core-mix: 68%;
+  --daily-badge-glow-aura-mix: 40%;
+  color: var(--daily-badge-color);
+}
+
+.daily-badge-mark.rarity-ur {
+  --daily-badge-color: #ffd700;
+  --daily-badge-glow-core: 8px;
+  --daily-badge-glow-aura: 22px;
+  --daily-badge-glow-core-mix: 76%;
+  --daily-badge-glow-aura-mix: 48%;
+  color: var(--daily-badge-color);
+}
 
 .daily-badge-mark::before {
   content: none;
@@ -1558,8 +1609,8 @@ p {
   width: 66px;
   height: 66px;
   filter:
-    drop-shadow(0 0 5px color-mix(in srgb, var(--daily-badge-color) 66%, transparent))
-    drop-shadow(0 0 12px color-mix(in srgb, var(--daily-badge-color) 34%, transparent))
+    drop-shadow(0 0 var(--daily-badge-glow-core) color-mix(in srgb, var(--daily-badge-color) var(--daily-badge-glow-core-mix), transparent))
+    drop-shadow(0 0 var(--daily-badge-glow-aura) color-mix(in srgb, var(--daily-badge-color) var(--daily-badge-glow-aura-mix), transparent))
     drop-shadow(0 7px 8px rgba(0, 0, 0, 0.38));
   object-fit: contain;
 }
