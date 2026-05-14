@@ -1560,6 +1560,13 @@ p {
   content: none;
 }
 
+.daily-badge-image {
+  display: block;
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+}
+
 .daily-badge-mark .rarity-icon {
   isolation: isolate;
   position: relative;

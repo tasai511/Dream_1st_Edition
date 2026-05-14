@@ -46,6 +46,14 @@ const RARITY_ICON_URLS = {
   SR: `${PUBLIC_ASSET_BASE}images/rarity_sr_super_rare.svg?v=8`,
   UR: `${PUBLIC_ASSET_BASE}images/rarity_ur_ultra_rare.svg?v=8`,
 };
+const DAILY_RARITY_IMAGE_URLS = {
+  C: `${PUBLIC_ASSET_BASE}images/rarity_c_common.png`,
+  U: `${PUBLIC_ASSET_BASE}images/rarity_u_uncommon.png`,
+  R: `${PUBLIC_ASSET_BASE}images/rarity_r_rare.png`,
+  RR: `${PUBLIC_ASSET_BASE}images/rarity_rr_double_rare.png`,
+  SR: `${PUBLIC_ASSET_BASE}images/rarity_sr_super_rare.png`,
+  UR: `${PUBLIC_ASSET_BASE}images/rarity_ur_ultra_rare.png`,
+};
 const UNIQUE_TOTAL_COUNT_TARGETS = [100, 500, 1000, 3000, 5000, 10000, 30000, 50000, 100000];
 const UNIQUE_BEST_TARGETS = [500, 600, 700, 800, 900, 999];
 const UNIQUE_STREAK_TARGETS = [2, 3, 7, 14, 30, 60, 100, 365];
@@ -1082,7 +1090,7 @@ function DailyBadgeMark({ label, description }) {
         onClick={() => setSelectedBadge({ ...definition, earnedCount: 0, lockedSecret: false })}
         aria-label={`${definition.label}の詳細`}
       >
-        <RarityIcon rarity={definition.rarity} />
+        <img className="daily-badge-image" src={DAILY_RARITY_IMAGE_URLS[definition.rarity]} alt="" aria-hidden="true" />
         <b className="daily-badge-rarity-mark" aria-hidden="true">{definition.rarity}</b>
         <span className="daily-badge-label">
           {labelParts.map((part) => <span key={part}>{part}</span>)}
