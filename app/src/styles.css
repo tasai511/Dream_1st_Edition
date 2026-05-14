@@ -1648,37 +1648,6 @@ p {
   transform: translateY(-2px);
 }
 
-.daily-badge-label {
-  position: absolute;
-  right: calc(100% + 8px);
-  top: 50%;
-  z-index: 2;
-  display: grid;
-  overflow: visible;
-  width: 104px;
-  max-width: 104px;
-  border: 0;
-  padding: 0;
-  color: var(--daily-badge-color);
-  background: transparent;
-  font-size: 0.9rem;
-  font-weight: 950;
-  line-height: 1.02;
-  text-shadow: none;
-  text-align: right;
-  white-space: normal;
-  transform: translateY(-50%);
-}
-
-.daily-badge-label span {
-  display: block;
-}
-
-.daily-badge-label-number {
-  font-size: 1.35rem;
-  line-height: 0.9;
-}
-
 .daily-badge-empty {
   display: inline-flex;
   align-items: center;

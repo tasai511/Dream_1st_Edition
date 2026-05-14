@@ -1079,7 +1079,6 @@ function DailyResultCard({ card, showBadges }) {
 function DailyBadgeMark({ label, description }) {
   const [selectedBadge, setSelectedBadge] = useState(null);
   const definition = makeBadgeDefinition(canonicalBadgeLabel(label), { description });
-  const labelParts = splitDailyBadgeLabel(definition.label);
   return (
     <>
       <button
@@ -1090,13 +1089,6 @@ function DailyBadgeMark({ label, description }) {
       >
         <img className="daily-badge-image" src={DAILY_RARITY_IMAGE_URLS[definition.rarity]} alt="" aria-hidden="true" />
         <b className="daily-badge-rarity-label" aria-hidden="true">{definition.rarity}</b>
-        <span className="daily-badge-label">
-          {labelParts.map((part, index) => (
-            <span className={part.kind === "number" ? "daily-badge-label-number" : undefined} key={`${part.kind}-${part.text}-${index}`}>
-              {part.text}
-            </span>
-          ))}
-        </span>
       </button>
       {selectedBadge && (
         <BadgeDetailPopover badge={selectedBadge} onClose={() => setSelectedBadge(null)} />
@@ -2971,26 +2963,6 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
       </section>
     </div>
   );
-}
-
-function splitDailyBadgeLabel(label) {
-  const prefixes = ["毎日", "毎週", "毎月"];
-  const prefix = prefixes.find((item) => label.startsWith(item));
-  if (!prefix || label.length <= prefix.length) return [{ kind: "text", text: label }];
-
-  const rest = label.slice(prefix.length);
-  const endingNumber = rest.match(/^(.+?)([0-9]+)$/);
-  if (endingNumber) {
-    return [
-      { kind: "text", text: `${prefix}${endingNumber[1]}` },
-      { kind: "number", text: endingNumber[2] },
-    ];
-  }
-
-  return [
-    { kind: "text", text: prefix },
-    { kind: "text", text: rest },
-  ];
 }
 
 function BottomNav({ tab, setTab }) {
