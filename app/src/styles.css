@@ -3394,11 +3394,16 @@ input::placeholder {
   margin: 0;
   font-size: 1rem;
   font-weight: 950;
+  line-height: 1;
 }
 
-.collection-group-title p {
-  font-size: 0.68rem;
-  font-weight: 850;
+.collection-rarity-initial {
+  display: inline-block;
+  margin-right: 1px;
+  color: currentColor;
+  font-size: 1.34rem;
+  line-height: 0.82;
+  vertical-align: -0.04em;
 }
 
 .collection-group-title strong {

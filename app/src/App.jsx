@@ -2544,7 +2544,10 @@ function BadgeCollectionView({ allForName }) {
                 <div className="collection-group-title">
                   <RarityIcon rarity={rarity} />
                   <div>
-                    <h3>{RARITY_LABELS[rarity]} / {RARITY_POINTS[rarity]}pt</h3>
+                    <h3>
+                      <span className="collection-rarity-initial">{RARITY_LABELS[rarity].charAt(0)}</span>
+                      {RARITY_LABELS[rarity].slice(1)} / {RARITY_POINTS[rarity]}pt
+                    </h3>
                   </div>
                   <strong>{rarityEarnedTotal}/{items.length}<span>{rarityPointTotal}pt</span></strong>
                 </div>
