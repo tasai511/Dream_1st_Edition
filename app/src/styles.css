@@ -5884,8 +5884,8 @@ select:focus,
 
 .record-section .record-scroll:not(.score-record-scroll) {
   container-type: inline-size;
-  width: clamp(320px, calc(100% - 48px), 360px) !important;
-  max-width: calc(100% - 24px);
+  width: clamp(340px, calc(100% - 24px), 380px) !important;
+  max-width: calc(100% - 12px);
   margin-inline: auto;
   padding-inline: 0;
 }
