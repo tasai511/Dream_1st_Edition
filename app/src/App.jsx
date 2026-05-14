@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import batIconUrl from "./assets/images/bat-icon.svg";
 import premiumMeterBadgeUrl from "./assets/images/premium-meter-badge.svg";
@@ -237,6 +237,7 @@ function nameColorFor(db, name) {
 function SvgIcon({ type }) {
   const props = { viewBox: "0 0 24 24", "aria-hidden": "true" };
   if (type === "home") return <svg {...props}><path d="M4 11.5 12 5l8 6.5" /><path d="M6.5 10.5V20h11v-9.5" /><path d="M9.5 20v-5h5v5" /></svg>;
+  if (type === "challenge") return <svg {...props}><path d="M7 4h10l-1 6a4 4 0 0 1-8 0L7 4Z" /><path d="M7 6H4.5a2 2 0 0 0 2 4H8" /><path d="M17 6h2.5a2 2 0 0 1-2 4H16" /><path d="M12 14v4" /><path d="M8.5 20h7" /></svg>;
   if (type === "log") return <svg {...props}><rect x="4" y="5" width="16" height="15" rx="3" /><path d="M8 3v4M16 3v4M4 10h16" /></svg>;
   if (type === "settings") return <svg {...props}><circle cx="12" cy="12" r="3.2" /><path d="M19 12a7 7 0 0 0-.1-1l2-1.6-2-3.4-2.4 1a7 7 0 0 0-1.8-1L14.4 3h-4.8l-.3 3a7 7 0 0 0-1.8 1l-2.4-1-2 3.4 2 1.6A7 7 0 0 0 5 12a7 7 0 0 0 .1 1l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 1.8 1l.3 3h4.8l.3-3a7 7 0 0 0 1.8-1l2.4 1 2-3.4-2-1.6c.1-.3.1-.7.1-1Z" /></svg>;
   if (type === "collection") return <svg {...props}><path d="M7 4h10a2 2 0 0 1 2 2v14l-7-3-7 3V6a2 2 0 0 1 2-2Z" /><path d="M12 8l1.4 2.8 3.1.5-2.2 2.2.5 3.1-2.8-1.5-2.8 1.5.5-3.1-2.2-2.2 3.1-.5L12 8Z" /></svg>;
@@ -263,6 +264,30 @@ function BatIcon({ color = "#8d95a4" }) {
 
 function ButtonIcon({ type }) {
   return <span className="button-icon"><SvgIcon type={type} /></span>;
+}
+
+function playTapSound() {
+  try {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return;
+    const context = playTapSound.context || new AudioContextClass();
+    playTapSound.context = context;
+    if (context.state === "suspended") context.resume();
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    const now = context.currentTime;
+    oscillator.type = "sine";
+    oscillator.frequency.setValueAtTime(720, now);
+    oscillator.frequency.exponentialRampToValueAtTime(520, now + 0.035);
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.045, now + 0.004);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.055);
+    oscillator.connect(gain).connect(context.destination);
+    oscillator.start(now);
+    oscillator.stop(now + 0.06);
+  } catch {
+    // Audio feedback is optional.
+  }
 }
 
 function todayISO() {
@@ -1032,7 +1057,7 @@ function DailyResultCards({ summary, showBadges = true, selected = false, onSele
   if (onSelect) {
     return (
       <article
-        className="daily-result-group-card record-card-button"
+        className={`daily-result-group-card record-card-button ${selected ? "selected" : ""}`}
         onClick={(event) => {
           if (event.target.closest("button")) return;
           onSelect();
@@ -1047,10 +1072,6 @@ function DailyResultCards({ summary, showBadges = true, selected = false, onSele
         tabIndex={0}
         aria-pressed={selected}
       >
-        <div className="daily-result-group-title">
-          <span className="icon all-bat-icon"><BatIcon color="var(--hot)" /></span>
-          <strong>全バット合計</strong>
-        </div>
         <div className="daily-result-grid">
           {cards.map((card) => <DailyResultCard card={card} showBadges={showBadges} key={card.key} />)}
         </div>
@@ -1304,7 +1325,9 @@ function badgeDomId(label) {
 
 function CountBars({ buckets }) {
   const scrollRef = useRef(null);
-  const max = Math.max(1, ...buckets.map((bucket) => bucket.count));
+  const counts = buckets.map((bucket) => Number(bucket.count || 0)).filter((count) => count > 0);
+  const average = counts.length ? counts.reduce((sum, count) => sum + count, 0) / counts.length : 0;
+  const cap = Math.max(1, Math.min(Math.max(1, ...counts), Math.max(1, average * 2)));
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -1316,9 +1339,10 @@ function CountBars({ buckets }) {
     <div className="record-scroll" ref={scrollRef}>
       <div className="count-bars">
         {buckets.map((bucket) => {
-          const height = bucket.count > 0 ? Math.max(10, (bucket.count / max) * 100) : 0;
+          const clipped = bucket.count > cap;
+          const height = bucket.count > 0 ? Math.max(10, (Math.min(bucket.count, cap) / cap) * 100) : 0;
           return (
-            <article className={`bar-item ${bucket.label === "今日" ? "today" : ""}`} key={bucket.label}>
+            <article className={`bar-item ${bucket.label === "今日" ? "today" : ""} ${clipped ? "clipped" : ""}`} key={bucket.label}>
               <div className="bar-track">
                 <span className="bar-fill" style={{ height: `${height}%` }} />
               </div>
@@ -1404,6 +1428,7 @@ function Chart({ data, initialRange }) {
   const [chartSize, setChartSize] = useState({ width: 360, height: 178 });
   const wrapRef = useRef(null);
   const svgRef = useRef(null);
+  const initializedViewRef = useRef(false);
   const pointersRef = useRef(new Map());
   const gestureRef = useRef(null);
   const width = chartSize.width;
@@ -1443,7 +1468,10 @@ function Chart({ data, initialRange }) {
     pointersRef.current.clear();
     gestureRef.current = null;
     setHovered(null);
-    setView(initialChartView(data.length, initialRange, plotW));
+    if (!initializedViewRef.current && data.length && plotW > 0) {
+      initializedViewRef.current = true;
+      setView(initialChartView(data.length, initialRange, plotW));
+    }
   }, [data.length, data[0]?.date, data.at(-1)?.date, initialRange, plotW]);
 
   useEffect(() => {
@@ -1663,7 +1691,7 @@ function Chart({ data, initialRange }) {
             <stop offset="100%" stopColor="var(--active-graph-color, var(--graph-color, var(--hot)))" stopOpacity="0" />
           </linearGradient>
           <clipPath id="chartPlotClip">
-            <rect x={pad.left - 8} y={pad.top - 8} width={plotW + 16} height={plotH + 16} />
+            <rect x={pad.left} y={pad.top - 8} width={plotW} height={plotH + 16} />
           </clipPath>
         </defs>
         {yLabels.map((tick) => (
@@ -1877,6 +1905,16 @@ export default function App() {
     document.addEventListener("pointerdown", closeOnOutsideTap, true);
     return () => document.removeEventListener("pointerdown", closeOnOutsideTap, true);
   }, [isNameMenuOpen]);
+
+  useEffect(() => {
+    const playForInteractiveTap = (event) => {
+      const target = event.target.closest?.("button, a, label, input, select, [role='button'], [role='tab']");
+      if (!target || target.disabled || target.getAttribute?.("aria-disabled") === "true") return;
+      playTapSound();
+    };
+    document.addEventListener("pointerup", playForInteractiveTap, true);
+    return () => document.removeEventListener("pointerup", playForInteractiveTap, true);
+  }, []);
 
   const addRecord = (event, date = selectedDate) => {
     event.preventDefault();
@@ -2150,7 +2188,6 @@ function HomeView({ db, currentName, allForName, homeBat, setHomeBat, addRecord,
     map.set(label, (map.get(label) || 0) + 1);
     return map;
   }, new Map()).entries()].sort(([a], [b]) => compareBadgesByRarity(a, b));
-  const chartData = filledChartExtent(chartDaily);
   const handleRecordSubmit = (event) => {
     if (addRecord(event, todayISO())) {
       setIsInputOpen(false);
@@ -2160,17 +2197,18 @@ function HomeView({ db, currentName, allForName, homeBat, setHomeBat, addRecord,
     setIsInputOpen(!hasTodayRecord);
   }, [currentName, hasTodayRecord]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!scoreAnimation) {
       setScoreAnimationProgress(1);
       return undefined;
     }
 
-    const duration = 3000;
+    const duration = 1600;
     let frameId = 0;
-    const startedAt = performance.now();
+    let startedAt = 0;
 
     const tick = (now) => {
+      if (!startedAt) startedAt = now;
       const rawProgress = clamp((now - startedAt) / duration, 0, 1);
       const easedProgress = 1 - Math.pow(1 - rawProgress, 3);
       setScoreAnimationProgress(easedProgress);
@@ -2182,13 +2220,16 @@ function HomeView({ db, currentName, allForName, homeBat, setHomeBat, addRecord,
     };
 
     setScoreAnimationProgress(0);
-    frameId = requestAnimationFrame(tick);
+    frameId = requestAnimationFrame((now) => {
+      startedAt = now;
+      frameId = requestAnimationFrame(tick);
+    });
     return () => cancelAnimationFrame(frameId);
   }, [scoreAnimation?.id]);
 
   return (
     <>
-      <section className={`panel input-panel home-input-panel ${isInputOpen ? "open" : ""}`}>
+      <section className={`home-section home-input-panel ${isInputOpen ? "open" : ""}`}>
         <div className="input-panel-title">
           <h2>今日の記録</h2>
         </div>
@@ -2212,32 +2253,25 @@ function HomeView({ db, currentName, allForName, homeBat, setHomeBat, addRecord,
         </button>
       </section>
 
-      <section className="score-card">
-        <section className="panel score-summary-card">
-          <div className="section-row tight">
-            <div>
-              <h2>今日の結果</h2>
-            </div>
-          </div>
-          <DailyResultCards summary={displayTodaySummary} selected={homeBat === ALL} onSelect={() => setHomeBat(ALL)} animation={scoreCardAnimation} />
-          <div className="home-bat-records">
-            {todayByBat.length ? todayByBat.map((item) => (
-              <RecordSummary
-                key={item.bat}
-                item={animatedBatSummary?.bat === item.bat ? animatedBatSummary : item}
-                batColor={batColorFor(db, item.bat)}
-                selected={homeBat === item.bat}
-                onSelect={() => setHomeBat((value) => value === item.bat ? ALL : item.bat)}
-              />
-            )) : <p className="empty compact-empty">今日のバット別記録はまだありません。</p>}
-          </div>
-          <RecordPanel
-            daily={chartData}
-            range={RANGE_TODAY}
-            graphColor={homeBat === ALL ? null : batColorFor(db, homeBat)}
-          />
-          <EarnedBadgesCard badgeCounts={badgeCounts} />
-        </section>
+      <section className="home-section home-result-section">
+        <DailyResultCards summary={displayTodaySummary} selected={homeBat === ALL} onSelect={() => setHomeBat(ALL)} animation={scoreCardAnimation} />
+        <div className="home-bat-records">
+          {todayByBat.length ? todayByBat.map((item) => (
+            <RecordSummary
+              key={item.bat}
+              item={animatedBatSummary?.bat === item.bat ? animatedBatSummary : item}
+              batColor={batColorFor(db, item.bat)}
+              selected={homeBat === item.bat}
+              onSelect={() => setHomeBat((value) => value === item.bat ? ALL : item.bat)}
+            />
+          )) : <p className="empty compact-empty">今日のバット別記録はまだありません。</p>}
+        </div>
+        <RecordPanel
+          daily={filledChartExtent(chartDaily)}
+          range={RANGE_TODAY}
+          graphColor={homeBat === ALL ? null : batColorFor(db, homeBat)}
+        />
+        <EarnedBadgesCard badgeCounts={badgeCounts} />
       </section>
     </>
   );
@@ -3102,16 +3136,17 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
 
 function BottomNav({ tab, setTab }) {
   const tabs = [
-    ["home", "home"],
-    ["record", "log"],
-    ["badges", "collection"],
-    ["settings", "settings"],
+    ["home", "home", "ホーム"],
+    ["record", "challenge", "チャレンジ"],
+    ["badges", "collection", "バッジ"],
+    ["settings", "settings", "設定"],
   ];
   return (
     <nav className="bottom-nav" aria-label="画面切り替え">
-      {tabs.map(([key, icon]) => (
+      {tabs.map(([key, icon, label]) => (
         <button key={key} type="button" className={tab === key ? "active" : ""} onClick={() => setTab(key)} aria-label={key}>
           <SvgIcon type={icon} />
+          <span>{label}</span>
         </button>
       ))}
     </nav>
