@@ -2528,14 +2528,14 @@ function BadgeCollectionView({ allForName }) {
         </div>
       </div>
       <section className="collection-main-card">
+        <div className="collection-card-heading">
+          <p>コレクション</p>
+        </div>
         <RarityBadgePreview
           summaries={raritySummaries}
           activeRarity={activeRaritySummary?.rarity}
           onSelect={setSelectedRarity}
         />
-        <div className="collection-card-heading">
-          <p>コレクション</p>
-        </div>
         <div className="collection-groups">
           {activeRaritySummary && (() => {
             const { rarity, items, earnedTotal: rarityEarnedTotal, pointTotal: rarityPointTotal } = activeRaritySummary;

@@ -3377,10 +3377,10 @@ input::placeholder {
 .collection-group {
   display: grid;
   gap: 10px;
-  border: 1px solid color-mix(in srgb, currentColor 22%, var(--line));
-  border-radius: var(--radius);
-  padding: 12px;
-  background: color-mix(in srgb, currentColor 7%, #1a1f2a);
+  border: 0;
+  border-radius: 0;
+  padding: 2px 0 0;
+  background: transparent;
 }
 
 .collection-group-title {
