@@ -1102,6 +1102,19 @@ function DailyBadgeMark({ label, description }) {
   );
 }
 
+function RarityBadgePreview() {
+  return (
+    <section className="rarity-badge-preview" aria-label="バッジ表示プレビュー">
+      {RARITY_ORDER.map((rarity) => (
+        <span className={`daily-badge-mark rarity-${rarity.toLowerCase()} preview-badge-mark`} key={rarity}>
+          <img className="daily-badge-image" src={DAILY_RARITY_IMAGE_URLS[rarity]} alt="" aria-hidden="true" />
+          <b>{rarity}</b>
+        </span>
+      ))}
+    </section>
+  );
+}
+
 function ScoreComparison({ daily, range }) {
   const [mode, setMode] = useState("count");
   const scrollRef = useRef(null);
@@ -2447,6 +2460,7 @@ function BadgeCollectionView({ allForName }) {
   const activeRaritySummary = raritySummaries.find((summary) => summary.rarity === selectedRarity) || raritySummaries[0];
   return (
     <section className="badge-collection">
+      <RarityBadgePreview />
       <div className="badge-point-card">
         <div>
           <p>バッジポイント</p>

@@ -3150,6 +3150,41 @@ input::placeholder {
   gap: 12px;
 }
 
+.rarity-badge-preview {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  align-items: end;
+  gap: 8px;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px 10px 10px;
+  background: #202633;
+}
+
+.preview-badge-mark {
+  width: 100%;
+  min-width: 0;
+  height: auto;
+  min-height: 0;
+  justify-items: center;
+  gap: 5px;
+  cursor: default;
+  pointer-events: none;
+}
+
+.preview-badge-mark .daily-badge-image {
+  width: min(54px, 100%);
+  height: min(54px, 100%);
+}
+
+.preview-badge-mark b {
+  color: currentColor;
+  font-size: 0.7rem;
+  font-weight: 950;
+  line-height: 1;
+}
+
 .badge-point-card {
   display: flex;
   align-items: center;
