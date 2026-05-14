@@ -1091,7 +1091,6 @@ function DailyBadgeMark({ label, description }) {
         aria-label={`${definition.label}の詳細`}
       >
         <img className="daily-badge-image" src={DAILY_RARITY_IMAGE_URLS[definition.rarity]} alt="" aria-hidden="true" />
-        <b className="daily-badge-rarity-mark" aria-hidden="true">{definition.rarity}</b>
         <span className="daily-badge-label">
           {labelParts.map((part) => <span key={part}>{part}</span>)}
         </span>

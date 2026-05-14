@@ -1547,12 +1547,12 @@ p {
 
 .daily-badge-mark::before {
   position: absolute;
-  inset: 8px;
+  inset: 3px;
   z-index: -1;
   border-radius: 50%;
-  background: radial-gradient(circle, color-mix(in srgb, var(--daily-badge-color) 48%, transparent) 0 34%, transparent 72%);
-  filter: blur(7px);
-  opacity: 0.42;
+  background: radial-gradient(circle, color-mix(in srgb, var(--daily-badge-color) 76%, transparent) 0 38%, transparent 76%);
+  filter: blur(10px);
+  opacity: 0.72;
   content: "";
 }
 
@@ -1566,26 +1566,6 @@ p {
   height: 66px;
   filter: drop-shadow(0 7px 8px rgba(0, 0, 0, 0.38));
   object-fit: contain;
-}
-
-.daily-badge-rarity-mark {
-  position: absolute;
-  top: 1px;
-  right: 0;
-  z-index: 3;
-  display: grid;
-  min-width: 25px;
-  height: 23px;
-  padding: 0 5px;
-  place-items: center;
-  color: var(--daily-badge-color);
-  background: transparent;
-  font-size: 0.7rem;
-  font-weight: 950;
-  letter-spacing: 0;
-  line-height: 1;
-  text-shadow: none;
-  pointer-events: none;
 }
 
 .daily-badge-label {
