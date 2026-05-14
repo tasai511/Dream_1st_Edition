@@ -127,7 +127,8 @@ const defaultDb = {
   testInputDefaults: false,
 };
 
-const TEST_RECORD_VALUES = { count: 60, avg: 520, best: 640 };
+const TEST_INITIAL_RECORD_VALUES = { count: 60, avg: 520, best: 640 };
+const TEST_ADDITION_RECORD_VALUES = { count: 40, avg: 320, best: 420 };
 
 const BAT_COLOR_PALETTE = [
   "#ff3044",
@@ -2141,6 +2142,9 @@ function HomeView({ db, currentName, allForName, homeBat, setHomeBat, addRecord,
       }
     : null;
   const chartDaily = aggregate(chartFiltered);
+  const testRecordValues = db.testInputDefaults
+    ? (hasTodayRecord ? TEST_ADDITION_RECORD_VALUES : TEST_INITIAL_RECORD_VALUES)
+    : null;
   const todayEarnedBadges = badgesFor(allForName.filter((record) => record.date <= todayISO())).get(todayISO()) || [];
   const badgeCounts = [...todayEarnedBadges.reduce((map, label) => {
     map.set(label, (map.get(label) || 0) + 1);
@@ -2190,9 +2194,10 @@ function HomeView({ db, currentName, allForName, homeBat, setHomeBat, addRecord,
         </div>
         <div className="input-panel-layout">
           <SwingForm
+            key={testRecordValues ? `${hasTodayRecord ? "add" : "first"}-${db.defaultBat}` : db.defaultBat}
             bats={db.bats}
             defaultBat={db.defaultBat}
-            defaultValues={db.testInputDefaults ? TEST_RECORD_VALUES : null}
+            defaultValues={testRecordValues}
             onSubmit={handleRecordSubmit}
             submitLabel={hasTodayRecord ? "追加する" : "記録する"}
           />
