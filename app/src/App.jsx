@@ -38,21 +38,13 @@ const RARITY_COLORS = {
   UR: "#ffd700",
 };
 const PUBLIC_ASSET_BASE = import.meta.env.BASE_URL || "./";
-const RARITY_ICON_URLS = {
-  C: `${PUBLIC_ASSET_BASE}images/rarity_c_common.svg?v=8`,
-  U: `${PUBLIC_ASSET_BASE}images/rarity_u_uncommon.svg?v=8`,
-  R: `${PUBLIC_ASSET_BASE}images/rarity_r_rare.svg?v=8`,
-  RR: `${PUBLIC_ASSET_BASE}images/rarity_rr_double_rare.svg?v=8`,
-  SR: `${PUBLIC_ASSET_BASE}images/rarity_sr_super_rare.svg?v=8`,
-  UR: `${PUBLIC_ASSET_BASE}images/rarity_ur_ultra_rare.svg?v=8`,
-};
 const DAILY_RARITY_IMAGE_URLS = {
-  C: `${PUBLIC_ASSET_BASE}images/rarity_c_common.png?v=2`,
-  U: `${PUBLIC_ASSET_BASE}images/rarity_u_uncommon.png?v=2`,
-  R: `${PUBLIC_ASSET_BASE}images/rarity_r_rare.png?v=2`,
-  RR: `${PUBLIC_ASSET_BASE}images/rarity_rr_double_rare.png?v=2`,
-  SR: `${PUBLIC_ASSET_BASE}images/rarity_sr_super_rare.png?v=2`,
-  UR: `${PUBLIC_ASSET_BASE}images/rarity_ur_ultra_rare.png?v=2`,
+  C: `${PUBLIC_ASSET_BASE}images/rarity_c_common.png?v=3`,
+  U: `${PUBLIC_ASSET_BASE}images/rarity_u_uncommon.png?v=3`,
+  R: `${PUBLIC_ASSET_BASE}images/rarity_r_rare.png?v=3`,
+  RR: `${PUBLIC_ASSET_BASE}images/rarity_rr_double_rare.png?v=3`,
+  SR: `${PUBLIC_ASSET_BASE}images/rarity_sr_super_rare.png?v=3`,
+  UR: `${PUBLIC_ASSET_BASE}images/rarity_ur_ultra_rare.png?v=3`,
 };
 const UNIQUE_TOTAL_COUNT_TARGETS = [100, 500, 1000, 3000, 5000, 10000, 30000, 50000, 100000];
 const UNIQUE_BEST_TARGETS = [500, 600, 700, 800, 900, 999];
@@ -2348,11 +2340,50 @@ function earnedCountForDefinition(definition, badgeCounts, metaStats = null) {
 
 function RarityIcon({ rarity }) {
   return (
-    <span
-      className={`rarity-icon rarity-${rarity.toLowerCase()}`}
-      style={{ "--rarity-icon": `url("${RARITY_ICON_URLS[rarity]}")` }}
-      aria-hidden="true"
-    />
+    <span className={`rarity-icon rarity-${rarity.toLowerCase()}`} aria-hidden="true">
+      <svg viewBox="0 0 64 64" focusable="false">
+        {rarity === "C" && (
+          <>
+            <circle cx="32" cy="32" r="20" fill="currentColor" fillOpacity="0.5" stroke="currentColor" strokeWidth="4" />
+            <circle cx="32" cy="32" r="6" fill="currentColor" opacity="0.9" />
+          </>
+        )}
+        {rarity === "U" && (
+          <>
+            <path d="M32 10 L54 32 L32 54 L10 32 Z" fill="currentColor" fillOpacity="0.5" stroke="currentColor" strokeWidth="4" strokeLinejoin="round" />
+            <path d="M32 22 L42 32 L32 42 L22 32 Z" fill="currentColor" opacity="0.9" />
+          </>
+        )}
+        {rarity === "R" && (
+          <>
+            <path d="M32 8 L39 24 L56 25 L43 37 L47 54 L32 45 L17 54 L21 37 L8 25 L25 24 Z" fill="currentColor" fillOpacity="0.5" stroke="currentColor" strokeWidth="4" strokeLinejoin="round" />
+            <circle cx="32" cy="32" r="5" fill="currentColor" />
+          </>
+        )}
+        {rarity === "RR" && (
+          <>
+            <path d="M26 9 L32 23 L47 24 L36 35 L39 50 L26 42 L13 50 L16 35 L5 24 L20 23 Z" fill="currentColor" fillOpacity="0.5" stroke="currentColor" strokeWidth="3.5" strokeLinejoin="round" />
+            <path d="M42 14 L47 26 L60 27 L50 36 L53 50 L42 43 L31 50 L34 36 L24 27 L37 26 Z" fill="currentColor" fillOpacity="0.5" stroke="currentColor" strokeWidth="3.5" strokeLinejoin="round" opacity="0.82" />
+            <path d="M32 20 L36 30 L47 31 L39 38 L41 49 L32 43 L23 49 L25 38 L17 31 L28 30 Z" fill="currentColor" opacity="0.28" />
+          </>
+        )}
+        {rarity === "SR" && (
+          <>
+            <path d="M32 6 L37 22 L54 15 L46 31 L60 40 L43 42 L45 59 L32 48 L19 59 L21 42 L4 40 L18 31 L10 15 L27 22 Z" fill="currentColor" fillOpacity="0.5" stroke="currentColor" strokeWidth="3.7" strokeLinejoin="round" />
+            <circle cx="32" cy="32" r="19" fill="currentColor" fillOpacity="0.5" stroke="currentColor" strokeWidth="2" opacity="0.35" />
+            <path d="M32 19 L35 29 L45 29 L37 35 L40 45 L32 39 L24 45 L27 35 L19 29 L29 29 Z" fill="currentColor" opacity="0.85" />
+          </>
+        )}
+        {rarity === "UR" && (
+          <>
+            <circle cx="32" cy="32" r="24" fill="currentColor" fillOpacity="0.5" stroke="currentColor" strokeWidth="3" />
+            <path d="M32 5 L36 20 L48 10 L43 25 L59 24 L45 33 L57 44 L41 41 L42 58 L32 45 L22 58 L23 41 L7 44 L19 33 L5 24 L21 25 L16 10 L28 20 Z" fill="currentColor" fillOpacity="0.5" stroke="currentColor" strokeWidth="3.4" strokeLinejoin="round" />
+            <circle cx="32" cy="32" r="8" fill="currentColor" opacity="0.25" />
+            <circle cx="32" cy="32" r="3.5" fill="currentColor" />
+          </>
+        )}
+      </svg>
+    </span>
   );
 }
 

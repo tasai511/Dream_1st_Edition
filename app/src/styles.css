@@ -1518,7 +1518,7 @@ p {
   justify-items: center;
   align-content: center;
   gap: 5px;
-  width: 66px;
+  width: 78px;
   height: auto;
   min-width: 0;
   min-height: 0;
@@ -3187,6 +3187,10 @@ input::placeholder {
   pointer-events: none;
 }
 
+.preview-badge-mark .daily-badge-image {
+  width: min(54px, calc(100% - 20px));
+}
+
 .badge-point-card {
   display: flex;
   align-items: center;
@@ -3560,9 +3564,15 @@ input::placeholder {
   display: inline-block;
   width: 28px;
   height: 28px;
-  background: currentColor;
-  -webkit-mask: var(--rarity-icon) center / contain no-repeat;
-  mask: var(--rarity-icon) center / contain no-repeat;
+  overflow: visible;
+  color: currentColor;
+}
+
+.rarity-icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
 }
 
 .rarity-c { color: #b47a42; }
