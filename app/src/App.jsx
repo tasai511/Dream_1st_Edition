@@ -1038,7 +1038,10 @@ function DailyResultCard({ card, showBadges }) {
               style={earnedBadge ? { "--daily-stage-badge-color": rarityColorFor(rarityForBadge(earnedBadge.label)) } : null}
             >
               {earnedBadge ? (
-                <DailyBadgeMark label={earnedBadge.label} description={earnedBadge.description || `${earnedBadge.label}をゲット`} />
+                <>
+                  <DailyBadgeMark label={earnedBadge.label} description={earnedBadge.description || `${earnedBadge.label}をゲット`} />
+                  <span className="daily-badge-get-stamp" aria-hidden="true">GET!</span>
+                </>
               ) : (
                 <span className="daily-badge-empty">今日はまだ未獲得</span>
               )}
