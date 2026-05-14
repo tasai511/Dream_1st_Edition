@@ -1616,10 +1616,12 @@ p {
 }
 
 .daily-badge-rarity-label {
+  display: block;
   color: currentColor;
   font-size: 0.7rem;
   font-weight: 950;
   line-height: 1;
+  transform: translateY(-2px);
 }
 
 .daily-badge-label {
