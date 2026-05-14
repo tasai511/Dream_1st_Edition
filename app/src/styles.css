@@ -1566,14 +1566,21 @@ p {
   width: 52px;
   height: 52px;
   margin-bottom: 0;
-  background: transparent;
+  background:
+    radial-gradient(circle at 28% 18%, rgba(255, 255, 255, 0.58) 0 7%, rgba(255, 255, 255, 0.22) 17%, transparent 35%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0 18%, transparent 46%),
+    var(--daily-badge-color);
   filter: none;
 }
 
 .daily-badge-mark .rarity-icon::before,
 .daily-badge-mark .rarity-icon::after {
+  position: absolute;
+  inset: 0;
   content: "";
-  content: none;
+  -webkit-mask: var(--rarity-icon) center / contain no-repeat;
+  mask: var(--rarity-icon) center / contain no-repeat;
+  pointer-events: none;
 }
 
 .daily-badge-mark .rarity-icon::before {
@@ -3513,19 +3520,12 @@ input::placeholder {
 }
 
 .rarity-icon {
-  display: inline-grid;
-  place-items: center;
+  display: inline-block;
   width: 28px;
   height: 28px;
-  background: transparent;
-  -webkit-mask: none;
-  mask: none;
-}
-
-.rarity-icon svg {
-  display: block;
-  width: 100%;
-  height: 100%;
+  background: currentColor;
+  -webkit-mask: var(--rarity-icon) center / contain no-repeat;
+  mask: var(--rarity-icon) center / contain no-repeat;
 }
 
 .rarity-c { color: #b47a42; }
