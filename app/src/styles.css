@@ -1518,18 +1518,13 @@ p {
   height: 66px;
   min-width: 0;
   min-height: 66px;
-  border: 2px solid var(--daily-badge-color);
-  border-radius: 13px;
-  padding: 2px;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
   overflow: visible;
   color: currentColor;
-  background:
-    radial-gradient(circle at 28% 18%, rgba(255, 255, 255, 0.24) 0 10%, rgba(255, 255, 255, 0.08) 21%, transparent 42%),
-    linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0 18%, transparent 48%),
-    color-mix(in srgb, var(--daily-badge-color) 30%, #202633);
-  box-shadow:
-    inset -1px -1px 0 rgba(0, 0, 0, 0.32),
-    inset 1px 1px 0 rgba(255, 255, 255, 0.22);
+  background: transparent;
+  box-shadow: none;
   cursor: pointer;
   outline: 0;
   pointer-events: auto;
@@ -1538,9 +1533,7 @@ p {
 .daily-badge-mark:focus,
 .daily-badge-mark:focus-visible,
 .daily-badge-mark:active {
-  box-shadow:
-    inset -1px -1px 0 rgba(0, 0, 0, 0.32),
-    inset 1px 1px 0 rgba(255, 255, 255, 0.22);
+  box-shadow: none;
   outline: 0;
   transform: none;
 }
@@ -1562,44 +1555,9 @@ p {
 
 .daily-badge-image {
   display: block;
-  width: 52px;
-  height: 52px;
+  width: 66px;
+  height: 66px;
   object-fit: contain;
-}
-
-.daily-badge-mark .rarity-icon {
-  isolation: isolate;
-  position: relative;
-  width: 52px;
-  height: 52px;
-  margin-bottom: 0;
-  background:
-    radial-gradient(circle at 28% 18%, rgba(255, 255, 255, 0.58) 0 7%, rgba(255, 255, 255, 0.22) 17%, transparent 35%),
-    linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0 18%, transparent 46%),
-    var(--daily-badge-color);
-  filter: none;
-}
-
-.daily-badge-mark .rarity-icon::before,
-.daily-badge-mark .rarity-icon::after {
-  position: absolute;
-  inset: 0;
-  content: "";
-  -webkit-mask: var(--rarity-icon) center / contain no-repeat;
-  mask: var(--rarity-icon) center / contain no-repeat;
-  pointer-events: none;
-}
-
-.daily-badge-mark .rarity-icon::before {
-  background: rgba(255, 255, 255, 0.24);
-  opacity: 1;
-  transform: translate(-1px, -1px);
-}
-
-.daily-badge-mark .rarity-icon::after {
-  background: rgba(0, 0, 0, 0.32);
-  opacity: 1;
-  transform: translate(1.25px, 1.25px);
 }
 
 .daily-badge-rarity-mark {
