@@ -2,12 +2,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import batIconUrl from "./assets/images/bat-icon.svg";
 import premiumMeterBadgeUrl from "./assets/images/premium-meter-badge.svg";
-import rarityCUrl from "./assets/images/rarity_c_common.svg";
-import rarityUUrl from "./assets/images/rarity_u_uncommon.svg";
-import rarityRUrl from "./assets/images/rarity_r_rare.svg";
-import rarityRrUrl from "./assets/images/rarity_rr_double_rare.svg";
-import raritySrUrl from "./assets/images/rarity_sr_super_rare.svg";
-import rarityUrUrl from "./assets/images/rarity_ur_ultra_rare.svg";
 
 const STORAGE_KEY = "dream1-swing-tracker-v1";
 const ALL = "__all__";
@@ -42,14 +36,6 @@ const RARITY_COLORS = {
   RR: "#a878ff",
   SR: "#d7dee8",
   UR: "#ffd700",
-};
-const RARITY_ICON_URLS = {
-  C: rarityCUrl,
-  U: rarityUUrl,
-  R: rarityRUrl,
-  RR: rarityRrUrl,
-  SR: raritySrUrl,
-  UR: rarityUrUrl,
 };
 const UNIQUE_TOTAL_COUNT_TARGETS = [100, 500, 1000, 3000, 5000, 10000, 30000, 50000, 100000];
 const UNIQUE_BEST_TARGETS = [500, 600, 700, 800, 900, 999];
@@ -2320,12 +2306,54 @@ function earnedCountForDefinition(definition, badgeCounts, metaStats = null) {
 }
 
 function RarityIcon({ rarity }) {
+  const content = {
+    C: (
+      <>
+        <circle cx="32" cy="32" r="22" />
+        <circle cx="32" cy="32" r="13" fill="none" stroke="white" strokeWidth="4" opacity=".28" />
+      </>
+    ),
+    U: (
+      <>
+        <path d="M32 7L57 32 32 57 7 32 32 7z" />
+        <path d="M32 20l12 12-12 12-12-12 12-12z" fill="white" opacity=".24" />
+      </>
+    ),
+    R: (
+      <>
+        <path d="M32 5l7.4 16.9 18.4 1.7-13.9 12.2 4.1 18L32 44.6 16 53.8l4.1-18L6.2 23.6l18.4-1.7L32 5z" />
+        <circle cx="32" cy="32" r="7" fill="white" opacity=".20" />
+      </>
+    ),
+    RR: (
+      <>
+        <path d="M24 6l5.9 14 15.1 1.2-11.5 9.9 3.5 14.8L24 38.1 11 45.9l3.5-14.8L3 21.2 18.1 20 24 6z" />
+        <path d="M42 12l4.8 11.3 12.2 1-9.3 8 2.8 12L42 38l-10.5 6.3 2.8-12-9.3-8 12.2-1L42 12z" opacity=".78" />
+      </>
+    ),
+    SR: (
+      <>
+        <path d="M32 4l5.5 15.8 15.8-6.1-6.1 15.8L63 35l-15.8 5.5 6.1 15.8-15.8-6.1L32 66l-5.5-15.8-15.8 6.1 6.1-15.8L1 35l15.8-5.5-6.1-15.8 15.8 6.1L32 4z" />
+        <circle cx="32" cy="32" r="16" fill="white" opacity=".20" />
+        <path d="M32 18l3.9 9.2 10 .8-7.6 6.5 2.3 9.8-8.6-5.2-8.6 5.2 2.3-9.8-7.6-6.5 10-.8L32 18z" fill="white" opacity=".30" />
+      </>
+    ),
+    UR: (
+      <>
+        <path d="M32 3l4.4 14.2L48 7.8l-5.1 14 15.1-1.1-12.1 8.7L60 35l-14.7 2.6 9.9 11.2-13.9-5.6.4 15L32 46.8 22.3 58.2l.4-15-13.9 5.6 9.9-11.2L4 35l14.1-5.6L6 20.7l15.1 1.1L16 7.8l11.6 9.4L32 3z" />
+        <circle cx="32" cy="32" r="26" fill="none" stroke="currentColor" strokeWidth="4" />
+        <circle cx="32" cy="32" r="15" fill="white" opacity=".18" />
+        <path d="M32 20l3.3 7.2 7.9.9-5.8 5.4 1.6 7.8-7-3.9-7 3.9 1.6-7.8-5.8-5.4 7.9-.9L32 20z" fill="white" opacity=".32" />
+      </>
+    ),
+  }[rarity] || null;
+
   return (
-    <span
-      className={`rarity-icon rarity-${rarity.toLowerCase()}`}
-      style={{ "--rarity-icon": `url("${RARITY_ICON_URLS[rarity]}")` }}
-      aria-hidden="true"
-    />
+    <span className={`rarity-icon rarity-${rarity.toLowerCase()}`} aria-hidden="true">
+      <svg viewBox="0 0 64 64" focusable="false">
+        <g fill="currentColor">{content}</g>
+      </svg>
+    </span>
   );
 }
 
