@@ -47,12 +47,12 @@ const RARITY_ICON_URLS = {
   UR: `${PUBLIC_ASSET_BASE}images/rarity_ur_ultra_rare.svg?v=8`,
 };
 const DAILY_RARITY_IMAGE_URLS = {
-  C: `${PUBLIC_ASSET_BASE}images/rarity_c_common.png`,
-  U: `${PUBLIC_ASSET_BASE}images/rarity_u_uncommon.png`,
-  R: `${PUBLIC_ASSET_BASE}images/rarity_r_rare.png`,
-  RR: `${PUBLIC_ASSET_BASE}images/rarity_rr_double_rare.png`,
-  SR: `${PUBLIC_ASSET_BASE}images/rarity_sr_super_rare.png`,
-  UR: `${PUBLIC_ASSET_BASE}images/rarity_ur_ultra_rare.png`,
+  C: `${PUBLIC_ASSET_BASE}images/rarity_c_common.png?v=2`,
+  U: `${PUBLIC_ASSET_BASE}images/rarity_u_uncommon.png?v=2`,
+  R: `${PUBLIC_ASSET_BASE}images/rarity_r_rare.png?v=2`,
+  RR: `${PUBLIC_ASSET_BASE}images/rarity_rr_double_rare.png?v=2`,
+  SR: `${PUBLIC_ASSET_BASE}images/rarity_sr_super_rare.png?v=2`,
+  UR: `${PUBLIC_ASSET_BASE}images/rarity_ur_ultra_rare.png?v=2`,
 };
 const UNIQUE_TOTAL_COUNT_TARGETS = [100, 500, 1000, 3000, 5000, 10000, 30000, 50000, 100000];
 const UNIQUE_BEST_TARGETS = [500, 600, 700, 800, 900, 999];
