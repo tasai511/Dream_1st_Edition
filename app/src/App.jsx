@@ -1429,7 +1429,7 @@ function Chart({ data, initialRange }) {
   const gestureRef = useRef(null);
   const width = chartSize.width;
   const height = chartSize.height;
-  const pad = { left: 34, right: 12, top: 22, bottom: 36 };
+  const pad = { left: 34, right: 12, top: 6, bottom: 36 };
   const plotW = width - pad.left - pad.right;
   const plotH = height - pad.top - pad.bottom;
   const minScale = minChartScale(data.length);
