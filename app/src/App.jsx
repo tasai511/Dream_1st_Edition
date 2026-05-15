@@ -123,6 +123,7 @@ const defaultDb = {
   batColors: {},
   defaultBat: "",
   theme: "#ff7a45",
+  fontTheme: "system",
   records: [],
   testInputDefaults: false,
 };
@@ -144,6 +145,18 @@ const BAT_COLOR_PALETTE = [
   "#b8834b",
   "#8d95a4",
 ];
+
+const FONT_THEMES = [
+  ["system", "標準"],
+  ["rounded", "まるめ"],
+  ["clean", "きれいめ"],
+  ["sport", "スポーツ"],
+  ["friendly", "かわいい"],
+];
+
+function fontThemeKey(value) {
+  return FONT_THEMES.some(([key]) => key === value) ? value : "system";
+}
 
 function normalizeHexColor(value, fallback = BAT_COLOR_PALETTE[0]) {
   const color = String(value || "").trim();
@@ -389,6 +402,7 @@ function loadDb() {
       batColors: normalizeBatColors(parsed.batColors, bats),
       defaultBat: parsed.bats?.includes(parsed.defaultBat) ? parsed.defaultBat : parsed.bats?.[0] || "",
       theme: legacyTheme,
+      fontTheme: fontThemeKey(parsed.fontTheme),
       records: Array.isArray(parsed.records) ? parsed.records : [],
       testInputDefaults: Boolean(parsed.testInputDefaults),
     };
@@ -1068,14 +1082,14 @@ function DailyResultCards({ summary, showBadges = true, selected = false, onSele
         tabIndex={0}
         aria-pressed={selected}
       >
-        <div className="daily-result-grid">
+        <div className={`daily-result-grid card-count-${cards.length}`}>
           {cards.map((card) => <DailyResultCard card={card} showBadges={showBadges} key={card.key} />)}
         </div>
       </article>
     );
   }
 
-  return <div className="daily-result-grid">{cards.map((card) => <DailyResultCard card={card} showBadges={showBadges} key={card.key} />)}</div>;
+  return <div className={`daily-result-grid card-count-${cards.length}`}>{cards.map((card) => <DailyResultCard card={card} showBadges={showBadges} key={card.key} />)}</div>;
 }
 
 function DailyResultCard({ card, showBadges }) {
@@ -1171,7 +1185,6 @@ function DailyBadgeMark({ label, description }) {
         aria-label={`${definition.label}の詳細`}
       >
         <img className="daily-badge-image" src={DAILY_RARITY_IMAGE_URLS[definition.rarity]} alt="" aria-hidden="true" />
-        <b className="daily-badge-rarity-label" aria-hidden="true">{definition.rarity}</b>
       </button>
       {selectedBadge && (
         <BadgeDetailPopover badge={selectedBadge} onClose={() => setSelectedBadge(null)} />
@@ -1193,7 +1206,6 @@ function RarityBadgePreview({ summaries, activeRarity, onSelect }) {
           key={rarity}
         >
           <img className="daily-badge-image" src={DAILY_RARITY_IMAGE_URLS[rarity]} alt="" aria-hidden="true" />
-          <b className="daily-badge-rarity-label">{rarity}</b>
         </button>
       ))}
     </div>
@@ -1275,7 +1287,7 @@ function EarnedBadgesCard({ badgeCounts, title = "獲得バッジ" }) {
     <section className={`dashboard-section badge-inline-section ${expanded ? "expanded" : ""}`}>
       <div className="section-row tight">
         <div>
-          <h2>{title}</h2>
+          <h2 className="icon-heading"><Icon type="badge" />{title}</h2>
         </div>
         <div className="badge-heading-count"><strong>{badgeTotal.toLocaleString("ja-JP")}</strong><span>種類</span></div>
       </div>
@@ -1874,7 +1886,6 @@ export default function App() {
   const [db, setDbState] = useState(loadDb);
   const [tab, setTab] = useState(() => (localStorage.getItem(STORAGE_KEY) ? "home" : "settings"));
   const [range, setRange] = useState(RANGE_WEEK);
-  const [homeBat, setHomeBat] = useState(ALL);
   const [selectedDate, setSelectedDate] = useState(todayISO);
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
   const [pendingDelete, setPendingDelete] = useState(null);
@@ -2049,7 +2060,7 @@ export default function App() {
   };
 
   return (
-    <div className={`app theme-${["red", "blue", "green"].includes(db.theme) ? db.theme : "custom"}`} style={themeStyleFor(currentName ? nameColorFor(db, currentName) : db.theme)}>
+    <div className={`app theme-${["red", "blue", "green"].includes(db.theme) ? db.theme : "custom"} font-${fontThemeKey(db.fontTheme)}`} style={themeStyleFor(currentName ? nameColorFor(db, currentName) : db.theme)}>
       <div className="phone-shell">
         <header className="app-header">
           <strong className="app-title">SWING LOG</strong>
@@ -2092,8 +2103,6 @@ export default function App() {
               db={db}
               currentName={currentName}
               allForName={allForName}
-              homeBat={homeBat}
-              setHomeBat={setHomeBat}
               addRecord={addRecord}
               scoreAnimation={scoreAnimation}
               onScoreAnimationComplete={() => setScoreAnimation(null)}
@@ -2103,16 +2112,13 @@ export default function App() {
             <RecordView
               db={db}
               allForName={allForName}
-              badgeMap={badgeMap}
-              selectedDate={selectedDate}
-              setSelectedDate={setSelectedDate}
-              month={month}
-              setMonth={setMonth}
-              addRecord={addRecord}
             />
           )}
           {tab === "badges" && (
             <BadgeCollectionView allForName={allForName} />
+          )}
+          {tab === "allRecords" && (
+            <ChallengeAllPanel db={db} records={allForName} />
           )}
           {tab === "settings" && (
             <SettingsView
@@ -2137,9 +2143,9 @@ export default function App() {
   );
 }
 
-function HomeView({ db, currentName, allForName, homeBat, setHomeBat, addRecord, scoreAnimation, onScoreAnimationComplete }) {
-  const [isInputOpen, setIsInputOpen] = useState(false);
+function HomeView({ db, currentName, allForName, addRecord, scoreAnimation, onScoreAnimationComplete }) {
   const [scoreAnimationProgress, setScoreAnimationProgress] = useState(1);
+  const [formResetKey, setFormResetKey] = useState(0);
   const activeScoreAnimationIdRef = useRef(null);
   const allFiltered = db.records.filter((record) => (
     record.name === currentName &&
@@ -2169,6 +2175,9 @@ function HomeView({ db, currentName, allForName, homeBat, setHomeBat, addRecord,
         ...interpolateDailySummary(scoreAnimation.fromBat, scoreAnimation.toBat, effectiveScoreAnimationProgress),
       }
     : null;
+  const homeBatSummaries = todayByBat
+    .map((item) => (animatedBatSummary?.bat === item.bat ? { ...item, ...animatedBatSummary } : item))
+    .sort((a, b) => db.bats.indexOf(a.bat) - db.bats.indexOf(b.bat));
   const testRecordValues = db.testInputDefaults
     ? (hasTodayRecord ? TEST_ADDITION_RECORD_VALUES : TEST_INITIAL_RECORD_VALUES)
     : null;
@@ -2179,12 +2188,10 @@ function HomeView({ db, currentName, allForName, homeBat, setHomeBat, addRecord,
   }, new Map()).entries()].sort(([a], [b]) => compareBadgesByRarity(a, b));
   const handleRecordSubmit = (event) => {
     if (addRecord(event, todayISO())) {
-      setIsInputOpen(false);
+      event.currentTarget.reset();
+      setFormResetKey((value) => value + 1);
     }
   };
-  useEffect(() => {
-    setIsInputOpen(!hasTodayRecord);
-  }, [currentName, hasTodayRecord]);
 
   useLayoutEffect(() => {
     if (!scoreAnimation) {
@@ -2220,44 +2227,39 @@ function HomeView({ db, currentName, allForName, homeBat, setHomeBat, addRecord,
 
   return (
     <>
-      <section className={`home-section home-input-panel ${isInputOpen ? "open" : ""}`}>
-        <div className="input-panel-title">
-          <h2>今日の記録</h2>
-        </div>
-        <div className="input-panel-layout">
-          <SwingForm
-            key={testRecordValues ? `${hasTodayRecord ? "add" : "first"}-${db.defaultBat}` : db.defaultBat}
-            bats={db.bats}
-            defaultBat={db.defaultBat}
-            defaultValues={testRecordValues}
-            onSubmit={handleRecordSubmit}
-            submitLabel={hasTodayRecord ? "追加する" : "記録する"}
-          />
-        </div>
-        <button
-          type="button"
-          className={`badge-expand-bar input-expand-bar ${isInputOpen ? "expanded" : ""}`}
-          onClick={() => setIsInputOpen((value) => !value)}
-          aria-label={isInputOpen ? "入力フォームを閉じる" : "入力フォームを開く"}
-        >
-          {isInputOpen ? "閉じる" : "入力する"}
-        </button>
-      </section>
-
       <section className="home-section home-result-section">
-        <DailyResultCards summary={displayTodaySummary} animation={scoreCardAnimation} />
-        <div className="home-bat-records">
-          {todayByBat.length ? todayByBat.map((item) => (
-            <RecordSummary
-              key={item.bat}
-              item={animatedBatSummary?.bat === item.bat ? animatedBatSummary : item}
-              batColor={batColorFor(db, item.bat)}
-              selected={homeBat === item.bat}
-              onSelect={() => setHomeBat((value) => value === item.bat ? ALL : item.bat)}
-            />
-          )) : <p className="empty compact-empty">今日のバット別記録はまだありません。</p>}
+        <div className="section-row tight home-section-heading-row">
+          <h2 className="icon-heading"><Icon type="home" />今日の結果</h2>
         </div>
-        <EarnedBadgesCard badgeCounts={badgeCounts} />
+        <div className="home-score-input-grid">
+          <section className="home-section home-input-panel open">
+            <div className="input-panel-layout">
+              <SwingForm
+                key={`${formResetKey}-${testRecordValues ? `${hasTodayRecord ? "add" : "first"}-${db.defaultBat}` : db.defaultBat}`}
+                bats={db.bats}
+                defaultBat={db.defaultBat}
+                batColors={db.batColors}
+                defaultValues={formResetKey === 0 ? testRecordValues : null}
+                onSubmit={handleRecordSubmit}
+                submitLabel={hasTodayRecord ? "追加する" : "記録する"}
+              />
+            </div>
+          </section>
+          <DailyResultCards summary={displayTodaySummary} animation={scoreCardAnimation} />
+        </div>
+        <div className="home-subheading">使ったバット</div>
+        <div className="home-bat-records">
+          {homeBatSummaries.length ? (
+            homeBatSummaries.map((item) => (
+            <HomeBatResultCard
+              db={db}
+              item={item}
+              key={item.bat}
+            />
+            ))
+          ) : <p className="empty compact-empty">バットを登録するとバット別記録が表示されます。</p>}
+        </div>
+        <EarnedBadgesCard badgeCounts={badgeCounts} title="今日のバッジ" />
       </section>
     </>
   );
@@ -2764,7 +2766,6 @@ function RecordView({ db, allForName }) {
   const tabs = [
     [RANGE_WEEK, "今週の記録"],
     [RANGE_MONTH, "今月の記録"],
-    [RANGE_ALL, "全ての記録"],
   ];
 
   return (
@@ -2785,7 +2786,6 @@ function RecordView({ db, allForName }) {
       </div>
       {activeTab === RANGE_WEEK && <ChallengePeriodPanel db={db} records={allForName} range={RANGE_WEEK} />}
       {activeTab === RANGE_MONTH && <ChallengePeriodPanel db={db} records={allForName} range={RANGE_MONTH} />}
-      {activeTab === RANGE_ALL && <ChallengeAllPanel db={db} records={allForName} />}
     </div>
   );
 }
@@ -2949,15 +2949,16 @@ function GraphControls({ db, graphBat, setGraphBat, graphRange, setGraphRange })
   );
 }
 
-function SwingForm({ bats, defaultBat, onSubmit, submitLabel, defaultValues = null }) {
+function SwingForm({ bats, defaultBat, onSubmit, submitLabel, defaultValues = null, batColors = null }) {
   const selectedBat = bats.includes(defaultBat) ? defaultBat : bats[0] || "";
+  const selectedBatColor = normalizeHexColor(batColors?.[selectedBat], fallbackBatColor(selectedBat, Math.max(0, bats.indexOf(selectedBat))));
   return (
-    <form className="input-grid swing-form" onSubmit={onSubmit}>
-      <label className="field-label"><span className="field-title"><span className="icon"><BatIcon color="var(--hot)" /></span>バット</span><select key={selectedBat} name="bat" required defaultValue={selectedBat}>{bats.map((bat) => <option key={bat}>{bat}</option>)}</select></label>
-      <label className="field-label"><span className="field-title"><Icon type="count" />回数</span><input name="count" type="number" inputMode="numeric" min="1" step="1" required defaultValue={defaultValues?.count ?? ""} /></label>
-      <label className="field-label"><span className="field-title"><Icon type="avg" />平均</span><input name="avg" type="number" inputMode="numeric" min="0" max="999" step="1" required defaultValue={defaultValues?.avg ?? ""} /></label>
-      <label className="field-label"><span className="field-title"><Icon type="best" />ベスト</span><input name="best" type="number" inputMode="numeric" min="0" max="999" step="1" required defaultValue={defaultValues?.best ?? ""} /></label>
-      <button className="primary wide" type="submit"><ButtonIcon type="plus" />{submitLabel}</button>
+    <form className="input-grid swing-form" onSubmit={onSubmit} style={{ "--selected-bat-color": selectedBatColor }}>
+      <label className="field-label bat-input-label"><span className="field-title"><span className="icon"><BatIcon color="var(--selected-bat-color, var(--hot))" /></span><span className="visually-hidden">バット</span></span><span className="bat-input-shell"><span className="icon bat-card-icon" aria-hidden="true"><BatIcon color="var(--selected-bat-color, var(--hot))" /></span><select key={selectedBat} name="bat" required defaultValue={selectedBat} aria-label="バット">{bats.map((bat) => <option key={bat}>{bat}</option>)}</select><span className="home-bat-select-caret" aria-hidden="true"><Icon type="chevronDown" /></span></span></label>
+      <label className="field-label"><span className="field-title"><Icon type="count" />回数</span><input name="count" type="number" inputMode="numeric" min="1" max="999" step="1" required defaultValue={defaultValues?.count ?? ""} aria-label="回数" /></label>
+      <label className="field-label"><span className="field-title"><Icon type="avg" />平均</span><input name="avg" type="number" inputMode="numeric" min="0" max="999" step="1" required defaultValue={defaultValues?.avg ?? ""} aria-label="平均" /></label>
+      <label className="field-label"><span className="field-title"><Icon type="best" />ベスト</span><input name="best" type="number" inputMode="numeric" min="0" max="999" step="1" required defaultValue={defaultValues?.best ?? ""} aria-label="ベスト" /></label>
+      <button className="primary wide swing-form-heading" type="submit" aria-label={submitLabel}>結果入力</button>
     </form>
   );
 }
@@ -3022,6 +3023,23 @@ function RecordSummary({ item, batColor = "#8d95a4", selected = false, onSelect 
   return (
     <article className="record-card" style={{ "--bat-icon-color": color }}>
       {content}
+    </article>
+  );
+}
+
+function HomeBatResultCard({ db, item }) {
+  const color = batColorFor(db, item.bat);
+  return (
+    <article className="record-card home-bat-result-card" style={{ "--bat-icon-color": color }}>
+      <div className="record-title">
+        <span className="icon bat-card-icon" style={{ "--bat-icon-color": color }}><BatIcon color={color} /></span>
+        <strong>{item.bat}</strong>
+      </div>
+      <div className="mini-grid">
+        <span><b>回数</b>{item.count}<small>回</small></span>
+        <span><b>平均</b>{item.avg}<small>点</small></span>
+        <span><b>ベスト</b>{item.best}<small>点</small></span>
+      </div>
     </article>
   );
 }
@@ -3227,6 +3245,26 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
 
       <section className="panel">
         <div className="section-row">
+          <h2>フォント</h2>
+          <p>アプリ全体の雰囲気</p>
+        </div>
+        <div className="font-option-grid">
+          {FONT_THEMES.map(([key, label]) => (
+            <button
+              type="button"
+              className={`font-option font-${key} ${fontThemeKey(db.fontTheme) === key ? "selected" : ""}`}
+              onClick={() => setDb({ ...db, fontTheme: key })}
+              key={key}
+            >
+              <strong>SWING LOG</strong>
+              <span>{label}</span>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="panel">
+        <div className="section-row">
           <h2>データ管理</h2>
           <p>この端末に保存</p>
         </div>
@@ -3247,6 +3285,7 @@ function BottomNav({ tab, setTab }) {
     ["home", "home", "ホーム"],
     ["record", "challenge", "チャレンジ"],
     ["badges", "collection", "バッジ"],
+    ["allRecords", "log", "記録"],
     ["settings", "settings", "設定"],
   ];
   return (

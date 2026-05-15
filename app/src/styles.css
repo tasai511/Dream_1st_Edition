@@ -85,6 +85,43 @@ svg text {
 .app {
   min-height: 100svh;
   background: var(--app-bg, transparent);
+  font-family: var(--app-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+  font-weight: var(--app-base-weight, 800);
+}
+
+.app.font-system {
+  --app-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --app-display-font-family: "Avenir Next", "DIN Alternate", "Helvetica Neue", system-ui, sans-serif;
+  --app-heading-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --app-base-weight: 800;
+}
+
+.app.font-rounded {
+  --app-font-family: "Yu Gothic UI", "Meiryo", "Segoe UI", system-ui, sans-serif;
+  --app-display-font-family: "Trebuchet MS", "Yu Gothic UI", "Meiryo", sans-serif;
+  --app-heading-font-family: "Yu Gothic UI", "Meiryo", "Segoe UI", sans-serif;
+  --app-base-weight: 850;
+}
+
+.app.font-clean {
+  --app-font-family: "Segoe UI Variable Text", "Segoe UI", "Yu Gothic UI", system-ui, sans-serif;
+  --app-display-font-family: "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+  --app-heading-font-family: "Segoe UI Variable Display", "Segoe UI", "Yu Gothic UI", sans-serif;
+  --app-base-weight: 760;
+}
+
+.app.font-sport {
+  --app-font-family: "Arial Rounded MT Bold", "Trebuchet MS", "Yu Gothic UI", system-ui, sans-serif;
+  --app-display-font-family: "Trebuchet MS", "Arial Rounded MT Bold", system-ui, sans-serif;
+  --app-heading-font-family: "Trebuchet MS", "Arial Rounded MT Bold", "Yu Gothic UI", sans-serif;
+  --app-base-weight: 900;
+}
+
+.app.font-friendly {
+  --app-font-family: "Meiryo", "Yu Gothic UI", "Segoe UI", system-ui, sans-serif;
+  --app-display-font-family: "Trebuchet MS", "Meiryo", system-ui, sans-serif;
+  --app-heading-font-family: "Meiryo", "Yu Gothic UI", "Segoe UI", sans-serif;
+  --app-base-weight: 780;
 }
 
 .theme-red {
@@ -139,7 +176,7 @@ svg text {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 34px;
 }
 
 .brand-lockup {
@@ -155,10 +192,11 @@ svg text {
   justify-self: center;
   padding: 1px 1px 6px;
   color: rgba(255, 255, 255, 0.96);
-  font-family: "Avenir Next", "DIN Alternate", "Helvetica Neue", system-ui, sans-serif;
-  font-size: 1.18rem;
-  font-weight: 900;
-  letter-spacing: 0.065em;
+  font-family: var(--app-display-font-family, "Avenir Next", "DIN Alternate", "Helvetica Neue", system-ui, sans-serif);
+  font-size: 2.28rem;
+  font-style: normal;
+  font-weight: 950;
+  letter-spacing: 0.03em;
   line-height: 1;
   text-shadow: 0 1px 0 rgba(0, 0, 0, 0.52), 0 0 13px rgba(var(--hot-rgb), 0.34);
   white-space: nowrap;
@@ -255,6 +293,65 @@ h2 {
   font-size: 1.18rem;
   font-weight: 950;
   letter-spacing: 0;
+}
+
+.icon-heading {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  font-family: var(--app-heading-font-family, "Trebuchet MS", "Segoe UI Variable Display", "Avenir Next", system-ui, sans-serif);
+  font-weight: 900;
+  letter-spacing: 0.01em;
+}
+
+.icon-heading .icon {
+  width: 1.18em;
+  height: 1.18em;
+  color: var(--hot);
+  background: color-mix(in srgb, var(--hot) 14%, transparent);
+}
+
+.icon-heading .icon svg {
+  width: 0.86em;
+  height: 0.86em;
+}
+
+.section-row h2:not(.icon-heading) {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  font-family: var(--app-heading-font-family, "Trebuchet MS", "Segoe UI Variable Display", "Avenir Next", system-ui, sans-serif);
+  font-weight: 900;
+  letter-spacing: 0.01em;
+}
+
+.section-row h2:not(.icon-heading)::before {
+  display: inline-block;
+  width: 1.18em;
+  height: 1.18em;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--hot) 22%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--hot) 26%, transparent);
+  content: "";
+}
+
+.home-subheading {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.home-section-heading-row {
+  margin-bottom: 0;
+}
+
+.home-section-heading-row + .home-score-input-grid {
+  margin-top: -6px;
 }
 
 p {
@@ -394,10 +491,6 @@ p {
 .challenge-heading p {
   margin: 0;
   font-weight: 850;
-}
-
-.challenge-period-panel > .daily-result-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .challenge-bat-records {
@@ -880,6 +973,82 @@ p {
   line-height: 1.1;
 }
 
+.font-option-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.font-option {
+  display: grid;
+  gap: 4px;
+  min-height: 52px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 8px;
+  color: var(--text);
+  background: #121722;
+  text-align: left;
+}
+
+.font-option.selected {
+  border-color: color-mix(in srgb, var(--hot) 68%, var(--line));
+  background: color-mix(in srgb, var(--hot) 12%, #121722);
+}
+
+.font-option strong {
+  font-family: var(--app-display-font-family);
+  font-size: 0.86rem;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.font-option span {
+  color: var(--muted);
+  font-size: 0.62rem;
+  font-weight: 900;
+}
+
+.font-option.font-system {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.font-option.font-system strong {
+  font-family: "Avenir Next", "DIN Alternate", "Helvetica Neue", system-ui, sans-serif;
+}
+
+.font-option.font-rounded {
+  font-family: "Yu Gothic UI", "Meiryo", "Segoe UI", system-ui, sans-serif;
+}
+
+.font-option.font-rounded strong {
+  font-family: "Trebuchet MS", "Yu Gothic UI", "Meiryo", sans-serif;
+}
+
+.font-option.font-clean {
+  font-family: "Segoe UI Variable Text", "Segoe UI", "Yu Gothic UI", system-ui, sans-serif;
+}
+
+.font-option.font-clean strong {
+  font-family: "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+}
+
+.font-option.font-sport {
+  font-family: "Arial Rounded MT Bold", "Trebuchet MS", "Yu Gothic UI", system-ui, sans-serif;
+}
+
+.font-option.font-sport strong {
+  font-family: "Trebuchet MS", "Arial Rounded MT Bold", system-ui, sans-serif;
+}
+
+.font-option.font-friendly {
+  font-family: "Meiryo", "Yu Gothic UI", "Segoe UI", system-ui, sans-serif;
+}
+
+.font-option.font-friendly strong {
+  font-family: "Trebuchet MS", "Meiryo", system-ui, sans-serif;
+}
+
 .settings-view .add-row,
 .settings-view .tool-grid {
   gap: 6px;
@@ -1242,6 +1411,18 @@ p {
   gap: 10px;
 }
 
+.daily-result-grid.card-count-3 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.daily-result-grid.card-count-3 .daily-result-card:first-child {
+  grid-column: 1 / -1;
+}
+
+.daily-result-grid.card-count-4 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .daily-result-group-card {
   position: relative;
   display: grid;
@@ -1304,10 +1485,10 @@ p {
 
 .home-bat-records .record-card {
   display: grid;
-  grid-template-columns: minmax(104px, 0.88fr) minmax(176px, 1.38fr);
+  grid-template-columns: minmax(0, calc((100% - 10px) / 2)) minmax(0, 1fr);
   align-items: center;
   gap: 6px;
-  padding: 7px 10px;
+  padding: 5px 10px;
 }
 
 .home-bat-records .record-card-button,
@@ -1346,7 +1527,7 @@ p {
 
 .home-bat-records .record-title strong {
   overflow: hidden;
-  font-size: 0.82rem;
+  font-size: 0.76rem;
   line-height: 1;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1381,6 +1562,27 @@ p {
   justify-self: center;
 }
 
+.home-bat-result-card .mini-grid span,
+.home-bat-result-card .mini-grid span:first-child {
+  justify-items: center;
+  text-align: center;
+}
+
+.home-bat-result-card .mini-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-gap: 3px;
+}
+
+.home-bat-result-card .mini-grid span {
+  padding-inline: 2px;
+  font-size: 0.88rem;
+}
+
+.home-bat-result-card .mini-grid small {
+  margin-left: 1px;
+  font-size: 0.66rem;
+}
+
 .home-bat-records .mini-grid b {
   margin-bottom: 1px;
   font-size: 0.5rem;
@@ -1389,6 +1591,61 @@ p {
 .home-bat-records .mini-grid small {
   margin-left: 2px;
   font-size: 0.7rem;
+}
+
+.home-bat-result-card .record-title {
+  position: relative;
+  align-items: center;
+}
+
+.home-bat-select-shell {
+  position: relative;
+  flex: 0 1 132px;
+  width: 132px;
+  min-width: 0;
+}
+
+.home-bat-select-shell select {
+  appearance: none;
+  -webkit-appearance: none;
+  min-height: 28px;
+  border: 0;
+  border-radius: 6px;
+  padding: 0 24px 0 0;
+  color: var(--text);
+  background: transparent;
+  box-shadow: none;
+  font-size: 0.82rem;
+  font-weight: 950;
+  line-height: 1;
+  text-overflow: ellipsis;
+}
+
+.home-bat-select-shell select:focus {
+  box-shadow: none;
+}
+
+.home-bat-select-shell select:active {
+  transform: none !important;
+}
+
+.home-bat-select-caret {
+  position: absolute;
+  top: 50%;
+  right: 1px;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  color: var(--bat-icon-color, var(--hot));
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.home-bat-select-caret svg {
+  width: 12px;
+  height: 12px;
+  stroke-width: 3;
 }
 
 .graph-bat-filter {
@@ -1507,6 +1764,7 @@ p {
 .daily-score-row > strong {
   position: relative;
   z-index: 2;
+  transform: translateY(-6px);
   pointer-events: none;
 }
 
@@ -1709,7 +1967,7 @@ p {
 }
 
 .daily-badge-rarity-label {
-  display: block;
+  display: none;
   color: currentColor;
   font-size: 0.7rem;
   font-weight: 950;
@@ -4191,7 +4449,7 @@ input::placeholder {
   left: max(14px, calc((100vw - var(--app-visual-width)) / 2 + 14px));
   z-index: 35;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 3px;
@@ -5870,11 +6128,11 @@ select:focus,
 }
 
 .home-section {
-  gap: 8px;
+  gap: 12px;
 }
 
 .home-result-section {
-  gap: 8px !important;
+  gap: 12px !important;
 }
 
 .daily-result-group-card {
@@ -5894,7 +6152,7 @@ select:focus,
 
 .home-bat-records {
   margin-top: 0 !important;
-  padding-left: 18px;
+  padding-left: 14px;
   gap: 5px;
 }
 
@@ -5914,10 +6172,10 @@ select:focus,
 }
 
 .daily-badge-get-stamp {
-  right: auto;
-  top: 2px;
+  right: -12px;
+  top: -8px;
   bottom: auto;
-  left: -14px;
+  left: auto;
   width: 42px;
   height: 24px;
   border-radius: 5px;
@@ -6259,18 +6517,376 @@ select:focus,
 
 .daily-result-card strong {
   min-width: 0;
-  font-size: var(--score-value-size, 3.08rem);
+  font-size: var(--score-value-size, 2.72rem);
   white-space: nowrap;
 }
 
 .daily-result-card strong span {
+  margin-left: 4px;
+  font-size: 0.72rem;
   white-space: nowrap;
+}
+
+.daily-badge-stage {
+  width: 56px;
+  right: clamp(2px, 3%, 24px);
+}
+
+.daily-badge-mark {
+  width: 62px;
+}
+
+.daily-badge-image {
+  width: min(44px, 100%);
+  height: min(44px, 100%);
+}
+
+.daily-badge-get-stamp {
+  right: -9px;
+  top: -6px;
+  width: 36px;
+  height: 21px;
+  font-size: 0.6rem;
 }
 
 @media (max-width: 390px) {
   .graph-shared-controls {
     grid-template-columns: 1fr;
   }
+}
+
+.home-input-panel {
+  max-height: none !important;
+  gap: 5px !important;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 18px;
+}
+
+.home-input-panel .input-panel-title {
+  display: none;
+}
+
+.home-input-panel .swing-form-heading {
+  grid-area: heading;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 0;
+  border-color: color-mix(in srgb, var(--hot) 70%, var(--line));
+  border-radius: var(--radius);
+  padding: 0 12px;
+  color: var(--text);
+  background: color-mix(in srgb, var(--hot) 22%, #202633);
+  font-size: 1.18rem;
+  font-weight: 950;
+  line-height: 1;
+  align-self: center;
+}
+
+.home-input-panel .swing-form-heading .icon {
+  width: 24px;
+  height: 24px;
+  border-color: color-mix(in srgb, var(--hot) 46%, transparent);
+  color: var(--hot);
+  background: color-mix(in srgb, var(--hot) 14%, transparent);
+}
+
+.home-input-panel .swing-form-heading .icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.home-input-panel .input-panel-layout {
+  max-height: none !important;
+  overflow: visible;
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+.home-input-panel .swing-form {
+  display: grid;
+  grid-template-columns: minmax(138px, 1fr) repeat(3, minmax(50px, 0.42fr)) 42px;
+  grid-template-areas:
+    "heading heading heading heading heading"
+    ". count-label avg-label best-label ."
+    "bat count avg best submit";
+  column-gap: 6px;
+  row-gap: 6px;
+  align-items: end;
+  width: 100%;
+  max-width: 100%;
+  border-color: transparent;
+  background: transparent;
+  padding: 0 !important;
+}
+
+.home-input-panel .swing-form .field-label:first-child {
+  grid-area: bat;
+}
+
+.home-input-panel .swing-form .field-label {
+  gap: 3px;
+  min-width: 0;
+}
+
+.home-input-panel .field-title {
+  gap: 3px;
+  font-size: 0.62rem;
+  line-height: 1;
+}
+
+.home-input-panel .field-title .icon {
+  width: 16px;
+  height: 16px;
+}
+
+.home-input-panel .field-title .icon svg,
+.home-input-panel .field-title .icon .bat-image-icon {
+  width: 12px;
+  height: 12px;
+}
+
+.home-input-panel .swing-form .field-label:not(.bat-input-label) > .field-title {
+  display: inline-grid;
+  grid-template-columns: 16px auto;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.home-input-panel .swing-form .field-label:nth-of-type(2),
+.home-input-panel .swing-form .field-label:nth-of-type(3),
+.home-input-panel .swing-form .field-label:nth-of-type(4) {
+  display: contents;
+}
+
+.home-input-panel .swing-form .field-label:nth-of-type(2) > .field-title {
+  grid-area: count-label;
+}
+
+.home-input-panel .swing-form .field-label:nth-of-type(2) > input {
+  grid-area: count;
+}
+
+.home-input-panel .swing-form .field-label:nth-of-type(3) > .field-title {
+  grid-area: avg-label;
+}
+
+.home-input-panel .swing-form .field-label:nth-of-type(3) > input {
+  grid-area: avg;
+}
+
+.home-input-panel .swing-form .field-label:nth-of-type(4) > .field-title {
+  grid-area: best-label;
+}
+
+.home-input-panel .swing-form .field-label:nth-of-type(4) > input {
+  grid-area: best;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.home-input-panel .bat-input-label > .field-title {
+  display: none;
+}
+
+.home-input-panel .bat-input-label {
+  grid-area: bat;
+  align-self: end;
+}
+
+.bat-input-shell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
+  min-width: 0;
+  color: var(--selected-bat-color, var(--hot));
+}
+
+.bat-input-shell .bat-card-icon {
+  flex: 0 0 auto;
+  color: var(--selected-bat-color, var(--hot));
+  background: color-mix(in srgb, var(--selected-bat-color, var(--hot)) 14%, transparent);
+}
+
+.bat-input-shell .home-bat-select-caret {
+  color: var(--selected-bat-color, var(--hot));
+}
+
+.home-input-panel .bat-input-shell select {
+  appearance: none;
+  -webkit-appearance: none;
+  min-height: 28px;
+  border: 0;
+  border-radius: 6px;
+  padding: 0 24px 0 0;
+  color: var(--text);
+  background: transparent;
+  box-shadow: none;
+  font-size: 0.82rem;
+  font-weight: 950;
+  line-height: 1;
+  text-overflow: ellipsis;
+}
+
+.home-input-panel .swing-form input,
+.home-input-panel .swing-form select {
+  min-height: 31px;
+  padding: 4px 6px;
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.home-input-panel .swing-form input {
+  text-align: center;
+}
+
+.home-input-panel .swing-form input::placeholder {
+  color: #7f8794;
+}
+
+.home-input-panel .swing-form .bat-input-shell select {
+  padding-left: 0;
+}
+
+.home-input-panel .bat-input-shell select:active {
+  transform: none !important;
+}
+
+.home-input-panel .swing-form .primary {
+  min-height: 34px;
+  margin-top: 0;
+}
+
+.home-input-panel .swing-form .submit-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.home-input-panel .swing-form .button-icon {
+  width: 17px;
+  height: 17px;
+  stroke-width: 3.2;
+}
+
+.home-score-input-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  align-items: stretch;
+}
+
+.home-score-input-grid .home-input-panel {
+  grid-column: 1;
+  grid-row: 1;
+  margin-bottom: 0;
+  border: 1px solid color-mix(in srgb, var(--hot) 46%, var(--line));
+  border-radius: var(--radius);
+  padding: 10px;
+  background: #202633;
+}
+
+.home-score-input-grid .daily-result-grid.card-count-3 {
+  display: contents;
+}
+
+.home-score-input-grid .daily-result-grid.card-count-3 .daily-result-card:first-child {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.home-score-input-grid .daily-result-grid.card-count-3 .daily-result-card:nth-child(2) {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.home-score-input-grid .daily-result-grid.card-count-3 .daily-result-card:nth-child(3) {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.home-score-input-grid .home-input-panel .swing-form {
+  height: 100%;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-template-areas:
+    "bat bat bat bat bat bat bat bat bat bat bat bat"
+    "count-label count-label count-label count-label avg-label avg-label avg-label avg-label best-label best-label best-label best-label"
+    "count count count count avg avg avg avg best best best best"
+    ". . heading heading heading heading heading heading heading heading . .";
+  row-gap: 5px;
+}
+
+.home-score-input-grid .home-input-panel .bat-input-label {
+  margin-bottom: 2px;
+}
+
+.home-score-input-grid .home-input-panel .swing-form .field-label:not(.bat-input-label) > .field-title {
+  align-self: end;
+  margin-bottom: -1px;
+  transform: none;
+}
+
+.home-score-input-grid .home-input-panel .swing-form .field-label:nth-of-type(2) > input,
+.home-score-input-grid .home-input-panel .swing-form .field-label:nth-of-type(3) > input,
+.home-score-input-grid .home-input-panel .swing-form .field-label:nth-of-type(4) > input {
+  margin-top: 0;
+}
+
+.home-score-input-grid .home-input-panel .swing-form-heading {
+  font-size: 0.88rem;
+  white-space: nowrap;
+}
+
+.home-score-input-grid .home-input-panel .swing-form input,
+.home-score-input-grid .home-input-panel .swing-form select {
+  min-height: 30px;
+}
+
+.home-score-input-grid .home-input-panel .swing-form .primary {
+  justify-self: center;
+  align-self: end;
+  width: 100%;
+  min-height: 30px;
+  transform: translateY(3px);
+}
+
+.home-score-input-grid .home-input-panel .field-title {
+  justify-content: start;
+}
+
+.home-score-input-grid .home-input-panel .swing-form .field-label:not(.bat-input-label) > .field-title {
+  justify-content: start;
+}
+
+.home-bat-records .record-card-button:active,
+.record-card-button:active {
+  border-color: var(--line) !important;
+  color: inherit !important;
+  background: #171b24 !important;
+  transform: none !important;
+}
+
+.home-bat-records .record-card-button.selected:active,
+.record-card-button.selected:active {
+  border-color: color-mix(in srgb, var(--bat-icon-color, var(--hot)) 66%, var(--line)) !important;
+  background: color-mix(in srgb, var(--bat-icon-color, var(--hot)) 12%, #171b24) !important;
 }
 
 .active-player,
