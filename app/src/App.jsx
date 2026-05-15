@@ -1370,6 +1370,7 @@ function DailyResultCard({ card, showBadges }) {
   const targetInfo = animatedTarget?.targetInfo || baseTargetInfo;
   const targetBadge = targetInfo?.next || null;
   const reachedBadge = animatedTarget?.reachedBadge || targetBadge;
+  const completeBadge = animatedTarget?.reachedBadge || targetInfo?.current || null;
   const stageBadge = targetMode ? (animatedTarget?.showReached ? reachedBadge : targetBadge) : (card.badgeOverride || earnedBadge);
   const remainingValue = targetMode && targetBadge ? Math.max(0, animatedTarget?.remainingValue ?? (targetBadge.target - (card.value || 0))) : 0;
   const showComplete = targetMode && !targetBadge && Boolean(targetInfo?.current);
@@ -1388,7 +1389,7 @@ function DailyResultCard({ card, showBadges }) {
             <div className={`daily-badge-stage ${targetMode ? "remaining-stage" : ""} ${animatedTarget?.complete || showComplete ? "complete-stage" : ""}`}>
               {targetMode && (animatedTarget?.complete || showComplete) ? (
                 <>
-                  {stageBadge && <DailyBadgeMark label={stageBadge.label} description={stageBadge.description || `${stageBadge.label}をゲット`} />}
+                  {completeBadge && <DailyBadgeMark label={completeBadge.label} description={completeBadge.description || `${completeBadge.label}をゲット`} />}
                   <span className="daily-complete-stamp" aria-label="Complete">Complete</span>
                 </>
               ) : targetMode && animatedTarget?.showReached && stageBadge ? (
@@ -2336,11 +2337,14 @@ export default function App() {
     const nextRecords = [...db.records, record];
     const currentRecordsBefore = db.records.filter((item) => item.name === currentName);
     const currentRecordsAfter = nextRecords.filter((item) => item.name === currentName);
-    setChallengeAnimation({
-      id: uid(),
-      fromRecords: currentRecordsBefore,
-      toRecords: currentRecordsAfter,
-      playedRanges: [],
+    setChallengeAnimation((current) => {
+      const hasUnplayedPendingAnimation = current && !(current.playedRanges || []).length;
+      return {
+        id: hasUnplayedPendingAnimation ? current.id : uid(),
+        fromRecords: hasUnplayedPendingAnimation ? current.fromRecords : currentRecordsBefore,
+        toRecords: currentRecordsAfter,
+        playedRanges: [],
+      };
     });
     if (date === todayISO()) {
       const todayRecordsBefore = db.records.filter((item) => item.name === currentName && item.date === date);
