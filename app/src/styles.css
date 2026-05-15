@@ -6791,6 +6791,28 @@ select:focus,
   transform: none !important;
 }
 
+/* Final authority: the input button must recover its normal fill after the
+   score animation re-enables it. Keep tap feedback transform-only. */
+.home-input-panel .swing-form-heading:not(:disabled) {
+  border-color: color-mix(in srgb, var(--hot) 70%, var(--line)) !important;
+  color: var(--text) !important;
+  background: color-mix(in srgb, var(--hot) 22%, #202633) !important;
+  opacity: 1 !important;
+}
+
+.home-input-panel .swing-form-heading:not(:disabled):active {
+  background: color-mix(in srgb, var(--hot) 22%, #202633) !important;
+  transform: scale(0.94) !important;
+}
+
+.home-input-panel .swing-form-heading:disabled {
+  border-color: color-mix(in srgb, var(--hot) 34%, var(--line)) !important;
+  color: color-mix(in srgb, var(--text) 54%, transparent) !important;
+  background: color-mix(in srgb, var(--hot) 10%, #202633) !important;
+  opacity: 0.78 !important;
+  transform: none !important;
+}
+
 /* Final authority: target remainder is not the main score value. */
 .daily-result-card .target-remaining {
   width: 100% !important;
@@ -7300,7 +7322,6 @@ select:focus,
 }
 
 .home-input-panel .swing-form-heading:not(:disabled):active {
-  background: color-mix(in srgb, var(--hot) 38%, #202633);
   transform: scale(0.94);
 }
 
