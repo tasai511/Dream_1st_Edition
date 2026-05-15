@@ -339,7 +339,7 @@ h2 {
 }
 
 .home-subheading {
-  margin: 4px 0 0;
+  margin: 4px 0 0 14px;
   color: var(--muted);
   font-size: 0.78rem;
   font-weight: 950;
