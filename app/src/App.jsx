@@ -2804,7 +2804,7 @@ function ChallengePeriodPanel({ db, records, range }) {
   const badgeCounts = collectBadgeCounts(records, range);
 
   return (
-    <section className="home-section home-result-section challenge-period-panel all-record-panel">
+    <section className="home-section home-result-section challenge-period-panel">
       <div className="challenge-heading">
         <p>{label}</p>
       </div>
@@ -2824,7 +2824,7 @@ function ChallengeAllPanel({ db, records }) {
   const graphColor = graphBat === ALL ? null : batColorFor(db, graphBat);
 
   return (
-    <section className="home-section home-result-section challenge-period-panel">
+    <section className="home-section home-result-section challenge-period-panel all-record-panel">
       <div className="challenge-heading">
         <p>これまでの累計</p>
       </div>

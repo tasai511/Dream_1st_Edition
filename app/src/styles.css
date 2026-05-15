@@ -6901,12 +6901,20 @@ select:focus,
 }
 
 .all-record-panel > .daily-result-grid {
-  grid-template-columns: 1fr;
+  grid-template-columns: 1fr !important;
 }
 
-.all-record-panel > .daily-result-grid.card-count-3 .daily-result-card:first-child,
-.all-record-panel > .daily-result-grid.card-count-4 .daily-result-card:first-child {
-  grid-column: auto;
+.challenge-view .challenge-period-panel:not(.all-record-panel) > .daily-result-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+.challenge-view .challenge-period-panel:not(.all-record-panel) > .daily-result-grid.card-count-3 .daily-result-card:first-child {
+  grid-column: 1 / -1;
+}
+
+.all-record-panel > .daily-result-grid > .daily-result-card {
+  grid-column: auto !important;
+  grid-row: auto !important;
 }
 
 .home-score-input-grid .home-input-panel .swing-form {
