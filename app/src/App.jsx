@@ -75,6 +75,10 @@ const HOME_BADGE_DEFINITIONS = [
   ...[500, 1000, 2000, 3000, 5000].map((target) => ({ period: RANGE_MONTH, group: "monthly", metric: "count", target, label: periodCountBadgeLabel("毎月", target) })),
   ...[300, 400, 500, 600].map((target) => ({ period: RANGE_MONTH, group: "monthly", metric: "avg", target, label: `毎月平均${target}` })),
   ...[[5, "毎月5日練習"], [10, "毎月10日練習"], [20, "毎月20日練習"], ["all", "毎月毎日練習"]].map(([target, label]) => ({ period: RANGE_MONTH, group: "monthly", metric: "days", target, label })),
+  ...UNIQUE_TOTAL_COUNT_TARGETS.map((target) => ({ period: RANGE_TOTAL, group: "total", metric: "count", target, label: `累計回数${target}` })),
+  ...[300, 400, 500, 600, 700].map((target) => ({ period: RANGE_TOTAL, group: "total", metric: "avg", target, label: `累計平均${target}` })),
+  ...UNIQUE_BEST_TARGETS.map((target) => ({ period: RANGE_TOTAL, group: "total", metric: "best", target, label: `累計ベスト${target}` })),
+  ...[3, 7, 14, 30, 60, 100, 365].map((target) => ({ period: RANGE_TOTAL, group: "total", metric: "days", target, label: `累計${target}日練習` })),
 ];
 const UNIQUE_BADGE_DEFINITIONS = [
   ...UNIQUE_TOTAL_COUNT_TARGETS.map((target) => ({ metric: "count", target, label: `累計${target}回` })),
@@ -1109,6 +1113,7 @@ function DailyResultCard({ card, showBadges }) {
   const earnedBadge = dailyResultBadge(card.metric, card.value, badgeDefinitions);
   const visibleMilestones = milestones.filter((milestone) => milestone.earned);
   const revealBadge = card.revealBadge !== false;
+  const showMilestoneTrack = showBadges && !(card.metric === "best" && (card.range === RANGE_WEEK || card.range === RANGE_MONTH));
 
   return (
     <article className={`daily-result-card ${card.key} ${card.revealBadge === false ? "animating" : ""}`} style={{ "--milestone-fill-ratio": String(card.fillRatio ?? 1) }}>
@@ -1129,9 +1134,9 @@ function DailyResultCard({ card, showBadges }) {
               ) : null}
             </div>
           </div>
-          <div className={`milestone-track ${visibleMilestones.length ? "earned" : ""}`}>
+          <div className={`milestone-track ${showMilestoneTrack ? "" : "placeholder"} ${visibleMilestones.length ? "earned" : ""}`}>
             <span className="milestone-fill" />
-            {visibleMilestones.map((milestone) => {
+            {showMilestoneTrack && visibleMilestones.map((milestone) => {
               const alpha = milestoneAlpha(milestone.position);
               const definition = makeBadgeDefinition(canonicalBadgeLabel(milestone.label), { description: milestone.description || `${milestone.label}をゲット` });
               return (
@@ -1165,12 +1170,12 @@ function DailyResultCard({ card, showBadges }) {
 
 function scoreCardFontSize(value) {
   const digits = Number(value || 0).toLocaleString("ja-JP").length;
-  if (digits >= 9) return "1.62rem";
-  if (digits >= 8) return "1.86rem";
-  if (digits >= 7) return "2.14rem";
-  if (digits >= 6) return "2.42rem";
-  if (digits >= 5) return "2.72rem";
-  return "3.08rem";
+  if (digits >= 9) return "1.38rem";
+  if (digits >= 8) return "1.52rem";
+  if (digits >= 7) return "1.68rem";
+  if (digits >= 6) return "1.88rem";
+  if (digits >= 5) return "2.08rem";
+  return "2.44rem";
 }
 
 function DailyBadgeMark({ label, description }) {
@@ -2799,7 +2804,7 @@ function ChallengePeriodPanel({ db, records, range }) {
   const badgeCounts = collectBadgeCounts(records, range);
 
   return (
-    <section className="home-section home-result-section challenge-period-panel">
+    <section className="home-section home-result-section challenge-period-panel all-record-panel">
       <div className="challenge-heading">
         <p>{label}</p>
       </div>
@@ -2823,7 +2828,8 @@ function ChallengeAllPanel({ db, records }) {
       <div className="challenge-heading">
         <p>これまでの累計</p>
       </div>
-      <DailyResultCards summary={summary} showBadges={false} includeDays />
+      <DailyResultCards summary={summary} showBadges range={RANGE_TOTAL} includeDays />
+      <div className="home-subheading">使ったバット</div>
       <div className="home-bat-records challenge-bat-records">
         {byBat.length ? byBat.map((item) => (
           <RecordSummary key={item.bat} item={item} batColor={batColorFor(db, item.bat)} />
