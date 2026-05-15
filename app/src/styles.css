@@ -7299,6 +7299,19 @@ select:focus,
   align-self: center;
 }
 
+.home-input-panel .swing-form-heading:not(:disabled):active {
+  background: color-mix(in srgb, var(--hot) 38%, #202633);
+  transform: scale(0.94);
+}
+
+.home-input-panel .swing-form-heading:disabled {
+  border-color: color-mix(in srgb, var(--hot) 34%, var(--line));
+  color: color-mix(in srgb, var(--text) 54%, transparent);
+  background: color-mix(in srgb, var(--hot) 10%, #202633);
+  cursor: default;
+  opacity: 0.78;
+}
+
 .home-input-panel .swing-form-heading .icon {
   width: 24px;
   height: 24px;

@@ -133,8 +133,22 @@ const defaultDb = {
   testInputDefaults: false,
 };
 
-const TEST_INITIAL_RECORD_VALUES = { count: 60, avg: 520, best: 640 };
-const TEST_ADDITION_RECORD_VALUES = { count: 40, avg: 320, best: 420 };
+const TEST_RECORD_VALUE_PRESETS = [
+  { count: 60, avg: 520, best: 640 },
+  { count: 45, avg: 320, best: 420 },
+  { count: 115, avg: 690, best: 760 },
+  { count: 24, avg: 240, best: 360 },
+  { count: 190, avg: 720, best: 880 },
+  { count: 75, avg: 610, best: 910 },
+  { count: 310, avg: 280, best: 450 },
+  { count: 500, avg: 700, best: 999 },
+  { count: 90, avg: 430, best: 580 },
+];
+
+function testRecordValuesForStep(step, hasTodayRecord) {
+  const offset = hasTodayRecord ? Math.max(1, step) : 0;
+  return TEST_RECORD_VALUE_PRESETS[offset % TEST_RECORD_VALUE_PRESETS.length];
+}
 
 const BAT_COLOR_PALETTE = [
   "#ff3044",
@@ -2591,7 +2605,7 @@ function HomeView({ db, currentName, allForName, addRecord, scoreAnimation, onSc
     .map((item) => (animatedBatSummary?.bat === item.bat ? { ...item, ...animatedBatSummary } : item))
     .sort((a, b) => db.bats.indexOf(a.bat) - db.bats.indexOf(b.bat));
   const testRecordValues = db.testInputDefaults
-    ? (hasTodayRecord ? TEST_ADDITION_RECORD_VALUES : TEST_INITIAL_RECORD_VALUES)
+    ? testRecordValuesForStep(formResetKey, hasTodayRecord)
     : null;
   const todayEarnedBadges = badgesFor(allForName.filter((record) => record.date <= todayISO())).get(todayISO()) || [];
   const badgeCounts = [...todayEarnedBadges.reduce((map, label) => {
@@ -2653,6 +2667,7 @@ function HomeView({ db, currentName, allForName, addRecord, scoreAnimation, onSc
                 batColors={db.batColors}
                 defaultValues={testRecordValues}
                 resetToken={formResetKey}
+                submitDisabled={isScoreAnimating}
                 onSubmit={handleRecordSubmit}
                 submitLabel={hasTodayRecord ? "追加する" : "記録する"}
               />
@@ -3517,7 +3532,7 @@ function GraphControls({ db, graphBat, setGraphBat }) {
   );
 }
 
-function SwingForm({ bats, defaultBat, onSubmit, submitLabel, defaultValues = null, resetToken = 0, batColors = null }) {
+function SwingForm({ bats, defaultBat, onSubmit, submitLabel, defaultValues = null, resetToken = 0, submitDisabled = false, batColors = null }) {
   const initialBat = bats.includes(defaultBat) ? defaultBat : bats[0] || "";
   const [selectedBat, setSelectedBat] = useState(initialBat);
   const [countValue, setCountValue] = useState(defaultValues?.count ?? "");
@@ -3547,7 +3562,7 @@ function SwingForm({ bats, defaultBat, onSubmit, submitLabel, defaultValues = nu
       <label className="field-label"><span className="field-title"><Icon type="count" />回数</span><input name="count" type="number" inputMode="numeric" min="1" max="999" step="1" required value={countValue} onChange={(event) => setCountValue(event.target.value)} aria-label="回数" /></label>
       <label className="field-label"><span className="field-title"><Icon type="avg" />平均</span><input name="avg" type="number" inputMode="numeric" min="0" max="999" step="1" required value={avgValue} onChange={(event) => setAvgValue(event.target.value)} aria-label="平均" /></label>
       <label className="field-label"><span className="field-title"><Icon type="best" />ベスト</span><input name="best" type="number" inputMode="numeric" min="0" max="999" step="1" required value={bestValue} onChange={(event) => setBestValue(event.target.value)} aria-label="ベスト" /></label>
-      <button className="primary wide swing-form-heading" type="submit" aria-label={submitLabel}>結果入力</button>
+      <button className="primary wide swing-form-heading" type="submit" aria-label={submitLabel} disabled={submitDisabled}>結果入力</button>
     </form>
   );
 }
