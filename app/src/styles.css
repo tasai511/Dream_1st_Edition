@@ -174,7 +174,7 @@ svg text {
 
 .app-header {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   margin-bottom: 34px;
 }
@@ -188,8 +188,8 @@ svg text {
 
 .app-title {
   position: relative;
-  grid-column: 2;
-  justify-self: center;
+  grid-column: 1;
+  justify-self: start;
   padding: 1px 1px 6px;
   color: rgba(255, 255, 255, 0.96);
   font-family: var(--app-display-font-family, "Avenir Next", "DIN Alternate", "Helvetica Neue", system-ui, sans-serif);
@@ -214,13 +214,13 @@ svg text {
 }
 
 .app-header .active-player {
-  grid-column: 3;
+  grid-column: 2;
   justify-self: end;
 }
 
 .player-switcher {
   position: relative;
-  grid-column: 3;
+  grid-column: 2;
   justify-self: end;
 }
 
@@ -1659,6 +1659,7 @@ p {
 
 .daily-result-card {
   display: grid;
+  --milestone-dot-bg: #2c323e;
   gap: 9px;
   overflow: hidden;
   border: 1px solid var(--line);
@@ -1992,8 +1993,12 @@ p {
   overflow: visible;
 }
 
+.daily-result-card .milestone-track {
+  color: var(--hot);
+}
+
 .milestone-track.earned {
-  background: color-mix(in srgb, currentColor 8%, rgba(255, 255, 255, 0.055));
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .milestone-fill {
@@ -2001,7 +2006,7 @@ p {
   inset: 0;
   width: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, rgb(from currentColor r g b / 0.02) 0%, rgb(from currentColor r g b / 0.12) 28%, rgb(from currentColor r g b / 0.58) 68%, rgb(from currentColor r g b / 1) 100%);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.16) 28%, rgba(255, 255, 255, 0.68) 68%, #ffffff 100%);
   opacity: 1;
   transform: scaleX(var(--milestone-fill-ratio, 1));
   transform-origin: left center;
@@ -2017,9 +2022,9 @@ p {
   border: 0;
   border-radius: 50%;
   place-items: center;
-  color: currentColor;
+  color: #ffffff;
   background: #202633;
-  box-shadow: 0 0 0 2px rgb(from currentColor r g b / var(--milestone-ring-alpha, 0.48));
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, var(--milestone-ring-alpha, 0.48));
   transform: translate(-50%, -50%);
 }
 
@@ -2034,12 +2039,12 @@ p {
 .milestone-dot.current {
   width: 28px;
   height: 28px;
-  background: color-mix(in srgb, currentColor 22%, #202633);
+  background: color-mix(in srgb, #ffffff 22%, #202633);
   box-shadow:
-    0 0 0 4px color-mix(in srgb, currentColor 86%, transparent),
-    0 0 10px color-mix(in srgb, currentColor 90%, transparent),
-    0 0 24px color-mix(in srgb, currentColor 66%, transparent),
-    0 0 42px color-mix(in srgb, currentColor 42%, transparent);
+    0 0 0 4px rgba(255, 255, 255, 0.86),
+    0 0 10px rgba(255, 255, 255, 0.9),
+    0 0 24px rgba(255, 255, 255, 0.66),
+    0 0 42px rgba(255, 255, 255, 0.42);
 }
 
 .milestone-dot.current .rarity-icon {
@@ -5189,26 +5194,26 @@ body,
 .home-bat-filter .select-leading,
 .home-bat-filter.all-selected .select-leading {
   color: #8d95a4;
-  background: #242936;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .home-bat-filter .bat-field select,
 .home-bat-filter.all-selected .bat-field select {
   border-color: var(--line);
   color: var(--text);
-  background: #242936;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .home-bat-filter .bat-select-leading,
 .home-bat-filter.all-selected .bat-select-leading {
   color: var(--bat-filter-color, var(--hot));
-  background: color-mix(in srgb, var(--bat-filter-color, var(--hot)) 20%, #242936);
+  background: color-mix(in srgb, var(--bat-filter-color, var(--hot)) 18%, rgba(255, 255, 255, 0.08));
 }
 
 .home-bat-filter .select-caret,
 .home-bat-filter.all-selected .select-caret {
   color: #8d95a4;
-  background: #242936;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .bottom-nav {
@@ -6106,13 +6111,25 @@ select:focus,
   width: 16px !important;
   height: 16px !important;
   margin: 0 !important;
+  filter: none !important;
   line-height: 0 !important;
+  opacity: var(--milestone-alpha, 1) !important;
   transform: none !important;
+}
+
+.milestone-dot {
+  background: var(--milestone-dot-bg, #202633) !important;
 }
 
 .milestone-dot.current .rarity-icon {
   width: 21px !important;
   height: 21px !important;
+  filter: none !important;
+  opacity: 1 !important;
+}
+
+.milestone-dot.current {
+  background: var(--milestone-dot-bg, #202633) !important;
 }
 
 .milestone-dot.current > span:not(.rarity-icon) {
@@ -6465,6 +6482,26 @@ select:focus,
   width: 100%;
 }
 
+.graph-shared-controls .home-bat-filter.bat-field select,
+.graph-shared-controls .home-bat-filter.bat-field.all-selected select {
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  color: var(--text) !important;
+  background: #1d222d !important;
+}
+
+.graph-shared-controls .home-bat-filter.bat-field .select-leading,
+.graph-shared-controls .home-bat-filter.bat-field.all-selected .select-leading,
+.graph-shared-controls .home-bat-filter.bat-field .select-caret,
+.graph-shared-controls .home-bat-filter.bat-field.all-selected .select-caret {
+  background: #1d222d !important;
+}
+
+.graph-shared-controls .home-bat-filter.bat-field .bat-select-leading,
+.graph-shared-controls .home-bat-filter.bat-field.all-selected .bat-select-leading {
+  color: var(--bat-filter-color, var(--hot)) !important;
+  background: color-mix(in srgb, var(--bat-filter-color, var(--hot)) 14%, #1d222d) !important;
+}
+
 .graph-shared-controls .range-field {
   min-width: 0;
 }
@@ -6796,10 +6833,10 @@ select:focus,
   place-items: center;
   width: 18px;
   height: 18px;
-  border: 1px solid rgba(var(--hot-rgb), 0.3);
+  border: 0;
   border-radius: var(--radius);
   color: var(--selected-bat-color, var(--hot));
-  background: color-mix(in srgb, var(--selected-bat-color, var(--hot)) 18%, transparent);
+  background: color-mix(in srgb, var(--selected-bat-color, var(--hot)) 24%, #1d222d);
   transform: translateY(-50%);
   pointer-events: none;
 }
@@ -6815,10 +6852,8 @@ select:focus,
   height: 21px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 50%;
-  color: #fff;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.04)),
-    rgba(var(--hot-rgb), 0.12);
+  color: #8d95a4;
+  background: #1d222d;
 }
 
 .home-input-panel .bat-input-shell .home-bat-select-caret svg {
@@ -6834,9 +6869,7 @@ select:focus,
   border-radius: var(--radius);
   padding: 0 28px 0 30px;
   color: #fff;
-  background:
-    linear-gradient(135deg, rgba(var(--hot-rgb), 0.22), rgba(255, 255, 255, 0.06)),
-    rgba(8, 8, 12, 0.72);
+  background: #1d222d;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.1),
     0 12px 28px rgba(0, 0, 0, 0.22);
@@ -6900,21 +6933,12 @@ select:focus,
   grid-row: 2;
 }
 
-.all-record-panel > .daily-result-grid {
-  grid-template-columns: 1fr !important;
-}
-
 .challenge-view .challenge-period-panel:not(.all-record-panel) > .daily-result-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
 }
 
 .challenge-view .challenge-period-panel:not(.all-record-panel) > .daily-result-grid.card-count-3 .daily-result-card:first-child {
   grid-column: 1 / -1;
-}
-
-.all-record-panel > .daily-result-grid > .daily-result-card {
-  grid-column: auto !important;
-  grid-row: auto !important;
 }
 
 .home-score-input-grid .home-input-panel .swing-form {

@@ -39,12 +39,12 @@ const RARITY_COLORS = {
 };
 const PUBLIC_ASSET_BASE = import.meta.env.BASE_URL || "./";
 const DAILY_RARITY_IMAGE_URLS = {
-  C: `${PUBLIC_ASSET_BASE}images/rarity_c_common.png?v=3`,
-  U: `${PUBLIC_ASSET_BASE}images/rarity_u_uncommon.png?v=3`,
-  R: `${PUBLIC_ASSET_BASE}images/rarity_r_rare.png?v=3`,
-  RR: `${PUBLIC_ASSET_BASE}images/rarity_rr_double_rare.png?v=3`,
-  SR: `${PUBLIC_ASSET_BASE}images/rarity_sr_super_rare.png?v=3`,
-  UR: `${PUBLIC_ASSET_BASE}images/rarity_ur_ultra_rare.png?v=3`,
+  C: `${PUBLIC_ASSET_BASE}images/rarity_c_common.png?v=4`,
+  U: `${PUBLIC_ASSET_BASE}images/rarity_u_uncommon.png?v=4`,
+  R: `${PUBLIC_ASSET_BASE}images/rarity_r_rare.png?v=4`,
+  RR: `${PUBLIC_ASSET_BASE}images/rarity_rr_double_rare.png?v=4`,
+  SR: `${PUBLIC_ASSET_BASE}images/rarity_sr_super_rare.png?v=4`,
+  UR: `${PUBLIC_ASSET_BASE}images/rarity_ur_ultra_rare.png?v=4`,
 };
 const UNIQUE_TOTAL_COUNT_TARGETS = [100, 500, 1000, 3000, 5000, 10000, 30000, 50000, 100000];
 const UNIQUE_BEST_TARGETS = [500, 600, 700, 800, 900, 999];
@@ -2956,11 +2956,15 @@ function GraphControls({ db, graphBat, setGraphBat, graphRange, setGraphRange })
 }
 
 function SwingForm({ bats, defaultBat, onSubmit, submitLabel, defaultValues = null, batColors = null }) {
-  const selectedBat = bats.includes(defaultBat) ? defaultBat : bats[0] || "";
+  const initialBat = bats.includes(defaultBat) ? defaultBat : bats[0] || "";
+  const [selectedBat, setSelectedBat] = useState(initialBat);
+  useEffect(() => {
+    setSelectedBat(initialBat);
+  }, [initialBat]);
   const selectedBatColor = normalizeHexColor(batColors?.[selectedBat], fallbackBatColor(selectedBat, Math.max(0, bats.indexOf(selectedBat))));
   return (
     <form className="input-grid swing-form" onSubmit={onSubmit} style={{ "--selected-bat-color": selectedBatColor }}>
-      <label className="field-label bat-input-label"><span className="field-title"><span className="icon"><BatIcon color="var(--selected-bat-color, var(--hot))" /></span><span className="visually-hidden">バット</span></span><span className="bat-input-shell"><span className="icon bat-card-icon" aria-hidden="true"><BatIcon color="var(--selected-bat-color, var(--hot))" /></span><select key={selectedBat} name="bat" required defaultValue={selectedBat} aria-label="バット">{bats.map((bat) => <option key={bat}>{bat}</option>)}</select><span className="home-bat-select-caret" aria-hidden="true"><Icon type="chevronDown" /></span></span></label>
+      <label className="field-label bat-input-label"><span className="field-title"><span className="icon"><BatIcon color="var(--selected-bat-color, var(--hot))" /></span><span className="visually-hidden">バット</span></span><span className="bat-input-shell"><span className="icon bat-card-icon" aria-hidden="true"><BatIcon color="var(--selected-bat-color, var(--hot))" /></span><select name="bat" required value={selectedBat} onChange={(event) => setSelectedBat(event.target.value)} aria-label="バット">{bats.map((bat) => <option key={bat}>{bat}</option>)}</select><span className="home-bat-select-caret" aria-hidden="true"><Icon type="chevronDown" /></span></span></label>
       <label className="field-label"><span className="field-title"><Icon type="count" />回数</span><input name="count" type="number" inputMode="numeric" min="1" max="999" step="1" required defaultValue={defaultValues?.count ?? ""} aria-label="回数" /></label>
       <label className="field-label"><span className="field-title"><Icon type="avg" />平均</span><input name="avg" type="number" inputMode="numeric" min="0" max="999" step="1" required defaultValue={defaultValues?.avg ?? ""} aria-label="平均" /></label>
       <label className="field-label"><span className="field-title"><Icon type="best" />ベスト</span><input name="best" type="number" inputMode="numeric" min="0" max="999" step="1" required defaultValue={defaultValues?.best ?? ""} aria-label="ベスト" /></label>
