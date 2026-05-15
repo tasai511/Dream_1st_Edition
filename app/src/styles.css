@@ -344,6 +344,72 @@ p {
   gap: 14px;
 }
 
+.challenge-view {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.challenge-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 4px;
+  background: rgba(0, 0, 0, 0.24);
+}
+
+.challenge-tabs button {
+  min-height: 38px;
+  border: 0;
+  border-radius: 6px;
+  padding: 0 6px;
+  color: var(--muted);
+  background: transparent;
+  font-size: 0.72rem;
+  font-weight: 950;
+  line-height: 1.15;
+}
+
+.challenge-tabs button.selected {
+  color: white;
+  background: rgba(var(--hot-rgb), 0.78);
+}
+
+.challenge-period-panel {
+  min-width: 0;
+}
+
+.challenge-heading {
+  display: grid;
+  gap: 3px;
+  padding: 2px 2px 0;
+}
+
+.challenge-heading h2 {
+  margin: 0;
+}
+
+.challenge-heading p {
+  margin: 0;
+  font-weight: 850;
+}
+
+.challenge-period-panel > .daily-result-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.challenge-bat-records {
+  margin-top: 0;
+}
+
+.period-graphs {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
 .attached-tabs {
   display: flex;
   align-items: end;
@@ -1416,10 +1482,11 @@ p {
 .daily-result-card strong {
   display: block;
   color: var(--hot);
-  font-size: 3.08rem;
+  font-size: var(--score-value-size, 3.08rem);
   font-weight: 950;
   line-height: 1;
   text-shadow: none;
+  white-space: nowrap;
 }
 
 .daily-result-card strong span {
@@ -6113,6 +6180,97 @@ select:focus,
 
 .daily-result-group-card.record-card-button.badge-active:active {
   transform: none !important;
+}
+
+.graph-shared-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(148px, 0.86fr);
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+}
+
+.graph-shared-controls .home-bat-filter {
+  min-width: 0;
+  margin: 0;
+}
+
+.graph-shared-controls .home-bat-filter .select-shell {
+  width: 100%;
+}
+
+.graph-shared-controls .range-field {
+  min-width: 0;
+}
+
+.graph-range-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  min-width: 0;
+  border-radius: var(--radius);
+}
+
+.graph-range-tabs button {
+  min-height: 34px;
+  border-radius: 6px;
+  padding: 0 3px;
+  font-size: 0.68rem;
+}
+
+.all-record-graphs {
+  gap: 10px;
+}
+
+.all-record-graphs .graph-card {
+  display: grid;
+  gap: 9px;
+  min-height: 0;
+  padding-top: 12px;
+}
+
+.all-record-graphs .graph-title-row {
+  min-height: 26px;
+}
+
+.all-record-graphs .record-scroll {
+  height: 178px;
+  min-height: 178px;
+  padding-bottom: 0;
+}
+
+.all-record-graphs .count-bars {
+  align-items: end;
+  min-height: 0;
+}
+
+.all-record-graphs .record-section .bar-item {
+  grid-template-rows: 112px auto !important;
+}
+
+.all-record-graphs .record-section .bar-track {
+  height: 112px;
+}
+
+.all-record-graphs .chart-wrap,
+.all-record-graphs .chart-wrap svg {
+  height: 178px;
+  min-height: 178px;
+}
+
+.daily-result-card strong {
+  min-width: 0;
+  font-size: var(--score-value-size, 3.08rem);
+  white-space: nowrap;
+}
+
+.daily-result-card strong span {
+  white-space: nowrap;
+}
+
+@media (max-width: 390px) {
+  .graph-shared-controls {
+    grid-template-columns: 1fr;
+  }
 }
 
 .active-player,

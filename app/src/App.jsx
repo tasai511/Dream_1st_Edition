@@ -995,8 +995,19 @@ function milestoneAlpha(position) {
   return 0.68 + ((ratio - 0.68) / 0.32) * 0.32;
 }
 
-function DailyResultCards({ summary, showBadges = true, selected = false, onSelect = null, animation = null }) {
+function DailyResultCards({ summary, showBadges = true, selected = false, onSelect = null, animation = null, range = RANGE_TODAY, includeDays = false }) {
   const cards = [
+    ...(includeDays ? [{
+      key: "days",
+      icon: "log",
+      label: "練習日数",
+      value: summary.days || 0,
+      unit: "日",
+      metric: "days",
+      range,
+      variableTarget: summary.spanDays || null,
+      revealBadge: !animation?.active,
+    }] : []),
     {
       key: "count",
       icon: "count",
@@ -1004,6 +1015,7 @@ function DailyResultCards({ summary, showBadges = true, selected = false, onSele
       value: summary.count || 0,
       unit: "回",
       metric: "count",
+      range,
       fillRatio: animation?.fillRatios?.count,
       revealBadge: !animation?.active,
     },
@@ -1014,6 +1026,7 @@ function DailyResultCards({ summary, showBadges = true, selected = false, onSele
       value: summary.avg || 0,
       unit: "点",
       metric: "avg",
+      range,
       fillRatio: animation?.fillRatios?.avg,
       revealBadge: !animation?.active,
     },
@@ -1024,6 +1037,7 @@ function DailyResultCards({ summary, showBadges = true, selected = false, onSele
       value: summary.best || 0,
       unit: "点",
       metric: "best",
+      range,
       fillRatio: animation?.fillRatios?.best,
       revealBadge: !animation?.active,
     },
@@ -1066,8 +1080,19 @@ function DailyResultCards({ summary, showBadges = true, selected = false, onSele
 
 function DailyResultCard({ card, showBadges }) {
   const [selectedBadge, setSelectedBadge] = useState(null);
-  const milestones = dailyBadgeMilestones(card.metric, card.value);
-  const earnedBadge = dailyResultBadge(card.metric, card.value);
+  const valueFontSize = scoreCardFontSize(card.value);
+  const badgeDefinitions = HOME_BADGE_DEFINITIONS
+    .filter((definition) => (
+      definition.period === (card.range || RANGE_TODAY) &&
+      definition.metric === card.metric &&
+      (typeof definition.target === "number" || (definition.target === "all" && card.variableTarget))
+    ))
+    .map((definition) => ({
+      ...definition,
+      target: definition.target === "all" ? card.variableTarget : definition.target,
+    }));
+  const milestones = dailyBadgeMilestones(card.metric, card.value, badgeDefinitions);
+  const earnedBadge = dailyResultBadge(card.metric, card.value, badgeDefinitions);
   const visibleMilestones = milestones.filter((milestone) => milestone.earned);
   const revealBadge = card.revealBadge !== false;
 
@@ -1077,7 +1102,7 @@ function DailyResultCard({ card, showBadges }) {
       {showBadges && (
         <>
           <div className="daily-score-row">
-            <strong>{Number(card.value || 0).toLocaleString("ja-JP")}<span>{card.unit}</span></strong>
+            <strong style={{ "--score-value-size": valueFontSize }}>{Number(card.value || 0).toLocaleString("ja-JP")}<span>{card.unit}</span></strong>
             <div
               className="daily-badge-stage"
               style={earnedBadge && revealBadge ? { "--daily-stage-badge-color": rarityColorFor(rarityForBadge(earnedBadge.label)) } : null}
@@ -1119,9 +1144,19 @@ function DailyResultCard({ card, showBadges }) {
           )}
         </>
       )}
-      {!showBadges && <strong>{Number(card.value || 0).toLocaleString("ja-JP")}<span>{card.unit}</span></strong>}
+      {!showBadges && <strong style={{ "--score-value-size": valueFontSize }}>{Number(card.value || 0).toLocaleString("ja-JP")}<span>{card.unit}</span></strong>}
     </article>
   );
+}
+
+function scoreCardFontSize(value) {
+  const digits = Number(value || 0).toLocaleString("ja-JP").length;
+  if (digits >= 9) return "1.62rem";
+  if (digits >= 8) return "1.86rem";
+  if (digits >= 7) return "2.14rem";
+  if (digits >= 6) return "2.42rem";
+  if (digits >= 5) return "2.72rem";
+  return "3.08rem";
 }
 
 function DailyBadgeMark({ label, description }) {
@@ -1226,40 +1261,7 @@ function ScoreComparison({ daily, range }) {
   );
 }
 
-function RecordPanel({ daily, range, filterControl = null, graphColor = null }) {
-  const [mode, setMode] = useState("count");
-  const buckets = useMemo(() => comparisonBuckets(daily, range), [daily, range]);
-  const visibleBuckets = useMemo(() => [...buckets].reverse(), [buckets]);
-  const scoreVisibleRange = range === RANGE_TODAY ? 7 : range === RANGE_WEEK ? 4 : range === RANGE_MONTH ? 4 : 5;
-  const periodUnit = range === RANGE_WEEK ? "週" : range === RANGE_MONTH ? "月" : "日";
-  const scoreData = useMemo(() => visibleBuckets.map((bucket) => ({
-      date: bucket.label,
-      label: bucket.label,
-      isToday: bucket.label === "今日",
-      count: bucket.count,
-      avg: bucket.avg,
-      best: bucket.best,
-  })), [visibleBuckets]);
-
-  return (
-    <section className="dashboard-section record-section" style={graphColor ? { "--graph-color": graphColor } : undefined}>
-      {visibleBuckets.length ? (
-        mode === "count"
-          ? <CountBars buckets={visibleBuckets} />
-          : <Chart data={scoreData} initialRange={Math.min(scoreData.length, scoreVisibleRange)} />
-      ) : <p className="empty compact-empty">記録がありません。</p>}
-      <div className={`section-row tight ${filterControl ? "graph-control-row" : ""}`}>
-        {filterControl}
-        <div className="record-tabs" role="tablist" aria-label="記録表示">
-          <button type="button" className={mode === "count" ? "selected" : ""} onClick={() => setMode("count")}>毎{periodUnit}のスイング数</button>
-          <button type="button" className={mode === "score" ? "selected" : ""} onClick={() => setMode("score")}>毎{periodUnit}のスコア</button>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function EarnedBadgesCard({ badgeCounts }) {
+function EarnedBadgesCard({ badgeCounts, title = "獲得バッジ" }) {
   const [expanded, setExpanded] = useState(false);
   const allBadges = useMemo(() => [...badgeCounts].sort((a, b) => compareBadgesByRarity(a[0], b[0])), [badgeCounts]);
   const featuredBadges = useMemo(() => allBadges.slice(0, 6), [allBadges]);
@@ -1273,7 +1275,7 @@ function EarnedBadgesCard({ badgeCounts }) {
     <section className={`dashboard-section badge-inline-section ${expanded ? "expanded" : ""}`}>
       <div className="section-row tight">
         <div>
-          <h2>獲得バッジ</h2>
+          <h2>{title}</h2>
         </div>
         <div className="badge-heading-count"><strong>{badgeTotal.toLocaleString("ja-JP")}</strong><span>種類</span></div>
       </div>
@@ -2143,7 +2145,6 @@ function HomeView({ db, currentName, allForName, homeBat, setHomeBat, addRecord,
     record.name === currentName &&
     record.date <= todayISO()
   ));
-  const chartFiltered = allFiltered.filter((record) => homeBat === ALL || record.bat === homeBat);
   const todayRecords = allFiltered.filter((record) => record.date === todayISO());
   const todaySummary = aggregate(todayRecords)[0] || { date: todayISO(), count: 0, avg: 0, best: 0, bats: [] };
   const hasTodayRecord = todayRecords.length > 0;
@@ -2168,7 +2169,6 @@ function HomeView({ db, currentName, allForName, homeBat, setHomeBat, addRecord,
         ...interpolateDailySummary(scoreAnimation.fromBat, scoreAnimation.toBat, effectiveScoreAnimationProgress),
       }
     : null;
-  const chartDaily = aggregate(chartFiltered);
   const testRecordValues = db.testInputDefaults
     ? (hasTodayRecord ? TEST_ADDITION_RECORD_VALUES : TEST_INITIAL_RECORD_VALUES)
     : null;
@@ -2245,7 +2245,7 @@ function HomeView({ db, currentName, allForName, homeBat, setHomeBat, addRecord,
       </section>
 
       <section className="home-section home-result-section">
-        <DailyResultCards summary={displayTodaySummary} selected={homeBat === ALL} onSelect={() => setHomeBat(ALL)} animation={scoreCardAnimation} />
+        <DailyResultCards summary={displayTodaySummary} animation={scoreCardAnimation} />
         <div className="home-bat-records">
           {todayByBat.length ? todayByBat.map((item) => (
             <RecordSummary
@@ -2257,11 +2257,6 @@ function HomeView({ db, currentName, allForName, homeBat, setHomeBat, addRecord,
             />
           )) : <p className="empty compact-empty">今日のバット別記録はまだありません。</p>}
         </div>
-        <RecordPanel
-          daily={filledChartExtent(chartDaily)}
-          range={RANGE_TODAY}
-          graphColor={homeBat === ALL ? null : batColorFor(db, homeBat)}
-        />
         <EarnedBadgesCard badgeCounts={badgeCounts} />
       </section>
     </>
@@ -2764,74 +2759,193 @@ function badgeGroups(badgeCounts) {
   });
 }
 
-function RecordView({ db, allForName, badgeMap, selectedDate, setSelectedDate, month, setMonth, addRecord }) {
-  const [isEditing, setIsEditing] = useState(false);
-  const selectedRecords = allForName.filter((record) => record.date === selectedDate);
-  const selectedAgg = aggregate(selectedRecords)[0] || { count: 0, avg: 0, best: 0, bats: [] };
-  const selectedByBat = aggregateByBat(selectedRecords);
-  const isToday = selectedDate === todayISO();
-  const canEdit = selectedDate <= todayISO();
-  const selectedDateLabel = `${parseISO(selectedDate).getMonth() + 1}月${parseISO(selectedDate).getDate()}日の記録`;
-
-  useEffect(() => {
-    setIsEditing(false);
-  }, [selectedDate]);
-
-  const handleRecordSubmit = (event) => {
-    if (addRecord(event)) {
-      setIsEditing(false);
-    }
-  };
+function RecordView({ db, allForName }) {
+  const [activeTab, setActiveTab] = useState(RANGE_WEEK);
+  const tabs = [
+    [RANGE_WEEK, "今週の記録"],
+    [RANGE_MONTH, "今月の記録"],
+    [RANGE_ALL, "全ての記録"],
+  ];
 
   return (
-    <>
-      <section className="panel">
-        <div className="month-head">
-          <button type="button" className="ghost square" aria-label="前の月" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))}>‹</button>
-          <strong>{month.getFullYear()}年{month.getMonth() + 1}月</strong>
-          <button type="button" className="ghost square" aria-label="次の月" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))}>›</button>
-        </div>
-        <Calendar records={allForName} badgeMap={badgeMap} month={month} selectedDate={selectedDate} setSelectedDate={setSelectedDate} />
-      </section>
+    <div className="challenge-view">
+      <div className="challenge-tabs" role="tablist" aria-label="記録期間">
+        {tabs.map(([key, label]) => (
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === key}
+            className={activeTab === key ? "selected" : ""}
+            onClick={() => setActiveTab(key)}
+            key={key}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      {activeTab === RANGE_WEEK && <ChallengePeriodPanel db={db} records={allForName} range={RANGE_WEEK} />}
+      {activeTab === RANGE_MONTH && <ChallengePeriodPanel db={db} records={allForName} range={RANGE_MONTH} />}
+      {activeTab === RANGE_ALL && <ChallengeAllPanel db={db} records={allForName} />}
+    </div>
+  );
+}
 
-      <section className={`panel input-panel ${isEditing ? "open" : ""}`} aria-hidden={!isEditing}>
-        <div className="input-panel-title">
-          <h2>スイング入力</h2>
-          <p>{isToday ? "今日の記録を入力" : "選択日の記録を修正"}</p>
-        </div>
-        <div className="input-panel-layout">
-          <SwingForm bats={db.bats} defaultBat={db.defaultBat} onSubmit={handleRecordSubmit} submitLabel={isToday ? "記録する" : "修正を保存"} />
-          <button type="button" className="ghost edit-toggle input-close" onClick={() => setIsEditing(false)}>閉じる</button>
-        </div>
-      </section>
+function ChallengePeriodPanel({ db, records, range }) {
+  const { start, end, label } = rangeWindow(range);
+  const titlePrefix = range === RANGE_WEEK ? "今週" : "今月";
+  const periodRecords = records.filter((record) => record.date >= toISO(start) && record.date <= toISO(end));
+  const dailyMap = new Map(aggregate(periodRecords).map((day) => [day.date, day]));
+  const summary = periodSummaryFromDaily(dailyMap, start, end);
+  const badgeCounts = collectBadgeCounts(records, range);
 
-      <section className="panel">
-        <div className="section-row">
+  return (
+    <section className="home-section home-result-section challenge-period-panel">
+      <div className="challenge-heading">
+        <p>{label}</p>
+      </div>
+      <DailyResultCards summary={summary} showBadges range={range} includeDays />
+      <EarnedBadgesCard badgeCounts={badgeCounts} title={`${titlePrefix}の獲得バッジ`} />
+    </section>
+  );
+}
+
+function ChallengeAllPanel({ db, records }) {
+  const [graphBat, setGraphBat] = useState(ALL);
+  const [graphRange, setGraphRange] = useState(RANGE_TODAY);
+  const summary = summarizeRecords(records);
+  const byBat = aggregateByBat(records);
+  const graphRecords = records.filter((record) => graphBat === ALL || record.bat === graphBat);
+  const graphDaily = aggregate(graphRecords);
+  const graphColor = graphBat === ALL ? null : batColorFor(db, graphBat);
+
+  return (
+    <section className="home-section home-result-section challenge-period-panel">
+      <div className="challenge-heading">
+        <p>これまでの累計</p>
+      </div>
+      <DailyResultCards summary={summary} showBadges={false} includeDays />
+      <div className="home-bat-records challenge-bat-records">
+        {byBat.length ? byBat.map((item) => (
+          <RecordSummary key={item.bat} item={item} batColor={batColorFor(db, item.bat)} />
+        )) : <p className="empty compact-empty">バット別記録はまだありません。</p>}
+      </div>
+      <AllRecordGraphs
+        db={db}
+        daily={graphDaily}
+        graphBat={graphBat}
+        setGraphBat={setGraphBat}
+        graphRange={graphRange}
+        setGraphRange={setGraphRange}
+        graphColor={graphColor}
+      />
+    </section>
+  );
+}
+
+function summarizeRecords(records) {
+  const daily = aggregate(records);
+  const total = aggregate(records).reduce((sum, day) => sum + day.count, 0);
+  const weightedTotal = daily.reduce((sum, day) => sum + ((day.avg || 0) * (day.count || 0)), 0);
+  return {
+    count: total,
+    avg: total ? Math.round(weightedTotal / total) : 0,
+    best: daily.reduce((best, day) => Math.max(best, day.best || 0), 0),
+    days: daily.filter((day) => day.count > 0).length,
+    spanDays: daily.filter((day) => day.count > 0).length,
+  };
+}
+
+function graphBucketsForRange(daily, range) {
+  if (range === RANGE_ALL) return filledChartExtent(daily);
+  return [...comparisonBuckets(daily, range)].reverse();
+}
+
+function graphRangeLabel(range) {
+  if (range === RANGE_TODAY) return "今日";
+  if (range === RANGE_WEEK) return "今週";
+  if (range === RANGE_MONTH) return "今月";
+  return "全て";
+}
+
+function AllRecordGraphs({ db, daily, graphBat, setGraphBat, graphRange, setGraphRange, graphColor }) {
+  const buckets = graphBucketsForRange(daily, graphRange);
+  const chartData = buckets.map((bucket) => ({
+    ...bucket,
+    date: bucket.date || bucket.label,
+    label: bucket.label,
+    isToday: bucket.label === "今日",
+  }));
+  const label = graphRangeLabel(graphRange);
+  const controls = (
+    <GraphControls
+      db={db}
+      graphBat={graphBat}
+      setGraphBat={setGraphBat}
+      graphRange={graphRange}
+      setGraphRange={setGraphRange}
+    />
+  );
+
+  return (
+    <div className="period-graphs all-record-graphs" style={graphColor ? { "--graph-color": graphColor } : undefined}>
+      {controls}
+      <section className="dashboard-section record-section graph-card">
+        <div className="section-row tight graph-title-row">
           <div>
-            <h2>{isToday ? "今日の記録" : selectedDateLabel}</h2>
+            <h2>{label}のスイング数</h2>
           </div>
-          {canEdit && !isEditing && (
-            <button type="button" className={`ghost edit-toggle ${isToday ? "record-edit-toggle" : ""}`} onClick={() => setIsEditing((value) => !value)}>
-              {isToday ? "入力" : "修正"}
+        </div>
+        <CountBars buckets={buckets} />
+      </section>
+      <section className="dashboard-section record-section graph-card">
+        <div className="section-row tight graph-title-row">
+          <div>
+            <h2>{label}のスコア</h2>
+          </div>
+        </div>
+        <Chart data={chartData} initialRange={Math.min(chartData.length, graphRange === RANGE_ALL ? kMaxChartVisibleDays : 31)} />
+      </section>
+    </div>
+  );
+}
+
+function GraphControls({ db, graphBat, setGraphBat, graphRange, setGraphRange }) {
+  const selectedColor = graphBat === ALL ? "var(--hot)" : batColorFor(db, graphBat);
+  const ranges = [
+    [RANGE_TODAY, "今日"],
+    [RANGE_WEEK, "今週"],
+    [RANGE_MONTH, "今月"],
+  ];
+
+  return (
+    <div className="graph-shared-controls">
+      <label className={`bat-field graph-bat-filter home-bat-filter ${graphBat === ALL ? "all-selected" : ""}`} style={{ "--bat-filter-color": selectedColor }}>
+        <span className="select-shell">
+          <span className="select-leading bat-select-leading" aria-hidden="true"><span className="bat-color-icon" /></span>
+          <select value={graphBat} onChange={(event) => setGraphBat(event.target.value)} aria-label="グラフのバット">
+            <option value={ALL}>全てのバット</option>
+            {db.bats.map((bat) => <option value={bat} key={bat}>{bat}</option>)}
+          </select>
+          <span className="select-caret" aria-hidden="true"><Icon type="chevronDown" /></span>
+        </span>
+      </label>
+      <div className="range-field graph-range-field">
+        <div className="segmented graph-range-tabs" role="tablist" aria-label="グラフ期間">
+          {ranges.map(([key, label]) => (
+            <button
+              type="button"
+              role="tab"
+              aria-selected={graphRange === key}
+              className={graphRange === key ? "selected" : ""}
+              onClick={() => setGraphRange(key)}
+              key={key}
+            >
+              {label}
             </button>
-          )}
-        </div>
-        <div className="metric-grid four">
-          <Metric icon="count" label="合計回数" value={selectedAgg.count} unit="回" />
-          <Metric icon="avg" label="平均" value={selectedAgg.avg || 0} unit="点" />
-          <Metric icon="best" label="ベスト" value={selectedAgg.best || 0} unit="点" />
-          <Metric icon="bat" label="バット数" value={selectedAgg.bats.length} unit="本" />
-        </div>
-        <div className="record-list">
-          {selectedByBat.length ? selectedByBat.map((item) => <RecordSummary key={item.bat} item={item} batColor={batColorFor(db, item.bat)} />) : <p className="empty">この日の記録はまだありません。</p>}
-        </div>
-        <div className="badge-list day-badges">
-          {[...(badgeMap.get(selectedDate) || [])].sort(compareBadgesByRarity).map((badge) => (
-            <BadgeChip label={badge} key={badge} />
           ))}
         </div>
-      </section>
-    </>
+      </div>
+    </div>
   );
 }
 
