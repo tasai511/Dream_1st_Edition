@@ -2130,7 +2130,7 @@ function demoDb() {
   const names = ["はるた", "おとー"];
   const bats = ["しきバット", "だめバット", "ミニバット"];
   const start = parseISO("2024-01-01");
-  const end = parseISO(todayISO());
+  const end = addDays(parseISO(todayISO()), -1);
   const demoDays = Math.max(0, Math.floor((end - start) / 86400000));
   const records = [];
   const nameColors = {
@@ -2190,21 +2190,13 @@ function demoDb() {
       const mainBat = batFor(nameIndex, elapsed, progress, rand(seed + 8));
       const split = bigDay && totalCount >= (nameIndex === 0 ? 180 : 115);
       const secondBat = mainBat === "しきバット" ? "だめバット" : "しきバット";
-      const isToday = elapsed === demoDays;
-      const chunks = isToday
-        ? [
-            ["しきバット", Math.round(totalCount * 0.48)],
-            ["だめバット", Math.round(totalCount * 0.32)],
-            ["ミニバット", 0],
-          ]
-        : split
+      const chunks = split
         ? [
             [mainBat, Math.round(totalCount * (0.62 + rand(seed + 9) * 0.16))],
             [secondBat, 0],
           ]
         : [[mainBat, totalCount]];
-      if (isToday) chunks[2][1] = totalCount - chunks[0][1] - chunks[1][1];
-      if (!isToday && split) chunks[1][1] = totalCount - chunks[0][1];
+      if (split) chunks[1][1] = totalCount - chunks[0][1];
 
       chunks.forEach(([bat, count], index) => {
         if (count <= 0) return;
