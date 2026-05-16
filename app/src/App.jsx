@@ -14,6 +14,7 @@ const kMinChartVisibleDays = 7;
 const kMaxChartVisibleDays = 365;
 const kCompactLayoutWidth = 390;
 const kCompactLayoutHeight = 844;
+const kScoreProgressAnimationDuration = 5000;
 const RARITY_ORDER = ["C", "U", "R", "RR", "SR", "UR"];
 const RARITY_LABELS = {
   C: "Common",
@@ -72,7 +73,6 @@ const HOME_BADGE_DEFINITIONS = [
   ...[500, 600, 700, 800, 900].map((target) => ({ period: RANGE_TODAY, group: "daily", metric: "best", target, label: `毎日ベスト${target}` })),
   ...[2, 3, 7, 14, 30, 60, 100, 365].map((target) => ({ period: RANGE_TODAY, group: "daily", metric: "streak", target, label: `${target}日連続練習`, trigger: "exact" })),
   ...[300, 500, 1000, 2000].map((target) => ({ period: RANGE_WEEK, group: "weekly", metric: "count", target, label: periodCountBadgeLabel("毎週", target) })),
-  ...[300, 400, 500, 600, 700].map((target) => ({ period: RANGE_WEEK, group: "weekly", metric: "avg", target, label: `毎週平均${target}` })),
   ...[[3, "毎週3日練習"], [5, "毎週5日練習"], [7, "毎週皆勤"]].map(([target, label]) => ({ period: RANGE_WEEK, group: "weekly", metric: "days", target, label })),
   ...[500, 1000, 2000, 3000, 5000].map((target) => ({ period: RANGE_MONTH, group: "monthly", metric: "count", target, label: periodCountBadgeLabel("毎月", target) })),
   ...[300, 400, 500, 600, 700].map((target) => ({ period: RANGE_MONTH, group: "monthly", metric: "avg", target, label: `毎月平均${target}` })),
@@ -89,7 +89,9 @@ const UNIQUE_BADGE_DEFINITIONS = [
 const CONTEXT_START_BADGES = ["はじめの一歩", "初めての50回", "初めての100回"];
 const CONTEXT_STREAK_BADGES = UNIQUE_STREAK_TARGETS.map((target) => `${target}日連続`);
 const CONTEXT_BAT_BADGES = ["相棒100回", "相棒1000回", "相棒5000回", "バットコレクター", "全バット練習"];
-const CONTEXT_GROWTH_BADGES = ["先週より多く振った", "先月より多く振った", "先週より平均アップ", "先月より平均アップ"];
+const WEEKLY_AVG_UPDATE_BADGE = "先週より平均アップ";
+const WEEKLY_BEST_UPDATE_BADGE = "先週のベスト更新";
+const CONTEXT_GROWTH_BADGES = ["先週より多く振った", "先月より多く振った", WEEKLY_AVG_UPDATE_BADGE, "先月より平均アップ", WEEKLY_BEST_UPDATE_BADGE];
 const CONTEXT_SECRET_BADGES = [
   "ラッキー7",
   "スリーナイン",
@@ -569,6 +571,40 @@ function periodSummaryFromDaily(dailyMap, start, end, baseDate = todayISO()) {
   };
 }
 
+function summaryForRecordsRange(records, range = RANGE_TODAY, activeDate = todayISO()) {
+  if (range === RANGE_WEEK || range === RANGE_MONTH) {
+    const { start, end } = rangeWindow(range, parseISO(activeDate));
+    const periodRecords = records.filter((record) => record.date >= toISO(start) && record.date <= toISO(end));
+    const dailyMap = new Map(aggregate(periodRecords).map((day) => [day.date, day]));
+    const summary = periodSummaryFromDaily(dailyMap, start, end, activeDate);
+    if (range === RANGE_WEEK) {
+      const previousStart = addDays(start, -7);
+      const previousEnd = addDays(end, -7);
+      const previousRecords = records.filter((record) => record.date >= toISO(previousStart) && record.date <= toISO(previousEnd));
+      const previousDailyMap = new Map(aggregate(previousRecords).map((day) => [day.date, day]));
+      const previousSummary = periodSummaryFromDaily(previousDailyMap, previousStart, previousEnd, toISO(previousEnd));
+      if (previousRecords.length && previousSummary.avg > 0) {
+        summary.avgTarget = previousSummary.avg;
+        summary.avgTargetLabel = WEEKLY_AVG_UPDATE_BADGE;
+      }
+      if (previousRecords.length && previousSummary.best > 0) {
+        summary.bestTarget = previousSummary.best;
+        summary.bestTargetLabel = WEEKLY_BEST_UPDATE_BADGE;
+      }
+    }
+    return summary;
+  }
+  return aggregate(records.filter((record) => record.date === activeDate))[0] || emptyDailySummary(activeDate);
+}
+
+function recordsForViewRange(records, range = RANGE_TODAY, activeDate = todayISO()) {
+  if (range === RANGE_WEEK || range === RANGE_MONTH) {
+    const { start, end } = rangeWindow(range, parseISO(activeDate));
+    return records.filter((record) => record.date >= toISO(start) && record.date <= toISO(end));
+  }
+  return records.filter((record) => record.date === activeDate);
+}
+
 function streakByDate(daily) {
   const streaks = new Map();
   let previousDate = null;
@@ -678,6 +714,19 @@ function badgesFor(records, baseDate = todayISO()) {
           addHomeBadge(byDate, period.earnedAt, definition.label);
         }
       });
+    if (period.period === RANGE_WEEK) {
+      const previousStart = addDays(period.start, -7);
+      const previousEnd = addDays(period.end, -7);
+      const previousRecords = daily.filter((day) => day.date >= toISO(previousStart) && day.date <= toISO(previousEnd));
+      const previousDailyMap = new Map(previousRecords.map((day) => [day.date, day]));
+      const previousSummary = periodSummaryFromDaily(previousDailyMap, previousStart, previousEnd, toISO(previousEnd));
+      if (previousRecords.length && previousSummary.avg > 0 && summary.avg > previousSummary.avg) {
+        addHomeBadge(byDate, period.earnedAt, WEEKLY_AVG_UPDATE_BADGE);
+      }
+      if (previousRecords.length && previousSummary.best > 0 && summary.best > previousSummary.best) {
+        addHomeBadge(byDate, period.earnedAt, WEEKLY_BEST_UPDATE_BADGE);
+      }
+    }
   });
 
   return byDate;
@@ -1087,10 +1136,7 @@ function targetProgressInfo(value, milestones) {
   const endTarget = next?.target || Math.max(startTarget, value || 0, 1);
   const span = Math.max(1, endTarget - startTarget);
   const fillRatio = next ? clamp(((value || 0) - startTarget) / span, 0, 1) : 1;
-  const visibleMilestones = [
-    ...(current ? [{ ...current, position: 0, targetRole: "current" }] : []),
-    ...(next ? [{ ...next, position: 100, targetRole: "target" }] : []),
-  ];
+  const visibleMilestones = earned;
 
   return { current, next, fillRatio, visibleMilestones };
 }
@@ -1115,8 +1161,10 @@ function fixedTargetProgressInfo(value, target, labelPrefix, unit, scaleSpan = n
 }
 
 function targetInfoForDailyCard(card, value = card.value) {
-  const badgeDefinitions = badgeDefinitionsForMetric(card.range, card.metric, card.variableTarget);
+  const badgeDefinitions = card.badgeDefinitions || badgeDefinitionsForMetric(card.range, card.metric, card.variableTarget);
   const milestones = dailyBadgeMilestones(card.metric, value, badgeDefinitions);
+  if (!badgeDefinitions.length && !Number.isFinite(card.targetValue)) return null;
+  if (card.badgeDefinitions) return { ...targetProgressInfo(value, milestones), badgeDefinitions, milestones };
   if (card.metric === "best") {
     const fixedTargetInfo = fixedTargetProgressInfo(value, card.targetValue, "ベスト", card.unit, 100);
     if (fixedTargetInfo) return { ...fixedTargetInfo, badgeDefinitions, milestones };
@@ -1138,7 +1186,61 @@ function interpolateDailySummary(from, to, progress) {
     count: Math.round(interpolateNumber(from.count || 0, to.count || 0, progress)),
     avg: Math.round(interpolateNumber(from.avg || 0, to.avg || 0, progress)),
     best: Math.round(interpolateNumber(from.best || 0, to.best || 0, progress)),
+    days: Math.round(interpolateNumber(from.days || 0, to.days || 0, progress)),
+    spanDays: to.spanDays || from.spanDays || null,
+    avgTarget: to.avgTarget ?? from.avgTarget ?? null,
+    avgTargetLabel: to.avgTargetLabel || from.avgTargetLabel || null,
+    bestTarget: to.bestTarget ?? from.bestTarget ?? null,
+    bestTargetLabel: to.bestTargetLabel || from.bestTargetLabel || null,
     bats: to.bats || from.bats || [],
+  };
+}
+
+function scoreProgressEase(progress) {
+  return 1 - Math.pow(1 - progress, 3);
+}
+
+function useScoreProgressAnimation(animationId, { enabled = true, onComplete = null } = {}) {
+  const [state, setState] = useState({ id: null, progress: 1 });
+  const onCompleteRef = useRef(onComplete);
+
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
+
+  useLayoutEffect(() => {
+    if (!animationId || !enabled) {
+      setState({ id: null, progress: 1 });
+      return undefined;
+    }
+
+    let frameId = 0;
+    let startedAt = 0;
+
+    const tick = (now) => {
+      if (!startedAt) startedAt = now;
+      const rawProgress = clamp((now - startedAt) / kScoreProgressAnimationDuration, 0, 1);
+      const progress = scoreProgressEase(rawProgress);
+      setState({ id: animationId, progress });
+      if (rawProgress < 1) {
+        frameId = requestAnimationFrame(tick);
+      } else {
+        onCompleteRef.current?.();
+      }
+    };
+
+    setState({ id: animationId, progress: 0 });
+    frameId = requestAnimationFrame((now) => {
+      startedAt = now;
+      frameId = requestAnimationFrame(tick);
+    });
+    return () => cancelAnimationFrame(frameId);
+  }, [animationId, enabled]);
+
+  const progress = state.id === animationId ? state.progress : (animationId && enabled ? 0 : 1);
+  return {
+    progress,
+    active: Boolean(animationId && enabled && state.id === animationId && progress < 1),
   };
 }
 
@@ -1151,134 +1253,10 @@ function animationFillRatio(fromValue, toValue, progress) {
   return clamp(current / animationScale(fromValue, toValue), 0, 1);
 }
 
-function challengeValueFromSummary(summary, metric) {
-  return Number(summary?.[metric] || 0);
-}
-
-function challengeTargetAnimationForCard(card, fromSummary, toSummary, progress, phase) {
-  const fromValue = challengeValueFromSummary(fromSummary, card.metric);
-  const toValue = challengeValueFromSummary(toSummary, card.metric);
-  const animatedValue = interpolateNumber(fromValue, toValue, progress);
-  const startCard = { ...card, value: fromValue };
-  const startTargetInfo = targetInfoForDailyCard(startCard, fromValue);
-  const finalTargetInfo = targetInfoForDailyCard({ ...card, value: toValue }, toValue);
-  const target = startTargetInfo?.next;
-  if (!target) {
-    if (!startTargetInfo?.current) {
-      return {
-        targetInfo: startTargetInfo,
-        fillRatio: startTargetInfo?.fillRatio ?? 0,
-        remainingValue: 0,
-      };
-    }
-    return {
-      targetInfo: startTargetInfo,
-      fillRatio: 1,
-      complete: true,
-      reachedTarget: false,
-      reachedBadge: null,
-      remainingValue: 0,
-    };
-  }
-
-  const fillRatio = card.metric === "best" && Number.isFinite(card.targetValue)
-    ? fixedTargetProgressInfo(animatedValue, card.targetValue, "ベスト", card.unit, 100)?.fillRatio ?? startTargetInfo.fillRatio
-    : clamp(((animatedValue || 0) - (startTargetInfo.current?.target || 0)) / Math.max(1, target.target - (startTargetInfo.current?.target || 0)), 0, 1);
-  const reachedTarget = toValue >= target.target;
-  const nextAfterReached = reachedTarget ? finalTargetInfo?.next : target;
-  const isFixedBestTarget = card.metric === "best" && (card.range === RANGE_WEEK || card.range === RANGE_MONTH) && Number.isFinite(card.targetValue);
-  const isComplete = reachedTarget && (isFixedBestTarget || !nextAfterReached);
-  const showReached = reachedTarget && (phase === "hit" || isComplete);
-
-  return {
-    targetInfo: startTargetInfo,
-    fillRatio: showReached ? 1 : fillRatio,
-    reachedTarget,
-    showReached: showReached && !isComplete,
-    complete: isComplete,
-    reachedBadge: reachedTarget ? target : null,
-    remainingValue: Math.max(0, Math.ceil(target.target - animatedValue)),
-  };
-}
-
-function challengeAnimationCardsForSummary(summary, range, includeDays) {
-  return [
-    ...(includeDays ? [{
-      key: "days",
-      metric: "days",
-      unit: "日",
-      range,
-      value: summary.days || 0,
-      variableTarget: summary.spanDays || null,
-      targetValue: summary.daysTarget,
-    }] : []),
-    { key: "count", metric: "count", unit: "回", range, value: summary.count || 0, targetValue: summary.countTarget },
-    { key: "avg", metric: "avg", unit: "点", range, value: summary.avg || 0, targetValue: summary.avgTarget },
-    { key: "best", metric: "best", unit: "点", range, value: summary.best || 0, targetValue: summary.bestTarget },
-  ];
-}
-
-function challengeAnimationHasBadgeReveal(fromSummary, toSummary, range, includeDays) {
-  return challengeAnimationCardsForSummary(toSummary, range, includeDays).some((card) => {
-    const targetAnimation = challengeTargetAnimationForCard(card, fromSummary, toSummary, 1, "hit");
-    return Boolean(targetAnimation?.reachedTarget);
-  });
-}
-
-function useChallengeProgressAnimation(challengeAnimation, fromSummary, toSummary, range, includeDays) {
-  const [state, setState] = useState({ id: null, progress: 1, phase: "done" });
-  useLayoutEffect(() => {
-    if (!challengeAnimation || challengeAnimation.playedRanges?.includes(range)) {
-      setState({ id: null, progress: 1, phase: "done" });
-      return undefined;
-    }
-
-    const duration = 1600;
-    const shouldHoldBadge = challengeAnimationHasBadgeReveal(fromSummary, toSummary, range, includeDays);
-    let frameId = 0;
-    let startedAt = 0;
-
-    const tick = (now) => {
-      if (!startedAt) startedAt = now;
-      const rawProgress = clamp((now - startedAt) / duration, 0, 1);
-      const easedProgress = 1 - Math.pow(1 - rawProgress, 3);
-      setState({ id: challengeAnimation.id, progress: easedProgress, phase: "progress" });
-      if (rawProgress < 1) {
-        frameId = requestAnimationFrame(tick);
-      } else {
-        if (shouldHoldBadge) {
-          setState({ id: challengeAnimation.id, progress: 1, phase: "hit" });
-        } else {
-          setState({ id: challengeAnimation.id, progress: 1, phase: "done" });
-        }
-      }
-    };
-
-    challengeAnimation.onComplete?.(range);
-    setState({ id: challengeAnimation.id, progress: 0, phase: "progress" });
-    frameId = requestAnimationFrame(tick);
-    return () => {
-      cancelAnimationFrame(frameId);
-    };
-  }, [challengeAnimation?.id, range, includeDays]);
-
-  if (!challengeAnimation || state.id !== challengeAnimation.id || state.phase === "done") return null;
-
-  const displaySummary = interpolateDailySummary(fromSummary, toSummary, state.progress);
-  if (includeDays) displaySummary.days = Math.round(interpolateNumber(fromSummary.days || 0, toSummary.days || 0, state.progress));
-  displaySummary.spanDays = toSummary.spanDays || fromSummary.spanDays || displaySummary.days || null;
-  displaySummary.daysTarget = toSummary.daysTarget;
-  displaySummary.countTarget = toSummary.countTarget;
-  displaySummary.avgTarget = toSummary.avgTarget;
-  displaySummary.bestTarget = toSummary.bestTarget;
-
-  return {
-    active: state.phase !== "done",
-    phase: state.phase,
-    summary: displaySummary,
-    progress: state.progress,
-    dismissBadge: () => setState({ id: challengeAnimation.id, progress: 1, phase: "done" }),
-  };
+function targetAnimationFillRatio(fromValue, toValue, targetValue, progress) {
+  if (!Number.isFinite(targetValue) || targetValue <= 0) return animationFillRatio(fromValue, toValue, progress);
+  const current = interpolateNumber(fromValue || 0, toValue || 0, progress);
+  return clamp(current / targetValue, 0, 1);
 }
 
 function milestoneAlpha(position) {
@@ -1288,7 +1266,7 @@ function milestoneAlpha(position) {
   return 0.68 + ((ratio - 0.68) / 0.32) * 0.32;
 }
 
-function DailyResultCards({ summary, showBadges = true, selected = false, onSelect = null, animation = null, range = RANGE_TODAY, includeDays = false }) {
+function DailyResultCards({ summary, showBadges = true, selected = false, onSelect = null, animation = null, range = RANGE_TODAY, includeDays = false, dismissedHomeBadges = new Set(), onDismissHomeBadge = null }) {
   const cards = [
     ...(includeDays ? [{
       key: "days",
@@ -1300,6 +1278,7 @@ function DailyResultCards({ summary, showBadges = true, selected = false, onSele
       range,
       variableTarget: summary.spanDays || null,
       targetValue: summary.daysTarget,
+      fillRatio: animation?.fillRatios?.days,
       badgeOverride: animation?.badgeOverrides?.days,
       revealBadge: !animation?.active,
     }] : []),
@@ -1325,6 +1304,15 @@ function DailyResultCards({ summary, showBadges = true, selected = false, onSele
       metric: "avg",
       range,
       targetValue: summary.avgTarget,
+      badgeDefinitions: summary.avgTarget ? [{
+        period: range,
+        group: range,
+        metric: "avg",
+        target: summary.avgTarget,
+        label: summary.avgTargetLabel || `平均${summary.avgTarget}`,
+        description: summary.avgTargetLabel ? `先週の平均${summary.avgTarget}点を更新` : undefined,
+      }] : null,
+      emptyTrackMessage: range === RANGE_WEEK && !summary.avgTarget ? "先週のスコアがありません" : "",
       fillRatio: animation?.fillRatios?.avg,
       badgeOverride: animation?.badgeOverrides?.avg,
       revealBadge: !animation?.active,
@@ -1338,21 +1326,27 @@ function DailyResultCards({ summary, showBadges = true, selected = false, onSele
       metric: "best",
       range,
       targetValue: summary.bestTarget,
+      badgeDefinitions: summary.bestTarget ? [{
+        period: range,
+        group: range,
+        metric: "best",
+        target: summary.bestTarget,
+        label: summary.bestTargetLabel || `ベスト${summary.bestTarget}`,
+        description: summary.bestTargetLabel ? `先週のベスト${summary.bestTarget}点を更新` : undefined,
+      }] : null,
+      emptyTrackMessage: range === RANGE_WEEK && !summary.bestTarget ? "先週のスコアがありません" : "",
       fillRatio: animation?.fillRatios?.best,
       badgeOverride: animation?.badgeOverrides?.best,
       revealBadge: !animation?.active,
     },
   ];
-  const targetAnimations = animation?.targetMode
-    ? Object.fromEntries(cards.map((card) => [
-        card.key,
-        challengeTargetAnimationForCard(card, animation.fromSummary, animation.toSummary, animation.progress ?? 1, animation.phase || "progress"),
-      ]))
-    : (animation?.targetAnimations || {});
-  const displayCards = cards.map((card) => ({
-    ...card,
-    targetAnimation: targetAnimations[card.key],
-  }));
+  const displayCards = cards;
+  const cardPropsFor = (card) => ({
+    card,
+    showBadges,
+    dismissedHomeBadges,
+    onDismissHomeBadge,
+  });
 
   if (onSelect) {
     const handleSelect = (event) => {
@@ -1380,76 +1374,87 @@ function DailyResultCards({ summary, showBadges = true, selected = false, onSele
         aria-pressed={selected}
       >
         <div className={`daily-result-grid card-count-${cards.length}`}>
-          {displayCards.map((card) => <DailyResultCard card={card} showBadges={showBadges} key={card.key} />)}
+          {displayCards.map((card) => <DailyResultCard {...cardPropsFor(card)} key={card.key} />)}
         </div>
       </article>
     );
   }
 
-  return <div className={`daily-result-grid card-count-${cards.length}`}>{displayCards.map((card) => <DailyResultCard card={card} showBadges={showBadges} key={card.key} />)}</div>;
+  return <div className={`daily-result-grid card-count-${cards.length}`}>{displayCards.map((card) => <DailyResultCard {...cardPropsFor(card)} key={card.key} />)}</div>;
 }
 
-function DailyResultCard({ card, showBadges }) {
+function DailyResultCard({ card, showBadges, dismissedHomeBadges = new Set(), onDismissHomeBadge = null }) {
   const [selectedBadge, setSelectedBadge] = useState(null);
-  const valueFontSize = scoreCardFontSize(card.value, card.metric);
-  const badgeDefinitions = badgeDefinitionsForMetric(card.range, card.metric, card.variableTarget);
+  const badgeDefinitions = card.badgeDefinitions || badgeDefinitionsForMetric(card.range, card.metric, card.variableTarget);
   const milestones = dailyBadgeMilestones(card.metric, card.value, badgeDefinitions);
   const earnedBadge = dailyResultBadge(card.metric, card.value, badgeDefinitions);
-  const targetMode = showBadges && card.range !== RANGE_TODAY;
-  const baseTargetInfo = targetMode ? targetInfoForDailyCard(card) : null;
-  const animatedTarget = card.targetAnimation || null;
-  const targetInfo = animatedTarget?.targetInfo || baseTargetInfo;
+  const isCardAnimating = card.revealBadge === false;
+  const targetInfo = showBadges ? targetInfoForDailyCard(card) : null;
   const targetBadge = targetInfo?.next || null;
-  const reachedBadge = animatedTarget?.reachedBadge || targetBadge;
-  const completeBadge = animatedTarget?.reachedBadge || targetInfo?.current || null;
-  const stageBadge = targetMode ? (animatedTarget?.showReached ? reachedBadge : targetBadge) : (card.badgeOverride || earnedBadge);
-  const remainingValue = targetMode && targetBadge ? Math.max(0, animatedTarget?.remainingValue ?? (targetBadge.target - (card.value || 0))) : 0;
-  const showComplete = targetMode && !targetBadge && Boolean(targetInfo?.current);
-  const visibleMilestones = targetMode ? targetInfo.visibleMilestones : milestones.filter((milestone) => milestone.earned);
-  const revealBadge = card.revealBadge !== false || Boolean(card.badgeOverride || animatedTarget?.showReached || animatedTarget?.complete);
-  const showMilestoneTrack = showBadges && (Boolean(targetInfo) || !(card.metric === "best" && (card.range === RANGE_WEEK || card.range === RANGE_MONTH)));
-  const milestoneFillRatio = targetMode ? (animatedTarget?.fillRatio ?? targetInfo.fillRatio) : (card.fillRatio ?? 1);
+  const completeBadge = targetInfo?.current && !targetBadge ? targetInfo.current : null;
+  const stageBadge = completeBadge || card.badgeOverride || earnedBadge;
+  const isCompleteBadgeStage = Boolean(completeBadge);
+  const remainingValue = targetBadge ? Math.max(0, targetBadge.target - (card.value || 0)) : 0;
+  const visibleMilestones = milestones.filter((milestone) => milestone.earned);
+  const revealBadge = card.revealBadge !== false || Boolean(card.badgeOverride);
+  const showEmptyTrackMessage = showBadges && !targetInfo && Boolean(card.emptyTrackMessage);
+  const showMilestoneTrack = showBadges && !showEmptyTrackMessage && (Boolean(targetInfo) || !(card.metric === "best" && (card.range === RANGE_WEEK || card.range === RANGE_MONTH)));
+  const milestoneFillRatio = card.fillRatio ?? (card.badgeDefinitions ? targetInfo?.fillRatio : 1) ?? 1;
+  const homeBadgeLabel = stageBadge?.label ? stageBadge.label : null;
+  const homeBadgeDismissKey = homeBadgeLabel ? [
+    card.range,
+    card.key,
+    card.metric,
+    homeBadgeLabel,
+    stageBadge?.target ?? "earned",
+  ].join(":") : null;
+  const isHomeBadgeDismissed = Boolean(homeBadgeDismissKey && dismissedHomeBadges.has(homeBadgeDismissKey));
+  const canShowBadgeStage = !isCardAnimating;
+  const showHomeEarnedBadge = Boolean(stageBadge && (
+    isCompleteBadgeStage ||
+    (canShowBadgeStage && revealBadge && !isHomeBadgeDismissed)
+  ));
+  const showHomeRemaining = Boolean(targetBadge && (
+    isCardAnimating ||
+    !stageBadge ||
+    isHomeBadgeDismissed
+  ));
 
   return (
-    <article className={`daily-result-card ${card.key} ${targetMode ? "target-mode" : ""} ${card.revealBadge === false ? "animating" : ""}`} style={{ "--milestone-fill-ratio": String(milestoneFillRatio) }}>
+    <article className={`daily-result-card ${card.key} ${card.revealBadge === false ? "animating" : ""}`} style={{ "--milestone-fill-ratio": String(milestoneFillRatio) }}>
       <div className="metric-label"><Icon type={card.icon} />{card.label}</div>
       {showBadges && (
         <>
           <div className="daily-score-row">
-            <strong style={{ "--score-value-size": valueFontSize }}>{Number(card.value || 0).toLocaleString("ja-JP")}<span>{card.unit}</span></strong>
-            <div className={`daily-badge-stage ${targetMode ? "remaining-stage" : ""} ${animatedTarget?.complete || showComplete ? "complete-stage" : ""}`}>
-              {targetMode && (animatedTarget?.complete || showComplete) ? (
+            <strong>{Number(card.value || 0).toLocaleString("ja-JP")}<span>{card.unit}</span></strong>
+            <div className="daily-badge-stage">
+              {showHomeEarnedBadge ? (
                 <>
-                  {completeBadge && <DailyBadgeMark label={completeBadge.label} description={completeBadge.description || `${completeBadge.label}をゲット`} />}
-                  <span className="daily-complete-stamp" aria-label="Complete">Complete</span>
+                  <DailyBadgeMark
+                    label={stageBadge.label}
+                    description={stageBadge.description || `${stageBadge.label}をゲット`}
+                    complete={isCompleteBadgeStage}
+                    onDismiss={isCompleteBadgeStage ? null : (() => homeBadgeDismissKey && onDismissHomeBadge?.(homeBadgeDismissKey))}
+                  />
+                  {!isCompleteBadgeStage && <span className="daily-badge-get-stamp" aria-hidden="true">GET!</span>}
                 </>
-              ) : targetMode && animatedTarget?.showReached && stageBadge ? (
-                <>
-                  <DailyBadgeMark label={stageBadge.label} description={stageBadge.description || `${stageBadge.label}をゲット`} />
-                  <span className="daily-badge-get-stamp" aria-hidden="true">GET!</span>
-                </>
-              ) : targetMode && targetBadge && revealBadge ? (
+              ) : showHomeRemaining ? (
                 <div className="target-remaining" aria-label={`${targetBadge.label}まであと${remainingValue}${card.unit}`}>
                   <span>あと</span>
                   <strong>{Number(remainingValue).toLocaleString("ja-JP")}<small>{card.unit}</small></strong>
                 </div>
-              ) : stageBadge && revealBadge ? (
-                <>
-                  <DailyBadgeMark label={stageBadge.label} description={stageBadge.description || `${stageBadge.label}をゲット`} />
-                  <span className="daily-badge-get-stamp" aria-hidden="true">GET!</span>
-                </>
               ) : null}
             </div>
           </div>
-          <div className={`milestone-track ${showMilestoneTrack ? "" : "placeholder"} ${visibleMilestones.length ? "earned" : ""}`}>
+          <div className={`milestone-track ${showMilestoneTrack ? "" : "placeholder"} ${showEmptyTrackMessage ? "with-message" : ""} ${visibleMilestones.length ? "earned" : ""}`}>
             <span className="milestone-fill" />
             {showMilestoneTrack && visibleMilestones.map((milestone) => {
-              const alpha = targetMode && milestone.targetRole === "current" ? 0.38 : targetMode && milestone.targetRole === "target" ? 1 : milestoneAlpha(milestone.position);
+              const alpha = milestoneAlpha(milestone.position);
               const definition = makeBadgeDefinition(canonicalBadgeLabel(milestone.label), { description: milestone.description || `${milestone.label}をゲット` });
               return (
               <button
                 type="button"
-                className={`milestone-dot ${!targetMode && earnedBadge?.label === milestone.label ? "current" : ""} ${targetMode && milestone.targetRole === "target" ? "current" : ""} ${targetMode && milestone.targetRole ? `target-${milestone.targetRole}` : ""}`}
+                className={`milestone-dot ${earnedBadge?.label === milestone.label ? "current" : ""}`}
                 style={{
                   left: `${milestone.position}%`,
                   "--milestone-alpha": alpha.toFixed(2),
@@ -1464,35 +1469,19 @@ function DailyResultCard({ card, showBadges }) {
               </button>
               );
             })}
+            {showEmptyTrackMessage && <span className="milestone-empty-message">{card.emptyTrackMessage}</span>}
           </div>
           {selectedBadge && (
             <BadgeDetailPopover badge={selectedBadge} onClose={() => setSelectedBadge(null)} />
           )}
         </>
       )}
-      {!showBadges && <strong style={{ "--score-value-size": valueFontSize }}>{Number(card.value || 0).toLocaleString("ja-JP")}<span>{card.unit}</span></strong>}
+      {!showBadges && <strong>{Number(card.value || 0).toLocaleString("ja-JP")}<span>{card.unit}</span></strong>}
     </article>
   );
 }
 
-function scoreCardFontSize(value, metric = "") {
-  const digits = Number(value || 0).toLocaleString("ja-JP").length;
-  if (metric === "count") {
-    if (digits >= 9) return "1.16rem";
-    if (digits >= 8) return "1.24rem";
-    if (digits >= 7) return "1.34rem";
-    if (digits >= 6) return "1.44rem";
-    if (digits >= 5) return "1.54rem";
-  }
-  if (digits >= 9) return "1.38rem";
-  if (digits >= 8) return "1.52rem";
-  if (digits >= 7) return "1.68rem";
-  if (digits >= 6) return "1.78rem";
-  if (digits >= 5) return "1.98rem";
-  return "2.44rem";
-}
-
-function DailyBadgeMark({ label, description, onDismiss = null }) {
+function DailyBadgeMark({ label, description, onDismiss = null, complete = false }) {
   const [selectedBadge, setSelectedBadge] = useState(null);
   const definition = makeBadgeDefinition(canonicalBadgeLabel(label), { description });
   const handleClick = () => {
@@ -1506,11 +1495,12 @@ function DailyBadgeMark({ label, description, onDismiss = null }) {
     <>
       <button
         type="button"
-        className={`daily-badge-mark rarity-${definition.rarity.toLowerCase()}`}
+        className={`daily-badge-mark rarity-${definition.rarity.toLowerCase()} ${complete ? "complete" : ""}`}
         onClick={handleClick}
         aria-label={`${definition.label}の詳細`}
       >
         <img className="daily-badge-image" src={DAILY_RARITY_IMAGE_URLS[definition.rarity]} alt="" aria-hidden="true" />
+        {complete && <span className="daily-complete-stamp" aria-hidden="true">COMPLETE</span>}
       </button>
       {selectedBadge && (
         <BadgeDetailPopover badge={selectedBadge} onClose={() => setSelectedBadge(null)} />
@@ -2284,22 +2274,30 @@ export default function App() {
   const [pendingDelete, setPendingDelete] = useState(null);
   const [isNameMenuOpen, setIsNameMenuOpen] = useState(false);
   const [scoreAnimation, setScoreAnimation] = useState(null);
-  const [challengeAnimation, setChallengeAnimation] = useState(null);
   const [homeViewDate, setHomeViewDate] = useState(todayISO);
+  const [dismissedHomeBadgesByDate, setDismissedHomeBadgesByDate] = useState({});
 
   useLayoutEffect(() => {
     const root = document.documentElement;
+    let stableViewportHeight = 0;
+    let stableViewportWidth = 0;
     const updateAppScale = () => {
       const viewportWidth = Math.max(0, window.visualViewport?.width || window.innerWidth || kCompactLayoutWidth);
       const viewportHeight = Math.max(0, window.visualViewport?.height || window.innerHeight || kCompactLayoutHeight);
+      if (!stableViewportHeight || Math.abs(viewportWidth - stableViewportWidth) > 24) {
+        stableViewportHeight = viewportHeight;
+        stableViewportWidth = viewportWidth;
+      } else {
+        stableViewportHeight = Math.max(stableViewportHeight, viewportHeight);
+      }
       const visualWidth = Math.min(480, viewportWidth);
       const widthScale = visualWidth / kCompactLayoutWidth;
-      const heightScale = visualWidth <= 480 ? viewportHeight / kCompactLayoutHeight : Infinity;
+      const heightScale = visualWidth <= 480 ? stableViewportHeight / kCompactLayoutHeight : Infinity;
       const scale = Math.max(0.72, Math.min(480 / kCompactLayoutWidth, widthScale, heightScale));
       root.style.setProperty("--app-scale", scale.toFixed(4));
       root.style.setProperty("--app-layout-width", `${kCompactLayoutWidth}px`);
       root.style.setProperty("--app-visual-width", `${visualWidth}px`);
-      root.style.setProperty("--app-min-height", `${(window.innerHeight || 0) / scale}px`);
+      root.style.setProperty("--app-min-height", `${stableViewportHeight / scale}px`);
     };
 
     updateAppScale();
@@ -2333,7 +2331,7 @@ export default function App() {
   }, [db.names.length, db.bats.length, tab]);
 
   useEffect(() => {
-    if (tab !== "home" && scoreAnimation) setScoreAnimation(null);
+    if (!["home", "record"].includes(tab) && scoreAnimation) setScoreAnimation(null);
   }, [tab, scoreAnimation]);
 
   useEffect(() => {
@@ -2361,25 +2359,22 @@ export default function App() {
       best: Math.max(0, Math.min(999, Number(form.get("best")) || 0)),
     };
     const nextRecords = [...db.records, record];
-    const currentRecordsBefore = db.records.filter((item) => item.name === currentName && item.date <= date);
-    const currentRecordsAfter = nextRecords.filter((item) => item.name === currentName && item.date <= date);
-    setChallengeAnimation((current) => {
-      const hasUnplayedPendingAnimation = current && !(current.playedRanges || []).length;
-      return {
-        id: hasUnplayedPendingAnimation ? current.id : uid(),
-        fromRecords: hasUnplayedPendingAnimation ? current.fromRecords : currentRecordsBefore,
-        toRecords: currentRecordsAfter,
-        playedRanges: [],
-      };
-    });
     if (date === activeDate) {
       const todayRecordsBefore = db.records.filter((item) => item.name === currentName && item.date === date);
       const todayRecordsAfter = nextRecords.filter((item) => item.name === currentName && item.date === date);
+      const recordsForNameBefore = db.records.filter((item) => item.name === currentName);
+      const recordsForNameAfter = nextRecords.filter((item) => item.name === currentName);
       const fromSummary = aggregate(todayRecordsBefore)[0] || emptyDailySummary(date);
       const toSummary = aggregate(todayRecordsAfter)[0] || emptyDailySummary(date);
+      const fromWeekSummary = summaryForRecordsRange(recordsForNameBefore, RANGE_WEEK, date);
+      const toWeekSummary = summaryForRecordsRange(recordsForNameAfter, RANGE_WEEK, date);
       const fromBat = aggregateByBat(todayRecordsBefore).find((item) => item.bat === bat) || { bat, count: 0, avg: 0, best: 0 };
       const toBat = aggregateByBat(todayRecordsAfter).find((item) => item.bat === bat) || { bat, count: 0, avg: 0, best: 0 };
-      setScoreAnimation({ id: uid(), bat, fromSummary, toSummary, fromBat, toBat });
+      const weekRecordsBefore = recordsForViewRange(recordsForNameBefore, RANGE_WEEK, date);
+      const weekRecordsAfter = recordsForViewRange(recordsForNameAfter, RANGE_WEEK, date);
+      const fromWeekBat = aggregateByBat(weekRecordsBefore).find((item) => item.bat === bat) || { bat, count: 0, avg: 0, best: 0 };
+      const toWeekBat = aggregateByBat(weekRecordsAfter).find((item) => item.bat === bat) || { bat, count: 0, avg: 0, best: 0 };
+      setScoreAnimation({ id: uid(), bat, fromSummary, toSummary, fromWeekSummary, toWeekSummary, fromBat, toBat, fromWeekBat, toWeekBat, playedRanges: [] });
     }
     setDb({ ...db, records: nextRecords });
     return true;
@@ -2388,8 +2383,16 @@ export default function App() {
   const loadAnimationTestDb = () => {
     setDb({ ...db, testInputDefaults: true, testRandomGeneration: true, testDate: todayISO() });
     setScoreAnimation(null);
-    setChallengeAnimation(null);
     setTab("home");
+  };
+
+  const markScoreAnimationPlayed = (completedRange) => {
+    if (!completedRange) return;
+    setScoreAnimation((current) => {
+      if (!current) return current;
+      const playedRanges = Array.from(new Set([...(current.playedRanges || []), completedRange]));
+      return { ...current, playedRanges };
+    });
   };
 
   const addName = (event) => {
@@ -2434,7 +2437,13 @@ export default function App() {
     setPendingDelete(null);
     if (!pending) return;
     if (pending.type === "all") {
-      setDb({ activeName: "", names: [], nameColors: {}, bats: [], batColors: {}, defaultBat: "", theme: BAT_COLOR_PALETTE[0], records: [], testInputDefaults: false, testRandomGeneration: false, testDate: null });
+      setDb({
+        ...db,
+        records: [],
+        testInputDefaults: false,
+        testRandomGeneration: false,
+        testDate: null,
+      });
       return;
     }
     if (pending.type === "name") {
@@ -2549,23 +2558,33 @@ export default function App() {
               activeDate={homeActiveDate}
               appActiveDate={activeDate}
               setHomeViewDate={setHomeViewDate}
+              dismissedHomeBadgesByDate={dismissedHomeBadgesByDate}
+              setDismissedHomeBadgesByDate={setDismissedHomeBadgesByDate}
               scoreAnimation={scoreAnimation}
-              onScoreAnimationComplete={() => setScoreAnimation(null)}
+              setScoreAnimation={setScoreAnimation}
+              onScoreAnimationComplete={markScoreAnimationPlayed}
             />
           )}
           {tab === "record" && (
-            <RecordView
+            <HomeView
               db={db}
-              allForName={allForName}
-              activeDate={activeDate}
-              challengeAnimation={challengeAnimation}
-              onChallengeAnimationComplete={(completedRange) => {
-                setChallengeAnimation((current) => {
-                  if (!current || !completedRange) return current;
-                  const playedRanges = Array.from(new Set([...(current.playedRanges || []), completedRange]));
-                  return { ...current, playedRanges };
-                });
-              }}
+              setDb={setDb}
+              currentName={currentName}
+              allForName={homeForName}
+              allForNameRaw={allForNameRaw}
+              addRecord={addRecord}
+              activeDate={homeActiveDate}
+              appActiveDate={activeDate}
+              setHomeViewDate={setHomeViewDate}
+              dismissedHomeBadgesByDate={dismissedHomeBadgesByDate}
+              setDismissedHomeBadgesByDate={setDismissedHomeBadgesByDate}
+              scoreAnimation={scoreAnimation}
+              setScoreAnimation={setScoreAnimation}
+              onScoreAnimationComplete={markScoreAnimationPlayed}
+              resultRange={RANGE_WEEK}
+              title="チャレンジ"
+              titleIcon="challenge"
+              badgeTitle="今週のバッジ"
             />
           )}
           {tab === "data" && (
@@ -2607,38 +2626,72 @@ export default function App() {
   );
 }
 
-function HomeView({ db, setDb, currentName, allForName, allForNameRaw = allForName, addRecord, activeDate = todayISO(), appActiveDate = todayISO(), setHomeViewDate, scoreAnimation, onScoreAnimationComplete }) {
-  const [scoreAnimationProgress, setScoreAnimationProgress] = useState(1);
+function HomeView({ db, setDb, currentName, allForName, allForNameRaw = allForName, addRecord, activeDate = todayISO(), appActiveDate = todayISO(), setHomeViewDate, dismissedHomeBadgesByDate, setDismissedHomeBadgesByDate, scoreAnimation, setScoreAnimation, onScoreAnimationComplete, resultRange = RANGE_TODAY, title = "今日の結果", titleIcon = "home", badgeTitle = "今日のバッジ" }) {
   const [formResetKey, setFormResetKey] = useState(0);
-  const activeScoreAnimationIdRef = useRef(null);
+  const showHomeEntryTools = resultRange === RANGE_TODAY;
+  const scoreAnimationPlayed = Boolean(scoreAnimation?.playedRanges?.includes(resultRange));
+  const activeScoreAnimationKey = scoreAnimation && !scoreAnimationPlayed ? `${scoreAnimation.id}:${resultRange}` : null;
+  const scoreProgressAnimation = useScoreProgressAnimation(activeScoreAnimationKey, {
+    enabled: Boolean(activeScoreAnimationKey),
+    onComplete: () => onScoreAnimationComplete?.(resultRange),
+  });
   const allFiltered = allForName;
   const todayRecords = allFiltered.filter((record) => record.date === activeDate);
-  const todaySummary = aggregate(todayRecords)[0] || { date: activeDate, count: 0, avg: 0, best: 0, bats: [] };
+  const viewRecords = recordsForViewRange(allFiltered, resultRange, activeDate);
+  const todaySummary = summaryForRecordsRange(allFiltered, resultRange, activeDate);
   const hasTodayRecord = todayRecords.length > 0;
-  const todayByBat = aggregateByBat(todayRecords);
-  const isFreshScoreAnimation = Boolean(scoreAnimation && activeScoreAnimationIdRef.current !== scoreAnimation.id);
-  const effectiveScoreAnimationProgress = isFreshScoreAnimation ? 0 : scoreAnimationProgress;
-  const isScoreAnimating = Boolean(scoreAnimation && effectiveScoreAnimationProgress < 1);
-  const displayTodaySummary = scoreAnimation
-    ? interpolateDailySummary(scoreAnimation.fromSummary, scoreAnimation.toSummary, effectiveScoreAnimationProgress)
+  const todayByBat = aggregateByBat(viewRecords);
+  const shouldPlayScoreAnimation = Boolean(scoreAnimation && !scoreAnimationPlayed);
+  const effectiveScoreAnimationProgress = shouldPlayScoreAnimation ? scoreProgressAnimation.progress : 1;
+  const isScoreAnimating = Boolean(shouldPlayScoreAnimation && scoreProgressAnimation.active);
+  const animationFromSummary = resultRange === RANGE_WEEK && scoreAnimation?.fromWeekSummary ? scoreAnimation.fromWeekSummary : scoreAnimation?.fromSummary;
+  const animationToSummary = resultRange === RANGE_WEEK && scoreAnimation?.toWeekSummary ? scoreAnimation.toWeekSummary : scoreAnimation?.toSummary;
+  const displayTodaySummary = shouldPlayScoreAnimation
+    ? interpolateDailySummary(animationFromSummary, animationToSummary, effectiveScoreAnimationProgress)
     : todaySummary;
-  const scoreCardAnimation = scoreAnimation ? {
+  const bestDefinitionsForSummary = (summary) => summary?.bestTarget ? [{
+    period: resultRange,
+    group: resultRange,
+    metric: "best",
+    target: summary.bestTarget,
+    label: summary.bestTargetLabel || `ベスト${summary.bestTarget}`,
+    description: summary.bestTargetLabel ? `先週のベスト${summary.bestTarget}点を更新` : undefined,
+  }] : badgeDefinitionsForMetric(resultRange, "best");
+  const avgDefinitionsForSummary = (summary) => summary?.avgTarget ? [{
+    period: resultRange,
+    group: resultRange,
+    metric: "avg",
+    target: summary.avgTarget,
+    label: summary.avgTargetLabel || `平均${summary.avgTarget}`,
+    description: summary.avgTargetLabel ? `先週の平均${summary.avgTarget}点を更新` : undefined,
+  }] : badgeDefinitionsForMetric(resultRange, "avg");
+  const daysBadgeDefinitions = badgeDefinitionsForMetric(resultRange, "days", animationFromSummary?.spanDays || todaySummary.spanDays);
+  const countBadgeDefinitions = badgeDefinitionsForMetric(resultRange, "count");
+  const avgBadgeDefinitions = avgDefinitionsForSummary(animationFromSummary);
+  const bestBadgeDefinitions = bestDefinitionsForSummary(animationFromSummary);
+  const scoreCardAnimation = shouldPlayScoreAnimation ? {
     active: isScoreAnimating,
     fillRatios: {
-      count: animationFillRatio(scoreAnimation.fromSummary.count, scoreAnimation.toSummary.count, effectiveScoreAnimationProgress),
-      avg: animationFillRatio(scoreAnimation.fromSummary.avg, scoreAnimation.toSummary.avg, effectiveScoreAnimationProgress),
-      best: animationFillRatio(scoreAnimation.fromSummary.best, scoreAnimation.toSummary.best, effectiveScoreAnimationProgress),
+      days: animationFillRatio(animationFromSummary.days, animationToSummary.days, effectiveScoreAnimationProgress),
+      count: animationFillRatio(animationFromSummary.count, animationToSummary.count, effectiveScoreAnimationProgress),
+      avg: targetAnimationFillRatio(animationFromSummary.avg, animationToSummary.avg, animationToSummary.avgTarget, effectiveScoreAnimationProgress),
+      best: targetAnimationFillRatio(animationFromSummary.best, animationToSummary.best, animationToSummary.bestTarget, effectiveScoreAnimationProgress),
     },
-    badgeOverrides: scoreAnimation.fromSummary.count > 0 ? {
-      count: dailyResultBadge("count", scoreAnimation.fromSummary.count),
-      avg: dailyResultBadge("avg", scoreAnimation.fromSummary.avg),
-      best: dailyResultBadge("best", scoreAnimation.fromSummary.best),
+    badgeOverrides: animationFromSummary.count > 0 ? {
+      days: dailyResultBadge("days", animationFromSummary.days, daysBadgeDefinitions),
+      count: dailyResultBadge("count", animationFromSummary.count, countBadgeDefinitions),
+      avg: dailyResultBadge("avg", animationFromSummary.avg, avgBadgeDefinitions),
+      best: dailyResultBadge("best", animationFromSummary.best, bestBadgeDefinitions),
     } : {},
   } : null;
-  const animatedBatSummary = scoreAnimation
+  const animatedBatSummary = shouldPlayScoreAnimation
     ? {
         bat: scoreAnimation.bat,
-        ...interpolateDailySummary(scoreAnimation.fromBat, scoreAnimation.toBat, effectiveScoreAnimationProgress),
+        ...interpolateDailySummary(
+          resultRange === RANGE_WEEK && scoreAnimation.fromWeekBat ? scoreAnimation.fromWeekBat : scoreAnimation.fromBat,
+          resultRange === RANGE_WEEK && scoreAnimation.toWeekBat ? scoreAnimation.toWeekBat : scoreAnimation.toBat,
+          effectiveScoreAnimationProgress
+        ),
       }
     : null;
   const homeBatSummaries = todayByBat
@@ -2648,17 +2701,55 @@ function HomeView({ db, setDb, currentName, allForName, allForNameRaw = allForNa
     ? randomTestRecordValues(formResetKey + todayRecords.length * 31)
     : null;
   const isHomeHistoryView = !db.testInputDefaults && activeDate !== todayISO();
-  const todayEarnedBadges = badgesFor(allForName, activeDate).get(activeDate) || [];
-  const badgeCounts = [...todayEarnedBadges.reduce((map, label) => {
+  const viewWindow = resultRange === RANGE_TODAY ? null : rangeWindow(resultRange, parseISO(activeDate));
+  const viewBadgeLabels = [...badgesFor(allForName, activeDate).entries()].flatMap(([date, labels]) => {
+    if (resultRange === RANGE_TODAY) return date === activeDate ? labels : [];
+    return date >= toISO(viewWindow.start) && date <= toISO(viewWindow.end) ? labels : [];
+  });
+  const dismissedBadgeBucket = resultRange === RANGE_TODAY ? activeDate : `${resultRange}:${toISO(viewWindow.start)}`;
+  const dismissedHomeBadges = useMemo(() => new Set(dismissedHomeBadgesByDate[dismissedBadgeBucket] || []), [dismissedHomeBadgesByDate, dismissedBadgeBucket]);
+  const badgeCounts = [...viewBadgeLabels.reduce((map, label) => {
     map.set(label, (map.get(label) || 0) + 1);
     return map;
   }, new Map()).entries()].sort(([a], [b]) => compareBadgesByRarity(a, b));
+  const headerDateLabel = resultRange === RANGE_TODAY
+    ? formatJapaneseMonthDay(parseISO(activeDate))
+    : rangeWindow(resultRange, parseISO(activeDate)).label;
   const markedDates = useMemo(() => new Set(allForNameRaw.map((record) => record.date)), [allForNameRaw]);
   const handleRecordSubmit = (event) => {
     if (addRecord(event, activeDate)) {
       if (!db.testInputDefaults) event.currentTarget.reset();
       setFormResetKey((value) => value + 1);
     }
+  };
+  const handleTestRecordCreate = (bat) => {
+    if (!db.testInputDefaults || !currentName || !bat) return;
+    const record = {
+      id: uid(),
+      name: currentName,
+      bat,
+      date: activeDate,
+      count: 999,
+      avg: 999,
+      best: 999,
+    };
+    const nextRecords = [record];
+    const recordsForNameAfter = nextRecords.filter((item) => item.name === currentName);
+    const todayRecordsAfter = recordsForNameAfter.filter((item) => item.date === activeDate);
+    const fromSummary = emptyDailySummary(activeDate);
+    const toSummary = aggregate(todayRecordsAfter)[0] || emptyDailySummary(activeDate);
+    const fromWeekSummary = summaryForRecordsRange([], RANGE_WEEK, activeDate);
+    const toWeekSummary = summaryForRecordsRange(recordsForNameAfter, RANGE_WEEK, activeDate);
+    const fromBat = { bat, count: 0, avg: 0, best: 0 };
+    const toBat = aggregateByBat(todayRecordsAfter).find((item) => item.bat === bat) || fromBat;
+    const toWeekBat = aggregateByBat(recordsForViewRange(recordsForNameAfter, RANGE_WEEK, activeDate)).find((item) => item.bat === bat) || fromBat;
+    setScoreAnimation?.({ id: uid(), bat, fromSummary, toSummary, fromWeekSummary, toWeekSummary, fromBat, toBat, fromWeekBat: fromBat, toWeekBat, playedRanges: [] });
+    setDb({
+      ...db,
+      records: nextRecords,
+    });
+    setDismissedHomeBadgesByDate({});
+    setFormResetKey((value) => value + 1);
   };
   const handleHomeDateSelect = (nextDate) => {
     if (!db.testInputDefaults) {
@@ -2712,45 +2803,13 @@ function HomeView({ db, setDb, currentName, allForName, allForNameRaw = allForNa
     });
   };
 
-  useLayoutEffect(() => {
-    if (!scoreAnimation) {
-      activeScoreAnimationIdRef.current = null;
-      setScoreAnimationProgress(1);
-      return undefined;
-    }
-
-    activeScoreAnimationIdRef.current = scoreAnimation.id;
-    const duration = 5000;
-    let frameId = 0;
-    let startedAt = 0;
-
-    const tick = (now) => {
-      if (!startedAt) startedAt = now;
-      const rawProgress = clamp((now - startedAt) / duration, 0, 1);
-      const easedProgress = 1 - Math.pow(1 - rawProgress, 3);
-      setScoreAnimationProgress(easedProgress);
-      if (rawProgress < 1) {
-        frameId = requestAnimationFrame(tick);
-      } else {
-        onScoreAnimationComplete?.();
-      }
-    };
-
-    setScoreAnimationProgress(0);
-    frameId = requestAnimationFrame((now) => {
-      startedAt = now;
-      frameId = requestAnimationFrame(tick);
-    });
-    return () => cancelAnimationFrame(frameId);
-  }, [scoreAnimation?.id]);
-
   return (
     <>
       <section className="home-section home-result-section">
         <div className="result-top-slot">
         <div className="section-row tight result-header-row">
-          <ResultHeader title="今日の結果" icon="home" dateLabel={formatJapaneseMonthDay(parseISO(activeDate))} />
-          {db.testInputDefaults && (
+          <ResultHeader title={title} icon={titleIcon} dateLabel={headerDateLabel} />
+          {showHomeEntryTools && db.testInputDefaults && (
             <div className="home-test-controls">
               <label className="test-auto-switch" aria-label="自動生成">
                 <input
@@ -2762,34 +2821,46 @@ function HomeView({ db, setDb, currentName, allForName, allForNameRaw = allForNa
               </label>
             </div>
           )}
-          <HomeDatePicker
-            value={activeDate}
-            markedDates={markedDates}
-            minDate={firstRecordDate(allForNameRaw) ? toISO(firstRecordDate(allForNameRaw)) : "2024-01-01"}
-            maxDate={db.testInputDefaults ? null : todayISO()}
-            onSelect={handleHomeDateSelect}
-          />
+          {showHomeEntryTools && (
+            <HomeDatePicker
+              value={activeDate}
+              markedDates={markedDates}
+              minDate={firstRecordDate(allForNameRaw) ? toISO(firstRecordDate(allForNameRaw)) : "2024-01-01"}
+              maxDate={db.testInputDefaults ? null : todayISO()}
+              onSelect={handleHomeDateSelect}
+            />
+          )}
         </div>
         </div>
-        <div className="home-score-input-grid">
-          <section className="home-section home-input-panel open">
-            <div className="input-panel-layout">
-              <SwingForm
-                key={db.defaultBat}
-                bats={db.bats}
-                defaultBat={db.defaultBat}
-                batColors={db.batColors}
-                defaultValues={testRecordValues}
-                resetToken={formResetKey}
-                submitDisabled={isScoreAnimating || isHomeHistoryView}
-                onSubmit={handleRecordSubmit}
-                submitLabel={hasTodayRecord ? "追加する" : "記録する"}
-              />
-            </div>
-          </section>
+        <div className={`home-score-input-grid ${showHomeEntryTools ? "" : "no-input-card"}`}>
+          {showHomeEntryTools && (
+            <section className="home-section home-input-panel open">
+              <div className="input-panel-layout">
+                <SwingForm
+                  key={db.defaultBat}
+                  bats={db.bats}
+                  defaultBat={db.defaultBat}
+                  batColors={db.batColors}
+                  defaultValues={testRecordValues}
+                  resetToken={formResetKey}
+                  submitDisabled={isScoreAnimating || isHomeHistoryView}
+                  testAction={db.testInputDefaults ? handleTestRecordCreate : null}
+                  onSubmit={handleRecordSubmit}
+                  submitLabel={hasTodayRecord ? "追加する" : "記録する"}
+                />
+              </div>
+            </section>
+          )}
           <DailyResultCards
             summary={displayTodaySummary}
             animation={scoreCardAnimation}
+            range={resultRange}
+            includeDays={!showHomeEntryTools}
+            dismissedHomeBadges={dismissedHomeBadges}
+            onDismissHomeBadge={(key) => setDismissedHomeBadgesByDate((current) => ({
+              ...current,
+              [dismissedBadgeBucket]: Array.from(new Set([...(current[dismissedBadgeBucket] || []), key])),
+            }))}
           />
         </div>
         <BatRecordsSection className="home-bat-records">
@@ -2803,7 +2874,7 @@ function HomeView({ db, setDb, currentName, allForName, allForNameRaw = allForNa
             ))
           ) : <p className="empty compact-empty">結果入力するとバット別記録が表示されます。</p>}
         </BatRecordsSection>
-        <EarnedBadgesCard badgeCounts={badgeCounts} title="今日のバッジ" />
+        <EarnedBadgesCard badgeCounts={badgeCounts} title={badgeTitle} />
       </section>
     </>
   );
@@ -3113,7 +3184,7 @@ function badgeDescriptionFor(label, type) {
   if (label.includes("ベスト") || label.startsWith("初")) return `${label}を達成`;
   if (label.includes("連続")) return `${label}で練習する`;
   if (label.includes("相棒")) return `${label}を達成`;
-  if (label.includes("多く振った") || label.includes("平均アップ")) return `${label}ときに獲得`;
+  if (label.includes("多く振った") || label.includes("平均アップ") || label.includes("ベスト更新")) return `${label}したときに獲得`;
   return `${label}を${type === "unique" ? "1回だけ獲得可" : "達成するたび獲得可"}`;
 }
 
@@ -3490,140 +3561,6 @@ function badgeGroups(badgeCounts) {
   });
 }
 
-function RecordView({ db, allForName, activeDate = todayISO(), challengeAnimation, onChallengeAnimationComplete }) {
-  const [activeTab, setActiveTab] = useState(RANGE_WEEK);
-  const activeChallengeAnimation = challengeAnimation ? {
-    ...challengeAnimation,
-    onComplete: (completedRange) => onChallengeAnimationComplete?.(completedRange),
-  } : null;
-  const activeRange = activeTab === "year" ? RANGE_TOTAL : activeTab;
-  const challengeDateLabel = challengeHeaderDateLabel(allForName, activeDate, activeRange);
-  const tabs = [
-    [RANGE_WEEK, "週間", "チャレンジ"],
-    [RANGE_MONTH, "月間", "チャレンジ"],
-    ["year", "年間", "チャレンジ"],
-  ];
-
-  return (
-    <div className="challenge-view">
-      <div className="result-top-slot">
-        <div className="challenge-top-layout result-heading">
-          <div className="challenge-tabs" role="tablist" aria-label="記録期間">
-            {tabs.map(([key, period, label]) => (
-              <button
-                type="button"
-                role="tab"
-                aria-selected={activeTab === key}
-                className={activeTab === key ? "selected" : ""}
-                onClick={() => setActiveTab(key)}
-                key={key}
-              >
-                <span className="challenge-tab-period">{period}</span>
-                <span className="challenge-tab-label">{label}</span>
-              </button>
-            ))}
-          </div>
-          <p>{challengeDateLabel}</p>
-        </div>
-      </div>
-      {activeTab === RANGE_WEEK && <ChallengePeriodPanel db={db} records={allForName} activeDate={activeDate} range={RANGE_WEEK} graphRange={RANGE_TODAY} challengeAnimation={activeChallengeAnimation} />}
-      {activeTab === RANGE_MONTH && <ChallengePeriodPanel db={db} records={allForName} activeDate={activeDate} range={RANGE_MONTH} graphRange={RANGE_WEEK} challengeAnimation={activeChallengeAnimation} />}
-      {activeTab === "year" && <ChallengeYearPanel db={db} records={allForName} activeDate={activeDate} challengeAnimation={activeChallengeAnimation} />}
-    </div>
-  );
-}
-
-function challengeHeaderDateLabel(records, activeDate, range) {
-  if (range === RANGE_WEEK || range === RANGE_MONTH) {
-    const { label } = rangeWindow(range, parseISO(activeDate));
-    return label;
-  }
-  const { start, end } = challengeYearWindow(records, parseISO(activeDate));
-  return `${formatJapaneseMonthDay(start)}〜${formatJapaneseMonthDay(end)}`;
-}
-
-function ChallengePeriodPanel({ db, records, activeDate = todayISO(), range, graphRange, challengeAnimation }) {
-  const { start, end, label } = rangeWindow(range, parseISO(activeDate));
-  const previousWindow = rangeWindow(range, addDays(start, -1));
-  const titlePrefix = range === RANGE_WEEK ? "今週" : "今月";
-  const periodRecords = records.filter((record) => record.date >= toISO(start) && record.date <= toISO(end));
-  const previousRecords = records.filter((record) => record.date >= toISO(previousWindow.start) && record.date <= toISO(previousWindow.end));
-  const dailyMap = new Map(aggregate(periodRecords).map((day) => [day.date, day]));
-  const previousSummary = periodSummaryFromDaily(new Map(aggregate(previousRecords).map((day) => [day.date, day])), previousWindow.start, previousWindow.end, activeDate);
-  const summary = {
-    ...periodSummaryFromDaily(dailyMap, start, end, activeDate),
-    bestTarget: previousSummary.best || null,
-  };
-  const makeSummary = (sourceRecords) => {
-    const sourcePeriodRecords = sourceRecords.filter((record) => record.date >= toISO(start) && record.date <= toISO(end));
-    const sourceDailyMap = new Map(aggregate(sourcePeriodRecords).map((day) => [day.date, day]));
-    return {
-      ...periodSummaryFromDaily(sourceDailyMap, start, end, activeDate),
-      bestTarget: previousSummary.best || null,
-    };
-  };
-  const fromSummary = challengeAnimation ? makeSummary(challengeAnimation.fromRecords || []) : summary;
-  const toSummary = challengeAnimation ? makeSummary(challengeAnimation.toRecords || []) : summary;
-  const progressAnimation = useChallengeProgressAnimation(challengeAnimation, fromSummary, toSummary, range, true);
-  const displaySummary = progressAnimation?.summary || summary;
-  const cardAnimation = progressAnimation ? {
-    ...progressAnimation,
-    targetMode: true,
-    fromSummary,
-    toSummary,
-  } : null;
-  const byBat = aggregateByBat(periodRecords);
-  const badgeCounts = collectBadgeCounts(records, range, activeDate);
-
-  return (
-    <section className="home-section home-result-section challenge-period-panel">
-      <DailyResultCards summary={displaySummary} showBadges range={range} includeDays animation={cardAnimation} />
-      <BatRecordsSection className="home-bat-records challenge-bat-records">
-        {byBat.length ? byBat.map((item) => (
-          <RecordSummary key={item.bat} item={item} batColor={batColorFor(db, item.bat)} />
-        )) : <p className="empty compact-empty">バット別記録はまだありません。</p>}
-      </BatRecordsSection>
-      <EarnedBadgesCard badgeCounts={badgeCounts} title={`${titlePrefix}の獲得バッジ`} />
-    </section>
-  );
-}
-
-function ChallengeYearPanel({ db, records, activeDate = todayISO(), challengeAnimation }) {
-  const { start, end, label } = challengeYearWindow(records, parseISO(activeDate));
-  const shortLabel = `${formatJapaneseMonthDay(start)}〜${formatJapaneseMonthDay(end)}`;
-  const effectiveEnd = toISO(end) < activeDate ? toISO(end) : activeDate;
-  const yearRecords = records.filter((record) => record.date >= toISO(start) && record.date <= effectiveEnd);
-  const summary = summarizeRecords(yearRecords);
-  const makeYearSummary = (sourceRecords) => {
-    const sourceYearRecords = sourceRecords.filter((record) => record.date >= toISO(start) && record.date <= effectiveEnd);
-    return summarizeRecords(sourceYearRecords);
-  };
-  const fromSummary = challengeAnimation ? makeYearSummary(challengeAnimation.fromRecords || []) : summary;
-  const toSummary = challengeAnimation ? makeYearSummary(challengeAnimation.toRecords || []) : summary;
-  const progressAnimation = useChallengeProgressAnimation(challengeAnimation, fromSummary, toSummary, RANGE_TOTAL, true);
-  const displaySummary = progressAnimation?.summary || summary;
-  const cardAnimation = progressAnimation ? {
-    ...progressAnimation,
-    targetMode: true,
-    fromSummary,
-    toSummary,
-  } : null;
-  const byBat = aggregateByBat(yearRecords);
-  const badgeCounts = collectBadgeCounts(records, "year", activeDate);
-
-  return (
-    <section className="home-section home-result-section challenge-period-panel all-record-panel">
-      <DailyResultCards summary={displaySummary} showBadges range={RANGE_TOTAL} includeDays animation={cardAnimation} />
-      <BatRecordsSection className="home-bat-records challenge-bat-records">
-        {byBat.length ? byBat.map((item) => (
-          <RecordSummary key={item.bat} item={item} batColor={batColorFor(db, item.bat)} />
-        )) : <p className="empty compact-empty">バット別記録はまだありません。</p>}
-      </BatRecordsSection>
-      <EarnedBadgesCard badgeCounts={badgeCounts} title="今年の獲得バッジ" />
-    </section>
-  );
-}
-
 function summarizeRecords(records) {
   const daily = aggregate(records);
   const total = aggregate(records).reduce((sum, day) => sum + day.count, 0);
@@ -3770,7 +3707,7 @@ function GraphControls({ db, graphBat, setGraphBat }) {
   );
 }
 
-function SwingForm({ bats, defaultBat, onSubmit, submitLabel, defaultValues = null, resetToken = 0, submitDisabled = false, batColors = null }) {
+function SwingForm({ bats, defaultBat, onSubmit, submitLabel, defaultValues = null, resetToken = 0, submitDisabled = false, batColors = null, testAction = null }) {
   const initialBat = bats.includes(defaultBat) ? defaultBat : bats[0] || "";
   const [selectedBat, setSelectedBat] = useState(initialBat);
   const [countValue, setCountValue] = useState(defaultValues?.count ?? "");
@@ -3785,8 +3722,12 @@ function SwingForm({ bats, defaultBat, onSubmit, submitLabel, defaultValues = nu
     setBestValue(defaultValues?.best ?? "");
   }, [defaultValues?.count, defaultValues?.avg, defaultValues?.best, resetToken]);
   const selectedBatColor = normalizeHexColor(batColors?.[selectedBat], fallbackBatColor(selectedBat, Math.max(0, bats.indexOf(selectedBat))));
+  const handleTestAction = () => {
+    testAction?.(selectedBat);
+  };
   return (
     <form className="input-grid swing-form" onSubmit={onSubmit} style={{ "--selected-bat-color": selectedBatColor }}>
+      <h3 className="swing-form-title"><Icon type="log" />記録入力</h3>
       <label className="field-label bat-input-label graph-shared-controls home-form-bat-controls" style={{ "--bat-filter-color": selectedBatColor }}>
         <span className="field-title"><span className="icon"><BatIcon color="var(--selected-bat-color, var(--hot))" /></span><span className="visually-hidden">バット</span></span>
         <span className="bat-field graph-bat-filter home-bat-filter">
@@ -3801,6 +3742,7 @@ function SwingForm({ bats, defaultBat, onSubmit, submitLabel, defaultValues = nu
       <label className="field-label"><span className="field-title"><Icon type="avg" />平均</span><input name="avg" type="number" inputMode="numeric" min="0" max="999" step="1" required value={avgValue} onChange={(event) => setAvgValue(event.target.value)} aria-label="平均" /></label>
       <label className="field-label"><span className="field-title"><Icon type="best" />ベスト</span><input name="best" type="number" inputMode="numeric" min="0" max="999" step="1" required value={bestValue} onChange={(event) => setBestValue(event.target.value)} aria-label="ベスト" /></label>
       <span className="home-ok-slot">
+        {testAction && <button className="standard-ok-button settings-ok-button test-seed-button" type="button" onClick={handleTestAction} disabled={submitDisabled}>テスト</button>}
         <button className="standard-ok-button settings-ok-button" type="submit" aria-label={submitLabel} disabled={submitDisabled}><Icon type="check" />OK</button>
       </span>
     </form>

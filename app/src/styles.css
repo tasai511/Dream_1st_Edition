@@ -2209,7 +2209,7 @@ p {
 .daily-result-card strong {
   display: block;
   color: var(--hot);
-  font-size: var(--score-value-size, 3.08rem);
+  font-size: 3.08rem;
   font-weight: 950;
   line-height: 1;
   text-shadow: none;
@@ -6919,13 +6919,6 @@ select:focus,
   transform: rotate(-9deg);
 }
 
-.daily-badge-stage.remaining-stage {
-  position: static;
-  width: 100%;
-  justify-self: stretch;
-  transform: none;
-}
-
 .target-remaining {
   display: grid;
   gap: 2px;
@@ -6965,50 +6958,6 @@ select:focus,
   font-weight: 950;
 }
 
-.daily-badge-stage.complete-stage {
-  justify-self: end;
-  transform: translate(9px, -14px);
-}
-
-.daily-result-card.target-mode .daily-score-row > strong {
-  max-width: calc(100% - 56px);
-  overflow: visible;
-  font-size: var(--score-value-size, 2.44rem);
-}
-
-.daily-result-card.target-mode .daily-score-row {
-  grid-template-columns: minmax(0, 1fr) minmax(58px, 68px);
-  gap: 6px;
-}
-
-.daily-result-card.target-mode .milestone-dot.target-current {
-  width: 19px;
-  height: 19px;
-  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, var(--milestone-ring-alpha, 0.32));
-}
-
-.daily-result-card.target-mode .milestone-dot.target-current .rarity-icon {
-  width: 13px;
-  height: 13px;
-  opacity: var(--milestone-alpha, 0.38);
-}
-
-.daily-result-card.target-mode .milestone-dot.target-target.current {
-  width: 24px;
-  height: 24px;
-  box-shadow:
-    0 0 0 3px rgba(255, 255, 255, 0.86),
-    0 0 10px rgba(255, 255, 255, 0.9),
-    0 0 24px rgba(255, 255, 255, 0.66),
-    0 0 42px rgba(255, 255, 255, 0.42);
-}
-
-.daily-result-card.target-mode .milestone-dot.target-target.current .rarity-icon {
-  width: 17px;
-  height: 17px;
-  opacity: 1;
-}
-
 @keyframes get-stamp-pop {
   from {
     opacity: 0;
@@ -7026,6 +6975,26 @@ select:focus,
 
 .milestone-track.placeholder {
   opacity: 0;
+}
+
+.milestone-track.placeholder.with-message {
+  display: grid;
+  place-items: center;
+  opacity: 1;
+  background: transparent;
+}
+
+.milestone-track.placeholder.with-message .milestone-fill {
+  display: none;
+}
+
+.milestone-empty-message {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 900;
+  line-height: 1.2;
+  text-align: center;
+  white-space: nowrap;
 }
 
 .daily-result-card.animating .milestone-fill {
@@ -7284,6 +7253,571 @@ select:focus,
 
 .daily-result-group-card.record-card-button.badge-active:active {
   transform: none !important;
+}
+
+/* Final authority: challenge has no input card; its first score card occupies that slot. */
+.home-score-input-grid.no-input-card > .daily-result-grid,
+.home-score-input-grid.no-input-card > .daily-result-grid.card-count-4 {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  gap: 10px !important;
+}
+
+.home-score-input-grid.no-input-card > .daily-result-grid > .daily-result-card {
+  grid-column: 1 !important;
+  grid-row: auto !important;
+  width: 100% !important;
+  max-width: none !important;
+}
+
+/* Final authority: use a heavier numeric face for score values. */
+.daily-score-row > strong {
+  font-family: "Avenir Next", "DIN Alternate", "Helvetica Neue", system-ui, sans-serif !important;
+  font-weight: 950 !important;
+  -webkit-text-stroke: 0.2px currentColor !important;
+  text-shadow: none !important;
+  font-variant-numeric: tabular-nums !important;
+  font-feature-settings: "tnum" 1 !important;
+}
+
+.daily-score-row > strong span {
+  font-family: var(--app-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif) !important;
+  font-weight: 900 !important;
+  -webkit-text-stroke: 0 !important;
+}
+
+/* Final authority: match the app logo type to the score-number face. */
+.app-title {
+  font-family: "Avenir Next", "DIN Alternate", "Helvetica Neue", system-ui, sans-serif !important;
+  font-weight: 950 !important;
+}
+
+/* Final authority: badge image placement is calculated from card/image size.
+   Card height is 142px, badge image is 57px, and GET stamp extends 8px upward.
+   top: 12px keeps the image high while leaving the stamp inside the card. */
+.home-score-input-grid .daily-result-card,
+.challenge-period-panel > .daily-result-grid > .daily-result-card {
+  position: relative !important;
+}
+
+.home-score-input-grid .daily-score-row,
+.challenge-period-panel > .daily-result-grid .daily-score-row {
+  position: static !important;
+}
+
+.home-score-input-grid .daily-badge-stage,
+.challenge-period-panel > .daily-result-grid .daily-badge-stage {
+  position: absolute !important;
+  top: 16px !important;
+  right: 14px !important;
+  width: 84px !important;
+  transform: none !important;
+}
+
+/* Final authority: remaining count sits just above the progress track.
+   Track top is about 94px in a 142px card, so a 28px label belongs near 62px. */
+.home-score-input-grid .daily-badge-stage:has(.target-remaining),
+.challenge-period-panel > .daily-result-grid .daily-badge-stage:has(.target-remaining) {
+  top: 50px !important;
+  z-index: 8 !important;
+}
+
+/* Final authority: completed fixed badge is subdued and stamped. */
+.daily-badge-mark.complete {
+  cursor: default;
+}
+
+.daily-badge-mark.complete .daily-badge-image {
+  opacity: 0.62 !important;
+  filter:
+    grayscale(0.46)
+    brightness(0.78)
+    drop-shadow(0 0 3px rgba(0, 0, 0, 0.38)) !important;
+}
+
+.daily-badge-mark.complete .daily-complete-stamp {
+  right: -8px !important;
+  top: 11px !important;
+  z-index: 4 !important;
+  width: 58px !important;
+  height: 24px !important;
+  border: 2px solid #ff3044 !important;
+  border-radius: 5px !important;
+  color: #ff3044 !important;
+  background: rgba(255, 48, 68, 0.08) !important;
+  font-size: 0.55rem !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  text-shadow: none !important;
+  transform: rotate(-13deg) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 48, 68, 0.22),
+    0 4px 8px rgba(0, 0, 0, 0.18) !important;
+}
+
+.daily-result-card .target-remaining {
+  transform: none !important;
+}
+
+/* Final authority: OK sits on the card centerline; test shifts left. */
+.home-score-input-grid .home-ok-slot {
+  display: grid !important;
+  grid-template-columns: 86px 86px 86px !important;
+  width: 274px !important;
+  max-width: 100% !important;
+  column-gap: 8px !important;
+  justify-self: center !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+.home-score-input-grid .home-ok-slot .test-seed-button {
+  grid-column: 1 !important;
+}
+
+.home-score-input-grid .home-ok-slot .standard-ok-button[type="submit"] {
+  grid-column: 2 !important;
+}
+
+/* Final authority: keep the bat selector compact and pinned right. */
+.home-score-input-grid .home-input-panel .swing-form {
+  grid-template-areas:
+    "form-title form-title form-title form-title form-title form-title . . bat bat bat bat"
+    "count-label count-label count-label count-label avg-label avg-label avg-label avg-label best-label best-label best-label best-label"
+    "count count count count avg avg avg avg best best best best"
+    ". heading heading heading heading heading heading heading heading heading heading ." !important;
+}
+
+.home-score-input-grid .home-input-panel .bat-input-label {
+  justify-self: end !important;
+  width: 100% !important;
+}
+
+.home-score-input-grid .home-input-panel .home-form-bat-controls {
+  justify-self: end !important;
+  width: min(164px, 100%) !important;
+}
+
+/* Final authority: align the input-card title with score-card titles. */
+.home-score-input-grid .home-input-panel .swing-form-title {
+  align-self: start !important;
+  justify-self: start !important;
+  transform: translateY(-2px);
+}
+
+/* Final authority: make score numbers feel heavier without enlarging them. */
+.daily-score-row > strong {
+  font-weight: 1000 !important;
+  -webkit-text-stroke: 0.35px currentColor;
+  text-shadow:
+    0.35px 0 currentColor,
+    -0.2px 0 currentColor;
+}
+
+.daily-score-row > strong span {
+  -webkit-text-stroke: 0;
+  text-shadow: none;
+}
+
+/* Final authority: lift the badge image high in the score card. */
+.daily-badge-stage {
+  top: 28% !important;
+  transform: translateY(-92%) !important;
+}
+
+.home-score-input-grid .home-input-panel {
+  box-sizing: border-box !important;
+  height: 142px !important;
+  min-height: 142px !important;
+  padding: 12px 14px 10px !important;
+}
+
+.home-score-input-grid .home-input-panel .input-panel-layout,
+.home-score-input-grid .home-input-panel .swing-form {
+  height: 100% !important;
+}
+
+.home-score-input-grid .home-input-panel .swing-form {
+  grid-template-rows: 32px 16px 30px 34px !important;
+  row-gap: 3px !important;
+  align-content: stretch !important;
+}
+
+.home-score-input-grid .home-input-panel .swing-form-title {
+  grid-area: form-title;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  margin: 0;
+  color: var(--text);
+  font-size: 0.88rem;
+  font-weight: 950;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.home-score-input-grid .home-input-panel .swing-form-title .icon {
+  width: 22px;
+  height: 22px;
+  color: var(--hot);
+  background: color-mix(in srgb, var(--hot) 16%, transparent);
+}
+
+.home-score-input-grid .home-input-panel .swing-form-title .icon svg {
+  width: 15px;
+  height: 15px;
+}
+
+.home-score-input-grid .home-input-panel .bat-input-label {
+  margin-bottom: 0 !important;
+}
+
+.home-score-input-grid .home-input-panel .field-label {
+  gap: 2px !important;
+}
+
+.home-score-input-grid .home-input-panel .field-title {
+  font-size: 0.58rem !important;
+  line-height: 1 !important;
+}
+
+.home-score-input-grid .home-input-panel .bat-input-shell select,
+.home-score-input-grid .home-input-panel .swing-form .bat-input-shell select,
+.home-score-input-grid .home-input-panel .swing-form input,
+.home-score-input-grid .home-input-panel .swing-form select {
+  min-height: 28px !important;
+  height: 28px !important;
+}
+
+.home-score-input-grid .home-input-panel .home-ok-slot .settings-ok-button {
+  min-height: 30px !important;
+  height: 30px !important;
+}
+
+.home-score-input-grid.no-input-card > .daily-result-grid,
+.home-score-input-grid.no-input-card > .daily-result-grid.card-count-4 {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  gap: 10px !important;
+}
+
+.home-score-input-grid.no-input-card > .daily-result-grid > .daily-result-card {
+  grid-column: 1 !important;
+  grid-row: auto !important;
+  width: 100% !important;
+  max-width: none !important;
+}
+
+/* Layout experiment absolute final authority. Keep this block at EOF. */
+.home-score-input-grid,
+.challenge-period-panel {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  align-items: stretch !important;
+}
+
+.home-score-input-grid .home-input-panel {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  width: 100% !important;
+  max-width: none !important;
+  justify-self: stretch !important;
+}
+
+.home-score-input-grid > .daily-result-grid,
+.challenge-period-panel > .daily-result-grid,
+.challenge-view .challenge-period-panel > .daily-result-grid,
+.challenge-view .challenge-period-panel:not(.all-record-panel) > .daily-result-grid,
+.challenge-view .challenge-period-panel > .daily-result-grid.card-count-3,
+.challenge-view .challenge-period-panel > .daily-result-grid.card-count-4 {
+  order: 0 !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  grid-column: 1 !important;
+  grid-row: auto !important;
+  width: 100% !important;
+  max-width: none !important;
+  justify-self: stretch !important;
+  gap: 10px !important;
+}
+
+.home-score-input-grid > .daily-result-grid {
+  grid-row: 2 !important;
+}
+
+.challenge-period-panel > .bat-records-section,
+.challenge-period-panel > .challenge-bat-records {
+  order: 1 !important;
+}
+
+.challenge-period-panel > .badge-inline-section {
+  order: 2 !important;
+}
+
+.home-score-input-grid .daily-result-grid.card-count-3 > .daily-result-card,
+.home-score-input-grid .daily-result-grid.card-count-3 > .daily-result-card:first-child,
+.home-score-input-grid .daily-result-grid.card-count-3 > .daily-result-card:nth-child(2),
+.home-score-input-grid .daily-result-grid.card-count-3 > .daily-result-card:nth-child(3),
+.challenge-view .challenge-period-panel > .daily-result-grid > .daily-result-card,
+.challenge-view .challenge-period-panel > .daily-result-grid.card-count-3 > .daily-result-card:first-child,
+.challenge-view .challenge-period-panel > .daily-result-grid.card-count-4 > .daily-result-card {
+  grid-column: 1 !important;
+  grid-row: auto !important;
+  width: 100% !important;
+  max-width: none !important;
+  justify-self: stretch !important;
+}
+
+/* Layout experiment absolute final authority. Keep this block at EOF. */
+.home-score-input-grid,
+.challenge-period-panel {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  align-items: stretch !important;
+}
+
+.home-score-input-grid .home-input-panel {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  width: 100% !important;
+  max-width: none !important;
+  justify-self: stretch !important;
+}
+
+.home-score-input-grid > .daily-result-grid,
+.challenge-period-panel > .daily-result-grid,
+.challenge-view .challenge-period-panel > .daily-result-grid,
+.challenge-view .challenge-period-panel:not(.all-record-panel) > .daily-result-grid,
+.challenge-view .challenge-period-panel > .daily-result-grid.card-count-3,
+.challenge-view .challenge-period-panel > .daily-result-grid.card-count-4 {
+  order: 0 !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  grid-column: 1 !important;
+  grid-row: auto !important;
+  width: 100% !important;
+  max-width: none !important;
+  justify-self: stretch !important;
+  gap: 10px !important;
+}
+
+.home-score-input-grid > .daily-result-grid {
+  grid-row: 2 !important;
+}
+
+.challenge-period-panel > .bat-records-section,
+.challenge-period-panel > .challenge-bat-records {
+  order: 1 !important;
+}
+
+.challenge-period-panel > .badge-inline-section {
+  order: 2 !important;
+}
+
+.home-score-input-grid .daily-result-grid.card-count-3 > .daily-result-card,
+.home-score-input-grid .daily-result-grid.card-count-3 > .daily-result-card:first-child,
+.home-score-input-grid .daily-result-grid.card-count-3 > .daily-result-card:nth-child(2),
+.home-score-input-grid .daily-result-grid.card-count-3 > .daily-result-card:nth-child(3),
+.challenge-view .challenge-period-panel > .daily-result-grid > .daily-result-card,
+.challenge-view .challenge-period-panel > .daily-result-grid.card-count-3 > .daily-result-card:first-child,
+.challenge-view .challenge-period-panel > .daily-result-grid.card-count-4 > .daily-result-card {
+  grid-column: 1 !important;
+  grid-row: auto !important;
+  width: 100% !important;
+  max-width: none !important;
+  justify-self: stretch !important;
+}
+
+/* Layout experiment absolute final authority. Keep this at the file end. */
+.home-score-input-grid,
+.challenge-period-panel {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  align-items: stretch !important;
+}
+
+.home-score-input-grid .home-input-panel {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  width: 100% !important;
+  max-width: none !important;
+  justify-self: stretch !important;
+}
+
+.home-score-input-grid > .daily-result-grid,
+.challenge-period-panel > .daily-result-grid,
+.challenge-view .challenge-period-panel > .daily-result-grid,
+.challenge-view .challenge-period-panel:not(.all-record-panel) > .daily-result-grid,
+.challenge-view .challenge-period-panel > .daily-result-grid.card-count-3,
+.challenge-view .challenge-period-panel > .daily-result-grid.card-count-4 {
+  order: 0 !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  grid-column: 1 !important;
+  grid-row: auto !important;
+  width: 100% !important;
+  max-width: none !important;
+  justify-self: stretch !important;
+  gap: 10px !important;
+}
+
+.home-score-input-grid > .daily-result-grid {
+  grid-row: 2 !important;
+}
+
+.challenge-period-panel > .bat-records-section,
+.challenge-period-panel > .challenge-bat-records {
+  order: 1 !important;
+}
+
+.challenge-period-panel > .badge-inline-section {
+  order: 2 !important;
+}
+
+.home-score-input-grid .daily-result-grid.card-count-3 > .daily-result-card,
+.home-score-input-grid .daily-result-grid.card-count-3 > .daily-result-card:first-child,
+.home-score-input-grid .daily-result-grid.card-count-3 > .daily-result-card:nth-child(2),
+.home-score-input-grid .daily-result-grid.card-count-3 > .daily-result-card:nth-child(3),
+.challenge-view .challenge-period-panel > .daily-result-grid > .daily-result-card,
+.challenge-view .challenge-period-panel > .daily-result-grid.card-count-3 > .daily-result-card:first-child,
+.challenge-view .challenge-period-panel > .daily-result-grid.card-count-4 > .daily-result-card {
+  grid-column: 1 !important;
+  grid-row: auto !important;
+  width: 100% !important;
+  max-width: none !important;
+  justify-self: stretch !important;
+}
+
+/* Layout experiment final authority: challenge follows home full-card layout. */
+.challenge-period-panel {
+  display: grid !important;
+}
+
+.challenge-period-panel > .daily-result-grid,
+.challenge-view .challenge-period-panel > .daily-result-grid,
+.challenge-view .challenge-period-panel:not(.all-record-panel) > .daily-result-grid,
+.challenge-view .challenge-period-panel > .daily-result-grid.card-count-3,
+.challenge-view .challenge-period-panel > .daily-result-grid.card-count-4 {
+  order: 0 !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  grid-row: auto !important;
+  width: 100% !important;
+  max-width: none !important;
+  justify-self: stretch !important;
+  gap: 10px !important;
+}
+
+.challenge-period-panel > .bat-records-section,
+.challenge-period-panel > .challenge-bat-records {
+  order: 1 !important;
+}
+
+.challenge-period-panel > .badge-inline-section {
+  order: 2 !important;
+}
+
+.challenge-view .challenge-period-panel > .daily-result-grid > .daily-result-card,
+.challenge-view .challenge-period-panel > .daily-result-grid.card-count-3 > .daily-result-card:first-child,
+.challenge-view .challenge-period-panel > .daily-result-grid.card-count-4 > .daily-result-card {
+  grid-column: 1 !important;
+  grid-row: auto !important;
+  width: 100% !important;
+  max-width: none !important;
+}
+
+/* Layout experiment: full-width score cards on home and challenge. */
+.home-score-input-grid {
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 10px !important;
+}
+
+.home-score-input-grid .home-input-panel {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  min-height: 154px;
+}
+
+.home-score-input-grid > .daily-result-grid,
+.challenge-period-panel > .daily-result-grid {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  grid-column: 1 !important;
+  grid-row: 2 !important;
+  gap: 10px !important;
+}
+
+.home-score-input-grid .daily-result-grid.card-count-3,
+.challenge-view .challenge-period-panel > .daily-result-grid,
+.challenge-view .challenge-period-panel:not(.all-record-panel) > .daily-result-grid {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
+.home-score-input-grid .daily-result-grid.card-count-3 .daily-result-card,
+.home-score-input-grid .daily-result-grid.card-count-3 .daily-result-card:first-child,
+.home-score-input-grid .daily-result-grid.card-count-3 .daily-result-card:nth-child(2),
+.home-score-input-grid .daily-result-grid.card-count-3 .daily-result-card:nth-child(3),
+.challenge-view .challenge-period-panel > .daily-result-grid .daily-result-card,
+.challenge-view .challenge-period-panel:not(.all-record-panel) > .daily-result-grid.card-count-3 .daily-result-card:first-child {
+  grid-column: 1 !important;
+  grid-row: auto !important;
+}
+
+.home-score-input-grid .daily-result-card,
+.challenge-period-panel > .daily-result-grid > .daily-result-card {
+  grid-template-rows: auto minmax(0, 1fr) auto !important;
+  height: 142px !important;
+  min-height: 142px !important;
+  padding: 12px 14px 10px !important;
+}
+
+.home-score-input-grid .home-input-panel .swing-form {
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-template-areas:
+    "bat bat bat bat bat bat bat bat bat bat bat bat"
+    "count-label count-label count-label count-label avg-label avg-label avg-label avg-label best-label best-label best-label best-label"
+    "count count count count avg avg avg avg best best best best"
+    ". . . heading heading heading heading heading heading . . .";
+  row-gap: 6px;
+}
+
+.home-score-input-grid .daily-result-card .milestone-track,
+.challenge-period-panel > .daily-result-grid > .daily-result-card .milestone-track {
+  align-self: end;
+  margin: 4px 14px 26px 8px !important;
+}
+
+.home-score-input-grid .daily-score-row,
+.challenge-period-panel > .daily-result-grid .daily-score-row {
+  grid-template-columns: minmax(0, 1fr) minmax(72px, 88px);
+  gap: 8px;
+}
+
+.home-score-input-grid .daily-score-row > strong,
+.challenge-period-panel > .daily-result-grid .daily-score-row > strong {
+  max-width: none !important;
+  transform: translateY(-4px);
+}
+
+.home-score-input-grid .daily-badge-stage,
+.challenge-period-panel > .daily-result-grid .daily-badge-stage {
+  position: static;
+  width: 100%;
+  justify-self: stretch;
+  align-self: center;
+  transform: none;
+}
+
+.home-score-input-grid .daily-badge-stage,
+.challenge-period-panel > .daily-result-grid .daily-badge-stage {
+  justify-self: end;
+  width: 82px;
 }
 
 /* Final authority: the input button must recover its normal fill after the
@@ -7756,7 +8290,7 @@ select:focus,
 .daily-result-card strong {
   min-width: 0;
   max-width: calc(100% - 38px);
-  font-size: var(--score-value-size, 2.44rem);
+  font-size: 2.44rem;
   overflow: visible;
   text-align: left;
   text-overflow: clip;
@@ -7779,18 +8313,18 @@ select:focus,
 
 .daily-badge-stage {
   width: 56px;
-  top: 42%;
+  top: 34%;
   right: -3px;
-  transform: translateY(-86%);
+  transform: translateY(-92%);
 }
 
 .daily-badge-mark {
-  width: 56px;
+  width: 84px;
 }
 
 .daily-badge-image {
-  width: min(38px, 100%);
-  height: min(38px, 100%);
+  width: min(57px, 100%);
+  height: min(57px, 100%);
 }
 
 .rarity-badge-preview .preview-badge-mark .daily-badge-image {
@@ -8142,40 +8676,44 @@ select:focus,
 }
 
 .home-score-input-grid .daily-result-grid.card-count-3 {
-  display: contents;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-column: 1;
+  grid-row: 2;
+  gap: 10px;
 }
 
 .home-score-input-grid .daily-result-grid.card-count-3 .daily-result-card:first-child {
-  grid-column: 2;
-  grid-row: 1;
+  grid-column: 1;
+  grid-row: auto;
 }
 
 .home-score-input-grid .daily-result-grid.card-count-3 .daily-result-card:nth-child(2) {
   grid-column: 1;
-  grid-row: 2;
+  grid-row: auto;
 }
 
 .home-score-input-grid .daily-result-grid.card-count-3 .daily-result-card:nth-child(3) {
-  grid-column: 2;
-  grid-row: 2;
+  grid-column: 1;
+  grid-row: auto;
 }
 
 .challenge-view .challenge-period-panel:not(.all-record-panel) > .daily-result-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  grid-template-columns: minmax(0, 1fr) !important;
 }
 
 .challenge-view .challenge-period-panel:not(.all-record-panel) > .daily-result-grid.card-count-3 .daily-result-card:first-child {
-  grid-column: 1 / -1;
+  grid-column: 1;
 }
 
 .home-score-input-grid .home-input-panel .swing-form {
   height: 100%;
   grid-template-columns: repeat(12, minmax(0, 1fr));
   grid-template-areas:
-    "bat bat bat bat bat bat bat bat bat bat bat bat"
+    "form-title form-title form-title form-title bat bat bat bat bat bat bat bat"
     "count-label count-label count-label count-label avg-label avg-label avg-label avg-label best-label best-label best-label best-label"
     "count count count count avg avg avg avg best best best best"
-    ". . heading heading heading heading heading heading heading heading . .";
+    ". heading heading heading heading heading heading heading heading heading heading .";
   row-gap: 5px;
 }
 
@@ -8213,16 +8751,24 @@ select:focus,
 }
 
 .home-ok-slot {
-  display: inline-grid;
+  display: inline-flex;
   grid-area: heading;
   align-self: center;
   justify-self: center;
-  place-items: center;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .home-ok-slot .settings-ok-button {
   width: 86px;
   min-width: 86px;
+}
+
+.home-ok-slot .test-seed-button {
+  color: var(--hot);
+  border-color: color-mix(in srgb, var(--hot) 55%, var(--line));
+  background: color-mix(in srgb, var(--hot) 12%, #1d222d);
 }
 
 .home-score-input-grid .home-input-panel .field-title {
@@ -8583,4 +9129,21 @@ input[type="file"]::file-selector-button:active {
 
 .daily-result-group-card.record-card-button.badge-active:active {
   transform: none !important;
+}
+
+/* Final authority: challenge has no input card; its first score card occupies that slot. */
+.home-score-input-grid.no-input-card > .daily-result-grid,
+.home-score-input-grid.no-input-card > .daily-result-grid.card-count-4 {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  gap: 10px !important;
+}
+
+.home-score-input-grid.no-input-card > .daily-result-grid > .daily-result-card {
+  grid-column: 1 !important;
+  grid-row: auto !important;
+  width: 100% !important;
+  max-width: none !important;
 }
