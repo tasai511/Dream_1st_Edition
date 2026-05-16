@@ -7272,26 +7272,72 @@ select:focus,
   max-width: none !important;
 }
 
-/* Final authority: use a heavier numeric face for score values. */
-.daily-score-row > strong {
-  font-family: "Avenir Next", "DIN Alternate", "Helvetica Neue", system-ui, sans-serif !important;
-  font-weight: 950 !important;
-  -webkit-text-stroke: 0.2px currentColor !important;
-  text-shadow: none !important;
-  font-variant-numeric: tabular-nums !important;
-  font-feature-settings: "tnum" 1 !important;
+/* Final authority: challenge tabs replace the heading inside the same slot. */
+.result-heading.with-tabs {
+  flex: 1 1 auto !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  grid-template-rows: 30px 1.35em !important;
+  row-gap: 2px !important;
+  min-height: 46px !important;
+  padding: 0 2px !important;
 }
 
-.daily-score-row > strong span {
-  font-family: var(--app-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif) !important;
-  font-weight: 900 !important;
-  -webkit-text-stroke: 0 !important;
+.result-header-row:has(.challenge-range-tabs) {
+  width: 100% !important;
 }
 
-/* Final authority: match the app logo type to the score-number face. */
-.app-title {
-  font-family: "Avenir Next", "DIN Alternate", "Helvetica Neue", system-ui, sans-serif !important;
-  font-weight: 950 !important;
+.result-heading.with-tabs > p {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.78rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.challenge-range-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-self: center;
+  width: 100%;
+  height: 30px;
+  gap: 6px;
+}
+
+.challenge-range-tabs button {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  align-items: center;
+  justify-items: center;
+  min-width: 0;
+  min-height: 0;
+  border: 0;
+  border-radius: 7px;
+  padding: 3px 4px 4px;
+  color: var(--muted);
+  background: transparent;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.challenge-range-tabs button.selected {
+  color: #fff;
+  background: var(--hot);
+}
+
+.challenge-range-tabs .challenge-tab-period {
+  display: block;
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.challenge-range-tabs .challenge-tab-label {
+  display: block;
+  margin-top: 3px;
+  font-size: 0.48rem;
+  font-weight: 900;
+  line-height: 1;
+  opacity: 0.82;
 }
 
 /* Final authority: badge image placement is calculated from card/image size.
@@ -7405,20 +7451,6 @@ select:focus,
   align-self: start !important;
   justify-self: start !important;
   transform: translateY(-2px);
-}
-
-/* Final authority: make score numbers feel heavier without enlarging them. */
-.daily-score-row > strong {
-  font-weight: 1000 !important;
-  -webkit-text-stroke: 0.35px currentColor;
-  text-shadow:
-    0.35px 0 currentColor,
-    -0.2px 0 currentColor;
-}
-
-.daily-score-row > strong span {
-  -webkit-text-stroke: 0;
-  text-shadow: none;
 }
 
 /* Final authority: lift the badge image high in the score card. */

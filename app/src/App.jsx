@@ -9,12 +9,18 @@ const RANGE_ALL = "all";
 const RANGE_TODAY = "today";
 const RANGE_WEEK = "week";
 const RANGE_MONTH = "month";
+const RANGE_YEAR = "year";
 const RANGE_TOTAL = "total";
 const kMinChartVisibleDays = 7;
 const kMaxChartVisibleDays = 365;
 const kCompactLayoutWidth = 390;
 const kCompactLayoutHeight = 844;
 const kScoreProgressAnimationDuration = 5000;
+const CHALLENGE_RANGE_TABS = [
+  { range: RANGE_WEEK, period: "週間" },
+  { range: RANGE_MONTH, period: "月間" },
+  { range: RANGE_YEAR, period: "年間" },
+];
 const RARITY_ORDER = ["C", "U", "R", "RR", "SR", "UR"];
 const RARITY_LABELS = {
   C: "Common",
@@ -64,6 +70,7 @@ const BADGE_PERIODS = [
   ["daily", "毎日バッジ"],
   ["weekly", "毎週バッジ"],
   ["monthly", "毎月バッジ"],
+  ["yearly", "毎年バッジ"],
   ["total", "累計バッジ"],
 ];
 const periodCountBadgeLabel = (prefix, target) => `${prefix}回数${target}`;
@@ -75,8 +82,9 @@ const HOME_BADGE_DEFINITIONS = [
   ...[300, 500, 1000, 2000].map((target) => ({ period: RANGE_WEEK, group: "weekly", metric: "count", target, label: periodCountBadgeLabel("毎週", target) })),
   ...[[3, "毎週3日練習"], [5, "毎週5日練習"], [7, "毎週皆勤"]].map(([target, label]) => ({ period: RANGE_WEEK, group: "weekly", metric: "days", target, label })),
   ...[500, 1000, 2000, 3000, 5000].map((target) => ({ period: RANGE_MONTH, group: "monthly", metric: "count", target, label: periodCountBadgeLabel("毎月", target) })),
-  ...[300, 400, 500, 600, 700].map((target) => ({ period: RANGE_MONTH, group: "monthly", metric: "avg", target, label: `毎月平均${target}` })),
   ...[[5, "毎月5日練習"], [10, "毎月10日練習"], [20, "毎月20日練習"], ["all", "毎月毎日練習"]].map(([target, label]) => ({ period: RANGE_MONTH, group: "monthly", metric: "days", target, label })),
+  ...[10000, 30000, 50000, 100000, 200000].map((target) => ({ period: RANGE_YEAR, group: "yearly", metric: "count", target, label: periodCountBadgeLabel("毎年", target) })),
+  ...[[30, "毎年30日練習"], [60, "毎年60日練習"], [100, "毎年100日練習"], [200, "毎年200日練習"], ["all", "毎年毎日練習"]].map(([target, label]) => ({ period: RANGE_YEAR, group: "yearly", metric: "days", target, label })),
   ...UNIQUE_TOTAL_COUNT_TARGETS.map((target) => ({ period: RANGE_TOTAL, group: "total", metric: "count", target, label: `累計回数${target}` })),
   ...[300, 400, 500, 600, 700].map((target) => ({ period: RANGE_TOTAL, group: "total", metric: "avg", target, label: `累計平均${target}` })),
   ...UNIQUE_BEST_TARGETS.map((target) => ({ period: RANGE_TOTAL, group: "total", metric: "best", target, label: `累計ベスト${target}` })),
@@ -91,7 +99,20 @@ const CONTEXT_STREAK_BADGES = UNIQUE_STREAK_TARGETS.map((target) => `${target}�
 const CONTEXT_BAT_BADGES = ["相棒100回", "相棒1000回", "相棒5000回", "バットコレクター", "全バット練習"];
 const WEEKLY_AVG_UPDATE_BADGE = "先週より平均アップ";
 const WEEKLY_BEST_UPDATE_BADGE = "先週のベスト更新";
-const CONTEXT_GROWTH_BADGES = ["先週より多く振った", "先月より多く振った", WEEKLY_AVG_UPDATE_BADGE, "先月より平均アップ", WEEKLY_BEST_UPDATE_BADGE];
+const MONTHLY_AVG_UPDATE_BADGE = "先月より平均アップ";
+const MONTHLY_BEST_UPDATE_BADGE = "先月のベスト更新";
+const YEARLY_AVG_UPDATE_BADGE = "去年より平均アップ";
+const YEARLY_BEST_UPDATE_BADGE = "去年のベスト更新";
+const CONTEXT_GROWTH_BADGES = [
+  "先週より多く振った",
+  "先月より多く振った",
+  WEEKLY_AVG_UPDATE_BADGE,
+  WEEKLY_BEST_UPDATE_BADGE,
+  MONTHLY_AVG_UPDATE_BADGE,
+  MONTHLY_BEST_UPDATE_BADGE,
+  YEARLY_AVG_UPDATE_BADGE,
+  YEARLY_BEST_UPDATE_BADGE,
+];
 const CONTEXT_SECRET_BADGES = [
   "ラッキー7",
   "スリーナイン",
@@ -430,6 +451,30 @@ function challengeYearWindow(records = [], baseDate = parseISO(todayISO())) {
   return challengeYearCycleAt(records, currentChallengeYearIndex(records, baseDate), baseDate);
 }
 
+function challengeYearWindowFromFirstDate(firstDate, baseDate = parseISO(todayISO())) {
+  if (!firstDate || baseDate < firstDate) {
+    const start = firstDate || baseDate;
+    const end = addDays(addYearsFromDate(start, 1), -1);
+    return { index: 0, start, end, label: `${formatJapaneseFullDate(start)}〜${formatJapaneseFullDate(end)}` };
+  }
+  let index = Math.max(0, baseDate.getFullYear() - firstDate.getFullYear());
+  const cycleAt = (cycleIndex) => {
+    const start = addYearsFromDate(firstDate, cycleIndex);
+    const end = addDays(addYearsFromDate(firstDate, cycleIndex + 1), -1);
+    return { index: cycleIndex, start, end, label: `${formatJapaneseFullDate(start)}〜${formatJapaneseFullDate(end)}` };
+  };
+  let window = cycleAt(index);
+  while (baseDate < window.start && index > 0) {
+    index -= 1;
+    window = cycleAt(index);
+  }
+  while (baseDate > window.end) {
+    index += 1;
+    window = cycleAt(index);
+  }
+  return window;
+}
+
 function challengeYearHistoryWindows(records = [], baseDate = parseISO(todayISO())) {
   const currentIndex = currentChallengeYearIndex(records, baseDate);
   return Array.from({ length: currentIndex }, (_, offset) => {
@@ -454,6 +499,41 @@ function rangeWindow(range, baseDate = parseISO(todayISO())) {
     return { start, end, title: "今月の実績", label: formatJapaneseRange(start, end) };
   }
   return { start: baseDate, end: baseDate, title: "今日の実績", label: formatJapaneseDate(baseDate) };
+}
+
+function viewWindowForRange(records, range = RANGE_TODAY, activeDate = todayISO()) {
+  if (range === RANGE_YEAR) return challengeYearWindow(records, parseISO(activeDate));
+  if (range === RANGE_WEEK || range === RANGE_MONTH) return rangeWindow(range, parseISO(activeDate));
+  const date = parseISO(activeDate);
+  return { start: date, end: date, label: formatJapaneseDate(date) };
+}
+
+function previousChallengeWindow(records, range, start, end) {
+  if (range === RANGE_WEEK) return { start: addDays(start, -7), end: addDays(end, -7), label: "先週" };
+  if (range === RANGE_MONTH) return { start: startOfMonth(addDays(start, -1)), end: endOfMonth(addDays(start, -1)), label: "先月" };
+  if (range === RANGE_YEAR) {
+    return { start: addYearsFromDate(start, -1), end: addDays(start, -1), label: "去年" };
+  }
+  return null;
+}
+
+function growthBadgeLabelsForRange(range) {
+  if (range === RANGE_WEEK) return {
+    previousLabel: "先週",
+    avg: WEEKLY_AVG_UPDATE_BADGE,
+    best: WEEKLY_BEST_UPDATE_BADGE,
+  };
+  if (range === RANGE_MONTH) return {
+    previousLabel: "先月",
+    avg: MONTHLY_AVG_UPDATE_BADGE,
+    best: MONTHLY_BEST_UPDATE_BADGE,
+  };
+  if (range === RANGE_YEAR) return {
+    previousLabel: "去年",
+    avg: YEARLY_AVG_UPDATE_BADGE,
+    best: YEARLY_BEST_UPDATE_BADGE,
+  };
+  return null;
 }
 
 function badgeFilterWindow(filter, baseDate = parseISO(todayISO()), records = []) {
@@ -572,24 +652,28 @@ function periodSummaryFromDaily(dailyMap, start, end, baseDate = todayISO()) {
 }
 
 function summaryForRecordsRange(records, range = RANGE_TODAY, activeDate = todayISO()) {
-  if (range === RANGE_WEEK || range === RANGE_MONTH) {
-    const { start, end } = rangeWindow(range, parseISO(activeDate));
+  if (range === RANGE_WEEK || range === RANGE_MONTH || range === RANGE_YEAR) {
+    const { start, end } = viewWindowForRange(records, range, activeDate);
     const periodRecords = records.filter((record) => record.date >= toISO(start) && record.date <= toISO(end));
     const dailyMap = new Map(aggregate(periodRecords).map((day) => [day.date, day]));
     const summary = periodSummaryFromDaily(dailyMap, start, end, activeDate);
-    if (range === RANGE_WEEK) {
-      const previousStart = addDays(start, -7);
-      const previousEnd = addDays(end, -7);
+    const growthLabels = growthBadgeLabelsForRange(range);
+    const previousWindow = previousChallengeWindow(records, range, start, end);
+    if (growthLabels && previousWindow) {
+      const previousStart = previousWindow.start;
+      const previousEnd = previousWindow.end;
       const previousRecords = records.filter((record) => record.date >= toISO(previousStart) && record.date <= toISO(previousEnd));
       const previousDailyMap = new Map(aggregate(previousRecords).map((day) => [day.date, day]));
       const previousSummary = periodSummaryFromDaily(previousDailyMap, previousStart, previousEnd, toISO(previousEnd));
       if (previousRecords.length && previousSummary.avg > 0) {
         summary.avgTarget = previousSummary.avg;
-        summary.avgTargetLabel = WEEKLY_AVG_UPDATE_BADGE;
+        summary.avgTargetLabel = growthLabels.avg;
+        summary.avgTargetPreviousLabel = growthLabels.previousLabel;
       }
       if (previousRecords.length && previousSummary.best > 0) {
         summary.bestTarget = previousSummary.best;
-        summary.bestTargetLabel = WEEKLY_BEST_UPDATE_BADGE;
+        summary.bestTargetLabel = growthLabels.best;
+        summary.bestTargetPreviousLabel = growthLabels.previousLabel;
       }
     }
     return summary;
@@ -598,8 +682,8 @@ function summaryForRecordsRange(records, range = RANGE_TODAY, activeDate = today
 }
 
 function recordsForViewRange(records, range = RANGE_TODAY, activeDate = todayISO()) {
-  if (range === RANGE_WEEK || range === RANGE_MONTH) {
-    const { start, end } = rangeWindow(range, parseISO(activeDate));
+  if (range === RANGE_WEEK || range === RANGE_MONTH || range === RANGE_YEAR) {
+    const { start, end } = viewWindowForRange(records, range, activeDate);
     return records.filter((record) => record.date >= toISO(start) && record.date <= toISO(end));
   }
   return records.filter((record) => record.date === activeDate);
@@ -652,6 +736,7 @@ function badgesFor(records, baseDate = todayISO()) {
   const uniqueEarned = new Set();
   const batEarned = new Set();
   const batStats = new Map();
+  const firstDate = firstRecordDate(records);
   let cumulativeCount = 0;
   let cumulativeBest = 0;
 
@@ -701,8 +786,11 @@ function badgesFor(records, baseDate = todayISO()) {
     const dateValue = parseISO(day.date);
     const weekKey = toISO(startOfWeek(dateValue));
     const monthKey = day.date.slice(0, 7);
+    const yearWindow = challengeYearWindowFromFirstDate(firstDate, dateValue);
+    const yearKey = `${yearWindow.index}:${toISO(yearWindow.start)}`;
     periodKeys.set(`week:${weekKey}`, { period: RANGE_WEEK, start: startOfWeek(dateValue), end: endOfWeek(dateValue), earnedAt: day.date });
     periodKeys.set(`month:${monthKey}`, { period: RANGE_MONTH, start: startOfMonth(dateValue), end: endOfMonth(dateValue), earnedAt: day.date });
+    periodKeys.set(`year:${yearKey}`, { period: RANGE_YEAR, start: yearWindow.start, end: yearWindow.end, earnedAt: day.date });
   });
 
   periodKeys.forEach((period) => {
@@ -714,17 +802,19 @@ function badgesFor(records, baseDate = todayISO()) {
           addHomeBadge(byDate, period.earnedAt, definition.label);
         }
       });
-    if (period.period === RANGE_WEEK) {
-      const previousStart = addDays(period.start, -7);
-      const previousEnd = addDays(period.end, -7);
+    const growthLabels = growthBadgeLabelsForRange(period.period);
+    const previousWindow = previousChallengeWindow(records, period.period, period.start, period.end);
+    if (growthLabels && previousWindow) {
+      const previousStart = previousWindow.start;
+      const previousEnd = previousWindow.end;
       const previousRecords = daily.filter((day) => day.date >= toISO(previousStart) && day.date <= toISO(previousEnd));
       const previousDailyMap = new Map(previousRecords.map((day) => [day.date, day]));
       const previousSummary = periodSummaryFromDaily(previousDailyMap, previousStart, previousEnd, toISO(previousEnd));
       if (previousRecords.length && previousSummary.avg > 0 && summary.avg > previousSummary.avg) {
-        addHomeBadge(byDate, period.earnedAt, WEEKLY_AVG_UPDATE_BADGE);
+        addHomeBadge(byDate, period.earnedAt, growthLabels.avg);
       }
       if (previousRecords.length && previousSummary.best > 0 && summary.best > previousSummary.best) {
-        addHomeBadge(byDate, period.earnedAt, WEEKLY_BEST_UPDATE_BADGE);
+        addHomeBadge(byDate, period.earnedAt, growthLabels.best);
       }
     }
   });
@@ -1190,8 +1280,10 @@ function interpolateDailySummary(from, to, progress) {
     spanDays: to.spanDays || from.spanDays || null,
     avgTarget: to.avgTarget ?? from.avgTarget ?? null,
     avgTargetLabel: to.avgTargetLabel || from.avgTargetLabel || null,
+    avgTargetPreviousLabel: to.avgTargetPreviousLabel || from.avgTargetPreviousLabel || null,
     bestTarget: to.bestTarget ?? from.bestTarget ?? null,
     bestTargetLabel: to.bestTargetLabel || from.bestTargetLabel || null,
+    bestTargetPreviousLabel: to.bestTargetPreviousLabel || from.bestTargetPreviousLabel || null,
     bats: to.bats || from.bats || [],
   };
 }
@@ -1267,6 +1359,8 @@ function milestoneAlpha(position) {
 }
 
 function DailyResultCards({ summary, showBadges = true, selected = false, onSelect = null, animation = null, range = RANGE_TODAY, includeDays = false, dismissedHomeBadges = new Set(), onDismissHomeBadge = null }) {
+  const growthLabels = growthBadgeLabelsForRange(range);
+  const previousScoreMissingMessage = growthLabels ? `${growthLabels.previousLabel}のスコアがありません` : "";
   const cards = [
     ...(includeDays ? [{
       key: "days",
@@ -1310,9 +1404,9 @@ function DailyResultCards({ summary, showBadges = true, selected = false, onSele
         metric: "avg",
         target: summary.avgTarget,
         label: summary.avgTargetLabel || `平均${summary.avgTarget}`,
-        description: summary.avgTargetLabel ? `先週の平均${summary.avgTarget}点を更新` : undefined,
+        description: summary.avgTargetLabel ? `${summary.avgTargetPreviousLabel || growthLabels?.previousLabel || "前回"}の平均${summary.avgTarget}点を更新` : undefined,
       }] : null,
-      emptyTrackMessage: range === RANGE_WEEK && !summary.avgTarget ? "先週のスコアがありません" : "",
+      emptyTrackMessage: growthLabels && !summary.avgTarget ? previousScoreMissingMessage : "",
       fillRatio: animation?.fillRatios?.avg,
       badgeOverride: animation?.badgeOverrides?.avg,
       revealBadge: !animation?.active,
@@ -1332,9 +1426,9 @@ function DailyResultCards({ summary, showBadges = true, selected = false, onSele
         metric: "best",
         target: summary.bestTarget,
         label: summary.bestTargetLabel || `ベスト${summary.bestTarget}`,
-        description: summary.bestTargetLabel ? `先週のベスト${summary.bestTarget}点を更新` : undefined,
+        description: summary.bestTargetLabel ? `${summary.bestTargetPreviousLabel || growthLabels?.previousLabel || "前回"}のベスト${summary.bestTarget}点を更新` : undefined,
       }] : null,
-      emptyTrackMessage: range === RANGE_WEEK && !summary.bestTarget ? "先週のスコアがありません" : "",
+      emptyTrackMessage: growthLabels && !summary.bestTarget ? previousScoreMissingMessage : "",
       fillRatio: animation?.fillRatios?.best,
       badgeOverride: animation?.badgeOverrides?.best,
       revealBadge: !animation?.active,
@@ -2268,7 +2362,7 @@ function animationTestDb() {
 export default function App() {
   const [db, setDbState] = useState(loadDb);
   const [tab, setTab] = useState(() => (localStorage.getItem(STORAGE_KEY) ? "home" : "settings"));
-  const [range, setRange] = useState(RANGE_WEEK);
+  const [challengeRange, setChallengeRange] = useState(RANGE_WEEK);
   const [selectedDate, setSelectedDate] = useState(todayISO);
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
   const [pendingDelete, setPendingDelete] = useState(null);
@@ -2581,10 +2675,11 @@ export default function App() {
               scoreAnimation={scoreAnimation}
               setScoreAnimation={setScoreAnimation}
               onScoreAnimationComplete={markScoreAnimationPlayed}
-              resultRange={RANGE_WEEK}
+              resultRange={challengeRange}
+              onChallengeRangeChange={setChallengeRange}
               title="チャレンジ"
               titleIcon="challenge"
-              badgeTitle="今週のバッジ"
+              badgeTitle={challengeRange === RANGE_WEEK ? "今週のバッジ" : challengeRange === RANGE_MONTH ? "今月のバッジ" : "年間のバッジ"}
             />
           )}
           {tab === "data" && (
@@ -2626,26 +2721,35 @@ export default function App() {
   );
 }
 
-function HomeView({ db, setDb, currentName, allForName, allForNameRaw = allForName, addRecord, activeDate = todayISO(), appActiveDate = todayISO(), setHomeViewDate, dismissedHomeBadgesByDate, setDismissedHomeBadgesByDate, scoreAnimation, setScoreAnimation, onScoreAnimationComplete, resultRange = RANGE_TODAY, title = "今日の結果", titleIcon = "home", badgeTitle = "今日のバッジ" }) {
+function HomeView({ db, setDb, currentName, allForName, allForNameRaw = allForName, addRecord, activeDate = todayISO(), appActiveDate = todayISO(), setHomeViewDate, dismissedHomeBadgesByDate, setDismissedHomeBadgesByDate, scoreAnimation, setScoreAnimation, onScoreAnimationComplete, resultRange = RANGE_TODAY, onChallengeRangeChange = null, title = "今日の結果", titleIcon = "home", badgeTitle = "今日のバッジ" }) {
   const [formResetKey, setFormResetKey] = useState(0);
   const showHomeEntryTools = resultRange === RANGE_TODAY;
   const scoreAnimationPlayed = Boolean(scoreAnimation?.playedRanges?.includes(resultRange));
-  const activeScoreAnimationKey = scoreAnimation && !scoreAnimationPlayed ? `${scoreAnimation.id}:${resultRange}` : null;
+  const animationFromSummary = resultRange === RANGE_WEEK && scoreAnimation?.fromWeekSummary
+    ? scoreAnimation.fromWeekSummary
+    : resultRange === RANGE_TODAY
+      ? scoreAnimation?.fromSummary
+      : null;
+  const animationToSummary = resultRange === RANGE_WEEK && scoreAnimation?.toWeekSummary
+    ? scoreAnimation.toWeekSummary
+    : resultRange === RANGE_TODAY
+      ? scoreAnimation?.toSummary
+      : null;
+  const canPlayScoreAnimation = Boolean(animationFromSummary && animationToSummary);
+  const activeScoreAnimationKey = scoreAnimation && !scoreAnimationPlayed && canPlayScoreAnimation ? `${scoreAnimation.id}:${resultRange}` : null;
   const scoreProgressAnimation = useScoreProgressAnimation(activeScoreAnimationKey, {
     enabled: Boolean(activeScoreAnimationKey),
     onComplete: () => onScoreAnimationComplete?.(resultRange),
   });
   const allFiltered = allForName;
-  const todayRecords = allFiltered.filter((record) => record.date === activeDate);
-  const viewRecords = recordsForViewRange(allFiltered, resultRange, activeDate);
-  const todaySummary = summaryForRecordsRange(allFiltered, resultRange, activeDate);
+  const todayRecords = useMemo(() => allFiltered.filter((record) => record.date === activeDate), [allFiltered, activeDate]);
+  const viewRecords = useMemo(() => recordsForViewRange(allFiltered, resultRange, activeDate), [allFiltered, resultRange, activeDate]);
+  const todaySummary = useMemo(() => summaryForRecordsRange(allFiltered, resultRange, activeDate), [allFiltered, resultRange, activeDate]);
   const hasTodayRecord = todayRecords.length > 0;
   const todayByBat = aggregateByBat(viewRecords);
-  const shouldPlayScoreAnimation = Boolean(scoreAnimation && !scoreAnimationPlayed);
+  const shouldPlayScoreAnimation = Boolean(scoreAnimation && !scoreAnimationPlayed && canPlayScoreAnimation);
   const effectiveScoreAnimationProgress = shouldPlayScoreAnimation ? scoreProgressAnimation.progress : 1;
   const isScoreAnimating = Boolean(shouldPlayScoreAnimation && scoreProgressAnimation.active);
-  const animationFromSummary = resultRange === RANGE_WEEK && scoreAnimation?.fromWeekSummary ? scoreAnimation.fromWeekSummary : scoreAnimation?.fromSummary;
-  const animationToSummary = resultRange === RANGE_WEEK && scoreAnimation?.toWeekSummary ? scoreAnimation.toWeekSummary : scoreAnimation?.toSummary;
   const displayTodaySummary = shouldPlayScoreAnimation
     ? interpolateDailySummary(animationFromSummary, animationToSummary, effectiveScoreAnimationProgress)
     : todaySummary;
@@ -2655,7 +2759,7 @@ function HomeView({ db, setDb, currentName, allForName, allForNameRaw = allForNa
     metric: "best",
     target: summary.bestTarget,
     label: summary.bestTargetLabel || `ベスト${summary.bestTarget}`,
-    description: summary.bestTargetLabel ? `先週のベスト${summary.bestTarget}点を更新` : undefined,
+    description: summary.bestTargetLabel ? `${summary.bestTargetPreviousLabel || growthBadgeLabelsForRange(resultRange)?.previousLabel || "前回"}のベスト${summary.bestTarget}点を更新` : undefined,
   }] : badgeDefinitionsForMetric(resultRange, "best");
   const avgDefinitionsForSummary = (summary) => summary?.avgTarget ? [{
     period: resultRange,
@@ -2663,7 +2767,7 @@ function HomeView({ db, setDb, currentName, allForName, allForNameRaw = allForNa
     metric: "avg",
     target: summary.avgTarget,
     label: summary.avgTargetLabel || `平均${summary.avgTarget}`,
-    description: summary.avgTargetLabel ? `先週の平均${summary.avgTarget}点を更新` : undefined,
+    description: summary.avgTargetLabel ? `${summary.avgTargetPreviousLabel || growthBadgeLabelsForRange(resultRange)?.previousLabel || "前回"}の平均${summary.avgTarget}点を更新` : undefined,
   }] : badgeDefinitionsForMetric(resultRange, "avg");
   const daysBadgeDefinitions = badgeDefinitionsForMetric(resultRange, "days", animationFromSummary?.spanDays || todaySummary.spanDays);
   const countBadgeDefinitions = badgeDefinitionsForMetric(resultRange, "count");
@@ -2701,20 +2805,23 @@ function HomeView({ db, setDb, currentName, allForName, allForNameRaw = allForNa
     ? randomTestRecordValues(formResetKey + todayRecords.length * 31)
     : null;
   const isHomeHistoryView = !db.testInputDefaults && activeDate !== todayISO();
-  const viewWindow = resultRange === RANGE_TODAY ? null : rangeWindow(resultRange, parseISO(activeDate));
-  const viewBadgeLabels = [...badgesFor(allForName, activeDate).entries()].flatMap(([date, labels]) => {
+  const viewWindow = useMemo(() => (
+    resultRange === RANGE_TODAY ? null : viewWindowForRange(allFiltered, resultRange, activeDate)
+  ), [allFiltered, resultRange, activeDate]);
+  const badgeMap = useMemo(() => badgesFor(allForName, activeDate), [allForName, activeDate]);
+  const viewBadgeLabels = useMemo(() => [...badgeMap.entries()].flatMap(([date, labels]) => {
     if (resultRange === RANGE_TODAY) return date === activeDate ? labels : [];
     return date >= toISO(viewWindow.start) && date <= toISO(viewWindow.end) ? labels : [];
-  });
+  }), [badgeMap, resultRange, activeDate, viewWindow]);
   const dismissedBadgeBucket = resultRange === RANGE_TODAY ? activeDate : `${resultRange}:${toISO(viewWindow.start)}`;
   const dismissedHomeBadges = useMemo(() => new Set(dismissedHomeBadgesByDate[dismissedBadgeBucket] || []), [dismissedHomeBadgesByDate, dismissedBadgeBucket]);
-  const badgeCounts = [...viewBadgeLabels.reduce((map, label) => {
+  const badgeCounts = useMemo(() => [...viewBadgeLabels.reduce((map, label) => {
     map.set(label, (map.get(label) || 0) + 1);
     return map;
-  }, new Map()).entries()].sort(([a], [b]) => compareBadgesByRarity(a, b));
+  }, new Map()).entries()].sort(([a], [b]) => compareBadgesByRarity(a, b)), [viewBadgeLabels]);
   const headerDateLabel = resultRange === RANGE_TODAY
     ? formatJapaneseMonthDay(parseISO(activeDate))
-    : rangeWindow(resultRange, parseISO(activeDate)).label;
+    : viewWindowForRange(allFiltered, resultRange, activeDate).label;
   const markedDates = useMemo(() => new Set(allForNameRaw.map((record) => record.date)), [allForNameRaw]);
   const handleRecordSubmit = (event) => {
     if (addRecord(event, activeDate)) {
@@ -2808,7 +2915,14 @@ function HomeView({ db, setDb, currentName, allForName, allForNameRaw = allForNa
       <section className="home-section home-result-section">
         <div className="result-top-slot">
         <div className="section-row tight result-header-row">
-          <ResultHeader title={title} icon={titleIcon} dateLabel={headerDateLabel} />
+          <ResultHeader
+            title={title}
+            icon={titleIcon}
+            dateLabel={headerDateLabel}
+            headingSlot={onChallengeRangeChange ? (
+              <ChallengeRangeTabs activeRange={resultRange} onChange={onChallengeRangeChange} />
+            ) : null}
+          />
           {showHomeEntryTools && db.testInputDefaults && (
             <div className="home-test-controls">
               <label className="test-auto-switch" aria-label="自動生成">
@@ -2880,10 +2994,30 @@ function HomeView({ db, setDb, currentName, allForName, allForNameRaw = allForNa
   );
 }
 
-function ResultHeader({ title, icon = null, dateLabel }) {
+function ChallengeRangeTabs({ activeRange, onChange }) {
   return (
-    <div className="result-heading">
-      {title ? <h2 className="icon-heading">{icon && <Icon type={icon} />}{title}</h2> : <span aria-hidden="true" />}
+    <div className="challenge-range-tabs" role="tablist" aria-label="チャレンジ期間">
+      {CHALLENGE_RANGE_TABS.map((tab) => (
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeRange === tab.range}
+          className={activeRange === tab.range ? "selected" : ""}
+          onClick={() => onChange?.(tab.range)}
+          key={tab.range}
+        >
+          <span className="challenge-tab-period">{tab.period}</span>
+          <span className="challenge-tab-label">チャレンジ</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function ResultHeader({ title, icon = null, dateLabel, headingSlot = null }) {
+  return (
+    <div className={`result-heading ${headingSlot ? "with-tabs" : ""}`}>
+      {headingSlot || (title ? <h2 className="icon-heading">{icon && <Icon type={icon} />}{title}</h2> : <span aria-hidden="true" />)}
       <p>{dateLabel}</p>
     </div>
   );
