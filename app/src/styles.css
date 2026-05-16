@@ -587,6 +587,25 @@ h2 {
   line-height: 1;
 }
 
+.home-calendar-today {
+  justify-self: center;
+  min-height: 24px;
+  border: 1px solid color-mix(in srgb, var(--hot) 42%, var(--line));
+  border-radius: 999px;
+  padding: 0 12px;
+  color: var(--text);
+  background: color-mix(in srgb, var(--hot) 14%, transparent);
+  font-size: 0.66rem;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.home-calendar-today:disabled {
+  border-color: var(--line);
+  color: color-mix(in srgb, var(--muted) 42%, transparent);
+  background: rgba(255, 255, 255, 0.035);
+}
+
 .home-calendar-weekdays,
 .home-calendar-grid {
   display: grid;

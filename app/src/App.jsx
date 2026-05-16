@@ -2712,6 +2712,9 @@ export default function App() {
             setTab("settings");
             return;
           }
+          if (nextTab === "record" && tab !== "record") {
+            setChallengeRange(RANGE_WEEK);
+          }
           setTab(nextTab);
         }} />
 
@@ -3028,8 +3031,10 @@ function HomeDatePicker({ value, markedDates, minDate = "2024-01-01", maxDate = 
   const [visibleMonth, setVisibleMonth] = useState(() => startOfMonth(parseISO(value || todayISO())));
   const pickerRef = useRef(null);
   const selectedDate = parseISO(value || todayISO());
+  const todayDate = parseISO(todayISO());
   const minDateValue = minDate ? parseISO(minDate) : null;
   const maxDateValue = maxDate ? parseISO(maxDate) : null;
+  const todayDisabled = (minDateValue && todayDate < minDateValue) || (maxDateValue && todayDate > maxDateValue);
   const monthStart = startOfMonth(visibleMonth);
   const gridStart = startOfWeek(monthStart);
   const days = Array.from({ length: 42 }, (_, index) => addDays(gridStart, index));
@@ -3071,6 +3076,17 @@ function HomeDatePicker({ value, markedDates, minDate = "2024-01-01", maxDate = 
             <strong>{monthStart.getFullYear()}年{monthStart.getMonth() + 1}月</strong>
             <button type="button" onClick={() => setVisibleMonth(startOfMonth(new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 1)))} aria-label="次の月">›</button>
           </div>
+          <button
+            type="button"
+            className="home-calendar-today"
+            disabled={todayDisabled}
+            onClick={() => {
+              setVisibleMonth(startOfMonth(todayDate));
+              selectDate(todayISO());
+            }}
+          >
+            今日に戻る
+          </button>
           <div className="home-calendar-weekdays" aria-hidden="true">
             {["月", "火", "水", "木", "金", "土", "日"].map((day) => <span key={day}>{day}</span>)}
           </div>
