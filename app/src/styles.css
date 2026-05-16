@@ -6980,9 +6980,15 @@ select:focus,
 /* Final authority: the input button must recover its normal fill after the
    score animation re-enables it. Keep tap feedback transform-only. */
 .home-input-panel .swing-form-heading:not(:disabled) {
+  min-width: 74px !important;
+  min-height: 34px !important;
+  gap: 5px !important;
   border-color: color-mix(in srgb, var(--hot) 70%, var(--line)) !important;
+  border-radius: var(--radius) !important;
+  padding: 0 12px !important;
   color: var(--text) !important;
   background: color-mix(in srgb, var(--hot) 22%, #202633) !important;
+  font-size: 0.95rem !important;
   opacity: 1 !important;
 }
 
@@ -6992,11 +6998,29 @@ select:focus,
 }
 
 .home-input-panel .swing-form-heading:disabled {
+  min-width: 74px !important;
+  min-height: 34px !important;
   border-color: color-mix(in srgb, var(--hot) 34%, var(--line)) !important;
+  border-radius: var(--radius) !important;
+  padding: 0 12px !important;
   color: color-mix(in srgb, var(--text) 54%, transparent) !important;
   background: color-mix(in srgb, var(--hot) 10%, #202633) !important;
+  font-size: 0.95rem !important;
   opacity: 0.78 !important;
   transform: none !important;
+}
+
+.home-input-panel .swing-form-heading .icon {
+  width: 18px !important;
+  height: 18px !important;
+  border: 0 !important;
+  color: currentColor !important;
+  background: transparent !important;
+}
+
+.home-input-panel .swing-form-heading .icon svg {
+  width: 18px !important;
+  height: 18px !important;
 }
 
 /* Final authority: target remainder is not the main score value. */
@@ -7859,7 +7883,6 @@ select:focus,
 }
 
 .home-score-input-grid .home-input-panel .swing-form-heading {
-  font-size: 0.88rem;
   white-space: nowrap;
 }
 

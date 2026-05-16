@@ -3610,7 +3610,7 @@ function SwingForm({ bats, defaultBat, onSubmit, submitLabel, defaultValues = nu
       <label className="field-label"><span className="field-title"><Icon type="count" />回数</span><input name="count" type="number" inputMode="numeric" min="1" max="999" step="1" required value={countValue} onChange={(event) => setCountValue(event.target.value)} aria-label="回数" /></label>
       <label className="field-label"><span className="field-title"><Icon type="avg" />平均</span><input name="avg" type="number" inputMode="numeric" min="0" max="999" step="1" required value={avgValue} onChange={(event) => setAvgValue(event.target.value)} aria-label="平均" /></label>
       <label className="field-label"><span className="field-title"><Icon type="best" />ベスト</span><input name="best" type="number" inputMode="numeric" min="0" max="999" step="1" required value={bestValue} onChange={(event) => setBestValue(event.target.value)} aria-label="ベスト" /></label>
-      <button className="primary wide swing-form-heading settings-ok-button" type="submit" aria-label={submitLabel} disabled={submitDisabled}><Icon type="check" />結果入力</button>
+      <button className="primary wide swing-form-heading settings-ok-button" type="submit" aria-label={submitLabel} disabled={submitDisabled}><Icon type="check" />OK</button>
     </form>
   );
 }
