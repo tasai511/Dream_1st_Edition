@@ -131,6 +131,8 @@ const defaultDb = {
   fontTheme: "system",
   records: [],
   testInputDefaults: false,
+  testRandomGeneration: false,
+  testDate: null,
 };
 
 const TEST_RECORD_VALUE_PRESETS = [
@@ -148,6 +150,20 @@ const TEST_RECORD_VALUE_PRESETS = [
 function testRecordValuesForStep(step, hasTodayRecord) {
   const offset = hasTodayRecord ? Math.max(1, step) : 0;
   return TEST_RECORD_VALUE_PRESETS[offset % TEST_RECORD_VALUE_PRESETS.length];
+}
+
+function randomTestRecordValues(seed = 1) {
+  const pick = (offset) => {
+    const value = Math.sin((seed + offset) * 12.9898) * 43758.5453;
+    return value - Math.floor(value);
+  };
+  const avg = Math.round(220 + pick(2) * 560);
+  const best = Math.round(clamp(avg + 20 + pick(3) * 260, avg, 999));
+  return {
+    count: Math.round(20 + pick(1) * 560),
+    avg,
+    best,
+  };
 }
 
 const BAT_COLOR_PALETTE = [
@@ -278,7 +294,11 @@ function SvgIcon({ type }) {
   if (type === "data") return <svg {...props}><path d="M4 19V5" /><path d="M4 19h16" /><rect x="7" y="11" width="2.8" height="5" rx="1" /><rect x="11" y="8" width="2.8" height="8" rx="1" /><rect x="15" y="5" width="2.8" height="11" rx="1" /></svg>;
   if (type === "log") return <svg {...props}><rect x="4" y="5" width="16" height="15" rx="3" /><path d="M8 3v4M16 3v4M4 10h16" /></svg>;
   if (type === "settings") return <svg {...props}><circle cx="12" cy="12" r="3.2" /><path d="M19 12a7 7 0 0 0-.1-1l2-1.6-2-3.4-2.4 1a7 7 0 0 0-1.8-1L14.4 3h-4.8l-.3 3a7 7 0 0 0-1.8 1l-2.4-1-2 3.4 2 1.6A7 7 0 0 0 5 12a7 7 0 0 0 .1 1l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 1.8 1l.3 3h4.8l.3-3a7 7 0 0 0 1.8-1l2.4 1 2-3.4-2-1.6c.1-.3.1-.7.1-1Z" /></svg>;
-  if (type === "collection") return <svg {...props}><circle cx="12" cy="9" r="4.6" /><path d="M9.4 13.1 7.6 20l4.4-2.5 4.4 2.5-1.8-6.9" /><path d="M12 6.8l.7 1.4 1.5.2-1.1 1.1.3 1.5-1.4-.8-1.4.8.3-1.5-1.1-1.1 1.5-.2L12 6.8Z" /></svg>;
+  if (type === "font") return <svg {...props}><rect x="4" y="5" width="16" height="14" rx="2.4" /><path d="M8 16 11.1 8h1.8L16 16" /><path d="M9.2 13h5.6" /><path d="M7 21h10" /></svg>;
+  if (type === "collection") return <svg {...props}><circle cx="12" cy="9" r="5.6" /><path d="M9.1 13.8 7.3 20.4l4.7-2.7 4.7 2.7-1.8-6.6" /><path d="M12 5.9l.9 1.8 2 .3-1.5 1.4.4 2-1.8-1-1.8 1 .4-2L9.1 8l2-.3L12 5.9Z" /></svg>;
+  if (type === "lock") return <svg {...props}><rect x="5" y="10" width="14" height="10" rx="2.4" /><path d="M8.4 10V7.5a3.6 3.6 0 0 1 7.2 0V10" /><path d="M12 14v2.4" /></svg>;
+  if (type === "calendar") return <svg {...props}><rect x="4" y="5" width="16" height="15" rx="3" /><path d="M8 3v4M16 3v4M4 10h16" /><path d="M8 14h2M12 14h2M16 14h1M8 17h2M12 17h2" /></svg>;
+  if (type === "check") return <svg {...props}><path d="m5 12 4 4 10-10" /></svg>;
   if (type === "person") return <svg {...props}><circle cx="12" cy="7.4" r="3.4" /><path d="M5 21c.8-4.6 3.2-7 7-7s6.2 2.4 7 7" /></svg>;
   if (type === "count") return <svg {...props}><path d="M4 7h16M4 12h16M4 17h10" /></svg>;
   if (type === "avg") return <svg {...props}><path d="M4 17 9 12l4 4 7-9" /><path d="M16 7h4v4" /></svg>;
@@ -473,6 +493,8 @@ function loadDb() {
       fontTheme: fontThemeKey(parsed.fontTheme),
       records: Array.isArray(parsed.records) ? parsed.records : [],
       testInputDefaults: Boolean(parsed.testInputDefaults),
+      testRandomGeneration: Boolean(parsed.testRandomGeneration),
+      testDate: /^\d{4}-\d{2}-\d{2}$/.test(parsed.testDate || "") ? parsed.testDate : null,
     };
   } catch {
     return structuredClone(defaultDb);
@@ -1887,12 +1909,14 @@ function Chart({ data, initialRange }) {
     const baseX = (plotX - chartView.offset) / chartView.scale;
     return clamp(Math.round((baseX / plotW) * (data.length - 1)), 0, data.length - 1);
   };
-  const xAxisLabels = [
-    { x: pad.left, anchor: "start", label: data[visibleIndexAt(0)]?.label || data[0].label },
-    { x: pad.left + (plotW / 3), anchor: "middle", label: data[visibleIndexAt(plotW / 3)]?.label || "" },
-    { x: pad.left + ((plotW * 2) / 3), anchor: "middle", label: data[visibleIndexAt((plotW * 2) / 3)]?.label || "" },
-    { x: width - pad.right, anchor: "end", label: data[visibleIndexAt(plotW)]?.label || data.at(-1).label },
-  ].filter((item, index, array) => item.label && array.findIndex((candidate) => candidate.label === item.label) === index);
+  const xAxisLabels = data.length <= 1
+    ? [{ x: pad.left + (plotW / 2), anchor: "middle", label: data[0].label }]
+    : [
+        { x: pad.left, anchor: "start", label: data[visibleIndexAt(0)]?.label || data[0].label },
+        { x: pad.left + (plotW / 3), anchor: "middle", label: data[visibleIndexAt(plotW / 3)]?.label || "" },
+        { x: pad.left + ((plotW * 2) / 3), anchor: "middle", label: data[visibleIndexAt((plotW * 2) / 3)]?.label || "" },
+        { x: width - pad.right, anchor: "end", label: data[visibleIndexAt(plotW)]?.label || data.at(-1).label },
+      ].filter((item, index, array) => item.label && array.findIndex((candidate) => candidate.label === item.label) === index);
   const hoveredInPlot = hovered && hovered.x >= pad.left && hovered.x <= width - pad.right;
   const tooltipWidth = 148;
   const tooltipGap = 14;
@@ -2291,12 +2315,13 @@ export default function App() {
   };
 
   const currentName = db.activeName || db.names[0] || "";
+  const activeDate = db.testInputDefaults && db.testDate ? db.testDate : todayISO();
   const allForName = useMemo(() => db.records.filter((record) => record.name === currentName), [db.records, currentName]);
   const badgeMap = useMemo(() => badgesFor(allForName), [allForName]);
 
   useEffect(() => {
-    if (!db.names.length && tab !== "settings") setTab("settings");
-  }, [db.names.length, tab]);
+    if ((!db.names.length || !db.bats.length) && tab !== "settings") setTab("settings");
+  }, [db.names.length, db.bats.length, tab]);
 
   useEffect(() => {
     if (tab !== "home" && scoreAnimation) setScoreAnimation(null);
@@ -2352,7 +2377,7 @@ export default function App() {
   };
 
   const loadAnimationTestDb = () => {
-    setDb({ ...db, testInputDefaults: true });
+    setDb({ ...db, testInputDefaults: true, testDate: todayISO() });
     setScoreAnimation(null);
     setChallengeAnimation(null);
     setTab("home");
@@ -2507,9 +2532,11 @@ export default function App() {
           {tab === "home" && (
             <HomeView
               db={db}
+              setDb={setDb}
               currentName={currentName}
               allForName={allForName}
               addRecord={addRecord}
+              activeDate={activeDate}
               scoreAnimation={scoreAnimation}
               onScoreAnimationComplete={() => setScoreAnimation(null)}
             />
@@ -2552,7 +2579,13 @@ export default function App() {
           )}
         </main>
 
-        <BottomNav tab={tab} setTab={setTab} />
+        <BottomNav tab={tab} setTab={(nextTab) => {
+          if (nextTab !== "settings" && (!db.names.length || !db.bats.length)) {
+            setTab("settings");
+            return;
+          }
+          setTab(nextTab);
+        }} />
 
         {pendingDelete && <DeleteDialog pending={pendingDelete} onCancel={() => setPendingDelete(null)} onConfirm={confirmDelete} />}
       </div>
@@ -2560,16 +2593,16 @@ export default function App() {
   );
 }
 
-function HomeView({ db, currentName, allForName, addRecord, scoreAnimation, onScoreAnimationComplete }) {
+function HomeView({ db, setDb, currentName, allForName, addRecord, activeDate = todayISO(), scoreAnimation, onScoreAnimationComplete }) {
   const [scoreAnimationProgress, setScoreAnimationProgress] = useState(1);
   const [formResetKey, setFormResetKey] = useState(0);
   const activeScoreAnimationIdRef = useRef(null);
   const allFiltered = db.records.filter((record) => (
     record.name === currentName &&
-    record.date <= todayISO()
+    record.date <= activeDate
   ));
-  const todayRecords = allFiltered.filter((record) => record.date === todayISO());
-  const todaySummary = aggregate(todayRecords)[0] || { date: todayISO(), count: 0, avg: 0, best: 0, bats: [] };
+  const todayRecords = allFiltered.filter((record) => record.date === activeDate);
+  const todaySummary = aggregate(todayRecords)[0] || { date: activeDate, count: 0, avg: 0, best: 0, bats: [] };
   const hasTodayRecord = todayRecords.length > 0;
   const todayByBat = aggregateByBat(todayRecords);
   const isFreshScoreAnimation = Boolean(scoreAnimation && activeScoreAnimationIdRef.current !== scoreAnimation.id);
@@ -2601,15 +2634,15 @@ function HomeView({ db, currentName, allForName, addRecord, scoreAnimation, onSc
     .map((item) => (animatedBatSummary?.bat === item.bat ? { ...item, ...animatedBatSummary } : item))
     .sort((a, b) => db.bats.indexOf(a.bat) - db.bats.indexOf(b.bat));
   const testRecordValues = db.testInputDefaults
-    ? testRecordValuesForStep(formResetKey, hasTodayRecord)
+    ? (db.testRandomGeneration ? randomTestRecordValues(formResetKey + todayRecords.length * 31) : testRecordValuesForStep(formResetKey, hasTodayRecord))
     : null;
-  const todayEarnedBadges = badgesFor(allForName.filter((record) => record.date <= todayISO())).get(todayISO()) || [];
+  const todayEarnedBadges = badgesFor(allForName.filter((record) => record.date <= activeDate)).get(activeDate) || [];
   const badgeCounts = [...todayEarnedBadges.reduce((map, label) => {
     map.set(label, (map.get(label) || 0) + 1);
     return map;
   }, new Map()).entries()].sort(([a], [b]) => compareBadgesByRarity(a, b));
   const handleRecordSubmit = (event) => {
-    if (addRecord(event, todayISO())) {
+    if (addRecord(event, activeDate)) {
       if (!db.testInputDefaults) event.currentTarget.reset();
       setFormResetKey((value) => value + 1);
     }
@@ -2652,6 +2685,23 @@ function HomeView({ db, currentName, allForName, addRecord, scoreAnimation, onSc
       <section className="home-section home-result-section">
         <div className="section-row tight home-section-heading-row">
           <h2 className="icon-heading"><Icon type="home" />今日の結果</h2>
+          {db.testInputDefaults && (
+            <div className="home-test-controls">
+              <label><input type="radio" checked={Boolean(db.testRandomGeneration)} onChange={() => setDb({ ...db, testRandomGeneration: true })} />ランダム生成</label>
+              <label><input type="radio" checked={!db.testRandomGeneration} onChange={() => setDb({ ...db, testRandomGeneration: false })} />固定</label>
+              <label className="test-date-button">
+                <Icon type="calendar" />
+                <input
+                  type="date"
+                  min={firstRecordDate(allForName) ? toISO(firstRecordDate(allForName)) : "2024-01-01"}
+                  max={todayISO()}
+                  value={activeDate}
+                  onChange={(event) => setDb({ ...db, testDate: event.target.value || todayISO() })}
+                  aria-label="テスト日付"
+                />
+              </label>
+            </div>
+          )}
         </div>
         <div className="home-score-input-grid">
           <section className="home-section home-input-panel open">
@@ -2680,7 +2730,7 @@ function HomeView({ db, currentName, allForName, addRecord, scoreAnimation, onSc
               key={item.bat}
             />
             ))
-          ) : <p className="empty compact-empty">バットを登録するとバット別記録が表示されます。</p>}
+          ) : <p className="empty compact-empty">結果入力するとバット別記録が表示されます。</p>}
         </BatRecordsSection>
         <EarnedBadgesCard badgeCounts={badgeCounts} title="今日のバッジ" />
       </section>
@@ -3010,7 +3060,9 @@ function BadgeDetailPopover({ badge, onClose }) {
         onClick={(event) => event.stopPropagation()}
       >
         <div className="collection-popover-head">
-          <RarityIcon rarity={badge.rarity} />
+          <span className={`popover-badge-image rarity-${badge.rarity.toLowerCase()}`} aria-hidden="true">
+            <img src={DAILY_RARITY_IMAGE_URLS[badge.rarity]} alt="" />
+          </span>
           <div>
             <strong>{badge.lockedSecret ? "???" : badge.label}</strong>
             <span>{badge.rarity} / {RARITY_LABELS[badge.rarity]}</span>
@@ -3495,7 +3547,7 @@ function DataGraphs({ db, records, graphRange, titlePrefix, maxBuckets }) {
             <h3>{titlePrefix}のスイング数</h3>
           </div>
         </div>
-        <CountBars buckets={buckets} visibleCount={Math.max(1, Math.min(buckets.length, 6))} />
+        <CountBars buckets={buckets} visibleCount={6} />
       </section>
       <section className="dashboard-section record-section graph-card">
         <div className="section-row tight graph-title-row">
@@ -3558,7 +3610,7 @@ function SwingForm({ bats, defaultBat, onSubmit, submitLabel, defaultValues = nu
       <label className="field-label"><span className="field-title"><Icon type="count" />回数</span><input name="count" type="number" inputMode="numeric" min="1" max="999" step="1" required value={countValue} onChange={(event) => setCountValue(event.target.value)} aria-label="回数" /></label>
       <label className="field-label"><span className="field-title"><Icon type="avg" />平均</span><input name="avg" type="number" inputMode="numeric" min="0" max="999" step="1" required value={avgValue} onChange={(event) => setAvgValue(event.target.value)} aria-label="平均" /></label>
       <label className="field-label"><span className="field-title"><Icon type="best" />ベスト</span><input name="best" type="number" inputMode="numeric" min="0" max="999" step="1" required value={bestValue} onChange={(event) => setBestValue(event.target.value)} aria-label="ベスト" /></label>
-      <button className="primary wide swing-form-heading" type="submit" aria-label={submitLabel} disabled={submitDisabled}>結果入力</button>
+      <button className="primary wide swing-form-heading settings-ok-button" type="submit" aria-label={submitLabel} disabled={submitDisabled}><Icon type="check" />結果入力</button>
     </form>
   );
 }
@@ -3645,13 +3697,20 @@ function HomeBatResultCard({ db, item }) {
 }
 
 function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, importCsv, loadAnimationTestDb, setPendingDelete }) {
+  const [draft, setDraft] = useState(db);
+  const [registerOpen, setRegisterOpen] = useState(false);
   const [openBatPalette, setOpenBatPalette] = useState(null);
   const [palettePosition, setPalettePosition] = useState(null);
-  const hasNames = db.names.length > 0;
-  const nameColorEntries = db.names.map((name) => [name, nameColorFor(db, name)]);
-  const batColorEntries = db.bats.map((bat) => [bat, batColorFor(db, bat)]);
+  const hasNames = draft.names.length > 0;
+  const nameColorEntries = draft.names.map((name) => [name, nameColorFor(draft, name)]);
+  const batColorEntries = draft.bats.map((bat) => [bat, batColorFor(draft, bat)]);
   const usedNameColors = new Set(nameColorEntries.map(([, color]) => color));
   const usedBatColors = new Set(batColorEntries.map(([, color]) => color));
+  useEffect(() => {
+    setDraft(db);
+    setOpenBatPalette(null);
+    setPalettePosition(null);
+  }, [db]);
   useEffect(() => {
     if (!openBatPalette) return undefined;
     const closeOnOutsideTap = (event) => {
@@ -3691,52 +3750,127 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
   };
 
   const updateNameColor = (name, color) => {
-    setDb({
-      ...db,
+    setDraft({
+      ...draft,
       nameColors: {
-        ...normalizeNameColors(db.nameColors, db.names, db.theme),
-        [name]: normalizeHexColor(color, nameColorFor(db, name)),
+        ...normalizeNameColors(draft.nameColors, draft.names, draft.theme),
+        [name]: normalizeHexColor(color, nameColorFor(draft, name)),
       },
-      theme: currentName === name ? normalizeHexColor(color, nameColorFor(db, name)) : db.theme,
+      theme: draft.activeName === name ? normalizeHexColor(color, nameColorFor(draft, name)) : draft.theme,
     });
     setOpenBatPalette(null);
     setPalettePosition(null);
   };
 
   const updateBatColor = (bat, color) => {
-    setDb({
-      ...db,
+    setDraft({
+      ...draft,
       batColors: {
-        ...normalizeBatColors(db.batColors, db.bats),
-        [bat]: normalizeHexColor(color, batColorFor(db, bat)),
+        ...normalizeBatColors(draft.batColors, draft.bats),
+        [bat]: normalizeHexColor(color, batColorFor(draft, bat)),
       },
     });
     setOpenBatPalette(null);
     setPalettePosition(null);
   };
 
+  const addDraftName = (event) => {
+    event.preventDefault();
+    const value = String(new FormData(event.currentTarget).get("name") || "").trim();
+    if (!value || draft.names.includes(value)) return;
+    const usedColors = new Set([...Object.values(normalizeNameColors(draft.nameColors, draft.names)), ...Object.values(normalizeBatColors(draft.batColors, draft.bats))]);
+    const newColor = firstAvailableColor(usedColors);
+    setDraft({
+      ...draft,
+      activeName: value,
+      names: [...draft.names, value],
+      nameColors: { ...normalizeNameColors(draft.nameColors, draft.names), [value]: newColor },
+      theme: draft.names.length ? draft.theme : newColor,
+    });
+    event.currentTarget.reset();
+  };
+
+  const addDraftBat = (event) => {
+    event.preventDefault();
+    const value = String(new FormData(event.currentTarget).get("bat") || "").trim();
+    if (!value || draft.bats.includes(value)) return;
+    const nextBats = [...draft.bats, value];
+    const usedColors = new Set([...Object.values(normalizeNameColors(draft.nameColors, draft.names, draft.theme)), ...Object.values(normalizeBatColors(draft.batColors, draft.bats))]);
+    setDraft({
+      ...draft,
+      bats: nextBats,
+      batColors: { ...normalizeBatColors(draft.batColors, draft.bats), [value]: firstAvailableColor(usedColors, fallbackBatColor(value, nextBats.length - 1)) },
+      defaultBat: draft.defaultBat || value,
+    });
+    event.currentTarget.reset();
+  };
+
+  const removeDraftName = (name) => {
+    const names = draft.names.filter((item) => item !== name);
+    setDraft({
+      ...draft,
+      names,
+      nameColors: normalizeNameColors(draft.nameColors, names, draft.theme),
+      activeName: draft.activeName === name ? names[0] || "" : draft.activeName,
+      records: draft.records.filter((record) => record.name !== name),
+    });
+  };
+
+  const removeDraftBat = (bat) => {
+    const bats = draft.bats.filter((item) => item !== bat);
+    setDraft({
+      ...draft,
+      bats,
+      batColors: normalizeBatColors(draft.batColors, bats),
+      defaultBat: draft.defaultBat === bat ? bats[0] || "" : draft.defaultBat,
+      records: draft.records.filter((record) => record.bat !== bat),
+    });
+  };
+
+  const saveDraft = () => {
+    if (!draft.names.length || !draft.bats.length) return;
+    setDb(draft);
+    setRegisterOpen(false);
+  };
+
+  const cancelDraft = () => {
+    setDraft(db);
+    setOpenBatPalette(null);
+    setPalettePosition(null);
+    setRegisterOpen(false);
+  };
+
   return (
     <div className="settings-view">
-      <section className={`panel ${String(openBatPalette).startsWith("name:") ? "palette-panel-open" : ""}`}>
+      <section className={`panel settings-register-card ${registerOpen ? "open" : "collapsed"} ${String(openBatPalette).startsWith("name:") || draft.bats.includes(openBatPalette) ? "palette-panel-open" : ""}`}>
         <div className="section-row">
-          <h2>名前</h2>
+          <h2 className="icon-heading"><Icon type="person" />登録</h2>
+          <button type="button" className="ghost settings-register-toggle" onClick={() => setRegisterOpen((value) => !value)} aria-expanded={registerOpen}>
+            <Icon type="chevronDown" />{registerOpen ? "閉じる" : "編集"}
+          </button>
+        </div>
+        {!registerOpen && !draft.bats.length && <p className="settings-error">バットをひとつ以上登録してください。</p>}
+        {registerOpen && (
+          <>
+        <section className="settings-nested-card">
+        <div className="section-row compact-settings-row">
+          <h3>名前</h3>
           <p>使う人とテーマカラー</p>
         </div>
-        <form className="add-row" onSubmit={addName}>
+        <form className="add-row" onSubmit={addDraftName}>
           <input name="name" type="text" autoComplete="off" placeholder="名前を追加" />
           <button type="submit" className="primary"><ButtonIcon type="plus" /></button>
         </form>
         {!hasNames && <p className="settings-error">最初に名前を登録してください。</p>}
         <div className="chip-list">
-          {db.names.map((name) => (
+          {draft.names.map((name) => (
             <span
               key={name}
-              className={`chip name-settings-chip ${name === currentName ? "active" : ""} ${openBatPalette === `name:${name}` ? "palette-open" : ""}`}
-              style={{ "--name-chip-color": nameColorFor(db, name) }}
+              className={`chip name-settings-chip ${name === draft.activeName ? "active" : ""} ${openBatPalette === `name:${name}` ? "palette-open" : ""}`}
+              style={{ "--name-chip-color": nameColorFor(draft, name) }}
             >
-              <button type="button" onClick={() => setDb({ ...db, activeName: name })}>
-                {name}{name === currentName ? <small>選択中</small> : null}
-              </button>
+              <button type="button" onClick={() => setDraft({ ...draft, activeName: name, theme: nameColorFor(draft, name) })}>{name}</button>
+              {name === draft.activeName ? <small>選択中</small> : null}
               <span className="name-color-menu">
                 <button
                   type="button"
@@ -3754,7 +3888,7 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
                   >
                     {BAT_COLOR_PALETTE.map((color) => {
                       const normalizedColor = normalizeHexColor(color);
-                      const currentColor = nameColorFor(db, name);
+                      const currentColor = nameColorFor(draft, name);
                       const usedElsewhere = usedBatColors.has(normalizedColor) || nameColorEntries.some(([otherName, otherColor]) => otherName !== name && otherColor === normalizedColor);
                       const disabled = usedElsewhere && normalizedColor !== currentColor;
                       return (
@@ -3773,33 +3907,33 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
                   </span>
                 )}
               </span>
-              <button type="button" className="chip-delete" aria-label={`${name}を削除`} onClick={() => setPendingDelete({ type: "name", value: name })}><SvgIcon type="trash" /></button>
+              <button type="button" className="chip-delete" aria-label={`${name}を削除`} onClick={() => removeDraftName(name)}><SvgIcon type="trash" /></button>
             </span>
           ))}
         </div>
-      </section>
-
-      <section className={`panel ${db.bats.includes(openBatPalette) ? "palette-panel-open" : ""}`}>
+        </section>
+        <section className="settings-nested-card">
         <fieldset className="settings-fieldset" disabled={!hasNames}>
-        <div className="section-row">
-          <h2>バット</h2>
+        <div className="section-row compact-settings-row">
+          <h3>バット</h3>
           <p>全員で共有 / 入力時の初期値</p>
         </div>
-        <form className="add-row" onSubmit={addBat}>
+        <form className="add-row" onSubmit={addDraftBat}>
           <input name="bat" type="text" autoComplete="off" placeholder="例: 赤バット" />
           <button type="submit" className="primary"><ButtonIcon type="plus" /></button>
         </form>
         <div className="chip-list">
-          {db.bats.map((bat) => (
+          {draft.bats.map((bat) => (
             <span
               key={bat}
-              className={`chip bat-settings-chip ${bat === db.defaultBat ? "active default" : ""} ${openBatPalette === bat ? "palette-open" : ""}`}
-              style={{ "--bat-chip-color": batColorFor(db, bat) }}
+              className={`chip bat-settings-chip ${bat === draft.defaultBat ? "active default" : ""} ${openBatPalette === bat ? "palette-open" : ""}`}
+              style={{ "--bat-chip-color": batColorFor(draft, bat) }}
             >
-              <button type="button" onClick={() => setDb({ ...db, defaultBat: bat })}>
-                <BatIcon color={batColorFor(db, bat)} />
-                <span>{bat}{bat === db.defaultBat ? <small>デフォルト</small> : null}</span>
+              <button type="button" onClick={() => setDraft({ ...draft, defaultBat: bat })}>
+                <BatIcon color={batColorFor(draft, bat)} />
+                <span>{bat}</span>
               </button>
+              {bat === draft.defaultBat ? <small>デフォルト</small> : null}
               <span className="bat-color-menu">
                 <button
                   type="button"
@@ -3817,7 +3951,7 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
                   >
                     {BAT_COLOR_PALETTE.map((color) => {
                       const normalizedColor = normalizeHexColor(color);
-                      const currentColor = batColorFor(db, bat);
+                      const currentColor = batColorFor(draft, bat);
                       const usedElsewhere = usedNameColors.has(normalizedColor) || batColorEntries.some(([otherBat, otherColor]) => otherBat !== bat && otherColor === normalizedColor);
                       const disabled = usedElsewhere && normalizedColor !== currentColor;
                       return (
@@ -3836,16 +3970,24 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
                   </span>
                 )}
               </span>
-              <button type="button" className="chip-delete" aria-label={`${bat}を削除`} onClick={() => setPendingDelete({ type: "bat", value: bat })}><SvgIcon type="trash" /></button>
+              <button type="button" className="chip-delete" aria-label={`${bat}を削除`} onClick={() => removeDraftBat(bat)}><SvgIcon type="trash" /></button>
             </span>
           ))}
         </div>
+        {!draft.bats.length && <p className="settings-error">バットをひとつ以上登録してください。</p>}
         </fieldset>
+        </section>
+        <div className="settings-register-actions">
+          <button type="button" className="ghost settings-cancel-button" onClick={cancelDraft}>キャンセル</button>
+          <button type="button" className="primary settings-ok-button" onClick={saveDraft} disabled={!draft.names.length || !draft.bats.length}><Icon type="check" />OK</button>
+        </div>
+          </>
+        )}
       </section>
 
       <section className="panel">
         <div className="section-row">
-          <h2>フォント</h2>
+          <h2 className="icon-heading"><Icon type="font" />フォント</h2>
           <p>アプリ全体の雰囲気</p>
         </div>
         <div className="font-option-grid">
@@ -3865,16 +4007,24 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
 
       <section className="panel">
         <div className="section-row">
-          <h2>データ管理</h2>
+          <h2 className="icon-heading"><Icon type="data" />データ管理</h2>
           <p>この端末に保存</p>
         </div>
         <div className="tool-grid">
           <button type="button" className="ghost" onClick={exportCsv}><ButtonIcon type="download" />CSV出力</button>
           <label className="file-control ghost"><ButtonIcon type="upload" />CSV読込<input type="file" accept=".csv,text/csv" onChange={importCsv} /></label>
         </div>
-        <button type="button" className="ghost wide" onClick={loadAnimationTestDb}>演出テスト用データを作成</button>
-        <button type="button" className="ghost wide" onClick={() => setDb({ ...demoDb(), testInputDefaults: false })}>デモデータを作成</button>
         <button type="button" className="danger wide" onClick={() => setPendingDelete({ type: "all", value: "全データ" })}>全データ削除</button>
+      </section>
+      <section className="panel">
+        <div className="section-row">
+          <h2 className="icon-heading"><Icon type="lock" />テスト</h2>
+          <p>検証用</p>
+        </div>
+        <button type="button" className="ghost wide" onClick={() => setDb({ ...demoDb(), testInputDefaults: false })}>デモデータ作成</button>
+        <button type="button" className={`ghost wide ${db.testInputDefaults ? "selected" : ""}`} onClick={() => setDb(db.testInputDefaults ? { ...db, testInputDefaults: false, testRandomGeneration: false, testDate: null } : { ...db, testInputDefaults: true, testDate: todayISO() })}>
+          テストモード {db.testInputDefaults ? "ON" : "OFF"}
+        </button>
       </section>
     </div>
   );
