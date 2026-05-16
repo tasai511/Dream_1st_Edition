@@ -408,8 +408,36 @@ h2 {
   transform: scale(0.97);
 }
 
-.home-section-heading-row {
-  margin-bottom: 0;
+.result-top-slot {
+  display: grid;
+  height: 46px;
+  min-height: 46px;
+  align-items: center;
+}
+
+.result-header-row {
+  min-height: 46px;
+  align-items: center;
+  margin-bottom: 0 !important;
+}
+
+.result-heading {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) 1.35em;
+  min-height: 46px;
+  padding: 0 2px 0;
+}
+
+.result-heading h2 {
+  align-self: center;
+  margin: 0;
+}
+
+.result-heading p {
+  align-self: end;
+  margin: 0;
+  font-weight: 850;
+  line-height: 1;
 }
 
 .home-test-controls {
@@ -431,11 +459,73 @@ h2 {
   gap: 2px;
 }
 
-.home-test-controls input[type="radio"] {
-  width: 10px;
-  height: 10px;
+.home-test-controls input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
   margin: 0;
-  accent-color: var(--hot);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  opacity: 0;
+}
+
+.test-auto-switch {
+  position: relative;
+  width: 24px;
+  height: 28px;
+  min-height: 28px;
+  justify-content: center;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.test-auto-switch::before {
+  display: block;
+  width: 15px;
+  height: 15px;
+  border: 1.5px solid color-mix(in srgb, var(--muted) 58%, transparent);
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.04);
+  content: "";
+}
+
+.test-auto-switch::after {
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  width: 7px;
+  height: 4px;
+  border-bottom: 2px solid #ffffff;
+  border-left: 2px solid #ffffff;
+  content: "";
+  opacity: 0;
+  transform: rotate(-45deg);
+}
+
+.test-auto-switch:has(input:checked)::before {
+  border-color: color-mix(in srgb, var(--hot) 76%, transparent);
+  background: var(--hot);
+}
+
+.test-auto-switch:has(input:checked)::after {
+  opacity: 1;
+}
+
+.test-auto-switch span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  white-space: nowrap;
+  clip-path: inset(50%);
 }
 
 .test-date-button {
@@ -450,9 +540,118 @@ h2 {
   overflow: hidden;
 }
 
+.home-date-picker {
+  position: relative;
+  z-index: 30;
+}
+
+.home-calendar-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 80;
+  display: grid;
+  width: 252px;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 10px;
+  background: #171c26;
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.46);
+}
+
+.home-calendar-head {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) 30px;
+  align-items: center;
+  gap: 6px;
+}
+
+.home-calendar-head strong {
+  font-size: 0.84rem;
+  font-weight: 950;
+  text-align: center;
+}
+
+.home-calendar-head button {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 1.2rem;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.home-calendar-weekdays,
+.home-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+}
+
+.home-calendar-weekdays span {
+  color: var(--muted);
+  font-size: 0.58rem;
+  font-weight: 950;
+  text-align: center;
+}
+
+.home-calendar-grid button {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  height: 28px;
+  border: 0;
+  border-radius: 50%;
+  color: var(--text);
+  background: transparent;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.home-calendar-grid button.outside {
+  color: color-mix(in srgb, var(--muted) 52%, transparent);
+}
+
+.home-calendar-grid button.has-record::after {
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--hot);
+  content: "";
+  transform: translateX(-50%);
+}
+
+.home-calendar-grid button.selected {
+  color: #ffffff;
+  background: color-mix(in srgb, var(--hot) 68%, #202633);
+}
+
+.home-calendar-grid button:disabled {
+  color: color-mix(in srgb, var(--muted) 28%, transparent);
+  cursor: default;
+}
+
+.home-calendar-grid button:disabled::after {
+  opacity: 0.28;
+}
+
 .test-date-button .icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
   width: 17px;
   height: 17px;
+  transform: translate(-50%, -50%);
 }
 
 .test-date-button input {
@@ -461,8 +660,9 @@ h2 {
   opacity: 0;
 }
 
-.home-section-heading-row + .home-score-input-grid {
-  margin-top: -6px;
+.result-top-slot + .home-score-input-grid,
+.result-top-slot + .challenge-period-panel {
+  margin-top: 0;
 }
 
 p {
@@ -558,6 +758,10 @@ p {
   min-width: 0;
 }
 
+.challenge-top-layout {
+  min-width: 0;
+}
+
 .challenge-tabs {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -572,7 +776,7 @@ p {
   display: grid;
   align-content: center;
   justify-items: center;
-  gap: 1px;
+  gap: 3px;
   min-height: 38px;
   border: 0;
   border-radius: 6px;
@@ -601,21 +805,6 @@ p {
 
 .challenge-period-panel {
   min-width: 0;
-}
-
-.challenge-heading {
-  display: grid;
-  gap: 3px;
-  padding: 2px 2px 0;
-}
-
-.challenge-heading h2 {
-  margin: 0;
-}
-
-.challenge-heading p {
-  margin: 0;
-  font-weight: 850;
 }
 
 .challenge-bat-records {
@@ -1087,7 +1276,7 @@ p {
 /* Settings density pass. Kept at the end so it wins over the flat refresh rules above. */
 .settings-view {
   display: grid;
-  gap: 8px;
+  gap: 11px;
 }
 
 .settings-view > .panel {
@@ -1227,9 +1416,9 @@ p {
 }
 
 .settings-view .chip button {
-  min-height: 28px;
-  padding: 0 8px;
-  font-size: 0.72rem;
+  min-height: 24px;
+  padding: 0 6px;
+  font-size: 0.66rem;
 }
 
 .settings-view .chip small {
@@ -1238,18 +1427,18 @@ p {
 }
 
 .settings-view .chip-delete {
-  flex-basis: 30px;
-  width: 30px;
+  flex-basis: 22px;
+  width: 22px;
 }
 
 .settings-view .chip-delete svg {
-  width: 13px;
-  height: 13px;
+  width: 14px;
+  height: 14px;
 }
 
 .settings-view .bat-color-menu {
-  flex-basis: 28px;
-  width: 28px;
+  flex-basis: 24px;
+  width: 24px;
 }
 
 .settings-view .bat-color-trigger {
@@ -1324,43 +1513,41 @@ p {
   gap: 12px;
 }
 
-.settings-register-card.collapsed {
-  gap: 8px;
-}
-
-.settings-register-toggle {
-  display: inline-flex;
-  min-height: 32px;
-  align-items: center;
-  gap: 5px;
-}
-
-.settings-register-toggle .icon {
-  width: 16px;
-  height: 16px;
-  transition: transform 160ms ease;
-}
-
-.settings-register-card.open .settings-register-toggle .icon {
-  transform: rotate(180deg);
+.settings-register-editor {
+  display: grid;
+  gap: 12px;
 }
 
 .settings-nested-card {
   display: grid;
   gap: 8px;
-  border: 1px solid var(--line);
+  border: 1px solid rgba(255, 255, 255, 0.095);
   border-radius: 7px;
   padding: 9px;
-  background: rgba(255, 255, 255, 0.035);
+  background: #1d222d;
 }
 
+.standard-ok-button,
 .settings-ok-button {
   display: inline-flex;
-  min-width: 74px;
-  min-height: 34px;
+  min-width: 86px;
+  min-height: 32px !important;
   align-items: center;
   justify-content: center;
   gap: 5px;
+  border-color: var(--line) !important;
+  border-radius: 6px !important;
+  padding: 0 9px !important;
+  color: var(--text) !important;
+  background: #242936 !important;
+  box-shadow: none !important;
+  font-size: 0.7rem !important;
+}
+
+.standard-ok-button {
+  border: 1px solid var(--line);
+  font-weight: 950;
+  text-decoration: none;
 }
 
 .settings-ok-button .icon {
@@ -1368,14 +1555,10 @@ p {
   height: 18px;
 }
 
-.settings-register-actions {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(86px, auto);
-  gap: 8px;
-}
-
-.settings-cancel-button {
-  min-height: 34px;
+.settings-view .ghost.wide.selected {
+  border-color: color-mix(in srgb, var(--hot) 68%, var(--line));
+  color: var(--text);
+  background: color-mix(in srgb, var(--hot) 20%, #242936);
 }
 
 .compact-settings-row {
@@ -1384,7 +1567,10 @@ p {
 
 .compact-settings-row h3 {
   margin: 0;
-  font-size: 0.9rem;
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 950;
+  letter-spacing: 0;
 }
 
 .settings-register-card .chip-list {
@@ -1396,21 +1582,31 @@ p {
 .settings-register-card .chip {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 30px 26px;
+  grid-template-columns: minmax(0, 1fr) 24px 22px;
   width: 100%;
-  min-height: 42px;
+  min-height: 28px;
   align-items: center;
 }
 
 .settings-register-card .chip > button:first-child {
   min-width: 0;
+  min-height: 26px !important;
   overflow: hidden;
+  font-size: var(--settings-chip-text-size, 0.66rem) !important;
+  white-space: nowrap;
+}
+
+.settings-register-card .chip > button:first-child > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: clip;
+  white-space: nowrap;
 }
 
 .settings-register-card .chip small {
   position: absolute;
-  top: -7px;
-  right: 18px;
+  top: -13px;
+  left: 6px;
   z-index: 2;
   display: block;
   max-width: 72px;
@@ -1421,7 +1617,7 @@ p {
 }
 
 .settings-view.settings-view {
-  gap: 8px !important;
+  gap: 11px !important;
 }
 
 .settings-view.settings-view > .panel {
@@ -1476,19 +1672,19 @@ p {
 }
 
 .settings-view.settings-view .chip button {
-  min-height: 28px !important;
-  padding: 0 8px !important;
-  font-size: 0.72rem !important;
+  min-height: 24px !important;
+  padding: 0 6px !important;
+  font-size: 0.66rem !important;
 }
 
 .settings-view.settings-view .chip-delete {
-  flex-basis: 30px !important;
-  width: 30px !important;
+  flex-basis: 22px !important;
+  width: 22px !important;
 }
 
 .settings-view.settings-view .bat-color-menu {
-  flex-basis: 28px !important;
-  width: 28px !important;
+  flex-basis: 24px !important;
+  width: 24px !important;
 }
 
 .settings-view.settings-view .bat-color-trigger {
@@ -1510,7 +1706,7 @@ p {
 
 .settings-view {
   display: grid;
-  gap: 8px;
+  gap: 11px;
 }
 
 .settings-view .panel {
@@ -3440,9 +3636,14 @@ input::placeholder {
 .badge-list-window {
   overflow: hidden;
   display: grid;
-  grid-template-rows: 80px;
+  grid-template-rows: 88px;
   background: transparent;
   transition: grid-template-rows 320ms ease;
+}
+
+.badge-inline-section .badge-list.two-col {
+  padding-top: 8px;
+  padding-right: 10px;
 }
 
 .badge-inline-section.expanded .badge-list-window {
@@ -3592,7 +3793,7 @@ input::placeholder {
 
 .badge-list.two-col {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   align-content: start;
   align-items: center;
   gap: 8px;
@@ -3708,6 +3909,14 @@ input::placeholder {
   background: rgba(var(--hot-rgb), 0.13);
   font-size: 0.68rem;
   font-weight: 900;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.badge .badge-label {
+  min-width: 0;
+  overflow: visible;
+  font-size: var(--badge-chip-font-size, 0.68rem);
   line-height: 1;
   white-space: nowrap;
 }
@@ -4204,6 +4413,25 @@ input::placeholder {
 }
 
 .collection-card .badge-chip-wrap > b {
+  position: absolute;
+  top: -7px;
+  right: -5px;
+  z-index: 2;
+  display: grid;
+  min-width: 24px;
+  height: 16px;
+  padding: 0 5px;
+  place-items: center;
+  border-radius: 999px;
+  color: #ffffff;
+  background: rgba(var(--hot-rgb), 0.13);
+  font-size: 0.68rem;
+  font-weight: 900;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.collection-card .badge-chip-wrap > b:empty {
   display: none;
 }
 
@@ -4214,26 +4442,49 @@ input::placeholder {
   display: grid;
   place-items: center;
   padding: 18px;
-  background: rgba(0, 0, 0, 0.52);
+  background: rgba(0, 0, 0, 0.58);
+  backdrop-filter: blur(3px);
 }
 
 .collection-popover {
+  position: relative;
+  isolation: isolate;
   display: grid;
   gap: 12px;
   width: min(360px, calc(100vw - 36px));
   max-width: 360px;
-  border: 1px solid color-mix(in srgb, currentColor 34%, var(--line));
+  border: 1px solid color-mix(in srgb, currentColor 58%, rgba(255, 255, 255, 0.22));
   border-radius: var(--radius);
   padding: 16px;
   color: var(--text);
   background: color-mix(in srgb, currentColor 9%, #151a24);
+  box-shadow:
+    0 28px 72px rgba(0, 0, 0, 0.72),
+    0 12px 28px rgba(0, 0, 0, 0.44),
+    0 0 0 1px rgba(255, 255, 255, 0.055),
+    0 0 52px color-mix(in srgb, currentColor 30%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.28);
+}
+
+.collection-popover::before {
+  position: absolute;
+  inset: 1px;
+  z-index: -1;
+  border-radius: calc(var(--radius) - 1px);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.11), transparent 34%),
+    radial-gradient(circle at 50% -12%, color-mix(in srgb, currentColor 20%, transparent), transparent 54%);
+  pointer-events: none;
+  content: "";
 }
 
 .collection-popover-head {
   display: grid;
-  grid-template-columns: 56px minmax(0, 1fr) 34px;
+  grid-template-columns: 56px minmax(0, 1fr);
   align-items: center;
   gap: 10px;
+  padding-right: 22px;
 }
 
 .popover-badge-image {
@@ -4276,11 +4527,14 @@ input::placeholder {
   line-height: 1.2;
 }
 
-.collection-popover-head button {
+.collection-popover-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
   display: grid;
   place-items: center;
-  width: 34px;
-  height: 34px;
+  width: 30px;
+  height: 30px;
   border: 0;
   border-radius: 50%;
   color: var(--text);
@@ -5102,6 +5356,17 @@ select,
   box-shadow: none;
 }
 
+input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 .select-caret {
   border: 0;
   color: var(--text);
@@ -5363,14 +5628,14 @@ body,
   background: #2d3340;
 }
 
-.swing-form .primary {
+.swing-form .primary:not(.settings-ok-button) {
   border-color: var(--line);
   color: var(--text);
   background: #252a35;
   box-shadow: none;
 }
 
-.swing-form .primary:hover {
+.swing-form .primary:not(.settings-ok-button):hover {
   background: #2d3340;
 }
 
@@ -5917,6 +6182,23 @@ select:focus,
   box-shadow: none;
 }
 
+.primary {
+  min-height: 34px;
+  border-color: var(--line);
+  border-radius: 6px;
+  padding: 0 9px;
+  color: var(--text);
+  background: #242936;
+  box-shadow: none;
+  gap: 5px;
+  font-size: 0.7rem;
+}
+
+.primary > .icon {
+  width: 18px;
+  height: 18px;
+}
+
 .primary:hover,
 .ghost:hover,
 .file-control:hover,
@@ -5944,7 +6226,7 @@ select:focus,
 }
 
 .add-row .primary,
-.swing-form .primary {
+.swing-form .primary:not(.settings-ok-button) {
   border-color: var(--line);
   color: var(--text);
   background: #242936;
@@ -6385,6 +6667,16 @@ select:focus,
 .settings-view > .panel {
   position: relative;
   z-index: 1;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.018)),
+    #181b23 !important;
+  border-color: color-mix(in srgb, var(--line) 74%, rgba(255, 255, 255, 0.2)) !important;
+  box-shadow: none !important;
+}
+
+.settings-view.settings-view > .panel {
+  border: 1px solid color-mix(in srgb, var(--line) 74%, rgba(255, 255, 255, 0.2)) !important;
+  box-shadow: none !important;
 }
 
 .settings-view > .panel.palette-panel-open,
@@ -6562,6 +6854,19 @@ select:focus,
   padding: 10px 11px 9px;
 }
 
+.home-score-input-grid .daily-result-card,
+.challenge-period-panel > .daily-result-grid > .daily-result-card {
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  height: 178px;
+  min-height: 178px;
+}
+
+.home-score-input-grid .daily-result-card .milestone-track,
+.challenge-period-panel > .daily-result-grid > .daily-result-card .milestone-track {
+  align-self: end;
+  margin-bottom: 28px;
+}
+
 .daily-result-group-card .daily-result-card {
   padding: 9px 10px 8px;
 }
@@ -6595,14 +6900,18 @@ select:focus,
 }
 
 .daily-complete-stamp {
+  position: absolute;
+  right: -12px;
+  top: -8px;
+  z-index: 3;
   display: grid;
   place-items: center;
-  width: 48px;
-  height: 24px;
-  border: 2px solid #ff3044;
+  width: 42px;
+  height: 21px;
+  border: 1.5px solid #ff3044;
   border-radius: 5px;
   color: #ff3044;
-  font-size: 0.48rem;
+  font-size: 0.42rem;
   font-weight: 950;
   letter-spacing: 0;
   line-height: 1;
@@ -6856,7 +7165,7 @@ select:focus,
   padding-block: 6px;
 }
 
-.swing-form .primary {
+.swing-form .primary:not(.settings-ok-button) {
   min-height: 38px;
 }
 
@@ -6932,11 +7241,11 @@ select:focus,
   animation: popover-tap-in 160ms ease-out both;
 }
 
-.collection-popover-head button {
+.collection-popover-close {
   transition: transform 120ms ease, background-color 160ms ease;
 }
 
-.collection-popover-head button:active {
+.collection-popover-close:active {
   transform: scale(0.9);
 }
 
@@ -7110,8 +7419,9 @@ select:focus,
   grid-auto-flow: column;
   grid-auto-columns: var(--count-chart-width);
   align-items: end;
+  justify-content: end;
   width: max-content;
-  min-width: max-content;
+  min-width: 100%;
   gap: calc(var(--count-chart-slot) - var(--count-chart-width));
   padding-right: 10px;
 }
@@ -7445,16 +7755,16 @@ select:focus,
 
 .daily-result-card strong {
   min-width: 0;
-  max-width: calc(100% - 56px);
+  max-width: calc(100% - 38px);
   font-size: var(--score-value-size, 2.44rem);
-  overflow: hidden;
+  overflow: visible;
   text-align: left;
   text-overflow: clip;
   white-space: nowrap;
 }
 
 .daily-result-card.count strong {
-  max-width: calc(100% - 56px);
+  max-width: calc(100% - 38px);
 }
 
 .daily-result-card.count strong span {
@@ -7716,7 +8026,10 @@ select:focus,
 
 .home-input-panel .swing-form input {
   background: #1d222d;
+  min-width: 0;
+  padding-inline: 4px;
   text-align: center;
+  font-variant-numeric: tabular-nums;
 }
 
 .home-input-panel .swing-form input::placeholder {
@@ -7791,7 +8104,7 @@ select:focus,
   font-weight: 950;
 }
 
-.home-input-panel .swing-form .primary {
+.home-input-panel .swing-form .primary:not(.settings-ok-button) {
   min-height: 34px;
   margin-top: 0;
 }
@@ -7891,12 +8204,25 @@ select:focus,
   min-height: 30px;
 }
 
-.home-score-input-grid .home-input-panel .swing-form .primary {
+.home-score-input-grid .home-input-panel .swing-form .primary:not(.settings-ok-button) {
   justify-self: center;
   align-self: end;
   width: 100%;
   min-height: 30px;
   transform: translateY(3px);
+}
+
+.home-ok-slot {
+  display: inline-grid;
+  grid-area: heading;
+  align-self: center;
+  justify-self: center;
+  place-items: center;
+}
+
+.home-ok-slot .settings-ok-button {
+  width: 86px;
+  min-width: 86px;
 }
 
 .home-score-input-grid .home-input-panel .field-title {
@@ -7949,7 +8275,7 @@ select:focus,
   stroke-width: 2.25 !important;
 }
 
-.collection-popover-head button {
+.collection-popover-close {
   width: 32px !important;
   height: 32px !important;
   border: 1px solid rgba(255, 255, 255, 0.09) !important;
@@ -7957,13 +8283,13 @@ select:focus,
   background: rgba(255, 255, 255, 0.045) !important;
 }
 
-.collection-popover-head button svg {
+.collection-popover-close svg {
   width: 17px;
   height: 17px;
   stroke-width: 2;
 }
 
-.collection-popover-head button:hover {
+.collection-popover-close:hover {
   color: var(--text) !important;
   background: rgba(255, 255, 255, 0.075) !important;
 }
@@ -8022,6 +8348,49 @@ select:focus,
 
 .daily-badge-mark:active {
   transform: none !important;
+}
+
+/* Final authority for the standard OK button.
+   It intentionally avoids .primary so home and settings cannot diverge. */
+.standard-ok-button.settings-ok-button {
+  display: inline-flex !important;
+  width: 86px !important;
+  min-width: 86px !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 5px !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 6px !important;
+  padding: 0 9px !important;
+  color: var(--text) !important;
+  background: #242936 !important;
+  box-shadow: none !important;
+  font-size: 0.7rem !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+}
+
+.standard-ok-button.settings-ok-button > .icon {
+  width: 18px !important;
+  height: 18px !important;
+}
+
+.standard-ok-button.settings-ok-button:not(:disabled):hover {
+  background: #2d3340 !important;
+}
+
+.standard-ok-button.settings-ok-button:disabled {
+  color: color-mix(in srgb, var(--text) 54%, transparent) !important;
+  background: #242936 !important;
+  opacity: 0.72 !important;
+}
+
+.settings-view .compact-settings-row h3 {
+  color: var(--text) !important;
+  font-weight: 950 !important;
+  text-shadow: 0.28px 0 currentColor;
 }
 
 /* Final authority: bat-card count values anchor on the right edge and grow left. */
@@ -8191,7 +8560,7 @@ input[type="file"]::file-selector-button:active {
 
 .square:not(:disabled):active,
 .chip-delete:not(:disabled):active,
-.collection-popover-head button:not(:disabled):active {
+.collection-popover-close:not(:disabled):active {
   transform: scale(0.9);
 }
 

@@ -13,6 +13,7 @@ const RANGE_TOTAL = "total";
 const kMinChartVisibleDays = 7;
 const kMaxChartVisibleDays = 365;
 const kCompactLayoutWidth = 390;
+const kCompactLayoutHeight = 844;
 const RARITY_ORDER = ["C", "U", "R", "RR", "SR", "UR"];
 const RARITY_LABELS = {
   C: "Common",
@@ -537,8 +538,8 @@ function aggregateByBat(records) {
   }));
 }
 
-function periodSummaryFromDaily(dailyMap, start, end) {
-  const today = parseISO(todayISO());
+function periodSummaryFromDaily(dailyMap, start, end, baseDate = todayISO()) {
+  const today = parseISO(baseDate);
   const effectiveEnd = end > today ? today : end;
   const spanDays = Math.max(1, Math.floor((effectiveEnd - start) / 86400000) + 1);
   let count = 0;
@@ -607,7 +608,7 @@ function isHomeBadgeEarned(definition, summary) {
   return definition.trigger === "exact" ? value === target : value >= target;
 }
 
-function badgesFor(records) {
+function badgesFor(records, baseDate = todayISO()) {
   const daily = aggregate(records);
   const dailyMap = new Map(daily.map((day) => [day.date, day]));
   const streaks = streakByDate(daily);
@@ -669,7 +670,7 @@ function badgesFor(records) {
   });
 
   periodKeys.forEach((period) => {
-    const summary = periodSummaryFromDaily(dailyMap, period.start, period.end);
+    const summary = periodSummaryFromDaily(dailyMap, period.start, period.end, baseDate);
     HOME_BADGE_DEFINITIONS
       .filter((definition) => definition.period === period.period)
       .forEach((definition) => {
@@ -744,10 +745,10 @@ function compareLabel(index, range) {
   return "";
 }
 
-function comparisonBuckets(daily, range, minimumBuckets = null) {
+function comparisonBuckets(daily, range, minimumBuckets = null, baseDate = parseISO(todayISO())) {
   const bucketRange = range === RANGE_WEEK ? 7 : range === RANGE_MONTH ? 30 : 1;
   const map = new Map(daily.map((day) => [day.date, day]));
-  const today = parseISO(todayISO());
+  const today = baseDate;
   const earliest = daily.length ? parseISO(daily[0].date) : today;
   const startAnchor = range === RANGE_WEEK ? startOfWeek(today) : range === RANGE_MONTH ? startOfMonth(today) : today;
   const firstAnchor = range === RANGE_WEEK ? startOfWeek(earliest) : range === RANGE_MONTH ? startOfMonth(earliest) : earliest;
@@ -1174,7 +1175,8 @@ function challengeTargetAnimationForCard(card, fromSummary, toSummary, progress,
       targetInfo: startTargetInfo,
       fillRatio: 1,
       complete: true,
-      reachedBadge: startTargetInfo?.current,
+      reachedTarget: false,
+      reachedBadge: null,
       remainingValue: 0,
     };
   }
@@ -1191,9 +1193,10 @@ function challengeTargetAnimationForCard(card, fromSummary, toSummary, progress,
   return {
     targetInfo: startTargetInfo,
     fillRatio: showReached ? 1 : fillRatio,
+    reachedTarget,
     showReached: showReached && !isComplete,
     complete: isComplete,
-    reachedBadge: target,
+    reachedBadge: reachedTarget ? target : null,
     remainingValue: Math.max(0, Math.ceil(target.target - animatedValue)),
   };
 }
@@ -1215,6 +1218,13 @@ function challengeAnimationCardsForSummary(summary, range, includeDays) {
   ];
 }
 
+function challengeAnimationHasBadgeReveal(fromSummary, toSummary, range, includeDays) {
+  return challengeAnimationCardsForSummary(toSummary, range, includeDays).some((card) => {
+    const targetAnimation = challengeTargetAnimationForCard(card, fromSummary, toSummary, 1, "hit");
+    return Boolean(targetAnimation?.reachedTarget);
+  });
+}
+
 function useChallengeProgressAnimation(challengeAnimation, fromSummary, toSummary, range, includeDays) {
   const [state, setState] = useState({ id: null, progress: 1, phase: "done" });
   useLayoutEffect(() => {
@@ -1224,9 +1234,8 @@ function useChallengeProgressAnimation(challengeAnimation, fromSummary, toSummar
     }
 
     const duration = 1600;
-    const holdDuration = 2000;
+    const shouldHoldBadge = challengeAnimationHasBadgeReveal(fromSummary, toSummary, range, includeDays);
     let frameId = 0;
-    let timeoutId = 0;
     let startedAt = 0;
 
     const tick = (now) => {
@@ -1237,11 +1246,11 @@ function useChallengeProgressAnimation(challengeAnimation, fromSummary, toSummar
       if (rawProgress < 1) {
         frameId = requestAnimationFrame(tick);
       } else {
-        setState({ id: challengeAnimation.id, progress: 1, phase: "hit" });
-        timeoutId = window.setTimeout(() => {
+        if (shouldHoldBadge) {
+          setState({ id: challengeAnimation.id, progress: 1, phase: "hit" });
+        } else {
           setState({ id: challengeAnimation.id, progress: 1, phase: "done" });
-          challengeAnimation.onComplete?.(range);
-        }, holdDuration);
+        }
       }
     };
 
@@ -1250,7 +1259,6 @@ function useChallengeProgressAnimation(challengeAnimation, fromSummary, toSummar
     frameId = requestAnimationFrame(tick);
     return () => {
       cancelAnimationFrame(frameId);
-      window.clearTimeout(timeoutId);
     };
   }, [challengeAnimation?.id, range, includeDays]);
 
@@ -1269,6 +1277,7 @@ function useChallengeProgressAnimation(challengeAnimation, fromSummary, toSummar
     phase: state.phase,
     summary: displaySummary,
     progress: state.progress,
+    dismissBadge: () => setState({ id: challengeAnimation.id, progress: 1, phase: "done" }),
   };
 }
 
@@ -1483,15 +1492,22 @@ function scoreCardFontSize(value, metric = "") {
   return "2.44rem";
 }
 
-function DailyBadgeMark({ label, description }) {
+function DailyBadgeMark({ label, description, onDismiss = null }) {
   const [selectedBadge, setSelectedBadge] = useState(null);
   const definition = makeBadgeDefinition(canonicalBadgeLabel(label), { description });
+  const handleClick = () => {
+    if (onDismiss) {
+      onDismiss();
+      return;
+    }
+    setSelectedBadge({ ...definition, earnedCount: 0, lockedSecret: false });
+  };
   return (
     <>
       <button
         type="button"
         className={`daily-badge-mark rarity-${definition.rarity.toLowerCase()}`}
-        onClick={() => setSelectedBadge({ ...definition, earnedCount: 0, lockedSecret: false })}
+        onClick={handleClick}
         aria-label={`${definition.label}の詳細`}
       >
         <img className="daily-badge-image" src={DAILY_RARITY_IMAGE_URLS[definition.rarity]} alt="" aria-hidden="true" />
@@ -1586,7 +1602,6 @@ function ScoreComparison({ daily, range }) {
 
 function EarnedBadgesCard({ badgeCounts, title = "獲得バッジ" }) {
   const [expanded, setExpanded] = useState(false);
-  const [selectedBadge, setSelectedBadge] = useState(null);
   const allBadges = useMemo(() => (
     [...badgeCounts]
       .sort((a, b) => compareBadgesByRarity(a[0], b[0]))
@@ -1621,17 +1636,7 @@ function EarnedBadgesCard({ badgeCounts, title = "獲得バッジ" }) {
                   style={{ "--badge-index": index }}
                   key={label}
                 >
-                  <span className="badge-chip-wrap">
-                    <button
-                      className={`badge collection-badge rarity-${definition.rarity.toLowerCase()}`}
-                      type="button"
-                      onClick={() => setSelectedBadge({ ...definition, earnedCount: count, lockedSecret: false })}
-                    >
-                      <RarityIcon rarity={definition.rarity} />
-                      {definition.label}
-                    </button>
-                    <b>{count > 1 ? `x${count}` : ""}</b>
-                  </span>
+                  <BadgeChip label={definition.label} count={count} description={definition.description} />
                 </span>
               ))}
             </div>
@@ -1649,9 +1654,6 @@ function EarnedBadgesCard({ badgeCounts, title = "獲得バッジ" }) {
           )}
         </>
       ) : <p className="empty">まだバッジはありません。</p>}
-      {selectedBadge && (
-        <BadgeDetailPopover badge={selectedBadge} onClose={() => setSelectedBadge(null)} />
-      )}
     </section>
   );
 }
@@ -2283,13 +2285,17 @@ export default function App() {
   const [isNameMenuOpen, setIsNameMenuOpen] = useState(false);
   const [scoreAnimation, setScoreAnimation] = useState(null);
   const [challengeAnimation, setChallengeAnimation] = useState(null);
+  const [homeViewDate, setHomeViewDate] = useState(todayISO);
 
   useLayoutEffect(() => {
     const root = document.documentElement;
     const updateAppScale = () => {
       const viewportWidth = Math.max(0, window.visualViewport?.width || window.innerWidth || kCompactLayoutWidth);
+      const viewportHeight = Math.max(0, window.visualViewport?.height || window.innerHeight || kCompactLayoutHeight);
       const visualWidth = Math.min(480, viewportWidth);
-      const scale = Math.max(0.82, Math.min(480 / kCompactLayoutWidth, visualWidth / kCompactLayoutWidth));
+      const widthScale = visualWidth / kCompactLayoutWidth;
+      const heightScale = visualWidth <= 480 ? viewportHeight / kCompactLayoutHeight : Infinity;
+      const scale = Math.max(0.72, Math.min(480 / kCompactLayoutWidth, widthScale, heightScale));
       root.style.setProperty("--app-scale", scale.toFixed(4));
       root.style.setProperty("--app-layout-width", `${kCompactLayoutWidth}px`);
       root.style.setProperty("--app-visual-width", `${visualWidth}px`);
@@ -2316,8 +2322,11 @@ export default function App() {
 
   const currentName = db.activeName || db.names[0] || "";
   const activeDate = db.testInputDefaults && db.testDate ? db.testDate : todayISO();
-  const allForName = useMemo(() => db.records.filter((record) => record.name === currentName), [db.records, currentName]);
-  const badgeMap = useMemo(() => badgesFor(allForName), [allForName]);
+  const allForNameRaw = useMemo(() => db.records.filter((record) => record.name === currentName), [db.records, currentName]);
+  const allForName = useMemo(() => allForNameRaw.filter((record) => record.date <= activeDate), [allForNameRaw, activeDate]);
+  const homeActiveDate = db.testInputDefaults ? activeDate : homeViewDate;
+  const homeForName = useMemo(() => allForNameRaw.filter((record) => record.date <= homeActiveDate), [allForNameRaw, homeActiveDate]);
+  const badgeMap = useMemo(() => badgesFor(allForName, activeDate), [allForName, activeDate]);
 
   useEffect(() => {
     if ((!db.names.length || !db.bats.length) && tab !== "settings") setTab("settings");
@@ -2352,8 +2361,8 @@ export default function App() {
       best: Math.max(0, Math.min(999, Number(form.get("best")) || 0)),
     };
     const nextRecords = [...db.records, record];
-    const currentRecordsBefore = db.records.filter((item) => item.name === currentName);
-    const currentRecordsAfter = nextRecords.filter((item) => item.name === currentName);
+    const currentRecordsBefore = db.records.filter((item) => item.name === currentName && item.date <= date);
+    const currentRecordsAfter = nextRecords.filter((item) => item.name === currentName && item.date <= date);
     setChallengeAnimation((current) => {
       const hasUnplayedPendingAnimation = current && !(current.playedRanges || []).length;
       return {
@@ -2363,7 +2372,7 @@ export default function App() {
         playedRanges: [],
       };
     });
-    if (date === todayISO()) {
+    if (date === activeDate) {
       const todayRecordsBefore = db.records.filter((item) => item.name === currentName && item.date === date);
       const todayRecordsAfter = nextRecords.filter((item) => item.name === currentName && item.date === date);
       const fromSummary = aggregate(todayRecordsBefore)[0] || emptyDailySummary(date);
@@ -2377,7 +2386,7 @@ export default function App() {
   };
 
   const loadAnimationTestDb = () => {
-    setDb({ ...db, testInputDefaults: true, testDate: todayISO() });
+    setDb({ ...db, testInputDefaults: true, testRandomGeneration: true, testDate: todayISO() });
     setScoreAnimation(null);
     setChallengeAnimation(null);
     setTab("home");
@@ -2425,7 +2434,7 @@ export default function App() {
     setPendingDelete(null);
     if (!pending) return;
     if (pending.type === "all") {
-      setDb({ activeName: "", names: [], nameColors: {}, bats: [], batColors: {}, defaultBat: "", theme: BAT_COLOR_PALETTE[0], records: [], testInputDefaults: false });
+      setDb({ activeName: "", names: [], nameColors: {}, bats: [], batColors: {}, defaultBat: "", theme: BAT_COLOR_PALETTE[0], records: [], testInputDefaults: false, testRandomGeneration: false, testDate: null });
       return;
     }
     if (pending.type === "name") {
@@ -2491,7 +2500,7 @@ export default function App() {
   };
 
   return (
-    <div className={`app theme-${["red", "blue", "green"].includes(db.theme) ? db.theme : "custom"} font-${fontThemeKey(db.fontTheme)}`} style={themeStyleFor(currentName ? nameColorFor(db, currentName) : db.theme)}>
+    <div className={`app theme-${["red", "blue", "green"].includes(db.theme) ? db.theme : "custom"} font-rounded`} style={themeStyleFor(currentName ? nameColorFor(db, currentName) : db.theme)}>
       <div className="phone-shell">
         <header className="app-header">
           <strong className="app-title">SWING LOG</strong>
@@ -2534,9 +2543,12 @@ export default function App() {
               db={db}
               setDb={setDb}
               currentName={currentName}
-              allForName={allForName}
+              allForName={homeForName}
+              allForNameRaw={allForNameRaw}
               addRecord={addRecord}
-              activeDate={activeDate}
+              activeDate={homeActiveDate}
+              appActiveDate={activeDate}
+              setHomeViewDate={setHomeViewDate}
               scoreAnimation={scoreAnimation}
               onScoreAnimationComplete={() => setScoreAnimation(null)}
             />
@@ -2545,6 +2557,7 @@ export default function App() {
             <RecordView
               db={db}
               allForName={allForName}
+              activeDate={activeDate}
               challengeAnimation={challengeAnimation}
               onChallengeAnimationComplete={(completedRange) => {
                 setChallengeAnimation((current) => {
@@ -2559,10 +2572,11 @@ export default function App() {
             <DataView
               db={db}
               allForName={allForName}
+              activeDate={activeDate}
             />
           )}
           {tab === "badges" && (
-            <BadgeCollectionView allForName={allForName} />
+            <BadgeCollectionView allForName={allForName} activeDate={activeDate} />
           )}
           {tab === "settings" && (
             <SettingsView
@@ -2593,14 +2607,11 @@ export default function App() {
   );
 }
 
-function HomeView({ db, setDb, currentName, allForName, addRecord, activeDate = todayISO(), scoreAnimation, onScoreAnimationComplete }) {
+function HomeView({ db, setDb, currentName, allForName, allForNameRaw = allForName, addRecord, activeDate = todayISO(), appActiveDate = todayISO(), setHomeViewDate, scoreAnimation, onScoreAnimationComplete }) {
   const [scoreAnimationProgress, setScoreAnimationProgress] = useState(1);
   const [formResetKey, setFormResetKey] = useState(0);
   const activeScoreAnimationIdRef = useRef(null);
-  const allFiltered = db.records.filter((record) => (
-    record.name === currentName &&
-    record.date <= activeDate
-  ));
+  const allFiltered = allForName;
   const todayRecords = allFiltered.filter((record) => record.date === activeDate);
   const todaySummary = aggregate(todayRecords)[0] || { date: activeDate, count: 0, avg: 0, best: 0, bats: [] };
   const hasTodayRecord = todayRecords.length > 0;
@@ -2633,19 +2644,72 @@ function HomeView({ db, setDb, currentName, allForName, addRecord, activeDate = 
   const homeBatSummaries = todayByBat
     .map((item) => (animatedBatSummary?.bat === item.bat ? { ...item, ...animatedBatSummary } : item))
     .sort((a, b) => db.bats.indexOf(a.bat) - db.bats.indexOf(b.bat));
-  const testRecordValues = db.testInputDefaults
-    ? (db.testRandomGeneration ? randomTestRecordValues(formResetKey + todayRecords.length * 31) : testRecordValuesForStep(formResetKey, hasTodayRecord))
+  const testRecordValues = db.testInputDefaults && db.testRandomGeneration
+    ? randomTestRecordValues(formResetKey + todayRecords.length * 31)
     : null;
-  const todayEarnedBadges = badgesFor(allForName.filter((record) => record.date <= activeDate)).get(activeDate) || [];
+  const isHomeHistoryView = !db.testInputDefaults && activeDate !== todayISO();
+  const todayEarnedBadges = badgesFor(allForName, activeDate).get(activeDate) || [];
   const badgeCounts = [...todayEarnedBadges.reduce((map, label) => {
     map.set(label, (map.get(label) || 0) + 1);
     return map;
   }, new Map()).entries()].sort(([a], [b]) => compareBadgesByRarity(a, b));
+  const markedDates = useMemo(() => new Set(allForNameRaw.map((record) => record.date)), [allForNameRaw]);
   const handleRecordSubmit = (event) => {
     if (addRecord(event, activeDate)) {
       if (!db.testInputDefaults) event.currentTarget.reset();
       setFormResetKey((value) => value + 1);
     }
+  };
+  const handleHomeDateSelect = (nextDate) => {
+    if (!db.testInputDefaults) {
+      setHomeViewDate?.(nextDate || todayISO());
+      return;
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(nextDate) || !currentName) {
+      setDb({ ...db, testDate: nextDate });
+      return;
+    }
+    const currentDate = appActiveDate;
+    if (nextDate <= currentDate) {
+      setDb({
+        ...db,
+        testDate: nextDate,
+        records: db.records.filter((record) => record.name !== currentName || record.date <= nextDate),
+      });
+      return;
+    }
+
+    const bat = db.defaultBat || db.bats[0] || "";
+    if (!bat) {
+      setDb({ ...db, testDate: nextDate });
+      return;
+    }
+    const startDate = addDays(parseISO(currentDate), 1);
+    const endDate = addDays(parseISO(nextDate), -1);
+    const generatedRecords = [];
+    for (let date = startDate; date <= endDate; date = addDays(date, 1)) {
+      const isoDate = toISO(date);
+      const values = randomTestRecordValues(Number(isoDate.replaceAll("-", "")));
+      generatedRecords.push({
+        id: uid(),
+        name: currentName,
+        bat,
+        date: isoDate,
+        ...values,
+      });
+    }
+    setDb({
+      ...db,
+      testDate: nextDate,
+      records: [
+        ...db.records.filter((record) => (
+          record.name !== currentName ||
+          record.date <= currentDate ||
+          record.date > nextDate
+        )),
+        ...generatedRecords,
+      ],
+    });
   };
 
   useLayoutEffect(() => {
@@ -2683,25 +2747,29 @@ function HomeView({ db, setDb, currentName, allForName, addRecord, activeDate = 
   return (
     <>
       <section className="home-section home-result-section">
-        <div className="section-row tight home-section-heading-row">
-          <h2 className="icon-heading"><Icon type="home" />今日の結果</h2>
+        <div className="result-top-slot">
+        <div className="section-row tight result-header-row">
+          <ResultHeader title="今日の結果" icon="home" dateLabel={formatJapaneseMonthDay(parseISO(activeDate))} />
           {db.testInputDefaults && (
             <div className="home-test-controls">
-              <label><input type="radio" checked={Boolean(db.testRandomGeneration)} onChange={() => setDb({ ...db, testRandomGeneration: true })} />ランダム生成</label>
-              <label><input type="radio" checked={!db.testRandomGeneration} onChange={() => setDb({ ...db, testRandomGeneration: false })} />固定</label>
-              <label className="test-date-button">
-                <Icon type="calendar" />
+              <label className="test-auto-switch" aria-label="自動生成">
                 <input
-                  type="date"
-                  min={firstRecordDate(allForName) ? toISO(firstRecordDate(allForName)) : "2024-01-01"}
-                  max={todayISO()}
-                  value={activeDate}
-                  onChange={(event) => setDb({ ...db, testDate: event.target.value || todayISO() })}
-                  aria-label="テスト日付"
+                  type="checkbox"
+                  checked={Boolean(db.testRandomGeneration)}
+                  onChange={(event) => setDb({ ...db, testRandomGeneration: event.target.checked })}
                 />
+                <span>自動生成</span>
               </label>
             </div>
           )}
+          <HomeDatePicker
+            value={activeDate}
+            markedDates={markedDates}
+            minDate={firstRecordDate(allForNameRaw) ? toISO(firstRecordDate(allForNameRaw)) : "2024-01-01"}
+            maxDate={db.testInputDefaults ? null : todayISO()}
+            onSelect={handleHomeDateSelect}
+          />
+        </div>
         </div>
         <div className="home-score-input-grid">
           <section className="home-section home-input-panel open">
@@ -2713,13 +2781,16 @@ function HomeView({ db, setDb, currentName, allForName, addRecord, activeDate = 
                 batColors={db.batColors}
                 defaultValues={testRecordValues}
                 resetToken={formResetKey}
-                submitDisabled={isScoreAnimating}
+                submitDisabled={isScoreAnimating || isHomeHistoryView}
                 onSubmit={handleRecordSubmit}
                 submitLabel={hasTodayRecord ? "追加する" : "記録する"}
               />
             </div>
           </section>
-          <DailyResultCards summary={displayTodaySummary} animation={scoreCardAnimation} />
+          <DailyResultCards
+            summary={displayTodaySummary}
+            animation={scoreCardAnimation}
+          />
         </div>
         <BatRecordsSection className="home-bat-records">
           {homeBatSummaries.length ? (
@@ -2735,6 +2806,93 @@ function HomeView({ db, setDb, currentName, allForName, addRecord, activeDate = 
         <EarnedBadgesCard badgeCounts={badgeCounts} title="今日のバッジ" />
       </section>
     </>
+  );
+}
+
+function ResultHeader({ title, icon = null, dateLabel }) {
+  return (
+    <div className="result-heading">
+      {title ? <h2 className="icon-heading">{icon && <Icon type={icon} />}{title}</h2> : <span aria-hidden="true" />}
+      <p>{dateLabel}</p>
+    </div>
+  );
+}
+
+function HomeDatePicker({ value, markedDates, minDate = "2024-01-01", maxDate = todayISO(), onSelect }) {
+  const [open, setOpen] = useState(false);
+  const [visibleMonth, setVisibleMonth] = useState(() => startOfMonth(parseISO(value || todayISO())));
+  const pickerRef = useRef(null);
+  const selectedDate = parseISO(value || todayISO());
+  const minDateValue = minDate ? parseISO(minDate) : null;
+  const maxDateValue = maxDate ? parseISO(maxDate) : null;
+  const monthStart = startOfMonth(visibleMonth);
+  const gridStart = startOfWeek(monthStart);
+  const days = Array.from({ length: 42 }, (_, index) => addDays(gridStart, index));
+
+  useEffect(() => {
+    setVisibleMonth(startOfMonth(parseISO(value || todayISO())));
+  }, [value]);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const closeOnOutsideTap = (event) => {
+      if (pickerRef.current?.contains(event.target)) return;
+      setOpen(false);
+    };
+    document.addEventListener("pointerdown", closeOnOutsideTap, true);
+    return () => document.removeEventListener("pointerdown", closeOnOutsideTap, true);
+  }, [open]);
+
+  const selectDate = (isoDate) => {
+    onSelect?.(isoDate);
+    setOpen(false);
+  };
+
+  return (
+    <div className="home-date-picker" ref={pickerRef}>
+      <button
+        type="button"
+        className="test-date-button"
+        aria-label="日付を選ぶ"
+        aria-expanded={open}
+        onClick={() => setOpen((value) => !value)}
+      >
+        <Icon type="calendar" />
+      </button>
+      {open && (
+        <div className="home-calendar-popover">
+          <div className="home-calendar-head">
+            <button type="button" onClick={() => setVisibleMonth(startOfMonth(addDays(monthStart, -1)))} aria-label="前の月">‹</button>
+            <strong>{monthStart.getFullYear()}年{monthStart.getMonth() + 1}月</strong>
+            <button type="button" onClick={() => setVisibleMonth(startOfMonth(new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 1)))} aria-label="次の月">›</button>
+          </div>
+          <div className="home-calendar-weekdays" aria-hidden="true">
+            {["月", "火", "水", "木", "金", "土", "日"].map((day) => <span key={day}>{day}</span>)}
+          </div>
+          <div className="home-calendar-grid">
+            {days.map((date) => {
+              const isoDate = toISO(date);
+              const disabled = (minDateValue && date < minDateValue) || (maxDateValue && date > maxDateValue);
+              const isSelected = isoDate === toISO(selectedDate);
+              const isOutside = date.getMonth() !== monthStart.getMonth();
+              const hasRecord = markedDates?.has(isoDate);
+              return (
+                <button
+                  type="button"
+                  className={`${isSelected ? "selected" : ""} ${isOutside ? "outside" : ""} ${hasRecord ? "has-record" : ""}`}
+                  disabled={disabled}
+                  onClick={() => selectDate(isoDate)}
+                  aria-label={`${formatJapaneseFullDate(date)}${hasRecord ? " 記録あり" : ""}`}
+                  key={isoDate}
+                >
+                  <span>{date.getDate()}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -2779,12 +2937,12 @@ function filledChartExtent(daily) {
   });
 }
 
-function collectBadgeCounts(records, filter = RANGE_ALL) {
-  const { start, end } = badgeFilterWindow(filter, parseISO(todayISO()), records);
+function collectBadgeCounts(records, filter = RANGE_ALL, baseDate = todayISO()) {
+  const { start, end } = badgeFilterWindow(filter, parseISO(baseDate), records);
   const startISO = start ? toISO(start) : null;
   const endISO = end ? toISO(end) : null;
   const counts = {};
-  [...badgesFor(records).entries()].forEach(([date, badges]) => {
+  [...badgesFor(records, baseDate).entries()].forEach(([date, badges]) => {
     if (startISO && date < startISO) return;
     if (endISO && date > endISO) return;
     badges.forEach((badge) => {
@@ -2846,6 +3004,25 @@ function compareBadgesByRarity(a, b) {
 
 function formatBadgeLabel(label) {
   return canonicalBadgeLabel(label);
+}
+
+function badgeChipFontSize(label) {
+  const length = [...String(label || "")].length;
+  if (length >= 9) return "0.52rem";
+  if (length >= 8) return "0.55rem";
+  if (length >= 7) return "0.58rem";
+  if (length >= 6) return "0.63rem";
+  return "0.68rem";
+}
+
+function settingsChipTextSize(text) {
+  const length = [...String(text || "")].length;
+  if (length >= 14) return "0.46rem";
+  if (length >= 12) return "0.5rem";
+  if (length >= 10) return "0.54rem";
+  if (length >= 8) return "0.58rem";
+  if (length >= 6) return "0.62rem";
+  return "0.66rem";
 }
 
 function canonicalBadgeLabel(label) {
@@ -3059,6 +3236,20 @@ function BadgeDetailPopover({ badge, onClose }) {
         onPointerDown={(event) => event.stopPropagation()}
         onClick={(event) => event.stopPropagation()}
       >
+        <button
+          type="button"
+          className="collection-popover-close"
+          aria-label="閉じる"
+          onPointerDown={(event) => {
+            event.stopPropagation();
+          }}
+          onClick={closePopover}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M7.5 7.5 16.5 16.5" />
+            <path d="M16.5 7.5 7.5 16.5" />
+          </svg>
+        </button>
         <div className="collection-popover-head">
           <span className={`popover-badge-image rarity-${badge.rarity.toLowerCase()}`} aria-hidden="true">
             <img src={DAILY_RARITY_IMAGE_URLS[badge.rarity]} alt="" />
@@ -3067,19 +3258,6 @@ function BadgeDetailPopover({ badge, onClose }) {
             <strong>{badge.lockedSecret ? "???" : badge.label}</strong>
             <span>{badge.rarity} / {RARITY_LABELS[badge.rarity]}</span>
           </div>
-          <button
-            type="button"
-            aria-label="閉じる"
-            onPointerDown={(event) => {
-              event.stopPropagation();
-            }}
-            onClick={closePopover}
-          >
-            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-              <path d="M7.5 7.5 16.5 16.5" />
-              <path d="M16.5 7.5 7.5 16.5" />
-            </svg>
-          </button>
         </div>
         <p>{badge.lockedSecret ? "ひみつ" : badge.description}</p>
         <small>
@@ -3107,10 +3285,11 @@ function BadgeChip({ label, count = 1, description = null, lockedSecret = false 
         <button
           className={`badge collection-badge rarity-${definition.rarity.toLowerCase()}`}
           type="button"
+          style={{ "--badge-chip-font-size": badgeChipFontSize(lockedSecret ? "???" : definition.label) }}
           onClick={() => setSelectedBadge({ ...definition, earnedCount: count, lockedSecret: false })}
         >
           <RarityIcon rarity={definition.rarity} />
-          {lockedSecret ? "???" : definition.label}
+          <span className="badge-label">{lockedSecret ? "???" : definition.label}</span>
         </button>
         <b>{count > 1 ? `x${count}` : ""}</b>
       </span>
@@ -3121,11 +3300,11 @@ function BadgeChip({ label, count = 1, description = null, lockedSecret = false 
   );
 }
 
-function BadgeCollectionView({ allForName }) {
+function BadgeCollectionView({ allForName, activeDate = todayISO() }) {
   const [selectedBadge, setSelectedBadge] = useState(null);
   const [selectedRarity, setSelectedRarity] = useState(RARITY_ORDER[0]);
   const [collectionMode, setCollectionMode] = useState("current");
-  const histories = useMemo(() => challengeYearHistoryWindows(allForName), [allForName]);
+  const histories = useMemo(() => challengeYearHistoryWindows(allForName, parseISO(activeDate)), [allForName, activeDate]);
   const [selectedHistoryAge, setSelectedHistoryAge] = useState(1);
   useEffect(() => {
     if (!histories.length && collectionMode === "history") {
@@ -3136,15 +3315,15 @@ function BadgeCollectionView({ allForName }) {
       setSelectedHistoryAge(histories[0].age);
     }
   }, [histories, collectionMode, selectedHistoryAge]);
-  const currentWindow = useMemo(() => challengeYearWindow(allForName), [allForName]);
+  const currentWindow = useMemo(() => challengeYearWindow(allForName, parseISO(activeDate)), [allForName, activeDate]);
   const selectedHistory = histories.find((history) => history.age === selectedHistoryAge) || histories[0] || null;
   const activeWindow = collectionMode === "history" && selectedHistory ? selectedHistory : currentWindow;
   const collectionRecords = useMemo(() => {
     const startISO = toISO(activeWindow.start);
-    const endISO = toISO(activeWindow.end) < todayISO() ? toISO(activeWindow.end) : todayISO();
+    const endISO = toISO(activeWindow.end) < activeDate ? toISO(activeWindow.end) : activeDate;
     return allForName.filter((record) => record.date >= startISO && record.date <= endISO);
-  }, [allForName, activeWindow.start, activeWindow.end]);
-  const badgeCounts = useMemo(() => new Map(collectBadgeCounts(collectionRecords, RANGE_ALL)), [collectionRecords]);
+  }, [allForName, activeWindow.start, activeWindow.end, activeDate]);
+  const badgeCounts = useMemo(() => new Map(collectBadgeCounts(collectionRecords, RANGE_ALL, activeDate)), [collectionRecords, activeDate]);
   const definitions = useMemo(() => allBadgeDefinitions(), []);
   const baseDefinitions = definitions.filter((definition) => !META_BADGE_DEFINITIONS.some((item) => item.label === definition.label));
   const basePointTotal = baseDefinitions.reduce((sum, definition) => {
@@ -3311,12 +3490,14 @@ function badgeGroups(badgeCounts) {
   });
 }
 
-function RecordView({ db, allForName, challengeAnimation, onChallengeAnimationComplete }) {
+function RecordView({ db, allForName, activeDate = todayISO(), challengeAnimation, onChallengeAnimationComplete }) {
   const [activeTab, setActiveTab] = useState(RANGE_WEEK);
   const activeChallengeAnimation = challengeAnimation ? {
     ...challengeAnimation,
     onComplete: (completedRange) => onChallengeAnimationComplete?.(completedRange),
   } : null;
+  const activeRange = activeTab === "year" ? RANGE_TOTAL : activeTab;
+  const challengeDateLabel = challengeHeaderDateLabel(allForName, activeDate, activeRange);
   const tabs = [
     [RANGE_WEEK, "週間", "チャレンジ"],
     [RANGE_MONTH, "月間", "チャレンジ"],
@@ -3325,45 +3506,59 @@ function RecordView({ db, allForName, challengeAnimation, onChallengeAnimationCo
 
   return (
     <div className="challenge-view">
-      <div className="challenge-tabs" role="tablist" aria-label="記録期間">
-        {tabs.map(([key, period, label]) => (
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeTab === key}
-            className={activeTab === key ? "selected" : ""}
-            onClick={() => setActiveTab(key)}
-            key={key}
-          >
-            <span className="challenge-tab-period">{period}</span>
-            <span className="challenge-tab-label">{label}</span>
-          </button>
-        ))}
+      <div className="result-top-slot">
+        <div className="challenge-top-layout result-heading">
+          <div className="challenge-tabs" role="tablist" aria-label="記録期間">
+            {tabs.map(([key, period, label]) => (
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeTab === key}
+                className={activeTab === key ? "selected" : ""}
+                onClick={() => setActiveTab(key)}
+                key={key}
+              >
+                <span className="challenge-tab-period">{period}</span>
+                <span className="challenge-tab-label">{label}</span>
+              </button>
+            ))}
+          </div>
+          <p>{challengeDateLabel}</p>
+        </div>
       </div>
-      {activeTab === RANGE_WEEK && <ChallengePeriodPanel db={db} records={allForName} range={RANGE_WEEK} graphRange={RANGE_TODAY} challengeAnimation={activeChallengeAnimation} />}
-      {activeTab === RANGE_MONTH && <ChallengePeriodPanel db={db} records={allForName} range={RANGE_MONTH} graphRange={RANGE_WEEK} challengeAnimation={activeChallengeAnimation} />}
-      {activeTab === "year" && <ChallengeYearPanel db={db} records={allForName} challengeAnimation={activeChallengeAnimation} />}
+      {activeTab === RANGE_WEEK && <ChallengePeriodPanel db={db} records={allForName} activeDate={activeDate} range={RANGE_WEEK} graphRange={RANGE_TODAY} challengeAnimation={activeChallengeAnimation} />}
+      {activeTab === RANGE_MONTH && <ChallengePeriodPanel db={db} records={allForName} activeDate={activeDate} range={RANGE_MONTH} graphRange={RANGE_WEEK} challengeAnimation={activeChallengeAnimation} />}
+      {activeTab === "year" && <ChallengeYearPanel db={db} records={allForName} activeDate={activeDate} challengeAnimation={activeChallengeAnimation} />}
     </div>
   );
 }
 
-function ChallengePeriodPanel({ db, records, range, graphRange, challengeAnimation }) {
-  const { start, end, label } = rangeWindow(range);
+function challengeHeaderDateLabel(records, activeDate, range) {
+  if (range === RANGE_WEEK || range === RANGE_MONTH) {
+    const { label } = rangeWindow(range, parseISO(activeDate));
+    return label;
+  }
+  const { start, end } = challengeYearWindow(records, parseISO(activeDate));
+  return `${formatJapaneseMonthDay(start)}〜${formatJapaneseMonthDay(end)}`;
+}
+
+function ChallengePeriodPanel({ db, records, activeDate = todayISO(), range, graphRange, challengeAnimation }) {
+  const { start, end, label } = rangeWindow(range, parseISO(activeDate));
   const previousWindow = rangeWindow(range, addDays(start, -1));
   const titlePrefix = range === RANGE_WEEK ? "今週" : "今月";
   const periodRecords = records.filter((record) => record.date >= toISO(start) && record.date <= toISO(end));
   const previousRecords = records.filter((record) => record.date >= toISO(previousWindow.start) && record.date <= toISO(previousWindow.end));
   const dailyMap = new Map(aggregate(periodRecords).map((day) => [day.date, day]));
-  const previousSummary = periodSummaryFromDaily(new Map(aggregate(previousRecords).map((day) => [day.date, day])), previousWindow.start, previousWindow.end);
+  const previousSummary = periodSummaryFromDaily(new Map(aggregate(previousRecords).map((day) => [day.date, day])), previousWindow.start, previousWindow.end, activeDate);
   const summary = {
-    ...periodSummaryFromDaily(dailyMap, start, end),
+    ...periodSummaryFromDaily(dailyMap, start, end, activeDate),
     bestTarget: previousSummary.best || null,
   };
   const makeSummary = (sourceRecords) => {
     const sourcePeriodRecords = sourceRecords.filter((record) => record.date >= toISO(start) && record.date <= toISO(end));
     const sourceDailyMap = new Map(aggregate(sourcePeriodRecords).map((day) => [day.date, day]));
     return {
-      ...periodSummaryFromDaily(sourceDailyMap, start, end),
+      ...periodSummaryFromDaily(sourceDailyMap, start, end, activeDate),
       bestTarget: previousSummary.best || null,
     };
   };
@@ -3378,13 +3573,10 @@ function ChallengePeriodPanel({ db, records, range, graphRange, challengeAnimati
     toSummary,
   } : null;
   const byBat = aggregateByBat(periodRecords);
-  const badgeCounts = collectBadgeCounts(records, range);
+  const badgeCounts = collectBadgeCounts(records, range, activeDate);
 
   return (
     <section className="home-section home-result-section challenge-period-panel">
-      <div className="challenge-heading">
-        <p>{label}</p>
-      </div>
       <DailyResultCards summary={displaySummary} showBadges range={range} includeDays animation={cardAnimation} />
       <BatRecordsSection className="home-bat-records challenge-bat-records">
         {byBat.length ? byBat.map((item) => (
@@ -3396,10 +3588,10 @@ function ChallengePeriodPanel({ db, records, range, graphRange, challengeAnimati
   );
 }
 
-function ChallengeYearPanel({ db, records, challengeAnimation }) {
-  const { start, end, label } = challengeYearWindow(records);
+function ChallengeYearPanel({ db, records, activeDate = todayISO(), challengeAnimation }) {
+  const { start, end, label } = challengeYearWindow(records, parseISO(activeDate));
   const shortLabel = `${formatJapaneseMonthDay(start)}〜${formatJapaneseMonthDay(end)}`;
-  const effectiveEnd = toISO(end) < todayISO() ? toISO(end) : todayISO();
+  const effectiveEnd = toISO(end) < activeDate ? toISO(end) : activeDate;
   const yearRecords = records.filter((record) => record.date >= toISO(start) && record.date <= effectiveEnd);
   const summary = summarizeRecords(yearRecords);
   const makeYearSummary = (sourceRecords) => {
@@ -3417,13 +3609,10 @@ function ChallengeYearPanel({ db, records, challengeAnimation }) {
     toSummary,
   } : null;
   const byBat = aggregateByBat(yearRecords);
-  const badgeCounts = collectBadgeCounts(records, "year");
+  const badgeCounts = collectBadgeCounts(records, "year", activeDate);
 
   return (
     <section className="home-section home-result-section challenge-period-panel all-record-panel">
-      <div className="challenge-heading">
-        <p>{shortLabel}</p>
-      </div>
       <DailyResultCards summary={displaySummary} showBadges range={RANGE_TOTAL} includeDays animation={cardAnimation} />
       <BatRecordsSection className="home-bat-records challenge-bat-records">
         {byBat.length ? byBat.map((item) => (
@@ -3448,15 +3637,15 @@ function summarizeRecords(records) {
   };
 }
 
-function graphBucketsForRange(daily, range) {
+function graphBucketsForRange(daily, range, baseDate = todayISO()) {
   if (range === RANGE_ALL) return filledChartExtent(daily);
-  return [...comparisonBuckets(daily, range)].reverse();
+  return [...comparisonBuckets(daily, range, null, parseISO(baseDate))].reverse();
 }
 
-function dataGraphBucketsForRange(daily, range, maxBuckets) {
+function dataGraphBucketsForRange(daily, range, maxBuckets, baseDate = todayISO()) {
   if (!daily.length) return [];
   if (range === RANGE_ALL) return filledChartExtent(daily).slice(-maxBuckets);
-  return comparisonBuckets(daily, range, 0).slice(0, maxBuckets).reverse();
+  return comparisonBuckets(daily, range, 0, parseISO(baseDate)).slice(0, maxBuckets).reverse();
 }
 
 function dataGraphInitialRange() {
@@ -3470,7 +3659,7 @@ function graphRangeLabel(range) {
   return "全て";
 }
 
-function DataView({ db, allForName }) {
+function DataView({ db, allForName, activeDate = todayISO() }) {
   const [activeTab, setActiveTab] = useState("daily");
   const tabs = [
     ["daily", "デイリー"],
@@ -3506,18 +3695,19 @@ function DataView({ db, allForName }) {
           graphRange={activeConfig.graphRange}
           titlePrefix={activeConfig.titlePrefix}
           maxBuckets={activeConfig.maxBuckets}
+          activeDate={activeDate}
         />
       </section>
     </div>
   );
 }
 
-function DataGraphs({ db, records, graphRange, titlePrefix, maxBuckets }) {
+function DataGraphs({ db, records, graphRange, titlePrefix, maxBuckets, activeDate = todayISO() }) {
   const [graphBat, setGraphBat] = useState(ALL);
   const graphRecords = records.filter((record) => graphBat === ALL || record.bat === graphBat);
   const daily = aggregate(graphRecords);
   const graphColor = graphBat === ALL ? null : batColorFor(db, graphBat);
-  const buckets = dataGraphBucketsForRange(daily, graphRange, maxBuckets);
+  const buckets = dataGraphBucketsForRange(daily, graphRange, maxBuckets, activeDate);
   const initialRange = Math.max(1, Math.min(buckets.length, dataGraphInitialRange()));
   const chartData = buckets.map((bucket) => ({
     ...bucket,
@@ -3610,7 +3800,9 @@ function SwingForm({ bats, defaultBat, onSubmit, submitLabel, defaultValues = nu
       <label className="field-label"><span className="field-title"><Icon type="count" />回数</span><input name="count" type="number" inputMode="numeric" min="1" max="999" step="1" required value={countValue} onChange={(event) => setCountValue(event.target.value)} aria-label="回数" /></label>
       <label className="field-label"><span className="field-title"><Icon type="avg" />平均</span><input name="avg" type="number" inputMode="numeric" min="0" max="999" step="1" required value={avgValue} onChange={(event) => setAvgValue(event.target.value)} aria-label="平均" /></label>
       <label className="field-label"><span className="field-title"><Icon type="best" />ベスト</span><input name="best" type="number" inputMode="numeric" min="0" max="999" step="1" required value={bestValue} onChange={(event) => setBestValue(event.target.value)} aria-label="ベスト" /></label>
-      <button className="primary wide swing-form-heading settings-ok-button" type="submit" aria-label={submitLabel} disabled={submitDisabled}><Icon type="check" />OK</button>
+      <span className="home-ok-slot">
+        <button className="standard-ok-button settings-ok-button" type="submit" aria-label={submitLabel} disabled={submitDisabled}><Icon type="check" />OK</button>
+      </span>
     </form>
   );
 }
@@ -3698,7 +3890,6 @@ function HomeBatResultCard({ db, item }) {
 
 function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, importCsv, loadAnimationTestDb, setPendingDelete }) {
   const [draft, setDraft] = useState(db);
-  const [registerOpen, setRegisterOpen] = useState(false);
   const [openBatPalette, setOpenBatPalette] = useState(null);
   const [palettePosition, setPalettePosition] = useState(null);
   const hasNames = draft.names.length > 0;
@@ -3732,6 +3923,11 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
     };
   }, [openBatPalette]);
 
+  const commitDraft = (nextDraft) => {
+    setDraft(nextDraft);
+    setDb(nextDraft);
+  };
+
   const togglePalette = (id, event) => {
     if (openBatPalette === id) {
       setOpenBatPalette(null);
@@ -3750,7 +3946,7 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
   };
 
   const updateNameColor = (name, color) => {
-    setDraft({
+    commitDraft({
       ...draft,
       nameColors: {
         ...normalizeNameColors(draft.nameColors, draft.names, draft.theme),
@@ -3763,7 +3959,7 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
   };
 
   const updateBatColor = (bat, color) => {
-    setDraft({
+    commitDraft({
       ...draft,
       batColors: {
         ...normalizeBatColors(draft.batColors, draft.bats),
@@ -3780,9 +3976,9 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
     if (!value || draft.names.includes(value)) return;
     const usedColors = new Set([...Object.values(normalizeNameColors(draft.nameColors, draft.names)), ...Object.values(normalizeBatColors(draft.batColors, draft.bats))]);
     const newColor = firstAvailableColor(usedColors);
-    setDraft({
+    commitDraft({
       ...draft,
-      activeName: value,
+      activeName: draft.activeName || value,
       names: [...draft.names, value],
       nameColors: { ...normalizeNameColors(draft.nameColors, draft.names), [value]: newColor },
       theme: draft.names.length ? draft.theme : newColor,
@@ -3796,7 +3992,7 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
     if (!value || draft.bats.includes(value)) return;
     const nextBats = [...draft.bats, value];
     const usedColors = new Set([...Object.values(normalizeNameColors(draft.nameColors, draft.names, draft.theme)), ...Object.values(normalizeBatColors(draft.batColors, draft.bats))]);
-    setDraft({
+    commitDraft({
       ...draft,
       bats: nextBats,
       batColors: { ...normalizeBatColors(draft.batColors, draft.bats), [value]: firstAvailableColor(usedColors, fallbackBatColor(value, nextBats.length - 1)) },
@@ -3807,7 +4003,7 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
 
   const removeDraftName = (name) => {
     const names = draft.names.filter((item) => item !== name);
-    setDraft({
+    commitDraft({
       ...draft,
       names,
       nameColors: normalizeNameColors(draft.nameColors, names, draft.theme),
@@ -3818,7 +4014,7 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
 
   const removeDraftBat = (bat) => {
     const bats = draft.bats.filter((item) => item !== bat);
-    setDraft({
+    commitDraft({
       ...draft,
       bats,
       batColors: normalizeBatColors(draft.batColors, bats),
@@ -3827,31 +4023,13 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
     });
   };
 
-  const saveDraft = () => {
-    if (!draft.names.length || !draft.bats.length) return;
-    setDb(draft);
-    setRegisterOpen(false);
-  };
-
-  const cancelDraft = () => {
-    setDraft(db);
-    setOpenBatPalette(null);
-    setPalettePosition(null);
-    setRegisterOpen(false);
-  };
-
   return (
     <div className="settings-view">
-      <section className={`panel settings-register-card ${registerOpen ? "open" : "collapsed"} ${String(openBatPalette).startsWith("name:") || draft.bats.includes(openBatPalette) ? "palette-panel-open" : ""}`}>
+      <section className={`panel settings-register-card ${String(openBatPalette).startsWith("name:") || draft.bats.includes(openBatPalette) ? "palette-panel-open" : ""}`}>
         <div className="section-row">
           <h2 className="icon-heading"><Icon type="person" />登録</h2>
-          <button type="button" className="ghost settings-register-toggle" onClick={() => setRegisterOpen((value) => !value)} aria-expanded={registerOpen}>
-            <Icon type="chevronDown" />{registerOpen ? "閉じる" : "編集"}
-          </button>
         </div>
-        {!registerOpen && !draft.bats.length && <p className="settings-error">バットをひとつ以上登録してください。</p>}
-        {registerOpen && (
-          <>
+        <div className="settings-register-editor">
         <section className="settings-nested-card">
         <div className="section-row compact-settings-row">
           <h3>名前</h3>
@@ -3867,10 +4045,10 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
             <span
               key={name}
               className={`chip name-settings-chip ${name === draft.activeName ? "active" : ""} ${openBatPalette === `name:${name}` ? "palette-open" : ""}`}
-              style={{ "--name-chip-color": nameColorFor(draft, name) }}
+              style={{ "--name-chip-color": nameColorFor(draft, name), "--settings-chip-text-size": settingsChipTextSize(name) }}
             >
-              <button type="button" onClick={() => setDraft({ ...draft, activeName: name, theme: nameColorFor(draft, name) })}>{name}</button>
-              {name === draft.activeName ? <small>選択中</small> : null}
+              <button type="button" onClick={() => commitDraft({ ...draft, activeName: name, theme: nameColorFor(draft, name) })}><span>{name}</span></button>
+              {name === draft.activeName ? <small>使用中</small> : null}
               <span className="name-color-menu">
                 <button
                   type="button"
@@ -3927,13 +4105,13 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
             <span
               key={bat}
               className={`chip bat-settings-chip ${bat === draft.defaultBat ? "active default" : ""} ${openBatPalette === bat ? "palette-open" : ""}`}
-              style={{ "--bat-chip-color": batColorFor(draft, bat) }}
+              style={{ "--bat-chip-color": batColorFor(draft, bat), "--settings-chip-text-size": settingsChipTextSize(bat) }}
             >
-              <button type="button" onClick={() => setDraft({ ...draft, defaultBat: bat })}>
+              <button type="button" onClick={() => commitDraft({ ...draft, defaultBat: bat })}>
                 <BatIcon color={batColorFor(draft, bat)} />
                 <span>{bat}</span>
               </button>
-              {bat === draft.defaultBat ? <small>デフォルト</small> : null}
+              {bat === draft.defaultBat ? <small>おきにいり</small> : null}
               <span className="bat-color-menu">
                 <button
                   type="button"
@@ -3977,31 +4155,6 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
         {!draft.bats.length && <p className="settings-error">バットをひとつ以上登録してください。</p>}
         </fieldset>
         </section>
-        <div className="settings-register-actions">
-          <button type="button" className="ghost settings-cancel-button" onClick={cancelDraft}>キャンセル</button>
-          <button type="button" className="primary settings-ok-button" onClick={saveDraft} disabled={!draft.names.length || !draft.bats.length}><Icon type="check" />OK</button>
-        </div>
-          </>
-        )}
-      </section>
-
-      <section className="panel">
-        <div className="section-row">
-          <h2 className="icon-heading"><Icon type="font" />フォント</h2>
-          <p>アプリ全体の雰囲気</p>
-        </div>
-        <div className="font-option-grid">
-          {FONT_THEMES.map(([key, label]) => (
-            <button
-              type="button"
-              className={`font-option font-${key} ${fontThemeKey(db.fontTheme) === key ? "selected" : ""}`}
-              onClick={() => setDb({ ...db, fontTheme: key })}
-              key={key}
-            >
-              <strong>SWING LOG</strong>
-              <span>{label}</span>
-            </button>
-          ))}
         </div>
       </section>
 
@@ -4021,8 +4174,8 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
           <h2 className="icon-heading"><Icon type="lock" />テスト</h2>
           <p>検証用</p>
         </div>
-        <button type="button" className="ghost wide" onClick={() => setDb({ ...demoDb(), testInputDefaults: false })}>デモデータ作成</button>
-        <button type="button" className={`ghost wide ${db.testInputDefaults ? "selected" : ""}`} onClick={() => setDb(db.testInputDefaults ? { ...db, testInputDefaults: false, testRandomGeneration: false, testDate: null } : { ...db, testInputDefaults: true, testDate: todayISO() })}>
+        <button type="button" className="ghost wide" onClick={() => setDb({ ...demoDb(), testInputDefaults: false, testRandomGeneration: false, testDate: null })}>デモデータ作成</button>
+        <button type="button" className={`ghost wide ${db.testInputDefaults ? "selected" : ""}`} onClick={() => setDb(db.testInputDefaults ? { ...db, testInputDefaults: false, testRandomGeneration: false, testDate: null } : { ...db, testInputDefaults: true, testRandomGeneration: true, testDate: todayISO() })}>
           テストモード {db.testInputDefaults ? "ON" : "OFF"}
         </button>
       </section>
