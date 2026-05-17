@@ -7291,6 +7291,1262 @@ select:focus,
   max-width: none !important;
 }
 
+/* Rebuild skin real EOF authority: progress low, remaining high. */
+.home-score-input-grid .daily-result-card,
+.challenge-period-panel > .daily-result-grid > .daily-result-card {
+  position: relative !important;
+}
+
+.home-score-input-grid .daily-result-card .daily-score-row,
+.challenge-period-panel > .daily-result-grid > .daily-result-card .daily-score-row {
+  position: static !important;
+  z-index: 5 !important;
+}
+
+.home-score-input-grid .daily-result-card .daily-badge-stage,
+.challenge-period-panel > .daily-result-grid > .daily-result-card .daily-badge-stage {
+  position: absolute !important;
+  top: 24px !important;
+  right: 18px !important;
+  bottom: auto !important;
+  left: auto !important;
+  z-index: 8 !important;
+  width: 86px !important;
+  min-width: 86px !important;
+  min-height: 40px !important;
+  transform: none !important;
+}
+
+.home-score-input-grid .daily-result-card .milestone-track,
+.challenge-period-panel > .daily-result-grid > .daily-result-card .milestone-track {
+  position: absolute !important;
+  right: 26px !important;
+  bottom: 22px !important;
+  left: 42px !important;
+  top: auto !important;
+  z-index: 2 !important;
+  width: auto !important;
+  margin: 0 !important;
+  transform: none !important;
+}
+
+body .app .phone-shell .home-score-input-grid .daily-result-card .daily-badge-stage,
+body .app .phone-shell .challenge-period-panel > .daily-result-grid > .daily-result-card .daily-badge-stage {
+  position: absolute !important;
+  top: 24px !important;
+  right: 16px !important;
+  left: auto !important;
+  width: 86px !important;
+  min-width: 86px !important;
+  transform: none !important;
+}
+
+body .app .phone-shell .home-score-input-grid .daily-result-card .milestone-track,
+body .app .phone-shell .challenge-period-panel > .daily-result-grid > .daily-result-card .milestone-track {
+  position: absolute !important;
+  right: 24px !important;
+  bottom: 20px !important;
+  left: 28px !important;
+  width: auto !important;
+  max-width: none !important;
+  transform: none !important;
+}
+
+/* Rebuild skin structural fix: remaining is now a direct card child. */
+body .app .phone-shell .home-score-input-grid .daily-result-card,
+body .app .phone-shell .challenge-period-panel > .daily-result-grid > .daily-result-card {
+  display: grid !important;
+  grid-template-columns: 58px minmax(0, 1fr) 96px !important;
+  grid-template-rows: 86px 34px !important;
+  column-gap: 12px !important;
+  row-gap: 0 !important;
+  height: 142px !important;
+  min-height: 142px !important;
+  padding: 12px 18px 10px !important;
+}
+
+body .app .phone-shell .home-score-input-grid .daily-result-card > .metric-label,
+body .app .phone-shell .challenge-period-panel > .daily-result-grid > .daily-result-card > .metric-label {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  align-self: center !important;
+  justify-self: center !important;
+  margin: 0 !important;
+}
+
+body .app .phone-shell .home-score-input-grid .daily-result-card > .daily-score-row,
+body .app .phone-shell .challenge-period-panel > .daily-result-grid > .daily-result-card > .daily-score-row {
+  position: static !important;
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  align-self: center !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  z-index: 4 !important;
+}
+
+body .app .phone-shell .home-score-input-grid .daily-result-card > .daily-score-row > strong,
+body .app .phone-shell .challenge-period-panel > .daily-result-grid > .daily-result-card > .daily-score-row > strong {
+  transform: translateY(-4px) !important;
+}
+
+body .app .phone-shell .home-score-input-grid .daily-result-card > .daily-badge-stage,
+body .app .phone-shell .challenge-period-panel > .daily-result-grid > .daily-result-card > .daily-badge-stage {
+  position: static !important;
+  grid-column: 3 !important;
+  grid-row: 1 !important;
+  align-self: center !important;
+  justify-self: end !important;
+  width: 72px !important;
+  min-width: 72px !important;
+  min-height: 42px !important;
+  padding: 3px 5px 3px 3px !important;
+  margin: 0 !important;
+  transform: none !important;
+  z-index: 5 !important;
+}
+
+body .app .phone-shell .home-score-input-grid .daily-result-card > .milestone-track,
+body .app .phone-shell .challenge-period-panel > .daily-result-grid > .daily-result-card > .milestone-track {
+  position: relative !important;
+  grid-column: 1 / 4 !important;
+  grid-row: 2 !important;
+  align-self: end !important;
+  justify-self: stretch !important;
+  right: auto !important;
+  bottom: auto !important;
+  left: auto !important;
+  top: auto !important;
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 6px 7px !important;
+  transform: none !important;
+}
+
+/* Rebuild skin: settings view uses the same light notebook/card language. */
+body .app .phone-shell .settings-view {
+  display: grid !important;
+  gap: 8px !important;
+  color: #102a49 !important;
+}
+
+body .app .phone-shell .settings-view > .panel,
+body .app .phone-shell .settings-view .settings-nested-card {
+  border: 2px solid rgba(30, 117, 238, 0.28) !important;
+  border-radius: 14px !important;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0.84)),
+    repeating-linear-gradient(0deg, transparent 0 25px, rgba(77, 147, 216, 0.08) 26px) !important;
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.86),
+    0 8px 16px rgba(72, 48, 22, 0.16) !important;
+}
+
+body .app .phone-shell .settings-view > .panel {
+  position: relative !important;
+  padding: 11px 12px !important;
+  overflow: visible !important;
+}
+
+body .app .phone-shell .settings-view > .panel::before,
+body .app .phone-shell .settings-view .settings-nested-card::before {
+  position: absolute;
+  top: 7px;
+  right: 12px;
+  left: 12px;
+  height: 2px;
+  border-radius: 999px;
+  background: rgba(30, 155, 225, 0.5);
+  content: "";
+}
+
+body .app .phone-shell .settings-view .settings-nested-card {
+  position: relative !important;
+  padding: 11px 10px 10px !important;
+}
+
+body .app .phone-shell .settings-view .settings-register-editor {
+  display: grid !important;
+  gap: 7px !important;
+}
+
+body .app .phone-shell .settings-view .section-row {
+  align-items: start !important;
+  gap: 5px !important;
+  color: #102a49 !important;
+}
+
+body .app .phone-shell .settings-view .icon-heading,
+body .app .phone-shell .settings-view .compact-settings-row h3 {
+  margin: 0 !important;
+  color: #0a3c99 !important;
+  font-size: 0.96rem !important;
+  font-weight: 950 !important;
+  letter-spacing: 0.04em !important;
+  text-shadow:
+    1.5px 0 #fff,
+    -1.5px 0 #fff,
+    0 1.5px #fff,
+    0 -1.5px #fff,
+    0 3px 4px rgba(7, 45, 111, 0.18) !important;
+}
+
+body .app .phone-shell .settings-view .icon-heading .icon,
+body .app .phone-shell .settings-view .icon-heading svg {
+  color: #0a74e8 !important;
+}
+
+body .app .phone-shell .settings-view .section-row p,
+body .app .phone-shell .settings-view .compact-settings-row p {
+  margin: 0 !important;
+  color: #5d7187 !important;
+  font-size: 0.66rem !important;
+  font-weight: 850 !important;
+}
+
+body .app .phone-shell .settings-view .add-row,
+body .app .phone-shell .settings-view .tool-grid {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  gap: 6px !important;
+}
+
+body .app .phone-shell .settings-view .tool-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+body .app .phone-shell .settings-view input,
+body .app .phone-shell .settings-view select {
+  min-height: 31px !important;
+  border: 1.5px solid rgba(193, 169, 139, 0.66) !important;
+  border-radius: 9px !important;
+  padding: 4px 9px !important;
+  color: #132438 !important;
+  background: rgba(255, 255, 255, 0.76) !important;
+  box-shadow:
+    inset 0 2px 4px rgba(123, 95, 55, 0.08),
+    0 1px 0 rgba(255, 255, 255, 0.85) !important;
+  font-size: 0.84rem !important;
+  font-weight: 850 !important;
+}
+
+body .app .phone-shell .settings-view input::placeholder {
+  color: #7b8798 !important;
+}
+
+body .app .phone-shell .settings-view .primary,
+body .app .phone-shell .settings-view .ghost,
+body .app .phone-shell .settings-view .file-control {
+  min-height: 31px !important;
+  border: 2px solid #0056c7 !important;
+  border-radius: 999px !important;
+  padding: 0 10px !important;
+  color: #fff !important;
+  background:
+    linear-gradient(180deg, #28a2ff 0%, #0875ee 48%, #0063d7 100%) !important;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.54),
+    inset 0 -4px 0 rgba(0, 52, 144, 0.28),
+    0 2px 0 #023a98,
+    0 6px 10px rgba(0, 56, 142, 0.22) !important;
+  font-weight: 950 !important;
+}
+
+body .app .phone-shell .settings-view .add-row .primary {
+  width: 38px !important;
+  min-width: 38px !important;
+  padding: 0 !important;
+}
+
+body .app .phone-shell .settings-view .danger {
+  min-height: 31px !important;
+  border: 2px solid #de2b3d !important;
+  border-radius: 999px !important;
+  color: #fff !important;
+  background:
+    linear-gradient(180deg, #ff6b77 0%, #ee3044 52%, #c91e31 100%) !important;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.42),
+    inset 0 -4px 0 rgba(105, 0, 18, 0.22),
+    0 2px 0 #9f1424,
+    0 6px 10px rgba(122, 0, 22, 0.22) !important;
+  font-weight: 950 !important;
+}
+
+body .app .phone-shell .settings-view .wide {
+  width: 100% !important;
+  justify-content: center !important;
+}
+
+body .app .phone-shell .settings-view .ghost.wide.selected {
+  border-color: #24a320 !important;
+  background:
+    linear-gradient(180deg, #42d847 0%, #24a320 52%, #158117 100%) !important;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.45),
+    inset 0 -4px 0 rgba(0, 83, 18, 0.22),
+    0 2px 0 #09650f,
+    0 6px 10px rgba(0, 83, 18, 0.2) !important;
+}
+
+body .app .phone-shell .settings-view .chip-list {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 6px !important;
+  margin-top: 7px !important;
+}
+
+body .app .phone-shell .settings-view .chip {
+  min-height: 30px !important;
+  border: 1.5px solid color-mix(in srgb, var(--chip-color, #2f86ff) 44%, rgba(30, 117, 238, 0.26)) !important;
+  border-radius: 999px !important;
+  padding: 2px 3px 2px 8px !important;
+  color: #102a49 !important;
+  background: rgba(255, 255, 255, 0.64) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    0 3px 7px rgba(16, 65, 108, 0.1) !important;
+}
+
+body .app .phone-shell .settings-view .name-settings-chip {
+  --chip-color: var(--name-chip-color);
+}
+
+body .app .phone-shell .settings-view .bat-settings-chip {
+  --chip-color: var(--bat-chip-color);
+}
+
+body .app .phone-shell .settings-view .chip.active {
+  background: color-mix(in srgb, var(--chip-color, #2f86ff) 16%, rgba(255, 255, 255, 0.78)) !important;
+}
+
+body .app .phone-shell .settings-view .chip > button:first-child {
+  color: #102a49 !important;
+  background: transparent !important;
+  font-weight: 950 !important;
+}
+
+body .app .phone-shell .settings-view .chip small {
+  border-radius: 999px !important;
+  padding: 1px 5px !important;
+  color: #fff !important;
+  background: #2f86ff !important;
+  font-size: 0.58rem !important;
+  font-weight: 950 !important;
+}
+
+body .app .phone-shell .settings-view .chip-delete {
+  width: 24px !important;
+  height: 24px !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+  color: #fff !important;
+  background: #de2b3d !important;
+}
+
+body .app .phone-shell .settings-view .bat-color-trigger,
+body .app .phone-shell .settings-view .name-color-trigger {
+  width: 21px !important;
+  height: 21px !important;
+  border: 2px solid #fff !important;
+  border-radius: 50% !important;
+  box-shadow: 0 0 0 1px rgba(16, 65, 108, 0.2) !important;
+}
+
+body .app .phone-shell .settings-view .bat-color-palette {
+  border: 1.5px solid rgba(30, 117, 238, 0.22) !important;
+  border-radius: 12px !important;
+  background: rgba(255, 255, 255, 0.94) !important;
+  box-shadow: 0 10px 24px rgba(16, 65, 108, 0.18) !important;
+}
+
+body .app .phone-shell .settings-view .settings-error {
+  color: #d91f27 !important;
+  font-weight: 900 !important;
+}
+
+/* Rebuild skin: fixed blue theme, cleaner add buttons, and bat result cards. */
+body .app {
+  --hot: #2f86ff !important;
+  --hot-rgb: 47, 134, 255 !important;
+  --hot-dark: #1755b8 !important;
+  --line-hot: rgba(47, 134, 255, 0.38) !important;
+}
+
+body .app .phone-shell .settings-view .name-color-menu,
+body .app .phone-shell .settings-view .name-color-trigger {
+  display: none !important;
+}
+
+body .app .phone-shell .settings-view .name-settings-chip {
+  --name-chip-color: #2f86ff !important;
+  --chip-color: #2f86ff !important;
+}
+
+body .app .phone-shell .settings-view .add-row {
+  grid-template-columns: minmax(0, 1fr) 64px !important;
+}
+
+body .app .phone-shell .settings-view .add-row .primary.add-text-button {
+  width: 56px !important;
+  min-width: 56px !important;
+  padding: 0 9px !important;
+  font-size: 0.78rem !important;
+  letter-spacing: 0.04em !important;
+}
+
+body .app .phone-shell .home-ok-slot .standard-ok-button.settings-ok-button,
+body .app .phone-shell .home-score-input-grid .home-input-panel .home-ok-slot .settings-ok-button {
+  min-height: 30px !important;
+  height: 30px !important;
+  border: 2px solid #0056c7 !important;
+  border-radius: 999px !important;
+  padding: 0 12px !important;
+  color: #fff !important;
+  background:
+    linear-gradient(180deg, #28a2ff 0%, #0875ee 48%, #0063d7 100%) !important;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.54),
+    inset 0 -4px 0 rgba(0, 52, 144, 0.28),
+    0 2px 0 #023a98,
+    0 6px 10px rgba(0, 56, 142, 0.22) !important;
+  font-size: 0.86rem !important;
+  font-weight: 950 !important;
+}
+
+body .app .phone-shell .home-score-input-grid .home-input-panel .home-ok-slot .settings-ok-button > .icon {
+  display: none !important;
+}
+
+body .app .phone-shell .home-score-input-grid .home-input-panel .home-ok-slot {
+  grid-template-columns: 74px 74px 74px !important;
+  width: 246px !important;
+  column-gap: 8px !important;
+}
+
+body .app .phone-shell .home-score-input-grid .home-input-panel .home-ok-slot .test-seed-button {
+  grid-column: 1 !important;
+  justify-self: start !important;
+  transform: translateX(-18px) !important;
+  border-color: #79b500 !important;
+  background:
+    linear-gradient(180deg, #d9ff53 0%, #a8df18 48%, #7fbd00 100%) !important;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.54),
+    inset 0 -4px 0 rgba(73, 112, 0, 0.22),
+    0 2px 0 #5d8f00,
+    0 6px 10px rgba(93, 143, 0, 0.22) !important;
+  color: #224000 !important;
+}
+
+body .app .phone-shell .home-score-input-grid .home-input-panel .home-ok-slot .test-seed-button:active {
+  transform: translateX(-18px) scale(0.97) !important;
+}
+
+body .app .phone-shell .home-bat-records .record-card.home-bat-result-card {
+  display: grid !important;
+  grid-template-columns: 52px minmax(0, 1fr) !important;
+  gap: 10px !important;
+  min-height: 92px !important;
+  border: 2px solid rgba(47, 134, 255, 0.6) !important;
+  border-radius: 13px !important;
+  padding: 11px 12px !important;
+  color: #073b9e !important;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.96), rgba(255, 253, 244, 0.9)),
+    radial-gradient(circle at 9% 50%, rgba(47, 134, 255, 0.14), transparent 34%) !important;
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.86),
+    0 5px 11px rgba(91, 59, 22, 0.18) !important;
+}
+
+body .app .phone-shell .home-bat-result-card .record-title {
+  grid-column: 1 / -1 !important;
+  display: grid !important;
+  grid-template-columns: 48px minmax(0, 1fr) !important;
+  align-items: center !important;
+  gap: 10px !important;
+  margin: 0 !important;
+}
+
+body .app .phone-shell .home-bat-result-card .bat-card-icon {
+  display: grid !important;
+  place-items: center !important;
+  width: 44px !important;
+  height: 44px !important;
+  border: 3px solid #fff !important;
+  border-radius: 50% !important;
+  color: #fff !important;
+  background:
+    radial-gradient(circle at 32% 25%, rgba(255, 255, 255, 0.72), transparent 20%),
+    radial-gradient(circle at 55% 62%, #4fa0ff, #073b9e) !important;
+  box-shadow:
+    inset 0 0 0 2px #2f86ff,
+    inset 0 -10px 18px rgba(0, 0, 0, 0.22),
+    0 2px 5px rgba(40, 36, 20, 0.24) !important;
+}
+
+body .app .phone-shell .home-bat-card-image {
+  width: 28px !important;
+  height: 28px !important;
+  object-fit: contain !important;
+  transform: scaleX(-1) !important;
+  filter: brightness(0) invert(1) drop-shadow(0 2px 1px rgba(0, 0, 0, 0.25));
+}
+
+body .app .phone-shell .home-bat-result-card .record-title strong {
+  color: #073b9e !important;
+  font-size: 1.05rem !important;
+  font-weight: 950 !important;
+  letter-spacing: 0.03em !important;
+  text-shadow:
+    1px 0 #fff,
+    -1px 0 #fff,
+    0 1px #fff,
+    0 -1px #fff,
+    0 3px 5px rgba(7, 59, 158, 0.16) !important;
+}
+
+body .app .phone-shell .home-bat-result-card .mini-grid {
+  grid-column: 1 / -1 !important;
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+  margin: 4px 0 0 !important;
+}
+
+body .app .phone-shell .home-bat-result-card .mini-grid .mini-stat {
+  display: grid !important;
+  min-width: 0 !important;
+  border: 1.5px solid rgba(47, 134, 255, 0.28) !important;
+  border-radius: 9px !important;
+  padding: 5px 6px !important;
+  color: #073b9e !important;
+  background: rgba(255, 255, 255, 0.58) !important;
+}
+
+body .app .phone-shell .home-bat-result-card .mini-grid b {
+  color: #5d7187 !important;
+  font-size: 0.58rem !important;
+  font-weight: 950 !important;
+}
+
+body .app .phone-shell .home-bat-result-card .mini-grid .mini-value {
+  display: block !important;
+  width: 100% !important;
+  color: #073b9e !important;
+  font-size: 1.08rem !important;
+  font-weight: 950 !important;
+  text-align: right !important;
+}
+
+body .app .phone-shell .home-bat-result-card .mini-grid small {
+  color: #073b9e !important;
+  font-size: 0.58rem !important;
+}
+
+/* Rebuild skin: home form bat dropdown final format. */
+body .app .phone-shell .home-input-panel .bat-input-shell,
+body .app .phone-shell .home-score-input-grid .home-input-panel .bat-input-shell {
+  position: relative !important;
+  display: block !important;
+  width: 100% !important;
+  color: #0a3c99 !important;
+}
+
+body .app .phone-shell .home-input-panel .bat-input-shell .bat-select-leading,
+body .app .phone-shell .home-score-input-grid .home-input-panel .bat-input-shell .bat-select-leading {
+  position: absolute !important;
+  z-index: 2 !important;
+  top: 50% !important;
+  left: 8px !important;
+  display: grid !important;
+  place-items: center !important;
+  width: 22px !important;
+  height: 22px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  transform: translateY(-50%) !important;
+  pointer-events: none !important;
+}
+
+body .app .phone-shell .home-input-panel .form-bat-icon,
+body .app .phone-shell .home-score-input-grid .home-input-panel .form-bat-icon {
+  display: block !important;
+  width: 20px !important;
+  height: 20px !important;
+  object-fit: contain !important;
+  transform: scaleX(-1) !important;
+  filter: drop-shadow(0 1px 2px rgba(83, 42, 10, 0.22)) !important;
+}
+
+body .app .phone-shell .home-input-panel .bat-input-shell select,
+body .app .phone-shell .home-input-panel .swing-form .bat-input-shell select,
+body .app .phone-shell .home-score-input-grid .home-input-panel .bat-input-shell select,
+body .app .phone-shell .home-score-input-grid .home-input-panel .swing-form .bat-input-shell select {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  border: 1.5px solid rgba(193, 169, 139, 0.66) !important;
+  border-radius: 9px !important;
+  padding: 0 28px 0 34px !important;
+  color: #132438 !important;
+  background: rgba(255, 255, 255, 0.76) !important;
+  box-shadow:
+    inset 0 2px 4px rgba(123, 95, 55, 0.08),
+    0 1px 0 rgba(255, 255, 255, 0.85) !important;
+  font-size: 0.82rem !important;
+  font-weight: 950 !important;
+}
+
+body .app .phone-shell .home-input-panel .bat-input-shell .home-bat-select-caret,
+body .app .phone-shell .home-score-input-grid .home-input-panel .bat-input-shell .home-bat-select-caret {
+  position: absolute !important;
+  top: 50% !important;
+  right: 6px !important;
+  display: grid !important;
+  place-items: center !important;
+  width: 22px !important;
+  height: 22px !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+  color: #0a3c99 !important;
+  background: transparent !important;
+  transform: translateY(-50%) !important;
+  pointer-events: none !important;
+}
+
+body .app .phone-shell .home-input-panel .bat-input-shell .home-bat-select-caret svg,
+body .app .phone-shell .home-score-input-grid .home-input-panel .bat-input-shell .home-bat-select-caret svg {
+  width: 13px !important;
+  height: 13px !important;
+  stroke-width: 3 !important;
+}
+
+/* Rebuild skin absolute final: separate remaining box from the progress bar. */
+.home-score-input-grid .daily-result-card,
+.challenge-period-panel > .daily-result-grid > .daily-result-card {
+  position: relative !important;
+  grid-template-columns: 52px minmax(0, 1fr) 76px !important;
+  grid-template-rows: auto 1fr !important;
+  min-height: 142px !important;
+  height: 142px !important;
+  padding: 12px 14px 10px !important;
+}
+
+.home-score-input-grid .daily-result-card .metric-label,
+.challenge-period-panel > .daily-result-grid > .daily-result-card .metric-label {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  align-self: start !important;
+  margin-top: 24px !important;
+}
+
+.home-score-input-grid .daily-result-card .daily-score-row,
+.challenge-period-panel > .daily-result-grid > .daily-result-card .daily-score-row {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  align-self: start !important;
+  margin-top: 18px !important;
+}
+
+.home-score-input-grid .daily-result-card .daily-badge-stage,
+.challenge-period-panel > .daily-result-grid > .daily-result-card .daily-badge-stage {
+  position: absolute !important;
+  top: 34px !important;
+  right: 20px !important;
+  z-index: 9 !important;
+  display: grid !important;
+  place-items: center !important;
+  width: 82px !important;
+  min-width: 82px !important;
+  min-height: 42px !important;
+  border: 1.5px solid var(--score-color) !important;
+  border-radius: 6px !important;
+  padding: 3px 4px !important;
+  background: rgba(255, 255, 255, 0.68) !important;
+  transform: none !important;
+}
+
+.home-score-input-grid .daily-result-card .target-remaining,
+.challenge-period-panel > .daily-result-grid > .daily-result-card .target-remaining {
+  display: grid !important;
+  justify-items: end !important;
+  width: 100% !important;
+  transform: none !important;
+}
+
+.home-score-input-grid .daily-result-card .milestone-track,
+.challenge-period-panel > .daily-result-grid > .daily-result-card .milestone-track {
+  position: absolute !important;
+  right: 24px !important;
+  bottom: 28px !important;
+  left: 36px !important;
+  z-index: 2 !important;
+  width: auto !important;
+  height: 12px !important;
+  margin: 0 !important;
+}
+
+.home-score-input-grid .daily-result-card .milestone-dot,
+.challenge-period-panel > .daily-result-grid > .daily-result-card .milestone-dot {
+  top: 50% !important;
+}
+
+/* Rebuild skin absolute final 2: keep score high, progress low. */
+.home-score-input-grid .daily-result-card .metric-label,
+.challenge-period-panel > .daily-result-grid > .daily-result-card .metric-label {
+  margin-top: 18px !important;
+  z-index: 5 !important;
+}
+
+.home-score-input-grid .daily-result-card .daily-score-row,
+.challenge-period-panel > .daily-result-grid > .daily-result-card .daily-score-row {
+  margin-top: 4px !important;
+  z-index: 6 !important;
+}
+
+.home-score-input-grid .daily-result-card .daily-score-row > strong,
+.challenge-period-panel > .daily-result-grid > .daily-result-card .daily-score-row > strong {
+  transform: translateY(-6px) !important;
+}
+
+.home-score-input-grid .daily-result-card .daily-badge-stage,
+.challenge-period-panel > .daily-result-grid > .daily-result-card .daily-badge-stage {
+  top: 26px !important;
+  z-index: 7 !important;
+}
+
+.home-score-input-grid .daily-result-card .milestone-track,
+.challenge-period-panel > .daily-result-grid > .daily-result-card .milestone-track {
+  bottom: 14px !important;
+  z-index: 1 !important;
+}
+
+/* Rebuild skin experiment: light ballpark UI over the existing app logic. */
+:root {
+  color-scheme: light;
+  --bg: #f7fbff;
+  --text: #102a49;
+  --muted: #5d7187;
+  --panel: rgba(255, 255, 255, 0.78);
+  --panel-strong: rgba(255, 255, 255, 0.92);
+  --line: rgba(25, 93, 168, 0.18);
+  --line-hot: rgba(var(--hot-rgb), 0.28);
+  --shadow: 0 12px 26px rgba(72, 48, 22, 0.2);
+}
+
+html,
+body {
+  background: #f7fbff !important;
+}
+
+body {
+  color: #102a49 !important;
+}
+
+.app {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  color: #102a49;
+  background:
+    linear-gradient(180deg, transparent 0 54%, rgba(247, 251, 255, 0.86) 75%, #f7fbff 100%),
+    #f7fbff !important;
+}
+
+.app::before {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: -2;
+  height: min(820px, 92svh);
+  background-image: var(--ballpark-bg-url);
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-size: cover;
+  filter: saturate(1.04) contrast(1.02);
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 58%, rgba(0, 0, 0, 0.62) 76%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 0%, #000 58%, rgba(0, 0, 0, 0.62) 76%, transparent 100%);
+  content: "";
+  pointer-events: none;
+}
+
+.app::after {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(circle at 10% 3%, rgba(255, 255, 255, 0.8), transparent 18%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.48) 70%, #f7fbff 100%);
+  content: "";
+  pointer-events: none;
+}
+
+.phone-shell {
+  padding: max(12px, env(safe-area-inset-top)) 14px calc(78px + env(safe-area-inset-bottom)) !important;
+}
+
+.app-header {
+  margin-bottom: 16px !important;
+}
+
+.app-title {
+  display: block !important;
+  width: min(54vw, 210px);
+  padding: 0 !important;
+  line-height: 0 !important;
+  text-shadow: none !important;
+}
+
+.app-title::after {
+  display: none !important;
+}
+
+.app-title img {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 8px 14px rgba(16, 65, 108, 0.18));
+}
+
+.active-player {
+  min-height: 34px !important;
+  border-color: rgba(255, 255, 255, 0.72) !important;
+  color: #0a3c99 !important;
+  background: rgba(255, 255, 255, 0.62) !important;
+  box-shadow: 0 4px 10px rgba(16, 65, 108, 0.13);
+}
+
+.content {
+  gap: 10px !important;
+}
+
+.home-result-section {
+  gap: 10px !important;
+}
+
+.section-row.tight.result-header-row {
+  min-height: 48px;
+  margin-bottom: 2px;
+}
+
+.result-heading h1,
+.result-heading p,
+.challenge-tab-period,
+.challenge-tab-label {
+  color: #0a3c99 !important;
+  text-shadow:
+    1.5px 0 #fff,
+    -1.5px 0 #fff,
+    0 1.5px #fff,
+    0 -1.5px #fff,
+    0 3px 7px rgba(3, 34, 88, 0.2);
+}
+
+.home-score-input-grid {
+  gap: 12px !important;
+}
+
+.home-score-input-grid .home-input-panel {
+  height: auto !important;
+  min-height: 142px !important;
+  border: 2px solid rgba(205, 190, 166, 0.9) !important;
+  border-radius: 14px !important;
+  padding: 12px 14px 12px !important;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0.84)),
+    repeating-linear-gradient(0deg, transparent 0 25px, rgba(77, 147, 216, 0.1) 26px) !important;
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.92),
+    0 8px 16px rgba(72, 48, 22, 0.22) !important;
+}
+
+.home-score-input-grid .home-input-panel::before {
+  position: absolute;
+  top: 7px;
+  right: 12px;
+  left: 12px;
+  height: 2px;
+  border-radius: 999px;
+  background: rgba(30, 155, 225, 0.58);
+  content: "";
+}
+
+.home-score-input-grid .home-input-panel .swing-form {
+  grid-template-rows: 32px 16px 30px 34px !important;
+  row-gap: 4px !important;
+}
+
+.home-score-input-grid .home-input-panel .swing-form-title {
+  color: #092b78 !important;
+  font-size: 1.05rem !important;
+  letter-spacing: 0.06em;
+  text-shadow:
+    1.5px 0 #fff,
+    -1.5px 0 #fff,
+    0 1.5px #fff,
+    0 -1.5px #fff,
+    0 3px 4px rgba(7, 45, 111, 0.2);
+}
+
+.form-pen-icon {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 3px rgba(9, 43, 120, 0.22));
+}
+
+.home-input-panel .swing-form .field-title {
+  color: #111827 !important;
+  font-size: 0.72rem !important;
+  font-weight: 950 !important;
+}
+
+.home-input-panel .swing-form input,
+.home-input-panel .swing-form .bat-input-shell select {
+  height: 32px !important;
+  min-height: 32px !important;
+  border: 1.5px solid rgba(193, 169, 139, 0.66) !important;
+  border-radius: 8px !important;
+  color: #132438 !important;
+  background: rgba(255, 255, 255, 0.72) !important;
+  box-shadow:
+    inset 0 2px 4px rgba(123, 95, 55, 0.08),
+    0 1px 0 rgba(255, 255, 255, 0.85) !important;
+}
+
+.home-input-panel .bat-input-shell .bat-select-leading {
+  left: 7px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+.form-bat-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  transform: scaleX(-1);
+  filter: drop-shadow(0 1px 2px rgba(83, 42, 10, 0.22));
+}
+
+.home-input-panel .bat-input-shell .bat-color-icon {
+  display: none !important;
+}
+
+.home-input-panel .bat-input-shell .home-bat-select-caret {
+  color: #0a3c99 !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+
+.home-ok-slot .settings-ok-button {
+  min-height: 34px !important;
+  height: 34px !important;
+  border: 2px solid #0056c7 !important;
+  border-radius: 999px !important;
+  background:
+    linear-gradient(180deg, #28a2ff 0%, #0875ee 48%, #0063d7 100%) !important;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.54),
+    inset 0 -4px 0 rgba(0, 52, 144, 0.28),
+    0 2px 0 #023a98,
+    0 6px 10px rgba(0, 56, 142, 0.24) !important;
+  color: #fff !important;
+}
+
+.daily-result-grid,
+.daily-result-grid.card-count-3,
+.daily-result-grid.card-count-4 {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 10px !important;
+}
+
+.daily-result-card {
+  --score-color: #0766e8;
+  --score-dark: #073b9e;
+  --score-soft: rgba(7, 102, 232, 0.14);
+  display: grid !important;
+  grid-template-columns: 52px minmax(0, 1fr) 76px !important;
+  grid-template-rows: auto 34px !important;
+  align-items: center !important;
+  gap: 10px !important;
+  width: 100% !important;
+  min-height: 92px !important;
+  border: 2px solid color-mix(in srgb, var(--score-color), white 20%) !important;
+  border-radius: 13px !important;
+  padding: 9px 10px 5px !important;
+  color: var(--score-dark) !important;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.96), rgba(255, 253, 244, 0.9)),
+    radial-gradient(circle at 9% 50%, var(--score-soft), transparent 34%) !important;
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.86),
+    0 5px 11px rgba(91, 59, 22, 0.2) !important;
+  overflow: hidden !important;
+}
+
+.daily-result-card.avg {
+  --score-color: #24a320;
+  --score-dark: #075d1d;
+  --score-soft: rgba(36, 163, 32, 0.16);
+}
+
+.daily-result-card.best {
+  --score-color: #f49a00;
+  --score-dark: #944000;
+  --score-soft: rgba(244, 154, 0, 0.16);
+}
+
+.daily-result-card.days {
+  --score-color: #2f86ff;
+  --score-dark: #174d96;
+  --score-soft: rgba(47, 134, 255, 0.16);
+}
+
+.daily-result-card .metric-label {
+  grid-column: 1 !important;
+  display: grid !important;
+  place-items: center !important;
+  width: 48px !important;
+  height: 48px !important;
+  min-width: 48px !important;
+  border: 3px solid #fff !important;
+  border-radius: 50% !important;
+  color: #fff !important;
+  background:
+    radial-gradient(circle at 32% 25%, rgba(255, 255, 255, 0.72), transparent 20%),
+    radial-gradient(circle at 55% 62%, color-mix(in srgb, var(--score-color), white 15%), var(--score-dark)) !important;
+  box-shadow:
+    inset 0 0 0 2px var(--score-color),
+    inset 0 -10px 18px rgba(0, 0, 0, 0.22),
+    0 2px 5px rgba(40, 36, 20, 0.28) !important;
+  font-size: 0 !important;
+}
+
+.daily-result-card .metric-label svg,
+.daily-result-card .metric-label .metric-image-icon {
+  width: 30px !important;
+  height: 30px !important;
+  object-fit: contain;
+  color: #fff !important;
+  filter: brightness(0) invert(1) drop-shadow(0 2px 1px rgba(0, 0, 0, 0.25));
+}
+
+.daily-result-card .daily-score-row {
+  grid-column: 2 !important;
+  display: block !important;
+  min-width: 0 !important;
+}
+
+.daily-result-card .daily-score-row::before {
+  display: block;
+  margin: 0 0 2px;
+  color: var(--score-dark);
+  font-size: 0.94rem;
+  font-weight: 950;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  content: attr(data-label);
+}
+
+.daily-result-card.count .daily-score-row::before {
+  content: "スイング数";
+}
+
+.daily-result-card.avg .daily-score-row::before {
+  content: "平均スコア";
+}
+
+.daily-result-card.best .daily-score-row::before {
+  content: "ベストスコア";
+}
+
+.daily-result-card.days .daily-score-row::before {
+  content: "練習日数";
+}
+
+.daily-result-card .daily-score-row > strong {
+  display: flex !important;
+  align-items: baseline !important;
+  gap: 4px !important;
+  color: var(--score-dark) !important;
+  font-size: clamp(2.55rem, 11vw, 3.35rem) !important;
+  line-height: 0.9 !important;
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.76),
+    0 3px 5px color-mix(in srgb, var(--score-color), transparent 72%) !important;
+}
+
+.daily-result-card .daily-score-row > strong span {
+  color: var(--score-dark) !important;
+  font-size: 1rem !important;
+  font-weight: 950 !important;
+}
+
+.daily-result-card .daily-badge-stage {
+  grid-column: 3 !important;
+  grid-row: 1 !important;
+  position: static !important;
+  display: grid !important;
+  place-items: center !important;
+  min-width: 70px !important;
+  min-height: 42px !important;
+  border: 1.5px solid var(--score-color) !important;
+  border-radius: 6px !important;
+  padding: 3px 4px !important;
+  background: rgba(255, 255, 255, 0.62) !important;
+  transform: none !important;
+}
+
+.daily-result-card .target-remaining {
+  position: static !important;
+  display: grid !important;
+  justify-items: center !important;
+  gap: 1px !important;
+  color: #111 !important;
+  transform: none !important;
+}
+
+.daily-result-card .target-remaining span {
+  color: var(--score-dark) !important;
+  font-size: 0.62rem !important;
+  font-weight: 950 !important;
+}
+
+.daily-result-card .target-remaining strong {
+  color: #d91f27 !important;
+  font-size: 0.96rem !important;
+  line-height: 1 !important;
+}
+
+.daily-result-card .target-remaining small {
+  font-size: 0.55rem !important;
+}
+
+.daily-result-card .daily-badge-mark {
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  filter: drop-shadow(0 4px 7px color-mix(in srgb, var(--score-color), transparent 66%));
+}
+
+.daily-result-card .daily-badge-get-stamp {
+  right: 1px !important;
+  top: 1px !important;
+  font-size: 0.62rem !important;
+}
+
+.daily-result-card .milestone-track {
+  grid-column: 1 / 4 !important;
+  grid-row: 2 !important;
+  align-self: end !important;
+  min-width: 0 !important;
+  height: 11px !important;
+  margin: 19px 4px 0 8px !important;
+  padding: 0 !important;
+  border: 1.5px solid color-mix(in srgb, var(--score-color), black 8%) !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.68) !important;
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.16),
+    0 1px 0 rgba(255, 255, 255, 0.86) !important;
+  overflow: visible !important;
+}
+
+.daily-result-card .milestone-fill {
+  inset: 1px auto 1px 1px !important;
+  height: auto !important;
+  border-radius: inherit !important;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--score-color), black 15%), var(--score-color), #fff45c) !important;
+}
+
+.daily-result-card .milestone-dot {
+  top: 50% !important;
+  width: 28px !important;
+  height: 28px !important;
+  border: 3px solid #fff !important;
+  background:
+    radial-gradient(circle at 35% 26%, #fff, transparent 18%),
+    radial-gradient(circle, color-mix(in srgb, var(--score-color), white 25%), var(--score-dark)) !important;
+  box-shadow:
+    inset 0 0 0 2px var(--score-color),
+    0 2px 5px rgba(47, 37, 16, 0.3) !important;
+}
+
+.daily-result-card .milestone-dot span {
+  top: calc(100% + 4px) !important;
+  color: #111 !important;
+  font-size: 0.72rem !important;
+  text-shadow:
+    1px 0 rgba(255, 255, 255, 0.9),
+    -1px 0 rgba(255, 255, 255, 0.9),
+    0 1px rgba(255, 255, 255, 0.9),
+    0 -1px rgba(255, 255, 255, 0.9) !important;
+}
+
+.daily-result-card .milestone-empty-message {
+  color: #334155 !important;
+  font-size: 0.72rem !important;
+}
+
+@media (max-width: 390px) {
+  .score-list,
+  .daily-result-grid {
+    gap: 8px !important;
+  }
+
+  .daily-result-card {
+    grid-template-columns: 42px minmax(0, 1fr) 58px !important;
+    grid-template-rows: auto 31px !important;
+    gap: 6px !important;
+    min-height: 82px !important;
+    padding: 8px 7px !important;
+  }
+
+  .daily-result-card .metric-label {
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+  }
+
+  .daily-result-card .metric-label svg,
+  .daily-result-card .metric-label .metric-image-icon {
+    width: 25px !important;
+    height: 25px !important;
+  }
+
+  .daily-result-card .daily-score-row::before {
+    font-size: 0.78rem !important;
+  }
+
+  .daily-result-card .daily-score-row > strong {
+    font-size: 2.2rem !important;
+  }
+
+  .daily-result-card .daily-score-row > strong span {
+    font-size: 0.82rem !important;
+  }
+
+  .daily-result-card .daily-badge-stage {
+    min-width: 56px !important;
+    min-height: 38px !important;
+  }
+
+  .daily-result-card .daily-badge-mark {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+  }
+}
+
 /* Final authority: challenge tabs replace the heading inside the same slot. */
 .result-heading.with-tabs {
   flex: 1 1 auto !important;
@@ -9197,4 +10453,42 @@ input[type="file"]::file-selector-button:active {
   grid-row: auto !important;
   width: 100% !important;
   max-width: none !important;
+}
+/* Rebuild skin real EOF authority: progress low, remaining high. */
+.home-score-input-grid .daily-result-card,
+.challenge-period-panel > .daily-result-grid > .daily-result-card {
+  position: relative !important;
+}
+
+.home-score-input-grid .daily-result-card .daily-score-row,
+.challenge-period-panel > .daily-result-grid > .daily-result-card .daily-score-row {
+  position: relative !important;
+  z-index: 5 !important;
+}
+
+.home-score-input-grid .daily-result-card .daily-badge-stage,
+.challenge-period-panel > .daily-result-grid > .daily-result-card .daily-badge-stage {
+  position: absolute !important;
+  top: 24px !important;
+  right: 28px !important;
+  bottom: auto !important;
+  left: auto !important;
+  z-index: 8 !important;
+  width: 86px !important;
+  min-width: 86px !important;
+  min-height: 40px !important;
+  transform: none !important;
+}
+
+.home-score-input-grid .daily-result-card .milestone-track,
+.challenge-period-panel > .daily-result-grid > .daily-result-card .milestone-track {
+  position: absolute !important;
+  right: 28px !important;
+  bottom: 22px !important;
+  left: 92px !important;
+  top: auto !important;
+  z-index: 2 !important;
+  width: auto !important;
+  margin: 0 !important;
+  transform: none !important;
 }

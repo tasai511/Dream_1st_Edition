@@ -47,6 +47,16 @@ const RARITY_COLORS = {
   UR: "#ffd700",
 };
 const PUBLIC_ASSET_BASE = import.meta.env.BASE_URL || "./";
+const NEW_UI_ASSETS = {
+  logo: `${PUBLIC_ASSET_BASE}images/logo.png`,
+  background: `${PUBLIC_ASSET_BASE}images/field-bg.png`,
+  pen: `${PUBLIC_ASSET_BASE}images/pen.png`,
+  bat: `${PUBLIC_ASSET_BASE}images/bat.svg`,
+  count: `${PUBLIC_ASSET_BASE}images/count.svg`,
+  avg: `${PUBLIC_ASSET_BASE}images/average.svg`,
+  best: `${PUBLIC_ASSET_BASE}images/best.svg`,
+};
+const FIXED_UI_THEME = "#2f86ff";
 const DAILY_RARITY_IMAGE_URLS = {
   C: `${PUBLIC_ASSET_BASE}images/rarity_c_common.png?v=4`,
   U: `${PUBLIC_ASSET_BASE}images/rarity_u_uncommon.png?v=4`,
@@ -1508,37 +1518,28 @@ function DailyResultCard({ card, showBadges, dismissedHomeBadges = new Set(), on
     isCompleteBadgeStage ||
     (canShowBadgeStage && revealBadge && !isHomeBadgeDismissed)
   ));
-  const showHomeRemaining = Boolean(targetBadge && (
-    isCardAnimating ||
-    !stageBadge ||
-    isHomeBadgeDismissed
-  ));
+  const displayRemainingBadge = targetBadge || completeBadge || card.badgeOverride || earnedBadge;
+  const displayRemainingValue = targetBadge ? Math.max(0, targetBadge.target - (card.value || 0)) : 0;
+  const showHomeRemaining = showBadges && Boolean(displayRemainingBadge);
 
   return (
     <article className={`daily-result-card ${card.key} ${card.revealBadge === false ? "animating" : ""}`} style={{ "--milestone-fill-ratio": String(milestoneFillRatio) }}>
-      <div className="metric-label"><Icon type={card.icon} />{card.label}</div>
+      <div className="metric-label">
+        {NEW_UI_ASSETS[card.key] ? <img className="metric-image-icon" src={NEW_UI_ASSETS[card.key]} alt="" aria-hidden="true" /> : <Icon type={card.icon} />}
+        {card.label}
+      </div>
       {showBadges && (
         <>
           <div className="daily-score-row">
             <strong>{Number(card.value || 0).toLocaleString("ja-JP")}<span>{card.unit}</span></strong>
-            <div className="daily-badge-stage">
-              {showHomeEarnedBadge ? (
-                <>
-                  <DailyBadgeMark
-                    label={stageBadge.label}
-                    description={stageBadge.description || `${stageBadge.label}をゲット`}
-                    complete={isCompleteBadgeStage}
-                    onDismiss={isCompleteBadgeStage ? null : (() => homeBadgeDismissKey && onDismissHomeBadge?.(homeBadgeDismissKey))}
-                  />
-                  {!isCompleteBadgeStage && <span className="daily-badge-get-stamp" aria-hidden="true">GET!</span>}
-                </>
-              ) : showHomeRemaining ? (
-                <div className="target-remaining" aria-label={`${targetBadge.label}まであと${remainingValue}${card.unit}`}>
-                  <span>あと</span>
-                  <strong>{Number(remainingValue).toLocaleString("ja-JP")}<small>{card.unit}</small></strong>
-                </div>
-              ) : null}
-            </div>
+          </div>
+          <div className="daily-badge-stage">
+            {showHomeRemaining ? (
+              <div className="target-remaining" aria-label={`${displayRemainingBadge.label}まであと${displayRemainingValue}${card.unit}`}>
+                <span>あと</span>
+                <strong>{Number(displayRemainingValue).toLocaleString("ja-JP")}<small>{card.unit}</small></strong>
+              </div>
+            ) : null}
           </div>
           <div className={`milestone-track ${showMilestoneTrack ? "" : "placeholder"} ${showEmptyTrackMessage ? "with-message" : ""} ${visibleMilestones.length ? "earned" : ""}`}>
             <span className="milestone-fill" />
@@ -2603,10 +2604,16 @@ export default function App() {
   };
 
   return (
-    <div className={`app theme-${["red", "blue", "green"].includes(db.theme) ? db.theme : "custom"} font-rounded`} style={themeStyleFor(currentName ? nameColorFor(db, currentName) : db.theme)}>
+    <div
+      className="app theme-blue font-rounded"
+      style={{
+        ...themeStyleFor(FIXED_UI_THEME),
+        "--ballpark-bg-url": `url("${NEW_UI_ASSETS.background}")`,
+      }}
+    >
       <div className="phone-shell">
         <header className="app-header">
-          <strong className="app-title">SWING LOG</strong>
+          <strong className="app-title"><img src={NEW_UI_ASSETS.logo} alt="SWING LOG" /></strong>
           <div className="player-switcher">
             <button
               className="active-player"
@@ -3877,12 +3884,12 @@ function SwingForm({ bats, defaultBat, onSubmit, submitLabel, defaultValues = nu
   };
   return (
     <form className="input-grid swing-form" onSubmit={onSubmit} style={{ "--selected-bat-color": selectedBatColor }}>
-      <h3 className="swing-form-title"><Icon type="log" />記録入力</h3>
+      <h3 className="swing-form-title"><img className="form-pen-icon" src={NEW_UI_ASSETS.pen} alt="" aria-hidden="true" />記録入力</h3>
       <label className="field-label bat-input-label graph-shared-controls home-form-bat-controls" style={{ "--bat-filter-color": selectedBatColor }}>
         <span className="field-title"><span className="icon"><BatIcon color="var(--selected-bat-color, var(--hot))" /></span><span className="visually-hidden">バット</span></span>
         <span className="bat-field graph-bat-filter home-bat-filter">
           <span className="select-shell">
-            <span className="select-leading bat-select-leading" aria-hidden="true"><span className="bat-color-icon" /></span>
+            <span className="select-leading bat-select-leading" aria-hidden="true"><img className="form-bat-icon" src={NEW_UI_ASSETS.bat} alt="" /></span>
             <select name="bat" required value={selectedBat} onChange={(event) => setSelectedBat(event.target.value)} aria-label="バット">{bats.map((bat) => <option key={bat}>{bat}</option>)}</select>
             <span className="select-caret" aria-hidden="true"><Icon type="chevronDown" /></span>
           </span>
@@ -3964,11 +3971,10 @@ function RecordSummary({ item, batColor = "#8d95a4", selected = false, onSelect 
 }
 
 function HomeBatResultCard({ db, item }) {
-  const color = batColorFor(db, item.bat);
   return (
-    <article className="record-card home-bat-result-card" style={{ "--bat-icon-color": color }}>
+    <article className="record-card home-bat-result-card">
       <div className="record-title">
-        <span className="icon bat-card-icon" style={{ "--bat-icon-color": color }}><BatIcon color={color} /></span>
+        <span className="icon bat-card-icon"><img className="home-bat-card-image" src={NEW_UI_ASSETS.bat} alt="" aria-hidden="true" /></span>
         <strong>{item.bat}</strong>
       </div>
       <div className="mini-grid">
@@ -4073,7 +4079,7 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
       activeName: draft.activeName || value,
       names: [...draft.names, value],
       nameColors: { ...normalizeNameColors(draft.nameColors, draft.names), [value]: newColor },
-      theme: draft.names.length ? draft.theme : newColor,
+      theme: FIXED_UI_THEME,
     });
     event.currentTarget.reset();
   };
@@ -4125,11 +4131,11 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
         <section className="settings-nested-card">
         <div className="section-row compact-settings-row">
           <h3>名前</h3>
-          <p>使う人とテーマカラー</p>
+          <p>使う人</p>
         </div>
         <form className="add-row" onSubmit={addDraftName}>
           <input name="name" type="text" autoComplete="off" placeholder="名前を追加" />
-          <button type="submit" className="primary"><ButtonIcon type="plus" /></button>
+          <button type="submit" className="primary add-text-button">追加</button>
         </form>
         {!hasNames && <p className="settings-error">最初に名前を登録してください。</p>}
         <div className="chip-list">
@@ -4139,44 +4145,8 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
               className={`chip name-settings-chip ${name === draft.activeName ? "active" : ""} ${openBatPalette === `name:${name}` ? "palette-open" : ""}`}
               style={{ "--name-chip-color": nameColorFor(draft, name), "--settings-chip-text-size": settingsChipTextSize(name) }}
             >
-              <button type="button" onClick={() => commitDraft({ ...draft, activeName: name, theme: nameColorFor(draft, name) })}><span>{name}</span></button>
+              <button type="button" onClick={() => commitDraft({ ...draft, activeName: name })}><span>{name}</span></button>
               {name === draft.activeName ? <small>使用中</small> : null}
-              <span className="name-color-menu">
-                <button
-                  type="button"
-                  className="name-color-trigger"
-                  aria-label={`${name}のテーマカラーを選ぶ`}
-                  aria-expanded={openBatPalette === `name:${name}`}
-                  onClick={(event) => togglePalette(`name:${name}`, event)}
-                />
-                {openBatPalette === `name:${name}` && (
-                  <span
-                    className="bat-color-palette"
-                    style={palettePosition ? { "--palette-left": `${palettePosition.left}px`, "--palette-top": `${palettePosition.top}px` } : undefined}
-                    role="listbox"
-                    aria-label={`${name}のテーマカラー`}
-                  >
-                    {BAT_COLOR_PALETTE.map((color) => {
-                      const normalizedColor = normalizeHexColor(color);
-                      const currentColor = nameColorFor(draft, name);
-                      const usedElsewhere = usedBatColors.has(normalizedColor) || nameColorEntries.some(([otherName, otherColor]) => otherName !== name && otherColor === normalizedColor);
-                      const disabled = usedElsewhere && normalizedColor !== currentColor;
-                      return (
-                        <button
-                          type="button"
-                          className={normalizedColor === currentColor ? "selected" : ""}
-                          style={{ "--swatch-color": normalizedColor }}
-                          aria-label={`${name}を${normalizedColor}にする`}
-                          aria-pressed={normalizedColor === currentColor}
-                          disabled={disabled}
-                          onClick={() => updateNameColor(name, normalizedColor)}
-                          key={normalizedColor}
-                        />
-                      );
-                    })}
-                  </span>
-                )}
-              </span>
               <button type="button" className="chip-delete" aria-label={`${name}を削除`} onClick={() => removeDraftName(name)}><SvgIcon type="trash" /></button>
             </span>
           ))}
@@ -4190,7 +4160,7 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
         </div>
         <form className="add-row" onSubmit={addDraftBat}>
           <input name="bat" type="text" autoComplete="off" placeholder="例: 赤バット" />
-          <button type="submit" className="primary"><ButtonIcon type="plus" /></button>
+          <button type="submit" className="primary add-text-button">追加</button>
         </form>
         <div className="chip-list">
           {draft.bats.map((bat) => (
