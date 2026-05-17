@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800;900&display=swap");
+
 :root {
   color-scheme: dark;
   --app-scale: 1;
@@ -47,7 +49,7 @@ body {
   margin: 0;
   color: var(--text);
   background: var(--app-bg, radial-gradient(circle at 50% -14%, rgba(var(--hot-rgb), 0.22), transparent 32%), linear-gradient(180deg, #15161d 0%, #08090d 100%));
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: "M PLUS Rounded 1c", "Hiragino Maru Gothic ProN", "Hiragino Sans", "YuGothic", "Yu Gothic", "Meiryo", sans-serif;
 }
 
 button,
@@ -87,7 +89,7 @@ svg text {
 .app {
   min-height: 100svh;
   background: var(--app-bg, transparent);
-  font-family: var(--app-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+  font-family: var(--app-font-family, "M PLUS Rounded 1c", "Hiragino Maru Gothic ProN", "Hiragino Sans", "YuGothic", "Yu Gothic", "Meiryo", sans-serif);
   font-weight: var(--app-base-weight, 800);
   -webkit-user-select: none;
   user-select: none;
@@ -102,10 +104,10 @@ svg text {
 }
 
 .app.font-rounded {
-  --app-font-family: "Hiragino Maru Gothic ProN", "Hiragino Sans", "YuGothic", "Yu Gothic", "Meiryo", "Segoe UI", system-ui, sans-serif;
-  --app-display-font-family: "Trebuchet MS", "Hiragino Maru Gothic ProN", "Hiragino Sans", sans-serif;
-  --app-heading-font-family: "Hiragino Maru Gothic ProN", "Hiragino Sans", "YuGothic", "Yu Gothic", sans-serif;
-  --app-base-weight: 850;
+  --app-font-family: "M PLUS Rounded 1c", "Hiragino Maru Gothic ProN", "Hiragino Sans", "YuGothic", "Yu Gothic", "Meiryo", sans-serif;
+  --app-display-font-family: "M PLUS Rounded 1c", "Arial Rounded MT Bold", "Hiragino Maru Gothic ProN", sans-serif;
+  --app-heading-font-family: "M PLUS Rounded 1c", "Hiragino Maru Gothic ProN", "Hiragino Sans", "YuGothic", "Yu Gothic", sans-serif;
+  --app-base-weight: 800;
 }
 
 .app.font-clean {
@@ -123,9 +125,9 @@ svg text {
 }
 
 .app.font-friendly {
-  --app-font-family: "Hiragino Maru Gothic ProN", "Hiragino Sans", "YuGothic", "Yu Gothic", "Meiryo", system-ui, sans-serif;
-  --app-display-font-family: "Trebuchet MS", "Hiragino Maru Gothic ProN", "Meiryo", system-ui, sans-serif;
-  --app-heading-font-family: "Hiragino Maru Gothic ProN", "Hiragino Sans", "YuGothic", "Yu Gothic", sans-serif;
+  --app-font-family: "M PLUS Rounded 1c", "Hiragino Maru Gothic ProN", "Hiragino Sans", "YuGothic", "Yu Gothic", "Meiryo", system-ui, sans-serif;
+  --app-display-font-family: "M PLUS Rounded 1c", "Arial Rounded MT Bold", "Hiragino Maru Gothic ProN", "Meiryo", system-ui, sans-serif;
+  --app-heading-font-family: "M PLUS Rounded 1c", "Hiragino Maru Gothic ProN", "Hiragino Sans", "YuGothic", "Yu Gothic", sans-serif;
   --app-base-weight: 780;
 }
 
@@ -1365,11 +1367,11 @@ p {
 }
 
 .font-option.font-rounded {
-  font-family: "Yu Gothic UI", "Meiryo", "Segoe UI", system-ui, sans-serif;
+  font-family: "M PLUS Rounded 1c", "Hiragino Maru Gothic ProN", "Meiryo", system-ui, sans-serif;
 }
 
 .font-option.font-rounded strong {
-  font-family: "Trebuchet MS", "Yu Gothic UI", "Meiryo", sans-serif;
+  font-family: "M PLUS Rounded 1c", "Arial Rounded MT Bold", "Hiragino Maru Gothic ProN", sans-serif;
 }
 
 .font-option.font-clean {
@@ -1389,11 +1391,11 @@ p {
 }
 
 .font-option.font-friendly {
-  font-family: "Meiryo", "Yu Gothic UI", "Segoe UI", system-ui, sans-serif;
+  font-family: "M PLUS Rounded 1c", "Hiragino Maru Gothic ProN", "Meiryo", system-ui, sans-serif;
 }
 
 .font-option.font-friendly strong {
-  font-family: "Trebuchet MS", "Meiryo", system-ui, sans-serif;
+  font-family: "M PLUS Rounded 1c", "Arial Rounded MT Bold", "Meiryo", system-ui, sans-serif;
 }
 
 .settings-view .add-row,
