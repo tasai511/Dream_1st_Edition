@@ -364,7 +364,7 @@ h2 {
   gap: 7px;
   border: 0;
   padding: 0;
-  color: #111827;
+  color: var(--muted);
   background: transparent;
   font: inherit;
   font-size: 0.74rem;
@@ -373,7 +373,7 @@ h2 {
 }
 
 .bat-records-toggle span {
-  color: #111827;
+  color: inherit;
 }
 
 .bat-records-toggle::after {
@@ -3689,7 +3689,7 @@ input::placeholder {
 }
 
 .badge-heading-count span {
-  color: #111827;
+  color: var(--muted);
   font-size: 0.8rem;
   font-weight: 900;
 }
@@ -7809,7 +7809,7 @@ body {
   z-index: 0;
   height: min(1040px, 118svh);
   background:
-    linear-gradient(180deg, transparent 0 76%, rgba(247, 251, 255, 0.36) 91%, #f7fbff 100%),
+    linear-gradient(180deg, transparent 0 58%, rgba(247, 251, 255, 0.12) 74%, rgba(247, 251, 255, 0.34) 91%, #f7fbff 100%),
     var(--ballpark-bg-url) center top / cover no-repeat,
     #f7fbff;
   content: "";
@@ -7822,7 +7822,7 @@ body {
   z-index: 0;
   background:
     radial-gradient(circle at 10% 3%, rgba(255, 255, 255, 0.8), transparent 18%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.28) 88%, #f7fbff 100%);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.12) 58%, rgba(255, 255, 255, 0.26) 86%, #f7fbff 100%);
   content: "";
   pointer-events: none;
 }
