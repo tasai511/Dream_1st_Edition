@@ -8210,15 +8210,20 @@ body {
 
 .daily-result-card .milestone-dot {
   top: 50% !important;
-  width: 28px !important;
-  height: 28px !important;
-  border: 3px solid #fff !important;
+  width: clamp(22px, calc(28px * var(--milestone-dot-scale, 1)), 28px) !important;
+  height: clamp(22px, calc(28px * var(--milestone-dot-scale, 1)), 28px) !important;
+  border: clamp(2px, calc(3px * var(--milestone-dot-scale, 1)), 3px) solid #fff !important;
   background:
     radial-gradient(circle at 35% 26%, #fff, transparent 18%),
     radial-gradient(circle, color-mix(in srgb, var(--score-color), white 25%), var(--score-dark)) !important;
   box-shadow:
     inset 0 0 0 2px var(--score-color),
     0 2px 5px rgba(47, 37, 16, 0.3) !important;
+}
+
+.daily-result-card .milestone-dot .rarity-icon {
+  width: clamp(13px, calc(17px * var(--milestone-dot-scale, 1)), 17px) !important;
+  height: clamp(13px, calc(17px * var(--milestone-dot-scale, 1)), 17px) !important;
 }
 
 .daily-result-card .milestone-dot span {
@@ -9941,6 +9946,7 @@ body .app .daily-result-card .target-remaining {
   width: 100% !important;
   height: 100% !important;
   align-content: center !important;
+  row-gap: 4px !important;
   justify-items: center !important;
   transform: none !important;
   text-align: center !important;
@@ -10065,6 +10071,7 @@ body .app .home-score-input-grid .home-input-panel {
   padding: 10px 10px 4px !important;
   border: 0 !important;
   border-radius: 0 !important;
+  position: relative !important;
   background:
     linear-gradient(180deg, transparent 0 36px, rgba(36, 104, 180, 0.13) 36px, rgba(36, 104, 180, 0.13) 37px, transparent 37px, transparent 39px, rgba(36, 104, 180, 0.1) 39px, rgba(36, 104, 180, 0.1) 40px, transparent 40px),
     repeating-linear-gradient(180deg, transparent 0 28px, rgba(36, 104, 180, 0.08) 28px, rgba(36, 104, 180, 0.08) 29px),
@@ -10087,6 +10094,39 @@ body .app .home-score-input-grid .home-input-panel {
     inset 0 -10px 18px rgba(201, 176, 126, 0.22),
     0 5px 10px rgba(94, 69, 28, 0.16),
     0 10px 18px rgba(8, 54, 126, 0.1) !important;
+}
+
+body .app .home-score-input-grid .home-input-panel::after {
+  position: absolute !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  z-index: 2 !important;
+  width: 24px !important;
+  height: 24px !important;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0 47%, rgba(212, 187, 136, 0.46) 48% 51%, rgba(236, 219, 178, 0.94) 52% 100%) !important;
+  box-shadow:
+    -2px -2px 4px rgba(96, 70, 31, 0.12),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.82) !important;
+  clip-path: polygon(100% 0, 0 100%, 100% 100%) !important;
+  content: "" !important;
+  pointer-events: none !important;
+}
+
+body .app .home-score-input-grid .home-input-panel::before {
+  position: absolute !important;
+  top: 20px !important;
+  bottom: 14px !important;
+  left: 5px !important;
+  z-index: 2 !important;
+  width: 12px !important;
+  background:
+    radial-gradient(circle at 50% 13px, rgba(61, 50, 36, 0.22) 0 2px, rgba(255, 255, 255, 0.96) 2.4px 4.6px, rgba(76, 58, 34, 0.2) 4.9px 5.4px, transparent 5.8px),
+    radial-gradient(circle at 50% 53px, rgba(61, 50, 36, 0.22) 0 2px, rgba(255, 255, 255, 0.96) 2.4px 4.6px, rgba(76, 58, 34, 0.2) 4.9px 5.4px, transparent 5.8px),
+    radial-gradient(circle at 50% 93px, rgba(61, 50, 36, 0.22) 0 2px, rgba(255, 255, 255, 0.96) 2.4px 4.6px, rgba(76, 58, 34, 0.2) 4.9px 5.4px, transparent 5.8px) !important;
+  content: "" !important;
+  filter: drop-shadow(1px 1px 0 rgba(119, 91, 44, 0.12)) !important;
+  pointer-events: none !important;
 }
 
 body .app .home-score-input-grid .home-input-panel .swing-form {
@@ -10644,9 +10684,9 @@ body .app .phone-shell .home-score-input-grid .daily-result-card,
 body .app .phone-shell .challenge-period-panel > .daily-result-grid > .daily-result-card {
   display: block !important;
   position: relative !important;
-  height: 112px !important;
-  min-height: 112px !important;
-  max-height: 112px !important;
+  height: 116px !important;
+  min-height: 116px !important;
+  max-height: 116px !important;
   overflow: visible !important;
   padding: 0 !important;
 }
@@ -10701,7 +10741,8 @@ body .app .phone-shell .challenge-period-panel > .daily-result-grid > .daily-res
   left: auto !important;
   width: 86px !important;
   min-width: 86px !important;
-  min-height: 40px !important;
+  height: 46px !important;
+  min-height: 46px !important;
   margin: 0 !important;
 }
 
@@ -10710,7 +10751,7 @@ body .app .phone-shell .challenge-period-panel > .daily-result-grid > .daily-res
   position: absolute !important;
   top: auto !important;
   right: 30px !important;
-  bottom: 22px !important;
+  bottom: 18px !important;
   left: 30px !important;
   z-index: 2 !important;
   width: auto !important;

@@ -1590,6 +1590,7 @@ function DailyResultCard({ card, showBadges, dismissedHomeBadges = new Set(), on
             <span className="milestone-fill" />
             {showMilestoneTrack && visibleMilestones.map((milestone) => {
               const alpha = milestoneAlpha(milestone.position);
+              const dotScale = 0.78 + (Math.max(0, Math.min(100, milestone.position)) / 100) * 0.22;
               const definition = makeBadgeDefinition(canonicalBadgeLabel(milestone.label), { description: milestone.description || `${milestone.label}をゲット` });
               return (
               <button
@@ -1599,6 +1600,7 @@ function DailyResultCard({ card, showBadges, dismissedHomeBadges = new Set(), on
                   left: `${milestone.position}%`,
                   "--milestone-alpha": alpha.toFixed(2),
                   "--milestone-ring-alpha": Math.max(0.08, alpha * 0.7).toFixed(2),
+                  "--milestone-dot-scale": dotScale.toFixed(3),
                 }}
                 onClick={() => setSelectedBadge({ ...definition, earnedCount: 0, lockedSecret: false })}
                 aria-label={`${definition.label}の詳細`}
