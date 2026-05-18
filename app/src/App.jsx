@@ -1590,7 +1590,7 @@ function DailyResultCard({ card, showBadges, dismissedHomeBadges = new Set(), on
             <span className="milestone-fill" />
             {showMilestoneTrack && visibleMilestones.map((milestone) => {
               const alpha = milestoneAlpha(milestone.position);
-              const dotScale = 0.78 + (Math.max(0, Math.min(100, milestone.position)) / 100) * 0.22;
+              const dotScale = 0.6 + (Math.max(0, Math.min(100, milestone.position)) / 100) * 0.55;
               const definition = makeBadgeDefinition(canonicalBadgeLabel(milestone.label), { description: milestone.description || `${milestone.label}をゲット` });
               return (
               <button
