@@ -47,6 +47,7 @@ const RARITY_COLORS = {
   UR: "#ffd700",
 };
 const PUBLIC_ASSET_BASE = import.meta.env.BASE_URL || "./";
+const ALL_BAT_FILTER_COLOR = "#0879f2";
 function cssImageUrl(assetUrl) {
   if (typeof document === "undefined") return `url("${assetUrl}")`;
   return `url("${new URL(assetUrl, document.baseURI).href}")`;
@@ -54,19 +55,24 @@ function cssImageUrl(assetUrl) {
 
 const NEW_UI_ASSETS = {
   logo: `${PUBLIC_ASSET_BASE}images/logo.png`,
-  background: `${PUBLIC_ASSET_BASE}images/field-bg.png`,
+  background: `${PUBLIC_ASSET_BASE}images/field-bg.jpg`,
   pen: `${PUBLIC_ASSET_BASE}images/pen.png`,
   bat: `${PUBLIC_ASSET_BASE}images/bat.svg`,
   days: `${PUBLIC_ASSET_BASE}images/calendar.svg`,
   count: `${PUBLIC_ASSET_BASE}images/count.svg`,
   avg: `${PUBLIC_ASSET_BASE}images/average.svg`,
   best: `${PUBLIC_ASSET_BASE}images/best.svg`,
+  navHome: `${PUBLIC_ASSET_BASE}images/icon_home_transparent.png`,
+  navChallenge: `${PUBLIC_ASSET_BASE}images/icon_challenge_transparent.png`,
+  navBadge: `${PUBLIC_ASSET_BASE}images/icon_badge_transparent.png`,
+  navData: `${PUBLIC_ASSET_BASE}images/icon_data_transparent.png`,
+  navSettings: `${PUBLIC_ASSET_BASE}images/icon_settings_transparent.png`,
 };
 const SCORE_CARD_SKINS = {
-  count: { watermark: `${PUBLIC_ASSET_BASE}images/batting.svg`, meterEnd: "#5fd6ff", meterGlow: "#37a4ff" },
-  avg: { watermark: `${PUBLIC_ASSET_BASE}images/ball.svg`, meterEnd: "#baff55", meterGlow: "#44ce35" },
-  best: { watermark: `${PUBLIC_ASSET_BASE}images/homebase.svg`, meterEnd: "#ffd84a", meterGlow: "#ff9d1b" },
-  days: { watermark: `${PUBLIC_ASSET_BASE}images/helmet.svg`, meterEnd: "#74c8ff", meterGlow: "#2f86ff" },
+  count: { meterGlow: "#37a4ff" },
+  avg: { meterGlow: "#44ce35" },
+  best: { meterGlow: "#ff9d1b" },
+  days: { meterGlow: "#e7333f" },
 };
 function scrollPageToTop() {
   if (typeof window === "undefined") return;
@@ -346,9 +352,19 @@ function nameColorFor(db, name) {
   return normalizeHexColor(db.nameColors?.[name], index === 0 ? legacyTheme : BAT_COLOR_PALETTE[index % BAT_COLOR_PALETTE.length]);
 }
 
-function compactPlayerName(name) {
-  const chars = [...String(name || "未選択")];
-  return chars.length > 4 ? `${chars.slice(0, 3).join("")}…` : chars.join("");
+function playerNameFontSize(name, compact = false) {
+  const length = [...String(name || "")].length;
+  if (compact) {
+    if (length >= 10) return "0.56rem";
+    if (length >= 8) return "0.62rem";
+    if (length >= 6) return "0.68rem";
+    return "0.78rem";
+  }
+  if (length >= 14) return "0.56rem";
+  if (length >= 12) return "0.6rem";
+  if (length >= 10) return "0.64rem";
+  if (length >= 8) return "0.69rem";
+  return "0.78rem";
 }
 
 function SvgIcon({ type }) {
@@ -1403,6 +1419,12 @@ function milestoneAlpha(position) {
   return 0.68 + ((ratio - 0.68) / 0.32) * 0.32;
 }
 
+function milestoneOrderScale(index, total) {
+  if (total <= 1) return 1.12;
+  const ratio = clamp(index / (total - 1), 0, 1);
+  return 0.62 + ratio * 0.58;
+}
+
 function DailyResultCards({ summary, showBadges = true, selected = false, onSelect = null, animation = null, range = RANGE_TODAY, includeDays = false, dismissedHomeBadges = new Set(), onDismissHomeBadge = null }) {
   const growthLabels = growthBadgeLabelsForRange(range);
   const previousScoreMissingMessage = growthLabels ? `${growthLabels.previousLabel}のスコアがありません` : "";
@@ -1556,6 +1578,7 @@ function DailyResultCard({ card, showBadges, dismissedHomeBadges = new Set(), on
   const displayRemainingBadge = targetBadge || completeBadge || card.badgeOverride || earnedBadge;
   const displayRemainingValue = targetBadge ? Math.max(0, targetBadge.target - (card.value || 0)) : 0;
   const showHomeRemaining = showBadges && Boolean(displayRemainingBadge);
+  const isRemainingComplete = showHomeRemaining && !targetBadge;
   const skin = SCORE_CARD_SKINS[card.key] || SCORE_CARD_SKINS.count;
 
   return (
@@ -1563,8 +1586,6 @@ function DailyResultCard({ card, showBadges, dismissedHomeBadges = new Set(), on
       className={`daily-result-card ${card.key} ${card.revealBadge === false ? "animating" : ""}`}
       style={{
         "--milestone-fill-ratio": String(milestoneFillRatio),
-        "--score-watermark": cssImageUrl(skin.watermark),
-        "--meter-end": skin.meterEnd,
         "--meter-glow": skin.meterGlow,
         ...scoreFontTokens(card.value),
       }}
@@ -1580,17 +1601,21 @@ function DailyResultCard({ card, showBadges, dismissedHomeBadges = new Set(), on
           </div>
           <div className="daily-badge-stage">
             {showHomeRemaining ? (
-              <div className="target-remaining" aria-label={`次のバッジまで${displayRemainingValue}${card.unit}`}>
-                <span>次のバッジまで</span>
-                <strong>{Number(displayRemainingValue).toLocaleString("ja-JP")}<small>{card.unit}</small></strong>
+              <div className={`target-remaining ${isRemainingComplete ? "complete" : ""}`} aria-label={isRemainingComplete ? "コンプリート" : `次のバッジまで${displayRemainingValue}${card.unit}`}>
+                {!isRemainingComplete && <span>次のバッジまで</span>}
+                {isRemainingComplete ? (
+                  <strong>コンプリート</strong>
+                ) : (
+                  <strong>{Number(displayRemainingValue).toLocaleString("ja-JP")}<small>{card.unit}</small></strong>
+                )}
               </div>
             ) : null}
           </div>
           <div className={`milestone-track ${showMilestoneTrack ? "" : "placeholder"} ${showEmptyTrackMessage ? "with-message" : ""} ${visibleMilestones.length ? "earned" : ""}`}>
             <span className="milestone-fill" />
-            {showMilestoneTrack && visibleMilestones.map((milestone) => {
+            {showMilestoneTrack && visibleMilestones.map((milestone, index) => {
               const alpha = milestoneAlpha(milestone.position);
-              const dotScale = 0.6 + (Math.max(0, Math.min(100, milestone.position)) / 100) * 0.55;
+              const dotScale = milestoneOrderScale(index, visibleMilestones.length);
               const definition = makeBadgeDefinition(canonicalBadgeLabel(milestone.label), { description: milestone.description || `${milestone.label}をゲット` });
               return (
               <button
@@ -2656,7 +2681,7 @@ export default function App() {
               aria-expanded={isNameMenuOpen}
               onClick={() => setIsNameMenuOpen((value) => !value)}
             >
-              <span>{compactPlayerName(currentName)}</span>
+              <span style={{ "--player-name-size": playerNameFontSize(currentName, true) }}>{currentName || "未選択"}</span>
             </button>
             {isNameMenuOpen && (
               <div className="player-menu" role="menu" aria-label="名前を切り替え">
@@ -2670,8 +2695,8 @@ export default function App() {
                     }}
                     role="menuitem"
                     key={name}
+                    style={{ "--player-menu-name-size": playerNameFontSize(name) }}
                   >
-                    <SvgIcon type="person" />
                     <span>{name}</span>
                   </button>
                 )) : (
@@ -3173,7 +3198,6 @@ function BatRecordsSection({ children, className = "home-bat-records" }) {
         onClick={() => setOpen((value) => !value)}
       >
         <span>使ったバット</span>
-        <SvgIcon type="chevronDown" />
       </button>
       {open && (
         <div className={className}>
@@ -3793,9 +3817,9 @@ function graphRangeLabel(range) {
 function DataView({ db, allForName, activeDate = todayISO() }) {
   const [activeTab, setActiveTab] = useState("daily");
   const tabs = [
-    ["daily", "デイリー"],
-    ["weekly", "ウィークリー"],
-    ["monthly", "マンスリー"],
+    ["daily", "週間"],
+    ["weekly", "月間"],
+    ["monthly", "年間"],
   ];
   const activeConfig = {
     daily: { graphRange: RANGE_TODAY, titlePrefix: "今週", maxBuckets: 365 },
@@ -3882,22 +3906,34 @@ function DataGraphs({ db, records, graphRange, titlePrefix, maxBuckets, activeDa
   );
 }
 
-function GraphControls({ db, graphBat, setGraphBat }) {
-  const selectedColor = graphBat === ALL ? "var(--hot)" : batColorFor(db, graphBat);
+function BatSelect({ value, onChange, bats, batColors = null, allOption = false, name = undefined, required = false, ariaLabel = "バット", className = "" }) {
+  const allColor = ALL_BAT_FILTER_COLOR;
+  const selectedColor = value === ALL
+    ? allColor
+    : normalizeHexColor(batColors?.[value], fallbackBatColor(value, Math.max(0, bats.indexOf(value))));
 
   return (
-    <div className="graph-shared-controls">
-      <label className={`bat-field graph-bat-filter home-bat-filter ${graphBat === ALL ? "all-selected" : ""}`} style={{ "--bat-filter-color": selectedColor }}>
+    <label className={`bat-select-control field-label bat-input-label ${className}`.trim()} style={{ "--bat-filter-color": selectedColor }}>
+      <span className={`bat-field graph-bat-filter home-bat-filter ${value === ALL ? "all-selected" : ""}`}>
         <span className="select-shell">
-          <span className="select-leading bat-select-leading" aria-hidden="true"><span className="bat-color-icon" /></span>
-          <select value={graphBat} onChange={(event) => setGraphBat(event.target.value)} aria-label="グラフのバット">
-            <option value={ALL}>全てのバット</option>
-            {db.bats.map((bat) => <option value={bat} key={bat}>{bat}</option>)}
+          <span className="select-leading bat-select-leading" aria-hidden="true"><img className="form-bat-icon" src={NEW_UI_ASSETS.bat} alt="" /></span>
+          <select name={name} required={required} value={value} onChange={(event) => onChange(event.target.value)} aria-label={ariaLabel}>
+            {allOption && <option value={ALL} style={{ color: ALL_BAT_FILTER_COLOR }}>全てのバット</option>}
+            {bats.map((bat, index) => {
+              const optionColor = normalizeHexColor(batColors?.[bat], fallbackBatColor(bat, index));
+              return <option value={bat} key={bat} style={{ color: optionColor }}>{bat}</option>;
+            })}
           </select>
           <span className="select-caret" aria-hidden="true"><Icon type="chevronDown" /></span>
         </span>
-      </label>
-    </div>
+      </span>
+    </label>
+  );
+}
+
+function GraphControls({ db, graphBat, setGraphBat }) {
+  return (
+    <BatSelect value={graphBat} onChange={setGraphBat} bats={db.bats} batColors={db.batColors} allOption ariaLabel="グラフのバット" className="home-form-bat-controls" />
   );
 }
 
@@ -3922,22 +3958,13 @@ function SwingForm({ bats, defaultBat, onSubmit, submitLabel, defaultValues = nu
   return (
     <form className="input-grid swing-form" onSubmit={onSubmit} style={{ "--selected-bat-color": selectedBatColor }}>
       <h3 className="swing-form-title"><img className="form-pen-icon" src={NEW_UI_ASSETS.pen} alt="" aria-hidden="true" />記録入力</h3>
-      <label className="field-label bat-input-label graph-shared-controls home-form-bat-controls" style={{ "--bat-filter-color": selectedBatColor }}>
-        <span className="field-title"><span className="icon"><BatIcon color="var(--selected-bat-color, var(--hot))" /></span><span className="visually-hidden">バット</span></span>
-        <span className="bat-field graph-bat-filter home-bat-filter">
-          <span className="select-shell">
-            <span className="select-leading bat-select-leading" aria-hidden="true"><img className="form-bat-icon" src={NEW_UI_ASSETS.bat} alt="" /></span>
-            <select name="bat" required value={selectedBat} onChange={(event) => setSelectedBat(event.target.value)} aria-label="バット">{bats.map((bat) => <option key={bat}>{bat}</option>)}</select>
-            <span className="select-caret" aria-hidden="true"><Icon type="chevronDown" /></span>
-          </span>
-        </span>
-      </label>
-      <label className="field-label"><span className="field-title"><Icon type="count" />回数</span><span className="paper-input-cell"><input name="count" type="number" inputMode="numeric" min="1" max="999" step="1" required value={countValue} onChange={(event) => setCountValue(event.target.value)} aria-label="回数" /><span aria-hidden="true">回</span></span></label>
-      <label className="field-label"><span className="field-title"><Icon type="avg" />平均</span><span className="paper-input-cell"><input name="avg" type="number" inputMode="numeric" min="0" max="999" step="1" required value={avgValue} onChange={(event) => setAvgValue(event.target.value)} aria-label="平均" /><span aria-hidden="true">点</span></span></label>
-      <label className="field-label"><span className="field-title"><Icon type="best" />ベスト</span><span className="paper-input-cell"><input name="best" type="number" inputMode="numeric" min="0" max="999" step="1" required value={bestValue} onChange={(event) => setBestValue(event.target.value)} aria-label="ベスト" /><span aria-hidden="true">点</span></span></label>
+      <BatSelect value={selectedBat} onChange={setSelectedBat} bats={bats} batColors={batColors} name="bat" required className="home-form-bat-controls" />
+      <label className="field-label"><span className="field-title">回数</span><span className="paper-input-cell"><input name="count" type="number" inputMode="numeric" min="1" max="999" step="1" required value={countValue} onChange={(event) => setCountValue(event.target.value)} aria-label="回数" /><span aria-hidden="true">回</span></span></label>
+      <label className="field-label"><span className="field-title">平均</span><span className="paper-input-cell"><input name="avg" type="number" inputMode="numeric" min="0" max="999" step="1" required value={avgValue} onChange={(event) => setAvgValue(event.target.value)} aria-label="平均" /><span aria-hidden="true">点</span></span></label>
+      <label className="field-label"><span className="field-title">ベスト</span><span className="paper-input-cell"><input name="best" type="number" inputMode="numeric" min="0" max="999" step="1" required value={bestValue} onChange={(event) => setBestValue(event.target.value)} aria-label="ベスト" /><span aria-hidden="true">点</span></span></label>
       <span className="home-ok-slot">
         {testAction && <button className="standard-ok-button settings-ok-button test-seed-button" type="button" onClick={handleTestAction} disabled={submitDisabled}>テスト</button>}
-        <button className="standard-ok-button settings-ok-button" type="submit" aria-label={submitLabel} disabled={submitDisabled}><Icon type="check" />OK</button>
+        <button className="standard-ok-button settings-ok-button" type="submit" aria-label={submitLabel} disabled={submitDisabled}>OK</button>
       </span>
     </form>
   );
@@ -4041,7 +4068,7 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
   useEffect(() => {
     if (!openBatPalette) return undefined;
     const closeOnOutsideTap = (event) => {
-      if (event.target.closest?.(".bat-color-menu, .name-color-menu")) return;
+      if (event.target.closest?.(".bat-color-menu")) return;
       setOpenBatPalette(null);
       setPalettePosition(null);
     };
@@ -4163,7 +4190,7 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
     <div className="settings-view">
       <section className={`panel settings-register-card ${String(openBatPalette).startsWith("name:") || draft.bats.includes(openBatPalette) ? "palette-panel-open" : ""}`}>
         <div className="section-row">
-          <h2 className="icon-heading"><Icon type="person" />登録</h2>
+          <h2 className="icon-heading">登録</h2>
         </div>
         <div className="settings-register-editor">
         <section className="settings-nested-card">
@@ -4260,7 +4287,7 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
 
       <section className="panel">
         <div className="section-row">
-          <h2 className="icon-heading"><Icon type="data" />データ管理</h2>
+          <h2 className="icon-heading">データ管理</h2>
           <p>この端末に保存</p>
         </div>
         <div className="tool-grid">
@@ -4271,7 +4298,7 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
       </section>
       <section className="panel">
         <div className="section-row">
-          <h2 className="icon-heading"><Icon type="lock" />テスト</h2>
+          <h2 className="icon-heading">テスト</h2>
           <p>検証用</p>
         </div>
         <button type="button" className="ghost wide" onClick={() => setDb({ ...demoDb(), testInputDefaults: false, testRandomGeneration: false, testDate: null })}>デモデータ作成</button>
@@ -4285,17 +4312,17 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
 
 function BottomNav({ tab, setTab }) {
   const tabs = [
-    ["home", "home", "ホーム"],
-    ["record", "challenge", "チャレンジ"],
-    ["badges", "collection", "バッジ"],
-    ["data", "data", "データ"],
-    ["settings", "settings", "設定"],
+    ["home", NEW_UI_ASSETS.navHome, "ホーム"],
+    ["record", NEW_UI_ASSETS.navChallenge, "チャレンジ"],
+    ["badges", NEW_UI_ASSETS.navBadge, "バッジ"],
+    ["data", NEW_UI_ASSETS.navData, "データ"],
+    ["settings", NEW_UI_ASSETS.navSettings, "設定"],
   ];
   return (
     <nav className="bottom-nav" aria-label="画面切り替え">
-      {tabs.map(([key, icon, label]) => (
+      {tabs.map(([key, iconUrl, label]) => (
         <button key={key} type="button" className={tab === key ? "active" : ""} onClick={() => setTab(key)} aria-label={key}>
-          <SvgIcon type={icon} />
+          <img className="bottom-nav-icon" src={iconUrl} alt="" aria-hidden="true" />
           <span>{label}</span>
         </button>
       ))}
