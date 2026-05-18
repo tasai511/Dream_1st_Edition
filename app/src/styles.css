@@ -7821,7 +7821,7 @@ body {
 .app::before {
   position: fixed;
   inset: 0 0 auto;
-  z-index: -2;
+  z-index: 0;
   height: min(820px, 92svh);
   background-image: var(--ballpark-bg-url);
   background-position: center top;
@@ -7837,7 +7837,7 @@ body {
 .app::after {
   position: fixed;
   inset: 0;
-  z-index: -1;
+  z-index: 0;
   background:
     radial-gradient(circle at 10% 3%, rgba(255, 255, 255, 0.8), transparent 18%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.48) 70%, #f7fbff 100%);
@@ -7846,6 +7846,8 @@ body {
 }
 
 .phone-shell {
+  position: relative;
+  z-index: 1;
   padding: max(12px, env(safe-area-inset-top)) 14px calc(78px + env(safe-area-inset-bottom)) !important;
 }
 
@@ -8267,9 +8269,9 @@ body {
   flex: 1 1 auto !important;
   width: 100% !important;
   min-width: 0 !important;
-  grid-template-rows: 30px 1.35em !important;
-  row-gap: 2px !important;
-  min-height: 46px !important;
+  grid-template-rows: 42px 1.35em !important;
+  row-gap: 4px !important;
+  min-height: 62px !important;
   padding: 0 2px !important;
 }
 
@@ -8290,7 +8292,7 @@ body {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   align-self: center;
   width: 100%;
-  height: 30px;
+  height: 42px;
   gap: 6px;
 }
 
@@ -8303,7 +8305,7 @@ body {
   min-height: 0;
   border: 0;
   border-radius: 7px;
-  padding: 3px 4px 4px;
+  padding: 4px 4px 5px;
   color: var(--muted);
   background: transparent;
   font-weight: 950;
@@ -10432,16 +10434,16 @@ body .app .graph-range-tabs button.selected {
 body .app .challenge-range-tabs button {
   display: grid !important;
   grid-template-columns: minmax(0, 1fr) !important;
-  grid-template-rows: 1fr auto !important;
+  grid-template-rows: minmax(0, 1fr) auto !important;
   align-items: center !important;
   justify-items: center !important;
-  gap: 1px !important;
+  gap: 2px !important;
   text-align: center !important;
   white-space: nowrap !important;
 }
 
 body .app .challenge-range-tabs .challenge-tab-period {
-  font-size: clamp(0.94rem, 5.1vw, 1.36rem) !important;
+  font-size: clamp(0.98rem, 5.3vw, 1.38rem) !important;
   line-height: 0.9 !important;
 }
 
@@ -10484,7 +10486,7 @@ body .app .phone-shell .home-score-input-grid.no-input-card > .daily-result-grid
   justify-self: stretch !important;
   width: 100% !important;
   max-width: none !important;
-  gap: 12px !important;
+  gap: 15px !important;
 }
 
 body .app .phone-shell .home-score-input-grid > .daily-result-grid {
