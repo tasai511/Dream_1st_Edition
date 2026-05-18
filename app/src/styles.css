@@ -6805,14 +6805,27 @@ select:focus,
   width: 13px !important;
   height: 13px !important;
   margin: 0 !important;
-  color: #ffffff !important;
+  color: #0b2146 !important;
   filter:
-    drop-shadow(0 1px 0 rgba(255, 255, 255, 0.72))
-    drop-shadow(0 -1px 0 rgba(0, 45, 116, 0.34))
-    drop-shadow(0 2px 2px rgba(0, 0, 0, 0.28)) !important;
+    drop-shadow(0 -1px 0 rgba(255, 255, 255, 0.86))
+    drop-shadow(0 1px 0 rgba(0, 0, 0, 0.18))
+    drop-shadow(0 2px 2px rgba(0, 0, 0, 0.14)) !important;
   line-height: 0 !important;
   opacity: 1 !important;
   transform: none !important;
+}
+
+.milestone-dot .rarity-icon.rarity-c,
+.milestone-dot .rarity-icon.rarity-u,
+.milestone-dot .rarity-icon.rarity-r,
+.milestone-dot .rarity-icon.rarity-rr,
+.milestone-dot .rarity-icon.rarity-sr,
+.milestone-dot .rarity-icon.rarity-ur,
+.milestone-dot .rarity-icon svg,
+.milestone-dot .rarity-icon svg * {
+  color: #0b2146 !important;
+  fill: #0b2146 !important;
+  stroke: #0b2146 !important;
 }
 
 .milestone-dot {
@@ -6829,9 +6842,9 @@ select:focus,
   width: 17px !important;
   height: 17px !important;
   filter:
-    drop-shadow(0 1px 0 rgba(255, 255, 255, 0.78))
-    drop-shadow(0 -1px 0 rgba(0, 45, 116, 0.38))
-    drop-shadow(0 2px 2px rgba(0, 0, 0, 0.3)) !important;
+    drop-shadow(0 -1px 0 rgba(255, 255, 255, 0.88))
+    drop-shadow(0 1px 0 rgba(0, 0, 0, 0.2))
+    drop-shadow(0 2px 2px rgba(0, 0, 0, 0.16)) !important;
   opacity: 1 !important;
 }
 
@@ -7591,15 +7604,14 @@ body .app .phone-shell .home-score-input-grid .home-input-panel .home-ok-slot .s
 }
 
 body .app .phone-shell .home-score-input-grid .home-input-panel .home-ok-slot {
-  grid-template-columns: 74px 74px 74px !important;
-  width: 246px !important;
+  display: flex !important;
+  width: 100% !important;
   column-gap: 8px !important;
+  justify-content: center !important;
 }
 
 body .app .phone-shell .home-score-input-grid .home-input-panel .home-ok-slot .test-seed-button {
-  grid-column: 1 !important;
-  justify-self: start !important;
-  transform: translateX(-18px) !important;
+  transform: none !important;
   border-color: #79b500 !important;
   background:
     linear-gradient(180deg, #d9ff53 0%, #a8df18 48%, #7fbd00 100%) !important;
@@ -7763,16 +7775,16 @@ body .app .phone-shell .home-score-input-grid .home-input-panel .bat-input-shell
 body .app .phone-shell .home-score-input-grid .home-input-panel .swing-form .bat-input-shell select {
   appearance: none !important;
   -webkit-appearance: none !important;
-  height: 32px !important;
-  min-height: 32px !important;
-  border: 1.5px solid rgba(193, 169, 139, 0.66) !important;
-  border-radius: 9px !important;
+  height: 29px !important;
+  min-height: 29px !important;
+  border: 1px solid rgba(92, 115, 150, 0.38) !important;
+  border-radius: 0 !important;
   padding: 0 28px 0 34px !important;
   color: #132438 !important;
-  background: rgba(255, 255, 255, 0.76) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.44), rgba(255, 253, 246, 0.18)) !important;
   box-shadow:
-    inset 0 2px 4px rgba(123, 95, 55, 0.08),
-    0 1px 0 rgba(255, 255, 255, 0.85) !important;
+    inset 0 1px 0 rgba(255, 255, 255, 0.56) !important;
   font-size: 0.82rem !important;
   font-weight: 950 !important;
 }
@@ -8995,7 +9007,8 @@ body {
   grid-area: count-label;
 }
 
-.home-input-panel .swing-form .field-label:nth-of-type(2) > input {
+.home-input-panel .swing-form .field-label:nth-of-type(2) > input,
+.home-input-panel .swing-form .field-label:nth-of-type(2) > .paper-input-cell {
   grid-area: count;
 }
 
@@ -9003,7 +9016,8 @@ body {
   grid-area: avg-label;
 }
 
-.home-input-panel .swing-form .field-label:nth-of-type(3) > input {
+.home-input-panel .swing-form .field-label:nth-of-type(3) > input,
+.home-input-panel .swing-form .field-label:nth-of-type(3) > .paper-input-cell {
   grid-area: avg;
 }
 
@@ -9011,7 +9025,8 @@ body {
   grid-area: best-label;
 }
 
-.home-input-panel .swing-form .field-label:nth-of-type(4) > input {
+.home-input-panel .swing-form .field-label:nth-of-type(4) > input,
+.home-input-panel .swing-form .field-label:nth-of-type(4) > .paper-input-cell {
   grid-area: best;
 }
 
@@ -9093,6 +9108,11 @@ body {
 
 .home-input-panel .swing-form input::placeholder {
   color: #7f8794;
+}
+
+body .app .home-score-input-grid .home-input-panel .swing-form input::placeholder {
+  color: rgba(15, 55, 110, 0.48) !important;
+  font-weight: 950 !important;
 }
 
 .home-input-panel .swing-form .bat-input-shell select {
@@ -9238,27 +9258,32 @@ body {
     "form-title bat bat bat"
     ". count-label avg-label best-label"
     ". count avg best"
-    ". heading heading heading";
-  column-gap: 7px;
+    "heading heading heading heading";
+  column-gap: 0;
   justify-content: end;
-  row-gap: 5px;
+  row-gap: 0;
 }
 
 .home-score-input-grid .home-input-panel .bat-input-label {
-  margin-bottom: 2px;
+  align-self: start;
+  margin-bottom: 0;
+  transform: translateY(-3px);
 }
 
 .home-score-input-grid .home-input-panel .swing-form .field-label:not(.bat-input-label) > .field-title {
   align-self: end;
   justify-self: end;
   width: 98px;
-  margin-bottom: -1px;
+  margin-bottom: 0;
   transform: none;
 }
 
 .home-score-input-grid .home-input-panel .swing-form .field-label:nth-of-type(2) > input,
 .home-score-input-grid .home-input-panel .swing-form .field-label:nth-of-type(3) > input,
-.home-score-input-grid .home-input-panel .swing-form .field-label:nth-of-type(4) > input {
+.home-score-input-grid .home-input-panel .swing-form .field-label:nth-of-type(4) > input,
+.home-score-input-grid .home-input-panel .swing-form .field-label:nth-of-type(2) > .paper-input-cell,
+.home-score-input-grid .home-input-panel .swing-form .field-label:nth-of-type(3) > .paper-input-cell,
+.home-score-input-grid .home-input-panel .swing-form .field-label:nth-of-type(4) > .paper-input-cell {
   justify-self: end;
   width: 98px;
   margin-top: 0;
@@ -9284,11 +9309,12 @@ body {
 .home-ok-slot {
   display: inline-flex;
   grid-area: heading;
-  align-self: center;
+  align-self: start;
   justify-self: center;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  transform: translateY(7px);
 }
 
 .home-ok-slot .settings-ok-button {
@@ -9868,7 +9894,10 @@ body .app .bottom-nav button.active {
 /* Final polish: the home bat dropdown stays light while the graph filter remains dark. */
 body .app .phone-shell .home-input-panel .home-form-bat-controls .home-bat-filter.bat-field select,
 body .app .phone-shell .home-score-input-grid .home-input-panel .home-form-bat-controls .home-bat-filter.bat-field select {
+  height: 25px !important;
+  min-height: 25px !important;
   border: 2px solid color-mix(in srgb, var(--bat-filter-color, var(--hot)) 32%, #ffffff) !important;
+  border-radius: 8px !important;
   color: #102236 !important;
   background:
     linear-gradient(180deg, #ffffff 0%, color-mix(in srgb, var(--bat-filter-color, var(--hot)) 9%, #eef6ff) 100%) !important;
@@ -9879,12 +9908,14 @@ body .app .phone-shell .home-input-panel .home-form-bat-controls .home-bat-filte
 body .app .phone-shell .home-score-input-grid .home-input-panel .home-form-bat-controls .home-bat-filter.bat-field .select-leading {
   color: var(--bat-filter-color, var(--hot)) !important;
   background: color-mix(in srgb, var(--bat-filter-color, var(--hot)) 14%, #ffffff) !important;
+  transform: translateY(-50%) scale(0.88) !important;
 }
 
 body .app .phone-shell .home-input-panel .home-form-bat-controls .home-bat-filter.bat-field .select-caret,
 body .app .phone-shell .home-score-input-grid .home-input-panel .home-form-bat-controls .home-bat-filter.bat-field .select-caret {
   color: #0b4dae !important;
   background: color-mix(in srgb, var(--bat-filter-color, var(--hot)) 12%, #ffffff) !important;
+  transform: translateY(-50%) scale(0.88) !important;
 }
 
 /* Final polish: keep progress numbers inside the score card. */
@@ -9978,8 +10009,8 @@ body .app .home-score-input-grid .home-input-panel .swing-form-title {
 }
 
 body .app .home-score-input-grid .home-input-panel .form-pen-icon {
-  width: 32px !important;
-  height: 32px !important;
+  width: 28px !important;
+  height: 28px !important;
   filter:
     drop-shadow(-1px -1px 0 rgba(255, 255, 255, 0.9))
     drop-shadow(1px 1px 0 rgba(4, 45, 116, 0.42))
@@ -10030,24 +10061,38 @@ body .app .home-score-input-grid {
 }
 
 body .app .home-score-input-grid .home-input-panel {
-  min-height: 76px !important;
-  padding: 5px 8px !important;
+  min-height: 140px !important;
+  padding: 10px 10px 4px !important;
   border: 0 !important;
+  border-radius: 0 !important;
   background:
+    linear-gradient(180deg, transparent 0 36px, rgba(36, 104, 180, 0.13) 36px, rgba(36, 104, 180, 0.13) 37px, transparent 37px, transparent 39px, rgba(36, 104, 180, 0.1) 39px, rgba(36, 104, 180, 0.1) 40px, transparent 40px),
+    repeating-linear-gradient(180deg, transparent 0 28px, rgba(36, 104, 180, 0.08) 28px, rgba(36, 104, 180, 0.08) 29px),
+    linear-gradient(90deg, transparent 0 17px, rgba(224, 86, 70, 0.2) 18px, transparent 19px),
     radial-gradient(circle at 16% 22%, var(--paper-fiber) 0 1px, transparent 1.6px),
     radial-gradient(circle at 82% 68%, rgba(122, 96, 50, 0.04) 0 1.2px, transparent 1.8px),
-    linear-gradient(135deg, rgba(255, 255, 255, 0.82), transparent 28%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.86), transparent 28%),
     linear-gradient(180deg, var(--paper-base) 0%, #f8f1df 100%) !important;
+  background-position:
+    0 0,
+    0 11px,
+    0 0,
+    0 0,
+    0 0,
+    0 0,
+    0 0 !important;
   box-shadow:
-    inset 0 0 0 2px #ffffff,
+    inset 0 1px 0 #ffffff,
+    inset 0 -1px 0 rgba(120, 92, 42, 0.22),
     inset 0 -10px 18px rgba(201, 176, 126, 0.22),
-    0 6px 12px rgba(94, 69, 28, 0.18),
-    0 10px 18px rgba(8, 54, 126, 0.12) !important;
+    0 5px 10px rgba(94, 69, 28, 0.16),
+    0 10px 18px rgba(8, 54, 126, 0.1) !important;
 }
 
 body .app .home-score-input-grid .home-input-panel .swing-form {
   min-height: 0 !important;
-  gap: 4px 7px !important;
+  grid-template-rows: 29px 29px 29px 43px !important;
+  gap: 0 !important;
 }
 
 body .app .home-score-input-grid .home-input-panel .swing-form-title {
@@ -10066,8 +10111,65 @@ body .app .home-score-input-grid .home-input-panel .swing-form select {
   min-height: 29px !important;
 }
 
+body .app .home-score-input-grid .home-input-panel .swing-form input {
+  border: 0 !important;
+  border-radius: 0 !important;
+  color: #12243a !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-size: 0.92rem !important;
+  font-weight: 950 !important;
+  padding: 0 18px 0 4px !important;
+  text-align: right !important;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.72) !important;
+}
+
+body .app .home-score-input-grid .home-input-panel .paper-input-cell {
+  position: relative !important;
+  display: block !important;
+  height: 29px !important;
+  border: 1px solid rgba(92, 115, 150, 0.38) !important;
+  background:
+    linear-gradient(180deg, #ffffff 0%, #fbfdff 100%) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -1px 0 rgba(92, 115, 150, 0.08) !important;
+}
+
+body .app .home-score-input-grid .home-input-panel .paper-input-cell > span {
+  position: absolute !important;
+  right: 5px !important;
+  bottom: 3px !important;
+  color: rgba(15, 55, 110, 0.58) !important;
+  font-size: 0.52rem !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  text-align: right !important;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.72) !important;
+  pointer-events: none !important;
+}
+
+body .app .home-score-input-grid .home-input-panel .swing-form .field-title {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 29px !important;
+  color: #21344d !important;
+  border: 0 !important;
+  background: transparent !important;
+  padding: 2px 3px !important;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.68) !important;
+}
+
+body .app .home-score-input-grid .home-input-panel .bat-input-label > .field-title {
+  display: none !important;
+}
+
 body .app .home-score-input-grid .home-input-panel .home-form-bat-controls {
-  width: min(164px, 100%) !important;
+  align-self: start !important;
+  justify-self: end !important;
+  width: min(194px, 100%) !important;
+  transform: translateY(-3px) !important;
 }
 
 body .app .daily-result-card {
@@ -10627,17 +10729,18 @@ body .app .phone-shell .home-score-input-grid .home-input-panel .swing-form {
 }
 
 body .app .phone-shell .home-score-input-grid .home-input-panel .swing-form-title {
-  position: absolute !important;
-  top: 2px !important;
-  left: 8px !important;
+  position: relative !important;
+  top: -6px !important;
+  left: auto !important;
   z-index: 3 !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: flex-start !important;
   gap: 6px !important;
-  width: 128px !important;
-  max-width: 128px !important;
-  min-width: 128px !important;
+  grid-area: form-title !important;
+  width: max-content !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
   margin: 0 !important;
   overflow: visible !important;
   color: var(--game-blue-deep) !important;
