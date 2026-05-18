@@ -63,6 +63,24 @@ const SCORE_CARD_SKINS = {
   best: { watermark: `${PUBLIC_ASSET_BASE}images/homebase.svg`, meterEnd: "#ffd84a", meterGlow: "#ff9d1b" },
   days: { watermark: `${PUBLIC_ASSET_BASE}images/helmet.svg`, meterEnd: "#74c8ff", meterGlow: "#2f86ff" },
 };
+function scrollPageToTop() {
+  if (typeof window === "undefined") return;
+  const scroll = () => {
+    document.scrollingElement?.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  };
+  scroll();
+  window.requestAnimationFrame(scroll);
+}
+function scoreFontTokens(value) {
+  const digitCount = String(Math.max(0, Math.trunc(Math.abs(Number(value) || 0)))).length;
+  const scale = digitCount <= 3 ? 1 : digitCount === 4 ? 0.88 : digitCount === 5 ? 0.76 : digitCount === 6 ? 0.66 : 0.58;
+  return {
+    "--score-font-min": `${(2.05 * scale).toFixed(3)}rem`,
+    "--score-font-mid": `${(9 * scale).toFixed(3)}vw`,
+    "--score-font-max": `${(2.68 * scale).toFixed(3)}rem`,
+  };
+}
 const FIXED_UI_THEME = "#2f86ff";
 const DAILY_RARITY_IMAGE_URLS = {
   C: `${PUBLIC_ASSET_BASE}images/rarity_c_common.png?v=4`,
@@ -1543,6 +1561,7 @@ function DailyResultCard({ card, showBadges, dismissedHomeBadges = new Set(), on
         "--score-watermark": `url("${skin.watermark}")`,
         "--meter-end": skin.meterEnd,
         "--meter-glow": skin.meterGlow,
+        ...scoreFontTokens(card.value),
       }}
     >
       <div className="metric-label">
@@ -2726,12 +2745,14 @@ export default function App() {
         <BottomNav tab={tab} setTab={(nextTab) => {
           if (nextTab !== "settings" && (!db.names.length || !db.bats.length)) {
             setTab("settings");
+            scrollPageToTop();
             return;
           }
           if (nextTab === "record" && tab !== "record") {
             setChallengeRange(RANGE_WEEK);
           }
           setTab(nextTab);
+          scrollPageToTop();
         }} />
 
         {pendingDelete && <DeleteDialog pending={pendingDelete} onCancel={() => setPendingDelete(null)} onConfirm={confirmDelete} />}

@@ -683,7 +683,7 @@ h2 {
 
 .result-top-slot + .home-score-input-grid,
 .result-top-slot + .challenge-period-panel {
-  margin-top: 0;
+  margin-top: 8px;
 }
 
 p {
@@ -6875,19 +6875,6 @@ select:focus,
   padding: 10px 11px 9px;
 }
 
-.home-score-input-grid .daily-result-card,
-.challenge-period-panel > .daily-result-grid > .daily-result-card {
-  grid-template-rows: auto minmax(0, 1fr) auto;
-  height: 178px;
-  min-height: 178px;
-}
-
-.home-score-input-grid .daily-result-card .milestone-track,
-.challenge-period-panel > .daily-result-grid > .daily-result-card .milestone-track {
-  align-self: end;
-  margin-bottom: 28px;
-}
-
 .daily-result-group-card .daily-result-card {
   padding: 9px 10px 8px;
 }
@@ -7291,138 +7278,6 @@ select:focus,
   grid-row: auto !important;
   width: 100% !important;
   max-width: none !important;
-}
-
-/* Rebuild skin real EOF authority: progress low, remaining high. */
-.home-score-input-grid .daily-result-card,
-.challenge-period-panel > .daily-result-grid > .daily-result-card {
-  position: relative !important;
-}
-
-.home-score-input-grid .daily-result-card .daily-score-row,
-.challenge-period-panel > .daily-result-grid > .daily-result-card .daily-score-row {
-  position: static !important;
-  z-index: 5 !important;
-}
-
-.home-score-input-grid .daily-result-card .daily-badge-stage,
-.challenge-period-panel > .daily-result-grid > .daily-result-card .daily-badge-stage {
-  position: absolute !important;
-  top: 24px !important;
-  right: 18px !important;
-  bottom: auto !important;
-  left: auto !important;
-  z-index: 8 !important;
-  width: 86px !important;
-  min-width: 86px !important;
-  min-height: 40px !important;
-  transform: none !important;
-}
-
-.home-score-input-grid .daily-result-card .milestone-track,
-.challenge-period-panel > .daily-result-grid > .daily-result-card .milestone-track {
-  position: absolute !important;
-  right: 26px !important;
-  bottom: 22px !important;
-  left: 42px !important;
-  top: auto !important;
-  z-index: 2 !important;
-  width: auto !important;
-  margin: 0 !important;
-  transform: none !important;
-}
-
-body .app .phone-shell .home-score-input-grid .daily-result-card .daily-badge-stage,
-body .app .phone-shell .challenge-period-panel > .daily-result-grid > .daily-result-card .daily-badge-stage {
-  position: absolute !important;
-  top: 24px !important;
-  right: 16px !important;
-  left: auto !important;
-  width: 86px !important;
-  min-width: 86px !important;
-  transform: none !important;
-}
-
-body .app .phone-shell .home-score-input-grid .daily-result-card .milestone-track,
-body .app .phone-shell .challenge-period-panel > .daily-result-grid > .daily-result-card .milestone-track {
-  position: absolute !important;
-  right: 24px !important;
-  bottom: 20px !important;
-  left: 28px !important;
-  width: auto !important;
-  max-width: none !important;
-  transform: none !important;
-}
-
-/* Rebuild skin structural fix: remaining is now a direct card child. */
-body .app .phone-shell .home-score-input-grid .daily-result-card,
-body .app .phone-shell .challenge-period-panel > .daily-result-grid > .daily-result-card {
-  display: grid !important;
-  grid-template-columns: 58px minmax(0, 1fr) 96px !important;
-  grid-template-rows: 86px 34px !important;
-  column-gap: 12px !important;
-  row-gap: 0 !important;
-  height: 142px !important;
-  min-height: 142px !important;
-  padding: 12px 18px 10px !important;
-}
-
-body .app .phone-shell .home-score-input-grid .daily-result-card > .metric-label,
-body .app .phone-shell .challenge-period-panel > .daily-result-grid > .daily-result-card > .metric-label {
-  grid-column: 1 !important;
-  grid-row: 1 !important;
-  align-self: center !important;
-  justify-self: center !important;
-  margin: 0 !important;
-}
-
-body .app .phone-shell .home-score-input-grid .daily-result-card > .daily-score-row,
-body .app .phone-shell .challenge-period-panel > .daily-result-grid > .daily-result-card > .daily-score-row {
-  position: static !important;
-  grid-column: 2 !important;
-  grid-row: 1 !important;
-  align-self: center !important;
-  min-width: 0 !important;
-  margin: 0 !important;
-  z-index: 4 !important;
-}
-
-body .app .phone-shell .home-score-input-grid .daily-result-card > .daily-score-row > strong,
-body .app .phone-shell .challenge-period-panel > .daily-result-grid > .daily-result-card > .daily-score-row > strong {
-  transform: translateY(-4px) !important;
-}
-
-body .app .phone-shell .home-score-input-grid .daily-result-card > .daily-badge-stage,
-body .app .phone-shell .challenge-period-panel > .daily-result-grid > .daily-result-card > .daily-badge-stage {
-  position: static !important;
-  grid-column: 3 !important;
-  grid-row: 1 !important;
-  align-self: center !important;
-  justify-self: end !important;
-  width: 72px !important;
-  min-width: 72px !important;
-  min-height: 42px !important;
-  padding: 3px 5px 3px 3px !important;
-  margin: 0 !important;
-  transform: none !important;
-  z-index: 5 !important;
-}
-
-body .app .phone-shell .home-score-input-grid .daily-result-card > .milestone-track,
-body .app .phone-shell .challenge-period-panel > .daily-result-grid > .daily-result-card > .milestone-track {
-  position: relative !important;
-  grid-column: 1 / 4 !important;
-  grid-row: 2 !important;
-  align-self: end !important;
-  justify-self: stretch !important;
-  right: auto !important;
-  bottom: auto !important;
-  left: auto !important;
-  top: auto !important;
-  width: 100% !important;
-  max-width: none !important;
-  margin: 0 6px 7px !important;
-  transform: none !important;
 }
 
 /* Rebuild skin: settings view uses the same light notebook/card language. */
@@ -7879,6 +7734,10 @@ body .app .phone-shell .home-score-input-grid .home-input-panel .form-bat-icon {
   width: 20px !important;
   height: 20px !important;
   object-fit: contain !important;
+  background: var(--bat-filter-color, var(--selected-bat-color, var(--hot))) !important;
+  -webkit-mask: url("./assets/images/bat-icon.svg") center / contain no-repeat !important;
+  mask: url("./assets/images/bat-icon.svg") center / contain no-repeat !important;
+  opacity: 1 !important;
   transform: scaleX(-1) !important;
   filter: drop-shadow(0 1px 2px rgba(83, 42, 10, 0.22)) !important;
 }
@@ -7925,106 +7784,6 @@ body .app .phone-shell .home-score-input-grid .home-input-panel .bat-input-shell
   width: 13px !important;
   height: 13px !important;
   stroke-width: 3 !important;
-}
-
-/* Rebuild skin absolute final: separate remaining box from the progress bar. */
-.home-score-input-grid .daily-result-card,
-.challenge-period-panel > .daily-result-grid > .daily-result-card {
-  position: relative !important;
-  grid-template-columns: 52px minmax(0, 1fr) 76px !important;
-  grid-template-rows: auto 1fr !important;
-  min-height: 142px !important;
-  height: 142px !important;
-  padding: 12px 14px 10px !important;
-}
-
-.home-score-input-grid .daily-result-card .metric-label,
-.challenge-period-panel > .daily-result-grid > .daily-result-card .metric-label {
-  grid-column: 1 !important;
-  grid-row: 1 !important;
-  align-self: start !important;
-  margin-top: 24px !important;
-}
-
-.home-score-input-grid .daily-result-card .daily-score-row,
-.challenge-period-panel > .daily-result-grid > .daily-result-card .daily-score-row {
-  grid-column: 2 !important;
-  grid-row: 1 !important;
-  align-self: start !important;
-  margin-top: 18px !important;
-}
-
-.home-score-input-grid .daily-result-card .daily-badge-stage,
-.challenge-period-panel > .daily-result-grid > .daily-result-card .daily-badge-stage {
-  position: absolute !important;
-  top: 34px !important;
-  right: 20px !important;
-  z-index: 9 !important;
-  display: grid !important;
-  place-items: center !important;
-  width: 82px !important;
-  min-width: 82px !important;
-  min-height: 42px !important;
-  border: 1.5px solid var(--score-color) !important;
-  border-radius: 6px !important;
-  padding: 3px 4px !important;
-  background: rgba(255, 255, 255, 0.68) !important;
-  transform: none !important;
-}
-
-.home-score-input-grid .daily-result-card .target-remaining,
-.challenge-period-panel > .daily-result-grid > .daily-result-card .target-remaining {
-  display: grid !important;
-  justify-items: end !important;
-  width: 100% !important;
-  transform: none !important;
-}
-
-.home-score-input-grid .daily-result-card .milestone-track,
-.challenge-period-panel > .daily-result-grid > .daily-result-card .milestone-track {
-  position: absolute !important;
-  right: 24px !important;
-  bottom: 28px !important;
-  left: 36px !important;
-  z-index: 2 !important;
-  width: auto !important;
-  height: 12px !important;
-  margin: 0 !important;
-}
-
-.home-score-input-grid .daily-result-card .milestone-dot,
-.challenge-period-panel > .daily-result-grid > .daily-result-card .milestone-dot {
-  top: 50% !important;
-}
-
-/* Rebuild skin absolute final 2: keep score high, progress low. */
-.home-score-input-grid .daily-result-card .metric-label,
-.challenge-period-panel > .daily-result-grid > .daily-result-card .metric-label {
-  margin-top: 18px !important;
-  z-index: 5 !important;
-}
-
-.home-score-input-grid .daily-result-card .daily-score-row,
-.challenge-period-panel > .daily-result-grid > .daily-result-card .daily-score-row {
-  margin-top: 4px !important;
-  z-index: 6 !important;
-}
-
-.home-score-input-grid .daily-result-card .daily-score-row > strong,
-.challenge-period-panel > .daily-result-grid > .daily-result-card .daily-score-row > strong {
-  transform: translateY(-6px) !important;
-}
-
-.home-score-input-grid .daily-result-card .daily-badge-stage,
-.challenge-period-panel > .daily-result-grid > .daily-result-card .daily-badge-stage {
-  top: 26px !important;
-  z-index: 7 !important;
-}
-
-.home-score-input-grid .daily-result-card .milestone-track,
-.challenge-period-panel > .daily-result-grid > .daily-result-card .milestone-track {
-  bottom: 14px !important;
-  z-index: 1 !important;
 }
 
 /* Rebuild skin experiment: light ballpark UI over the existing app logic. */
@@ -8145,52 +7904,6 @@ body {
     0 1.5px #fff,
     0 -1.5px #fff,
     0 3px 7px rgba(3, 34, 88, 0.2);
-}
-
-.home-score-input-grid {
-  gap: 12px !important;
-}
-
-.home-score-input-grid .home-input-panel {
-  height: auto !important;
-  min-height: 142px !important;
-  border: 2px solid rgba(205, 190, 166, 0.9) !important;
-  border-radius: 14px !important;
-  padding: 12px 14px 12px !important;
-  background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0.84)),
-    repeating-linear-gradient(0deg, transparent 0 25px, rgba(77, 147, 216, 0.1) 26px) !important;
-  box-shadow:
-    inset 0 0 0 2px rgba(255, 255, 255, 0.92),
-    0 8px 16px rgba(72, 48, 22, 0.22) !important;
-}
-
-.home-score-input-grid .home-input-panel::before {
-  position: absolute;
-  top: 7px;
-  right: 12px;
-  left: 12px;
-  height: 2px;
-  border-radius: 999px;
-  background: rgba(30, 155, 225, 0.58);
-  content: "";
-}
-
-.home-score-input-grid .home-input-panel .swing-form {
-  grid-template-rows: 32px 16px 30px 34px !important;
-  row-gap: 4px !important;
-}
-
-.home-score-input-grid .home-input-panel .swing-form-title {
-  color: #092b78 !important;
-  font-size: 1.05rem !important;
-  letter-spacing: 0.06em;
-  text-shadow:
-    1.5px 0 #fff,
-    -1.5px 0 #fff,
-    0 1.5px #fff,
-    0 -1.5px #fff,
-    0 3px 4px rgba(7, 45, 111, 0.2);
 }
 
 .form-pen-icon {
@@ -8617,518 +8330,6 @@ body {
   opacity: 0.82;
 }
 
-/* Final authority: badge image placement is calculated from card/image size.
-   Card height is 142px, badge image is 57px, and GET stamp extends 8px upward.
-   top: 12px keeps the image high while leaving the stamp inside the card. */
-.home-score-input-grid .daily-result-card,
-.challenge-period-panel > .daily-result-grid > .daily-result-card {
-  position: relative !important;
-}
-
-.home-score-input-grid .daily-score-row,
-.challenge-period-panel > .daily-result-grid .daily-score-row {
-  position: static !important;
-}
-
-.home-score-input-grid .daily-badge-stage,
-.challenge-period-panel > .daily-result-grid .daily-badge-stage {
-  position: absolute !important;
-  top: 16px !important;
-  right: 14px !important;
-  width: 84px !important;
-  transform: none !important;
-}
-
-/* Final authority: remaining count sits just above the progress track.
-   Track top is about 94px in a 142px card, so a 28px label belongs near 62px. */
-.home-score-input-grid .daily-badge-stage:has(.target-remaining),
-.challenge-period-panel > .daily-result-grid .daily-badge-stage:has(.target-remaining) {
-  top: 50px !important;
-  z-index: 8 !important;
-}
-
-/* Final authority: completed fixed badge is subdued and stamped. */
-.daily-badge-mark.complete {
-  cursor: default;
-}
-
-.daily-badge-mark.complete .daily-badge-image {
-  opacity: 0.62 !important;
-  filter:
-    grayscale(0.46)
-    brightness(0.78)
-    drop-shadow(0 0 3px rgba(0, 0, 0, 0.38)) !important;
-}
-
-.daily-badge-mark.complete .daily-complete-stamp {
-  right: -8px !important;
-  top: 11px !important;
-  z-index: 4 !important;
-  width: 58px !important;
-  height: 24px !important;
-  border: 2px solid #ff3044 !important;
-  border-radius: 5px !important;
-  color: #ff3044 !important;
-  background: rgba(255, 48, 68, 0.08) !important;
-  font-size: 0.55rem !important;
-  font-weight: 950 !important;
-  line-height: 1 !important;
-  text-shadow: none !important;
-  transform: rotate(-13deg) !important;
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 48, 68, 0.22),
-    0 4px 8px rgba(0, 0, 0, 0.18) !important;
-}
-
-.daily-result-card .target-remaining {
-  transform: none !important;
-}
-
-/* Final authority: OK sits on the card centerline; test shifts left. */
-.home-score-input-grid .home-ok-slot {
-  display: grid !important;
-  grid-template-columns: 86px 86px 86px !important;
-  width: 274px !important;
-  max-width: 100% !important;
-  column-gap: 8px !important;
-  justify-self: center !important;
-  justify-content: center !important;
-  align-items: center !important;
-}
-
-.home-score-input-grid .home-ok-slot .test-seed-button {
-  grid-column: 1 !important;
-}
-
-.home-score-input-grid .home-ok-slot .standard-ok-button[type="submit"] {
-  grid-column: 2 !important;
-}
-
-/* Final authority: keep the bat selector compact and pinned right. */
-.home-score-input-grid .home-input-panel .swing-form {
-  grid-template-areas:
-    "form-title form-title form-title form-title form-title form-title . . bat bat bat bat"
-    "count-label count-label count-label count-label avg-label avg-label avg-label avg-label best-label best-label best-label best-label"
-    "count count count count avg avg avg avg best best best best"
-    ". heading heading heading heading heading heading heading heading heading heading ." !important;
-}
-
-.home-score-input-grid .home-input-panel .bat-input-label {
-  justify-self: end !important;
-  width: 100% !important;
-}
-
-.home-score-input-grid .home-input-panel .home-form-bat-controls {
-  justify-self: end !important;
-  width: min(164px, 100%) !important;
-}
-
-/* Final authority: align the input-card title with score-card titles. */
-.home-score-input-grid .home-input-panel .swing-form-title {
-  align-self: start !important;
-  justify-self: start !important;
-  transform: translateY(-2px);
-}
-
-/* Final authority: lift the badge image high in the score card. */
-.daily-badge-stage {
-  top: 28% !important;
-  transform: translateY(-92%) !important;
-}
-
-.home-score-input-grid .home-input-panel {
-  box-sizing: border-box !important;
-  height: 142px !important;
-  min-height: 142px !important;
-  padding: 12px 14px 10px !important;
-}
-
-.home-score-input-grid .home-input-panel .input-panel-layout,
-.home-score-input-grid .home-input-panel .swing-form {
-  height: 100% !important;
-}
-
-.home-score-input-grid .home-input-panel .swing-form {
-  grid-template-rows: 32px 16px 30px 34px !important;
-  row-gap: 3px !important;
-  align-content: stretch !important;
-}
-
-.home-score-input-grid .home-input-panel .swing-form-title {
-  grid-area: form-title;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  min-width: 0;
-  margin: 0;
-  color: var(--text);
-  font-size: 0.88rem;
-  font-weight: 950;
-  line-height: 1;
-  white-space: nowrap;
-}
-
-.home-score-input-grid .home-input-panel .swing-form-title .icon {
-  width: 22px;
-  height: 22px;
-  color: var(--hot);
-  background: color-mix(in srgb, var(--hot) 16%, transparent);
-}
-
-.home-score-input-grid .home-input-panel .swing-form-title .icon svg {
-  width: 15px;
-  height: 15px;
-}
-
-.home-score-input-grid .home-input-panel .bat-input-label {
-  margin-bottom: 0 !important;
-}
-
-.home-score-input-grid .home-input-panel .field-label {
-  gap: 2px !important;
-}
-
-.home-score-input-grid .home-input-panel .field-title {
-  font-size: 0.58rem !important;
-  line-height: 1 !important;
-}
-
-.home-score-input-grid .home-input-panel .bat-input-shell select,
-.home-score-input-grid .home-input-panel .swing-form .bat-input-shell select,
-.home-score-input-grid .home-input-panel .swing-form input,
-.home-score-input-grid .home-input-panel .swing-form select {
-  min-height: 28px !important;
-  height: 28px !important;
-}
-
-.home-score-input-grid .home-input-panel .home-ok-slot .settings-ok-button {
-  min-height: 30px !important;
-  height: 30px !important;
-}
-
-.home-score-input-grid.no-input-card > .daily-result-grid,
-.home-score-input-grid.no-input-card > .daily-result-grid.card-count-4 {
-  display: grid !important;
-  grid-template-columns: minmax(0, 1fr) !important;
-  grid-column: 1 !important;
-  grid-row: 1 !important;
-  gap: 10px !important;
-}
-
-.home-score-input-grid.no-input-card > .daily-result-grid > .daily-result-card {
-  grid-column: 1 !important;
-  grid-row: auto !important;
-  width: 100% !important;
-  max-width: none !important;
-}
-
-/* Layout experiment absolute final authority. Keep this block at EOF. */
-.home-score-input-grid,
-.challenge-period-panel {
-  display: grid !important;
-  grid-template-columns: minmax(0, 1fr) !important;
-  align-items: stretch !important;
-}
-
-.home-score-input-grid .home-input-panel {
-  grid-column: 1 !important;
-  grid-row: 1 !important;
-  width: 100% !important;
-  max-width: none !important;
-  justify-self: stretch !important;
-}
-
-.home-score-input-grid > .daily-result-grid,
-.challenge-period-panel > .daily-result-grid,
-.challenge-view .challenge-period-panel > .daily-result-grid,
-.challenge-view .challenge-period-panel:not(.all-record-panel) > .daily-result-grid,
-.challenge-view .challenge-period-panel > .daily-result-grid.card-count-3,
-.challenge-view .challenge-period-panel > .daily-result-grid.card-count-4 {
-  order: 0 !important;
-  display: grid !important;
-  grid-template-columns: minmax(0, 1fr) !important;
-  grid-column: 1 !important;
-  grid-row: auto !important;
-  width: 100% !important;
-  max-width: none !important;
-  justify-self: stretch !important;
-  gap: 10px !important;
-}
-
-.home-score-input-grid > .daily-result-grid {
-  grid-row: 2 !important;
-}
-
-.challenge-period-panel > .bat-records-section,
-.challenge-period-panel > .challenge-bat-records {
-  order: 1 !important;
-}
-
-.challenge-period-panel > .badge-inline-section {
-  order: 2 !important;
-}
-
-.home-score-input-grid .daily-result-grid.card-count-3 > .daily-result-card,
-.home-score-input-grid .daily-result-grid.card-count-3 > .daily-result-card:first-child,
-.home-score-input-grid .daily-result-grid.card-count-3 > .daily-result-card:nth-child(2),
-.home-score-input-grid .daily-result-grid.card-count-3 > .daily-result-card:nth-child(3),
-.challenge-view .challenge-period-panel > .daily-result-grid > .daily-result-card,
-.challenge-view .challenge-period-panel > .daily-result-grid.card-count-3 > .daily-result-card:first-child,
-.challenge-view .challenge-period-panel > .daily-result-grid.card-count-4 > .daily-result-card {
-  grid-column: 1 !important;
-  grid-row: auto !important;
-  width: 100% !important;
-  max-width: none !important;
-  justify-self: stretch !important;
-}
-
-/* Layout experiment absolute final authority. Keep this block at EOF. */
-.home-score-input-grid,
-.challenge-period-panel {
-  display: grid !important;
-  grid-template-columns: minmax(0, 1fr) !important;
-  align-items: stretch !important;
-}
-
-.home-score-input-grid .home-input-panel {
-  grid-column: 1 !important;
-  grid-row: 1 !important;
-  width: 100% !important;
-  max-width: none !important;
-  justify-self: stretch !important;
-}
-
-.home-score-input-grid > .daily-result-grid,
-.challenge-period-panel > .daily-result-grid,
-.challenge-view .challenge-period-panel > .daily-result-grid,
-.challenge-view .challenge-period-panel:not(.all-record-panel) > .daily-result-grid,
-.challenge-view .challenge-period-panel > .daily-result-grid.card-count-3,
-.challenge-view .challenge-period-panel > .daily-result-grid.card-count-4 {
-  order: 0 !important;
-  display: grid !important;
-  grid-template-columns: minmax(0, 1fr) !important;
-  grid-column: 1 !important;
-  grid-row: auto !important;
-  width: 100% !important;
-  max-width: none !important;
-  justify-self: stretch !important;
-  gap: 10px !important;
-}
-
-.home-score-input-grid > .daily-result-grid {
-  grid-row: 2 !important;
-}
-
-.challenge-period-panel > .bat-records-section,
-.challenge-period-panel > .challenge-bat-records {
-  order: 1 !important;
-}
-
-.challenge-period-panel > .badge-inline-section {
-  order: 2 !important;
-}
-
-.home-score-input-grid .daily-result-grid.card-count-3 > .daily-result-card,
-.home-score-input-grid .daily-result-grid.card-count-3 > .daily-result-card:first-child,
-.home-score-input-grid .daily-result-grid.card-count-3 > .daily-result-card:nth-child(2),
-.home-score-input-grid .daily-result-grid.card-count-3 > .daily-result-card:nth-child(3),
-.challenge-view .challenge-period-panel > .daily-result-grid > .daily-result-card,
-.challenge-view .challenge-period-panel > .daily-result-grid.card-count-3 > .daily-result-card:first-child,
-.challenge-view .challenge-period-panel > .daily-result-grid.card-count-4 > .daily-result-card {
-  grid-column: 1 !important;
-  grid-row: auto !important;
-  width: 100% !important;
-  max-width: none !important;
-  justify-self: stretch !important;
-}
-
-/* Layout experiment absolute final authority. Keep this at the file end. */
-.home-score-input-grid,
-.challenge-period-panel {
-  display: grid !important;
-  grid-template-columns: minmax(0, 1fr) !important;
-  align-items: stretch !important;
-}
-
-.home-score-input-grid .home-input-panel {
-  grid-column: 1 !important;
-  grid-row: 1 !important;
-  width: 100% !important;
-  max-width: none !important;
-  justify-self: stretch !important;
-}
-
-.home-score-input-grid > .daily-result-grid,
-.challenge-period-panel > .daily-result-grid,
-.challenge-view .challenge-period-panel > .daily-result-grid,
-.challenge-view .challenge-period-panel:not(.all-record-panel) > .daily-result-grid,
-.challenge-view .challenge-period-panel > .daily-result-grid.card-count-3,
-.challenge-view .challenge-period-panel > .daily-result-grid.card-count-4 {
-  order: 0 !important;
-  display: grid !important;
-  grid-template-columns: minmax(0, 1fr) !important;
-  grid-column: 1 !important;
-  grid-row: auto !important;
-  width: 100% !important;
-  max-width: none !important;
-  justify-self: stretch !important;
-  gap: 10px !important;
-}
-
-.home-score-input-grid > .daily-result-grid {
-  grid-row: 2 !important;
-}
-
-.challenge-period-panel > .bat-records-section,
-.challenge-period-panel > .challenge-bat-records {
-  order: 1 !important;
-}
-
-.challenge-period-panel > .badge-inline-section {
-  order: 2 !important;
-}
-
-.home-score-input-grid .daily-result-grid.card-count-3 > .daily-result-card,
-.home-score-input-grid .daily-result-grid.card-count-3 > .daily-result-card:first-child,
-.home-score-input-grid .daily-result-grid.card-count-3 > .daily-result-card:nth-child(2),
-.home-score-input-grid .daily-result-grid.card-count-3 > .daily-result-card:nth-child(3),
-.challenge-view .challenge-period-panel > .daily-result-grid > .daily-result-card,
-.challenge-view .challenge-period-panel > .daily-result-grid.card-count-3 > .daily-result-card:first-child,
-.challenge-view .challenge-period-panel > .daily-result-grid.card-count-4 > .daily-result-card {
-  grid-column: 1 !important;
-  grid-row: auto !important;
-  width: 100% !important;
-  max-width: none !important;
-  justify-self: stretch !important;
-}
-
-/* Layout experiment final authority: challenge follows home full-card layout. */
-.challenge-period-panel {
-  display: grid !important;
-}
-
-.challenge-period-panel > .daily-result-grid,
-.challenge-view .challenge-period-panel > .daily-result-grid,
-.challenge-view .challenge-period-panel:not(.all-record-panel) > .daily-result-grid,
-.challenge-view .challenge-period-panel > .daily-result-grid.card-count-3,
-.challenge-view .challenge-period-panel > .daily-result-grid.card-count-4 {
-  order: 0 !important;
-  display: grid !important;
-  grid-template-columns: minmax(0, 1fr) !important;
-  grid-row: auto !important;
-  width: 100% !important;
-  max-width: none !important;
-  justify-self: stretch !important;
-  gap: 10px !important;
-}
-
-.challenge-period-panel > .bat-records-section,
-.challenge-period-panel > .challenge-bat-records {
-  order: 1 !important;
-}
-
-.challenge-period-panel > .badge-inline-section {
-  order: 2 !important;
-}
-
-.challenge-view .challenge-period-panel > .daily-result-grid > .daily-result-card,
-.challenge-view .challenge-period-panel > .daily-result-grid.card-count-3 > .daily-result-card:first-child,
-.challenge-view .challenge-period-panel > .daily-result-grid.card-count-4 > .daily-result-card {
-  grid-column: 1 !important;
-  grid-row: auto !important;
-  width: 100% !important;
-  max-width: none !important;
-}
-
-/* Layout experiment: full-width score cards on home and challenge. */
-.home-score-input-grid {
-  grid-template-columns: minmax(0, 1fr) !important;
-  gap: 10px !important;
-}
-
-.home-score-input-grid .home-input-panel {
-  grid-column: 1 !important;
-  grid-row: 1 !important;
-  min-height: 154px;
-}
-
-.home-score-input-grid > .daily-result-grid,
-.challenge-period-panel > .daily-result-grid {
-  display: grid !important;
-  grid-template-columns: minmax(0, 1fr) !important;
-  grid-column: 1 !important;
-  grid-row: 2 !important;
-  gap: 10px !important;
-}
-
-.home-score-input-grid .daily-result-grid.card-count-3,
-.challenge-view .challenge-period-panel > .daily-result-grid,
-.challenge-view .challenge-period-panel:not(.all-record-panel) > .daily-result-grid {
-  display: grid !important;
-  grid-template-columns: minmax(0, 1fr) !important;
-}
-
-.home-score-input-grid .daily-result-grid.card-count-3 .daily-result-card,
-.home-score-input-grid .daily-result-grid.card-count-3 .daily-result-card:first-child,
-.home-score-input-grid .daily-result-grid.card-count-3 .daily-result-card:nth-child(2),
-.home-score-input-grid .daily-result-grid.card-count-3 .daily-result-card:nth-child(3),
-.challenge-view .challenge-period-panel > .daily-result-grid .daily-result-card,
-.challenge-view .challenge-period-panel:not(.all-record-panel) > .daily-result-grid.card-count-3 .daily-result-card:first-child {
-  grid-column: 1 !important;
-  grid-row: auto !important;
-}
-
-.home-score-input-grid .daily-result-card,
-.challenge-period-panel > .daily-result-grid > .daily-result-card {
-  grid-template-rows: auto minmax(0, 1fr) auto !important;
-  height: 142px !important;
-  min-height: 142px !important;
-  padding: 12px 14px 10px !important;
-}
-
-.home-score-input-grid .home-input-panel .swing-form {
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  grid-template-areas:
-    "bat bat bat bat bat bat bat bat bat bat bat bat"
-    "count-label count-label count-label count-label avg-label avg-label avg-label avg-label best-label best-label best-label best-label"
-    "count count count count avg avg avg avg best best best best"
-    ". . . heading heading heading heading heading heading . . .";
-  row-gap: 6px;
-}
-
-.home-score-input-grid .daily-result-card .milestone-track,
-.challenge-period-panel > .daily-result-grid > .daily-result-card .milestone-track {
-  align-self: end;
-  margin: 4px 14px 26px 8px !important;
-}
-
-.home-score-input-grid .daily-score-row,
-.challenge-period-panel > .daily-result-grid .daily-score-row {
-  grid-template-columns: minmax(0, 1fr) minmax(72px, 88px);
-  gap: 8px;
-}
-
-.home-score-input-grid .daily-score-row > strong,
-.challenge-period-panel > .daily-result-grid .daily-score-row > strong {
-  max-width: none !important;
-  transform: translateY(-4px);
-}
-
-.home-score-input-grid .daily-badge-stage,
-.challenge-period-panel > .daily-result-grid .daily-badge-stage {
-  position: static;
-  width: 100%;
-  justify-self: stretch;
-  align-self: center;
-  transform: none;
-}
-
-.home-score-input-grid .daily-badge-stage,
-.challenge-period-panel > .daily-result-grid .daily-badge-stage {
-  justify-self: end;
-  width: 82px;
-}
-
 /* Final authority: the input button must recover its normal fill after the
    score animation re-enables it. Keep tap feedback transform-only. */
 .home-input-panel .swing-form-heading:not(:disabled) {
@@ -9486,22 +8687,24 @@ body {
 
 .graph-shared-controls .home-bat-filter.bat-field select,
 .graph-shared-controls .home-bat-filter.bat-field.all-selected select {
-  border-color: rgba(255, 255, 255, 0.14) !important;
-  color: var(--text) !important;
-  background: #1d222d !important;
+  border-color: color-mix(in srgb, var(--bat-filter-color, var(--hot)) 32%, #ffffff) !important;
+  color: #102236 !important;
+  background:
+    linear-gradient(180deg, #ffffff 0%, color-mix(in srgb, var(--bat-filter-color, var(--hot)) 9%, #eef6ff) 100%) !important;
+  text-shadow: none !important;
 }
 
 .graph-shared-controls .home-bat-filter.bat-field .select-leading,
 .graph-shared-controls .home-bat-filter.bat-field.all-selected .select-leading,
 .graph-shared-controls .home-bat-filter.bat-field .select-caret,
 .graph-shared-controls .home-bat-filter.bat-field.all-selected .select-caret {
-  background: #1d222d !important;
+  background: color-mix(in srgb, var(--bat-filter-color, var(--hot)) 12%, #ffffff) !important;
 }
 
 .graph-shared-controls .home-bat-filter.bat-field .bat-select-leading,
 .graph-shared-controls .home-bat-filter.bat-field.all-selected .bat-select-leading {
   color: var(--bat-filter-color, var(--hot)) !important;
-  background: color-mix(in srgb, var(--bat-filter-color, var(--hot)) 14%, #1d222d) !important;
+  background: color-mix(in srgb, var(--bat-filter-color, var(--hot)) 14%, #ffffff) !important;
 }
 
 .graph-shared-controls .range-field {
@@ -9819,8 +9022,8 @@ body {
 
 .home-input-panel .home-form-bat-controls {
   grid-template-columns: minmax(0, 1fr);
-  justify-self: start;
-  width: min(188px, 100%);
+  justify-self: end;
+  width: min(164px, 100%);
 }
 
 .bat-input-shell {
@@ -10017,12 +9220,14 @@ body {
 
 .home-score-input-grid .home-input-panel .swing-form {
   height: 100%;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-template-columns: minmax(46px, 1fr) repeat(3, minmax(88px, 98px));
   grid-template-areas:
-    "form-title form-title form-title form-title bat bat bat bat bat bat bat bat"
-    "count-label count-label count-label count-label avg-label avg-label avg-label avg-label best-label best-label best-label best-label"
-    "count count count count avg avg avg avg best best best best"
-    ". heading heading heading heading heading heading heading heading heading heading .";
+    "form-title bat bat bat"
+    ". count-label avg-label best-label"
+    ". count avg best"
+    ". heading heading heading";
+  column-gap: 7px;
+  justify-content: end;
   row-gap: 5px;
 }
 
@@ -10032,6 +9237,8 @@ body {
 
 .home-score-input-grid .home-input-panel .swing-form .field-label:not(.bat-input-label) > .field-title {
   align-self: end;
+  justify-self: end;
+  width: 98px;
   margin-bottom: -1px;
   transform: none;
 }
@@ -10039,6 +9246,8 @@ body {
 .home-score-input-grid .home-input-panel .swing-form .field-label:nth-of-type(2) > input,
 .home-score-input-grid .home-input-panel .swing-form .field-label:nth-of-type(3) > input,
 .home-score-input-grid .home-input-panel .swing-form .field-label:nth-of-type(4) > input {
+  justify-self: end;
+  width: 98px;
   margin-top: 0;
 }
 
@@ -10440,113 +9649,6 @@ input[type="file"]::file-selector-button:active {
   transform: none !important;
 }
 
-/* Final authority: challenge has no input card; its first score card occupies that slot. */
-.home-score-input-grid.no-input-card > .daily-result-grid,
-.home-score-input-grid.no-input-card > .daily-result-grid.card-count-4 {
-  display: grid !important;
-  grid-template-columns: minmax(0, 1fr) !important;
-  grid-column: 1 !important;
-  grid-row: 1 !important;
-  gap: 10px !important;
-}
-
-.home-score-input-grid.no-input-card > .daily-result-grid > .daily-result-card {
-  grid-column: 1 !important;
-  grid-row: auto !important;
-  width: 100% !important;
-  max-width: none !important;
-}
-/* Rebuild skin real EOF authority: progress low, remaining high. */
-.home-score-input-grid .daily-result-card,
-.challenge-period-panel > .daily-result-grid > .daily-result-card {
-  position: relative !important;
-}
-
-.home-score-input-grid .daily-result-card .daily-score-row,
-.challenge-period-panel > .daily-result-grid > .daily-result-card .daily-score-row {
-  position: relative !important;
-  z-index: 5 !important;
-}
-
-.home-score-input-grid .daily-result-card .daily-badge-stage,
-.challenge-period-panel > .daily-result-grid > .daily-result-card .daily-badge-stage {
-  position: absolute !important;
-  top: 24px !important;
-  right: 28px !important;
-  bottom: auto !important;
-  left: auto !important;
-  z-index: 8 !important;
-  width: 86px !important;
-  min-width: 86px !important;
-  min-height: 40px !important;
-  transform: none !important;
-}
-
-.home-score-input-grid .daily-result-card .milestone-track,
-.challenge-period-panel > .daily-result-grid > .daily-result-card .milestone-track {
-  position: absolute !important;
-  right: 28px !important;
-  bottom: 22px !important;
-  left: 92px !important;
-  top: auto !important;
-  z-index: 2 !important;
-  width: auto !important;
-  margin: 0 !important;
-  transform: none !important;
-}
-
-/* Final authority: widen and flatten the home input bat dropdown. */
-body .app .phone-shell .home-score-input-grid .home-input-panel .swing-form {
-  grid-template-areas:
-    "form-title form-title form-title form-title form-title . . bat bat bat bat bat"
-    "count-label count-label count-label count-label avg-label avg-label avg-label avg-label best-label best-label best-label best-label"
-    "count count count count avg avg avg avg best best best best"
-    ". heading heading heading heading heading heading heading heading heading heading ." !important;
-}
-
-body .app .phone-shell .home-score-input-grid .home-input-panel .home-form-bat-controls {
-  width: min(218px, 100%) !important;
-}
-
-body .app .phone-shell .home-input-panel .home-form-bat-controls .home-bat-filter.bat-field select,
-body .app .phone-shell .home-score-input-grid .home-input-panel .home-form-bat-controls .home-bat-filter.bat-field select {
-  padding-right: 25px !important;
-  padding-left: 32px !important;
-  box-shadow: none !important;
-}
-
-body .app .phone-shell .home-input-panel .home-form-bat-controls .home-bat-filter.bat-field select option,
-body .app .phone-shell .home-score-input-grid .home-input-panel .home-form-bat-controls .home-bat-filter.bat-field select option {
-  color: #102236;
-  background: #f7fbff;
-}
-
-body .app .phone-shell .home-input-panel .home-form-bat-controls .home-bat-filter.bat-field .select-leading,
-body .app .phone-shell .home-score-input-grid .home-input-panel .home-form-bat-controls .home-bat-filter.bat-field .select-leading,
-body .app .phone-shell .home-input-panel .home-form-bat-controls .home-bat-filter.bat-field .select-caret,
-body .app .phone-shell .home-score-input-grid .home-input-panel .home-form-bat-controls .home-bat-filter.bat-field .select-caret {
-  background: color-mix(in srgb, var(--selected-bat-color, var(--hot)) 18%, #f7fbff) !important;
-  box-shadow: none !important;
-}
-
-body .app .phone-shell .home-input-panel .home-form-bat-controls .form-bat-icon,
-body .app .phone-shell .home-score-input-grid .home-input-panel .home-form-bat-controls .form-bat-icon {
-  opacity: 0 !important;
-  filter: none !important;
-}
-
-body .app .phone-shell .home-input-panel .home-form-bat-controls .bat-select-leading::before,
-body .app .phone-shell .home-score-input-grid .home-input-panel .home-form-bat-controls .bat-select-leading::before {
-  position: absolute;
-  inset: 2px;
-  display: block;
-  background: var(--selected-bat-color, var(--hot));
-  content: "";
-  -webkit-mask: url("./assets/images/bat-icon.svg") center / contain no-repeat;
-  mask: url("./assets/images/bat-icon.svg") center / contain no-repeat;
-  transform: scaleX(-1);
-}
-
 /* Game reference skin: glossy cards, toy-like buttons, and bold outlined controls. */
 body .app {
   --game-blue: #0879f2;
@@ -10782,7 +9884,7 @@ body .app .phone-shell .challenge-period-panel > .daily-result-grid > .daily-res
 }
 
 body .app .daily-result-card .milestone-dot > span:not(.rarity-icon) {
-  top: calc(100% - 1px) !important;
+  top: calc(100% + 4px) !important;
   max-width: 34px !important;
   color: #102236 !important;
   font-size: 0.54rem !important;
@@ -10801,7 +9903,7 @@ body .app .daily-result-card .target-remaining {
 
 body .app .daily-result-card .target-remaining > span {
   color: var(--score-dark) !important;
-  font-size: 0.48rem !important;
+  font-size: 0.56rem !important;
   line-height: 1 !important;
   white-space: nowrap !important;
 }
@@ -10809,7 +9911,7 @@ body .app .daily-result-card .target-remaining > span {
 body .app .daily-result-card .target-remaining > strong {
   justify-content: center !important;
   color: #d91f27 !important;
-  font-size: 0.88rem !important;
+  font-size: 1rem !important;
   text-align: center !important;
 }
 
@@ -10910,28 +10012,28 @@ body .app {
 
 body .app .home-score-input-grid {
   align-items: stretch !important;
-  gap: 8px !important;
+  gap: 12px !important;
 }
 
 body .app .home-score-input-grid .home-input-panel {
-  min-height: 84px !important;
-  padding: 7px 8px !important;
+  min-height: 76px !important;
+  padding: 5px 8px !important;
+  border: 0 !important;
   background:
     radial-gradient(circle at 16% 22%, var(--paper-fiber) 0 1px, transparent 1.6px),
     radial-gradient(circle at 82% 68%, rgba(122, 96, 50, 0.04) 0 1.2px, transparent 1.8px),
     linear-gradient(135deg, rgba(255, 255, 255, 0.82), transparent 28%),
     linear-gradient(180deg, var(--paper-base) 0%, #f8f1df 100%) !important;
   box-shadow:
-    0 0 0 3px #0c6de0,
     inset 0 0 0 2px #ffffff,
     inset 0 -10px 18px rgba(201, 176, 126, 0.22),
-    0 6px 0 #064aa6,
-    0 12px 18px rgba(8, 54, 126, 0.22) !important;
+    0 6px 12px rgba(94, 69, 28, 0.18),
+    0 10px 18px rgba(8, 54, 126, 0.12) !important;
 }
 
 body .app .home-score-input-grid .home-input-panel .swing-form {
   min-height: 0 !important;
-  gap: 5px 7px !important;
+  gap: 4px 7px !important;
 }
 
 body .app .home-score-input-grid .home-input-panel .swing-form-title {
@@ -10946,20 +10048,21 @@ body .app .home-score-input-grid .home-input-panel .swing-form-title {
 
 body .app .home-score-input-grid .home-input-panel .swing-form input,
 body .app .home-score-input-grid .home-input-panel .swing-form select {
-  height: 31px !important;
-  min-height: 31px !important;
+  height: 29px !important;
+  min-height: 29px !important;
 }
 
 body .app .home-score-input-grid .home-input-panel .home-form-bat-controls {
-  width: min(196px, 100%) !important;
+  width: min(164px, 100%) !important;
 }
 
 body .app .daily-result-card {
-  min-height: 84px !important;
-  grid-template-columns: 48px minmax(0, 1fr) 82px !important;
-  grid-template-rows: auto 28px !important;
-  gap: 6px 9px !important;
-  padding: 7px 8px 4px !important;
+  min-height: 72px !important;
+  grid-template-columns: 44px minmax(0, 1fr) 78px !important;
+  grid-template-rows: auto 20px !important;
+  gap: 3px 8px !important;
+  padding: 2px 7px 2px !important;
+  align-items: start !important;
   background:
     linear-gradient(90deg, rgba(255, 255, 255, 0.98), color-mix(in srgb, var(--score-color) 8%, #fff8e8)),
     radial-gradient(circle at 74% 46%, color-mix(in srgb, var(--score-color) 13%, transparent), transparent 34%) !important;
@@ -10974,7 +10077,7 @@ body .app .daily-result-card {
 
 body .app .daily-result-card::before {
   position: absolute;
-  inset: 7px 72px 8px auto;
+  inset: 4px 70px 4px auto;
   z-index: 0;
   width: 96px;
   max-width: 32%;
@@ -10990,48 +10093,59 @@ body .app .daily-result-card > * {
 }
 
 body .app .daily-result-card .metric-label {
-  width: 44px !important;
-  height: 44px !important;
-  min-width: 44px !important;
-  place-self: center !important;
+  position: relative !important;
+  width: 40px !important;
+  height: 40px !important;
+  min-width: 40px !important;
+  place-self: start center !important;
+  margin-top: 1px !important;
   transform: none !important;
 }
 
 body .app .daily-result-card .metric-label svg,
 body .app .daily-result-card .metric-label .metric-image-icon {
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
   display: block !important;
-  width: 27px !important;
-  height: 27px !important;
+  width: 25px !important;
+  height: 25px !important;
   margin: auto !important;
   object-position: center !important;
+  transform: translate(-50%, -50%) !important;
 }
 
 body .app .daily-result-card .daily-score-row > strong {
-  font-size: clamp(2.28rem, 10vw, 3rem) !important;
+  font-size: clamp(2.08rem, 9.2vw, 2.72rem) !important;
+  line-height: 0.82 !important;
+  margin-top: -1px !important;
 }
 
 body .app .daily-result-card .daily-score-row::before {
-  margin-bottom: 0 !important;
-  font-size: 0.86rem !important;
+  margin-bottom: -2px !important;
+  font-size: 0.78rem !important;
+  line-height: 0.95 !important;
 }
 
 body .app .phone-shell .home-score-input-grid .daily-result-card .daily-badge-stage,
 body .app .phone-shell .challenge-period-panel > .daily-result-grid > .daily-result-card .daily-badge-stage {
-  top: 18px !important;
-  right: 18px !important;
-  min-height: 36px !important;
+  top: 10px !important;
+  right: 14px !important;
+  width: 78px !important;
+  min-width: 78px !important;
+  min-height: 34px !important;
 }
 
 body .app .phone-shell .home-score-input-grid .daily-result-card .milestone-track,
 body .app .phone-shell .challenge-period-panel > .daily-result-grid > .daily-result-card .milestone-track {
-  left: 3px !important;
-  right: 104px !important;
-  bottom: 6px !important;
+  left: 2px !important;
+  right: 94px !important;
+  bottom: 9px !important;
 }
 
 body .app .daily-result-card .milestone-track {
   height: 13px !important;
-  overflow: hidden !important;
+  overflow: visible !important;
   background:
     linear-gradient(180deg, #ffffff 0%, #dcecff 48%, #b8d3ff 100%) !important;
 }
@@ -11039,7 +10153,7 @@ body .app .daily-result-card .milestone-track {
 body .app .daily-result-card .milestone-track::after {
   position: absolute;
   inset: 2px 4px auto;
-  z-index: 3;
+  z-index: 0;
   height: 4px;
   border-radius: 999px;
   background: linear-gradient(90deg, rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.18));
@@ -11049,11 +10163,12 @@ body .app .daily-result-card .milestone-track::after {
 
 body .app .daily-result-card .milestone-fill {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.68), transparent 42%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.58), transparent 46%),
     linear-gradient(90deg,
-      color-mix(in srgb, var(--score-color) 86%, #004bb6) 0%,
-      var(--score-color) 54%,
-      var(--meter-end, #62d7ff) 100%) !important;
+      color-mix(in srgb, var(--score-color) 18%, #ffffff) 0%,
+      color-mix(in srgb, var(--score-color) 64%, var(--meter-end, #62d7ff)) 42%,
+      color-mix(in srgb, var(--meter-glow, var(--score-color)) 86%, #0052c7) 78%,
+      color-mix(in srgb, var(--meter-glow, var(--score-color)) 82%, #002a72) 100%) !important;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.78),
     inset 0 -3px 4px color-mix(in srgb, var(--score-dark) 34%, transparent),
@@ -11076,8 +10191,8 @@ body .app .daily-result-card.days {
 }
 
 body .app .home-bat-records {
-  gap: 5px !important;
-  margin-top: 8px !important;
+  gap: 8px !important;
+  margin-top: 12px !important;
   padding-left: 0 !important;
 }
 
@@ -11141,12 +10256,113 @@ body .app .home-bat-records .mini-grid {
 }
 
 body .app .home-bat-records .mini-grid .mini-stat {
-  padding: 1px 2px !important;
+  padding: 0 2px !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
   font-size: 0.68rem !important;
 }
 
 body .app .home-bat-records .mini-grid .mini-value {
   font-size: 0.82rem !important;
+}
+
+body .app .phone-shell .home-bat-records .record-card.home-bat-result-card,
+body .app .phone-shell .home-bat-records .record-card-button {
+  grid-template-columns: minmax(94px, 0.46fr) minmax(0, 1fr) !important;
+  gap: 8px !important;
+  min-height: 46px !important;
+  max-height: 50px !important;
+  padding: 4px 7px !important;
+  border-color: color-mix(in srgb, var(--bat-icon-color, var(--hot)) 68%, #ffffff) !important;
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--bat-icon-color, var(--hot)) 18%, #ffffff) 0%,
+      color-mix(in srgb, var(--bat-icon-color, var(--hot)) 8%, #fff8e7) 100%) !important;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.84),
+    0 2px 0 color-mix(in srgb, var(--bat-icon-color, var(--hot)) 78%, #684100),
+    0 5px 8px rgba(67, 53, 28, 0.14) !important;
+}
+
+body .app .phone-shell .home-bat-result-card .record-title,
+body .app .phone-shell .home-bat-records .record-card-button .record-title {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  grid-template-columns: 22px minmax(0, 1fr) !important;
+  gap: 4px !important;
+  align-self: center !important;
+  min-width: 0 !important;
+}
+
+body .app .phone-shell .home-bat-result-card .bat-card-icon,
+body .app .phone-shell .home-bat-records .record-card-button .bat-card-icon {
+  width: 22px !important;
+  height: 22px !important;
+  min-width: 22px !important;
+  color: var(--bat-icon-color, var(--hot)) !important;
+  background:
+    radial-gradient(circle at 35% 23%, rgba(255, 255, 255, 0.78), transparent 23%),
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--bat-icon-color, var(--hot)) 48%, #ffffff),
+      var(--bat-icon-color, var(--hot))) !important;
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--bat-icon-color, var(--hot)) 82%, #563300),
+    inset 0 -4px 7px rgba(0, 0, 0, 0.2) !important;
+}
+
+body .app .phone-shell .home-bat-result-card .bat-card-icon img,
+body .app .phone-shell .home-bat-result-card .home-bat-card-image,
+body .app .phone-shell .home-bat-records .record-card-button .bat-card-icon svg {
+  width: 14px !important;
+  height: 14px !important;
+  margin: auto !important;
+}
+
+body .app .phone-shell .home-bat-result-card .record-title strong,
+body .app .phone-shell .home-bat-records .record-card-button .record-title strong {
+  font-size: 0.78rem !important;
+}
+
+body .app .phone-shell .home-bat-result-card .mini-grid,
+body .app .phone-shell .home-bat-records .record-card-button .mini-grid {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  align-self: center !important;
+  grid-template-columns: 5.8ch 4.4ch 4.4ch !important;
+  justify-content: end !important;
+  gap: 10px !important;
+  margin: 0 !important;
+}
+
+body .app .phone-shell .home-bat-result-card .mini-grid .mini-stat,
+body .app .phone-shell .home-bat-records .record-card-button .mini-grid .mini-stat {
+  min-height: 22px !important;
+  border: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-size: 0.58rem !important;
+  line-height: 0.9 !important;
+}
+
+body .app .phone-shell .home-bat-result-card .mini-grid .mini-stat b,
+body .app .phone-shell .home-bat-records .record-card-button .mini-grid .mini-stat b {
+  font-size: 0.5rem !important;
+  line-height: 0.9 !important;
+  transform: none !important;
+}
+
+body .app .phone-shell .home-bat-result-card .mini-grid .mini-value,
+body .app .phone-shell .home-bat-records .record-card-button .mini-grid .mini-value {
+  font-size: 0.78rem !important;
+  line-height: 0.95 !important;
+}
+
+body .app .phone-shell .home-bat-result-card .mini-grid small,
+body .app .phone-shell .home-bat-records .record-card-button .mini-grid small {
+  margin-left: 1px !important;
+  font-size: 0.54rem !important;
 }
 
 body .app .badge-inline-section {
@@ -11215,19 +10431,196 @@ body .app .graph-range-tabs button.selected {
 
 body .app .challenge-range-tabs button {
   display: grid !important;
-  grid-template-columns: minmax(0, 1fr) auto !important;
-  align-items: end !important;
-  gap: 2px !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  grid-template-rows: 1fr auto !important;
+  align-items: center !important;
+  justify-items: center !important;
+  gap: 1px !important;
+  text-align: center !important;
   white-space: nowrap !important;
 }
 
 body .app .challenge-range-tabs .challenge-tab-period {
-  font-size: clamp(1.02rem, 5.8vw, 1.55rem) !important;
+  font-size: clamp(0.94rem, 5.1vw, 1.36rem) !important;
   line-height: 0.9 !important;
 }
 
 body .app .challenge-range-tabs .challenge-tab-label {
+  display: block !important;
   font-size: 0.56rem !important;
   line-height: 1 !important;
-  transform: translateY(-1px);
+  transform: none;
+}
+
+/* Layout authority: keep the home/challenge panels as full-width card stacks. */
+body .app .phone-shell .home-score-input-grid,
+body .app .phone-shell .challenge-period-panel:not(.all-record-panel) {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  align-items: stretch !important;
+  justify-items: stretch !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  gap: 12px !important;
+}
+
+body .app .phone-shell .home-score-input-grid .home-input-panel {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  justify-self: stretch !important;
+  width: 100% !important;
+  max-width: none !important;
+  box-sizing: border-box !important;
+}
+
+body .app .phone-shell .home-score-input-grid > .daily-result-grid,
+body .app .phone-shell .challenge-period-panel:not(.all-record-panel) > .daily-result-grid,
+body .app .phone-shell .challenge-view .challenge-period-panel:not(.all-record-panel) > .daily-result-grid,
+body .app .phone-shell .home-score-input-grid.no-input-card > .daily-result-grid {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  grid-column: 1 !important;
+  grid-row: auto !important;
+  justify-self: stretch !important;
+  width: 100% !important;
+  max-width: none !important;
+  gap: 12px !important;
+}
+
+body .app .phone-shell .home-score-input-grid > .daily-result-grid {
+  grid-row: 2 !important;
+}
+
+body .app .phone-shell .home-score-input-grid.no-input-card > .daily-result-grid {
+  grid-row: 1 !important;
+}
+
+body .app .phone-shell .home-score-input-grid > .daily-result-grid > .daily-result-card,
+body .app .phone-shell .challenge-period-panel:not(.all-record-panel) > .daily-result-grid > .daily-result-card {
+  grid-column: 1 !important;
+  grid-row: auto !important;
+  justify-self: stretch !important;
+  width: 100% !important;
+  max-width: none !important;
+  box-sizing: border-box !important;
+}
+
+/* Structural authority: score cards are two explicit rows, not the older tall grid. */
+body .app .phone-shell .home-score-input-grid .daily-result-card,
+body .app .phone-shell .challenge-period-panel > .daily-result-grid > .daily-result-card {
+  display: block !important;
+  position: relative !important;
+  height: 104px !important;
+  min-height: 104px !important;
+  max-height: 104px !important;
+  overflow: visible !important;
+  padding: 0 !important;
+}
+
+body .app .phone-shell .home-score-input-grid .daily-result-card > .metric-label,
+body .app .phone-shell .challenge-period-panel > .daily-result-grid > .daily-result-card > .metric-label {
+  position: absolute !important;
+  top: 12px !important;
+  left: 14px !important;
+  width: 40px !important;
+  height: 40px !important;
+  min-width: 40px !important;
+  margin: 0 !important;
+}
+
+body .app .phone-shell .home-score-input-grid .daily-result-card > .daily-score-row,
+body .app .phone-shell .challenge-period-panel > .daily-result-grid > .daily-result-card > .daily-score-row {
+  position: absolute !important;
+  top: 15px !important;
+  right: 116px !important;
+  left: 72px !important;
+  z-index: 5 !important;
+  display: block !important;
+  min-height: 0 !important;
+}
+
+body .app .phone-shell .home-score-input-grid .daily-result-card > .daily-score-row::before,
+body .app .phone-shell .challenge-period-panel > .daily-result-grid > .daily-result-card > .daily-score-row::before {
+  margin: -4px 0 1px !important;
+  font-size: 0.78rem !important;
+  line-height: 0.95 !important;
+}
+
+body .app .phone-shell .home-score-input-grid .daily-result-card > .daily-score-row > strong,
+body .app .phone-shell .challenge-period-panel > .daily-result-grid > .daily-result-card > .daily-score-row > strong {
+  display: block !important;
+  max-width: 100% !important;
+  overflow: visible !important;
+  margin: 0 !important;
+  font-size: clamp(var(--score-font-min, 2.05rem), var(--score-font-mid, 9vw), var(--score-font-max, 2.68rem)) !important;
+  line-height: 0.8 !important;
+  transform: none !important;
+  white-space: nowrap !important;
+}
+
+body .app .phone-shell .home-score-input-grid .daily-result-card > .daily-badge-stage,
+body .app .phone-shell .challenge-period-panel > .daily-result-grid > .daily-result-card > .daily-badge-stage {
+  position: absolute !important;
+  top: 19px !important;
+  right: 22px !important;
+  bottom: auto !important;
+  left: auto !important;
+  width: 82px !important;
+  min-width: 82px !important;
+  min-height: 34px !important;
+  margin: 0 !important;
+}
+
+body .app .phone-shell .home-score-input-grid .daily-result-card > .milestone-track,
+body .app .phone-shell .challenge-period-panel > .daily-result-grid > .daily-result-card > .milestone-track {
+  position: absolute !important;
+  top: auto !important;
+  right: 30px !important;
+  bottom: 17px !important;
+  left: 30px !important;
+  z-index: 2 !important;
+  width: auto !important;
+  height: 13px !important;
+  margin: 0 !important;
+  transform: none !important;
+}
+
+/* Input-card authority: keep the title horizontal and independent of grid compression. */
+body .app .phone-shell .home-score-input-grid .home-input-panel {
+  position: relative !important;
+}
+
+body .app .phone-shell .home-score-input-grid .home-input-panel .swing-form {
+  position: relative !important;
+}
+
+body .app .phone-shell .home-score-input-grid .home-input-panel .swing-form-title {
+  position: absolute !important;
+  top: 2px !important;
+  left: 8px !important;
+  z-index: 3 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 6px !important;
+  width: 128px !important;
+  max-width: 128px !important;
+  min-width: 128px !important;
+  margin: 0 !important;
+  overflow: visible !important;
+  color: var(--game-blue-deep) !important;
+  font-size: 0.98rem !important;
+  font-weight: 950 !important;
+  letter-spacing: 0.02em !important;
+  line-height: 1 !important;
+  text-align: left !important;
+  text-orientation: mixed !important;
+  text-overflow: clip !important;
+  white-space: nowrap !important;
+  word-break: keep-all !important;
+  writing-mode: horizontal-tb !important;
+}
+
+body .app .phone-shell .home-score-input-grid .home-input-panel .form-pen-icon {
+  flex: 0 0 auto !important;
 }
