@@ -6805,25 +6805,40 @@ select:focus,
   width: 13px !important;
   height: 13px !important;
   margin: 0 !important;
-  filter: none !important;
+  color: #ffffff !important;
+  filter:
+    drop-shadow(0 1px 0 rgba(255, 255, 255, 0.72))
+    drop-shadow(0 -1px 0 rgba(0, 45, 116, 0.34))
+    drop-shadow(0 2px 2px rgba(0, 0, 0, 0.28)) !important;
   line-height: 0 !important;
-  opacity: var(--milestone-alpha, 1) !important;
+  opacity: 1 !important;
   transform: none !important;
 }
 
 .milestone-dot {
-  background: var(--milestone-dot-bg, #202633) !important;
+  background:
+    radial-gradient(circle at 32% 24%, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.34) 22%, transparent 36%),
+    linear-gradient(180deg, #ffffff 0%, #d9e9ff 52%, #9fc3ff 100%) !important;
+  box-shadow:
+    inset 0 2px 2px rgba(255, 255, 255, 0.78),
+    inset 0 -3px 4px rgba(0, 54, 132, 0.28),
+    0 2px 4px rgba(0, 0, 0, 0.24) !important;
 }
 
 .milestone-dot.current .rarity-icon {
   width: 17px !important;
   height: 17px !important;
-  filter: none !important;
+  filter:
+    drop-shadow(0 1px 0 rgba(255, 255, 255, 0.78))
+    drop-shadow(0 -1px 0 rgba(0, 45, 116, 0.38))
+    drop-shadow(0 2px 2px rgba(0, 0, 0, 0.3)) !important;
   opacity: 1 !important;
 }
 
 .milestone-dot.current {
-  background: var(--milestone-dot-bg, #202633) !important;
+  background:
+    radial-gradient(circle at 32% 24%, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.4) 22%, transparent 36%),
+    linear-gradient(180deg, #ffffff 0%, #d9e9ff 52%, #87b4ff 100%) !important;
 }
 
 .milestone-dot.current > span:not(.rarity-icon) {
@@ -7815,6 +7830,7 @@ body {
   color: #102a49;
   background:
     linear-gradient(180deg, transparent 0 54%, rgba(247, 251, 255, 0.86) 75%, #f7fbff 100%),
+    var(--ballpark-bg-url) center top / cover no-repeat,
     #f7fbff !important;
 }
 
@@ -7823,13 +7839,8 @@ body {
   inset: 0 0 auto;
   z-index: 0;
   height: min(820px, 92svh);
-  background-image: var(--ballpark-bg-url);
-  background-position: center top;
-  background-repeat: no-repeat;
-  background-size: cover;
-  filter: saturate(1.04) contrast(1.02);
-  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 58%, rgba(0, 0, 0, 0.62) 76%, transparent 100%);
-  mask-image: linear-gradient(180deg, #000 0%, #000 58%, rgba(0, 0, 0, 0.62) 76%, transparent 100%);
+  background:
+    linear-gradient(180deg, transparent 0 58%, rgba(247, 251, 255, 0.34) 76%, #f7fbff 100%);
   content: "";
   pointer-events: none;
 }
@@ -9891,6 +9902,7 @@ body .app .daily-result-card .milestone-dot > span:not(.rarity-icon) {
   color: #102236 !important;
   font-size: 0.54rem !important;
   line-height: 0.95 !important;
+  opacity: 1 !important;
   white-space: nowrap !important;
 }
 
@@ -10063,18 +10075,22 @@ body .app .daily-result-card {
   grid-template-columns: 44px minmax(0, 1fr) 78px !important;
   grid-template-rows: auto 20px !important;
   gap: 3px 8px !important;
+  border: 4px solid transparent !important;
   padding: 2px 7px 2px !important;
   align-items: start !important;
   background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.98), color-mix(in srgb, var(--score-color) 8%, #fff8e8)),
-    radial-gradient(circle at 74% 46%, color-mix(in srgb, var(--score-color) 13%, transparent), transparent 34%) !important;
+    linear-gradient(90deg, rgba(255, 255, 255, 0.98), color-mix(in srgb, var(--score-color) 8%, #fff8e8)) padding-box,
+    radial-gradient(circle at 74% 46%, color-mix(in srgb, var(--score-color) 13%, transparent), transparent 34%) padding-box,
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--score-color) 42%, #ffffff) 0%,
+      var(--score-color) 46%,
+      color-mix(in srgb, var(--score-color) 76%, #052b75) 100%) border-box !important;
   box-shadow:
-    0 0 0 2px #ffffff,
-    0 0 0 5px color-mix(in srgb, var(--score-color) 86%, #053982),
     inset 0 3px 0 rgba(255, 255, 255, 0.82),
+    inset 0 0 0 1.5px rgba(255, 255, 255, 0.86),
     inset 0 -10px 22px color-mix(in srgb, var(--score-color) 10%, transparent),
-    0 7px 0 color-mix(in srgb, var(--score-color) 68%, #053982),
-    0 14px 18px rgba(8, 54, 126, 0.22) !important;
+    0 10px 18px rgba(0, 0, 0, 0.16),
+    0 18px 28px rgba(0, 0, 0, 0.08) !important;
 }
 
 body .app .daily-result-card::before {
@@ -10096,9 +10112,9 @@ body .app .daily-result-card > * {
 
 body .app .daily-result-card .metric-label {
   position: relative !important;
-  width: 40px !important;
-  height: 40px !important;
-  min-width: 40px !important;
+  width: 54px !important;
+  height: 54px !important;
+  min-width: 54px !important;
   place-self: start center !important;
   margin-top: 1px !important;
   transform: none !important;
@@ -10110,11 +10126,21 @@ body .app .daily-result-card .metric-label .metric-image-icon {
   top: 50% !important;
   left: 50% !important;
   display: block !important;
-  width: 25px !important;
-  height: 25px !important;
+  width: 40px !important;
+  height: 40px !important;
   margin: auto !important;
   object-position: center !important;
+  filter: brightness(0) invert(1) drop-shadow(0 2px 1px rgba(0, 0, 0, 0.36)) drop-shadow(0 0 3px rgba(255, 255, 255, 0.28)) !important;
   transform: translate(-50%, -50%) !important;
+}
+
+body .app .daily-result-card.avg .metric-label .metric-image-icon {
+  transform: translate(-54%, -50%) !important;
+}
+
+body .app .daily-result-card.best .metric-label .metric-image-icon {
+  width: 44px !important;
+  height: 44px !important;
 }
 
 body .app .daily-result-card .daily-score-row > strong {
@@ -10149,32 +10175,36 @@ body .app .daily-result-card .milestone-track {
   height: 13px !important;
   overflow: visible !important;
   background:
-    linear-gradient(180deg, #ffffff 0%, #dcecff 48%, #b8d3ff 100%) !important;
+    linear-gradient(180deg,
+      #ffffff 0%,
+      color-mix(in srgb, var(--score-color) 18%, #eaf4ff) 48%,
+      color-mix(in srgb, var(--score-color) 30%, #c8ddff) 100%) !important;
 }
 
 body .app .daily-result-card .milestone-track::after {
   position: absolute;
-  inset: 2px 4px auto;
+  inset: 2px 5px auto;
   z-index: 0;
-  height: 4px;
+  height: 3px;
   border-radius: 999px;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.18));
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.44), rgba(255, 255, 255, 0.08));
   content: "";
   pointer-events: none;
 }
 
 body .app .daily-result-card .milestone-fill {
+  z-index: 1 !important;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.58), transparent 46%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0.04) 42%, rgba(0, 0, 0, 0.24) 100%),
     linear-gradient(90deg,
-      color-mix(in srgb, var(--score-color) 18%, #ffffff) 0%,
-      color-mix(in srgb, var(--score-color) 64%, var(--meter-end, #62d7ff)) 42%,
-      color-mix(in srgb, var(--meter-glow, var(--score-color)) 86%, #0052c7) 78%,
-      color-mix(in srgb, var(--meter-glow, var(--score-color)) 82%, #002a72) 100%) !important;
+      color-mix(in srgb, var(--score-color) 68%, #ffffff) 0%,
+      var(--score-color) 28%,
+      color-mix(in srgb, var(--meter-glow, var(--score-color)) 90%, var(--score-color)) 62%,
+      color-mix(in srgb, var(--meter-glow, var(--score-color)) 70%, #001646) 100%) !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.78),
-    inset 0 -3px 4px color-mix(in srgb, var(--score-dark) 34%, transparent),
-    0 0 7px color-mix(in srgb, var(--meter-glow, var(--score-color)) 46%, transparent) !important;
+    inset 0 1px 0 rgba(255, 255, 255, 0.58),
+    inset 0 -3px 5px rgba(0, 0, 0, 0.24),
+    0 0 6px color-mix(in srgb, var(--meter-glow, var(--score-color)) 42%, transparent) !important;
 }
 
 body .app .daily-result-card.avg {
@@ -10486,7 +10516,7 @@ body .app .phone-shell .home-score-input-grid.no-input-card > .daily-result-grid
   justify-self: stretch !important;
   width: 100% !important;
   max-width: none !important;
-  gap: 15px !important;
+  gap: 5px !important;
 }
 
 body .app .phone-shell .home-score-input-grid > .daily-result-grid {
@@ -10512,9 +10542,9 @@ body .app .phone-shell .home-score-input-grid .daily-result-card,
 body .app .phone-shell .challenge-period-panel > .daily-result-grid > .daily-result-card {
   display: block !important;
   position: relative !important;
-  height: 104px !important;
-  min-height: 104px !important;
-  max-height: 104px !important;
+  height: 112px !important;
+  min-height: 112px !important;
+  max-height: 112px !important;
   overflow: visible !important;
   padding: 0 !important;
 }
@@ -10522,18 +10552,18 @@ body .app .phone-shell .challenge-period-panel > .daily-result-grid > .daily-res
 body .app .phone-shell .home-score-input-grid .daily-result-card > .metric-label,
 body .app .phone-shell .challenge-period-panel > .daily-result-grid > .daily-result-card > .metric-label {
   position: absolute !important;
-  top: 12px !important;
+  top: 10px !important;
   left: 14px !important;
-  width: 40px !important;
-  height: 40px !important;
-  min-width: 40px !important;
+  width: 54px !important;
+  height: 54px !important;
+  min-width: 54px !important;
   margin: 0 !important;
 }
 
 body .app .phone-shell .home-score-input-grid .daily-result-card > .daily-score-row,
 body .app .phone-shell .challenge-period-panel > .daily-result-grid > .daily-result-card > .daily-score-row {
   position: absolute !important;
-  top: 15px !important;
+  top: 12px !important;
   right: 116px !important;
   left: 72px !important;
   z-index: 5 !important;
@@ -10554,7 +10584,7 @@ body .app .phone-shell .challenge-period-panel > .daily-result-grid > .daily-res
   max-width: 100% !important;
   overflow: visible !important;
   margin: 0 !important;
-  font-size: clamp(var(--score-font-min, 2.05rem), var(--score-font-mid, 9vw), var(--score-font-max, 2.68rem)) !important;
+  font-size: clamp(var(--score-font-min, 2.16rem), var(--score-font-mid, 9.45vw), var(--score-font-max, 2.82rem)) !important;
   line-height: 0.8 !important;
   transform: none !important;
   white-space: nowrap !important;
@@ -10563,13 +10593,13 @@ body .app .phone-shell .challenge-period-panel > .daily-result-grid > .daily-res
 body .app .phone-shell .home-score-input-grid .daily-result-card > .daily-badge-stage,
 body .app .phone-shell .challenge-period-panel > .daily-result-grid > .daily-result-card > .daily-badge-stage {
   position: absolute !important;
-  top: 19px !important;
+  top: 16px !important;
   right: 22px !important;
   bottom: auto !important;
   left: auto !important;
-  width: 82px !important;
-  min-width: 82px !important;
-  min-height: 34px !important;
+  width: 86px !important;
+  min-width: 86px !important;
+  min-height: 40px !important;
   margin: 0 !important;
 }
 
@@ -10578,7 +10608,7 @@ body .app .phone-shell .challenge-period-panel > .daily-result-grid > .daily-res
   position: absolute !important;
   top: auto !important;
   right: 30px !important;
-  bottom: 17px !important;
+  bottom: 22px !important;
   left: 30px !important;
   z-index: 2 !important;
   width: auto !important;

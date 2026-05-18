@@ -47,6 +47,11 @@ const RARITY_COLORS = {
   UR: "#ffd700",
 };
 const PUBLIC_ASSET_BASE = import.meta.env.BASE_URL || "./";
+function cssImageUrl(assetUrl) {
+  if (typeof document === "undefined") return `url("${assetUrl}")`;
+  return `url("${new URL(assetUrl, document.baseURI).href}")`;
+}
+
 const NEW_UI_ASSETS = {
   logo: `${PUBLIC_ASSET_BASE}images/logo.png`,
   background: `${PUBLIC_ASSET_BASE}images/field-bg.png`,
@@ -76,9 +81,9 @@ function scoreFontTokens(value) {
   const digitCount = String(Math.max(0, Math.trunc(Math.abs(Number(value) || 0)))).length;
   const scale = digitCount <= 3 ? 1 : digitCount === 4 ? 0.88 : digitCount === 5 ? 0.76 : digitCount === 6 ? 0.66 : 0.58;
   return {
-    "--score-font-min": `${(2.05 * scale).toFixed(3)}rem`,
-    "--score-font-mid": `${(9 * scale).toFixed(3)}vw`,
-    "--score-font-max": `${(2.68 * scale).toFixed(3)}rem`,
+    "--score-font-min": `${(2.16 * scale).toFixed(3)}rem`,
+    "--score-font-mid": `${(9.45 * scale).toFixed(3)}vw`,
+    "--score-font-max": `${(2.82 * scale).toFixed(3)}rem`,
   };
 }
 const FIXED_UI_THEME = "#2f86ff";
@@ -1558,7 +1563,7 @@ function DailyResultCard({ card, showBadges, dismissedHomeBadges = new Set(), on
       className={`daily-result-card ${card.key} ${card.revealBadge === false ? "animating" : ""}`}
       style={{
         "--milestone-fill-ratio": String(milestoneFillRatio),
-        "--score-watermark": `url("${skin.watermark}")`,
+        "--score-watermark": cssImageUrl(skin.watermark),
         "--meter-end": skin.meterEnd,
         "--meter-glow": skin.meterGlow,
         ...scoreFontTokens(card.value),
@@ -2636,7 +2641,7 @@ export default function App() {
       className="app theme-blue font-rounded"
       style={{
         ...themeStyleFor(FIXED_UI_THEME),
-        "--ballpark-bg-url": `url("${NEW_UI_ASSETS.background}")`,
+        "--ballpark-bg-url": cssImageUrl(NEW_UI_ASSETS.background),
       }}
     >
       <div className="phone-shell">
