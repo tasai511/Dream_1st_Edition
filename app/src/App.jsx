@@ -52,9 +52,16 @@ const NEW_UI_ASSETS = {
   background: `${PUBLIC_ASSET_BASE}images/field-bg.png`,
   pen: `${PUBLIC_ASSET_BASE}images/pen.png`,
   bat: `${PUBLIC_ASSET_BASE}images/bat.svg`,
+  days: `${PUBLIC_ASSET_BASE}images/calendar.svg`,
   count: `${PUBLIC_ASSET_BASE}images/count.svg`,
   avg: `${PUBLIC_ASSET_BASE}images/average.svg`,
   best: `${PUBLIC_ASSET_BASE}images/best.svg`,
+};
+const SCORE_CARD_SKINS = {
+  count: { watermark: `${PUBLIC_ASSET_BASE}images/batting.svg`, meterEnd: "#5fd6ff", meterGlow: "#37a4ff" },
+  avg: { watermark: `${PUBLIC_ASSET_BASE}images/ball.svg`, meterEnd: "#baff55", meterGlow: "#44ce35" },
+  best: { watermark: `${PUBLIC_ASSET_BASE}images/homebase.svg`, meterEnd: "#ffd84a", meterGlow: "#ff9d1b" },
+  days: { watermark: `${PUBLIC_ASSET_BASE}images/helmet.svg`, meterEnd: "#74c8ff", meterGlow: "#2f86ff" },
 };
 const FIXED_UI_THEME = "#2f86ff";
 const DAILY_RARITY_IMAGE_URLS = {
@@ -428,6 +435,11 @@ function formatJapaneseMonthDay(date) {
   return `${date.getMonth() + 1}月${date.getDate()}日`;
 }
 
+function formatJapaneseMonthDayWithWeekday(date) {
+  const weekdays = ["日", "月", "火", "水", "木", "金", "土"];
+  return `${formatJapaneseMonthDay(date)}（${weekdays[date.getDay()]}）`;
+}
+
 function firstRecordDate(records = []) {
   const firstRecord = records
     .filter((record) => record.date <= todayISO())
@@ -445,7 +457,7 @@ function challengeYearCycleAt(records = [], cycleIndex = 0, baseDate = parseISO(
   const start = addYearsFromDate(firstDate, cycleIndex);
   const nextStart = addYearsFromDate(firstDate, cycleIndex + 1);
   const end = addDays(nextStart, -1);
-  return { index: cycleIndex, start, end, label: `${formatJapaneseFullDate(start)}〜${formatJapaneseFullDate(end)}` };
+  return { index: cycleIndex, start, end, label: `${formatJapaneseDate(start)}〜${formatJapaneseFullDate(end)}` };
 }
 
 function currentChallengeYearIndex(records = [], baseDate = parseISO(todayISO())) {
@@ -465,13 +477,13 @@ function challengeYearWindowFromFirstDate(firstDate, baseDate = parseISO(todayIS
   if (!firstDate || baseDate < firstDate) {
     const start = firstDate || baseDate;
     const end = addDays(addYearsFromDate(start, 1), -1);
-    return { index: 0, start, end, label: `${formatJapaneseFullDate(start)}〜${formatJapaneseFullDate(end)}` };
+    return { index: 0, start, end, label: `${formatJapaneseDate(start)}〜${formatJapaneseFullDate(end)}` };
   }
   let index = Math.max(0, baseDate.getFullYear() - firstDate.getFullYear());
   const cycleAt = (cycleIndex) => {
     const start = addYearsFromDate(firstDate, cycleIndex);
     const end = addDays(addYearsFromDate(firstDate, cycleIndex + 1), -1);
-    return { index: cycleIndex, start, end, label: `${formatJapaneseFullDate(start)}〜${formatJapaneseFullDate(end)}` };
+    return { index: cycleIndex, start, end, label: `${formatJapaneseDate(start)}〜${formatJapaneseFullDate(end)}` };
   };
   let window = cycleAt(index);
   while (baseDate < window.start && index > 0) {
@@ -1521,9 +1533,18 @@ function DailyResultCard({ card, showBadges, dismissedHomeBadges = new Set(), on
   const displayRemainingBadge = targetBadge || completeBadge || card.badgeOverride || earnedBadge;
   const displayRemainingValue = targetBadge ? Math.max(0, targetBadge.target - (card.value || 0)) : 0;
   const showHomeRemaining = showBadges && Boolean(displayRemainingBadge);
+  const skin = SCORE_CARD_SKINS[card.key] || SCORE_CARD_SKINS.count;
 
   return (
-    <article className={`daily-result-card ${card.key} ${card.revealBadge === false ? "animating" : ""}`} style={{ "--milestone-fill-ratio": String(milestoneFillRatio) }}>
+    <article
+      className={`daily-result-card ${card.key} ${card.revealBadge === false ? "animating" : ""}`}
+      style={{
+        "--milestone-fill-ratio": String(milestoneFillRatio),
+        "--score-watermark": `url("${skin.watermark}")`,
+        "--meter-end": skin.meterEnd,
+        "--meter-glow": skin.meterGlow,
+      }}
+    >
       <div className="metric-label">
         {NEW_UI_ASSETS[card.key] ? <img className="metric-image-icon" src={NEW_UI_ASSETS[card.key]} alt="" aria-hidden="true" /> : <Icon type={card.icon} />}
         {card.label}
@@ -1535,8 +1556,8 @@ function DailyResultCard({ card, showBadges, dismissedHomeBadges = new Set(), on
           </div>
           <div className="daily-badge-stage">
             {showHomeRemaining ? (
-              <div className="target-remaining" aria-label={`${displayRemainingBadge.label}まであと${displayRemainingValue}${card.unit}`}>
-                <span>あと</span>
+              <div className="target-remaining" aria-label={`次のバッジまで${displayRemainingValue}${card.unit}`}>
+                <span>次のバッジまで</span>
                 <strong>{Number(displayRemainingValue).toLocaleString("ja-JP")}<small>{card.unit}</small></strong>
               </div>
             ) : null}
@@ -2374,33 +2395,21 @@ export default function App() {
 
   useLayoutEffect(() => {
     const root = document.documentElement;
-    let stableViewportHeight = 0;
-    let stableViewportWidth = 0;
     const updateAppScale = () => {
-      const viewportWidth = Math.max(0, window.visualViewport?.width || window.innerWidth || kCompactLayoutWidth);
-      const viewportHeight = Math.max(0, window.visualViewport?.height || window.innerHeight || kCompactLayoutHeight);
-      if (!stableViewportHeight || Math.abs(viewportWidth - stableViewportWidth) > 24) {
-        stableViewportHeight = viewportHeight;
-        stableViewportWidth = viewportWidth;
-      } else {
-        stableViewportHeight = Math.max(stableViewportHeight, viewportHeight);
-      }
+      const viewportWidth = Math.max(0, window.innerWidth || kCompactLayoutWidth);
       const visualWidth = Math.min(480, viewportWidth);
       const widthScale = visualWidth / kCompactLayoutWidth;
-      const heightScale = visualWidth <= 480 ? stableViewportHeight / kCompactLayoutHeight : Infinity;
-      const scale = Math.max(0.72, Math.min(480 / kCompactLayoutWidth, widthScale, heightScale));
+      const scale = Math.max(0.72, Math.min(480 / kCompactLayoutWidth, widthScale));
       root.style.setProperty("--app-scale", scale.toFixed(4));
       root.style.setProperty("--app-layout-width", `${kCompactLayoutWidth}px`);
       root.style.setProperty("--app-visual-width", `${visualWidth}px`);
-      root.style.setProperty("--app-min-height", `${stableViewportHeight / scale}px`);
+      root.style.setProperty("--app-min-height", "100vh");
     };
 
     updateAppScale();
     window.addEventListener("resize", updateAppScale);
-    window.visualViewport?.addEventListener("resize", updateAppScale);
     return () => {
       window.removeEventListener("resize", updateAppScale);
-      window.visualViewport?.removeEventListener("resize", updateAppScale);
       root.style.removeProperty("--app-scale");
       root.style.removeProperty("--app-layout-width");
       root.style.removeProperty("--app-visual-width");
@@ -2621,7 +2630,7 @@ export default function App() {
               aria-expanded={isNameMenuOpen}
               onClick={() => setIsNameMenuOpen((value) => !value)}
             >
-              <SvgIcon type="person" /><span>{compactPlayerName(currentName)}</span>
+              <span>{compactPlayerName(currentName)}</span>
             </button>
             {isNameMenuOpen && (
               <div className="player-menu" role="menu" aria-label="名前を切り替え">
@@ -2830,7 +2839,7 @@ function HomeView({ db, setDb, currentName, allForName, allForNameRaw = allForNa
     return map;
   }, new Map()).entries()].sort(([a], [b]) => compareBadgesByRarity(a, b)), [viewBadgeLabels]);
   const headerDateLabel = resultRange === RANGE_TODAY
-    ? formatJapaneseMonthDay(parseISO(activeDate))
+    ? formatJapaneseMonthDayWithWeekday(parseISO(activeDate))
     : viewWindowForRange(allFiltered, resultRange, activeDate).label;
   const markedDates = useMemo(() => new Set(allForNameRaw.map((record) => record.date)), [allForNameRaw]);
   const handleRecordSubmit = (event) => {
@@ -3971,8 +3980,9 @@ function RecordSummary({ item, batColor = "#8d95a4", selected = false, onSelect 
 }
 
 function HomeBatResultCard({ db, item }) {
+  const color = batColorFor(db, item.bat);
   return (
-    <article className="record-card home-bat-result-card">
+    <article className="record-card home-bat-result-card" style={{ "--bat-icon-color": color }}>
       <div className="record-title">
         <span className="icon bat-card-icon"><img className="home-bat-card-image" src={NEW_UI_ASSETS.bat} alt="" aria-hidden="true" /></span>
         <strong>{item.bat}</strong>

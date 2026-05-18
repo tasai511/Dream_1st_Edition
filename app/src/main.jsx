@@ -10,7 +10,7 @@ const BASE_APP_WIDTH = 480;
 const MAX_APP_WIDTH = 720;
 
 const updateAppScale = () => {
-  const viewportWidth = window.visualViewport?.width || window.innerWidth || BASE_APP_WIDTH;
+  const viewportWidth = window.innerWidth || BASE_APP_WIDTH;
   const visualWidth = viewportWidth > BASE_APP_WIDTH ? Math.min(MAX_APP_WIDTH, viewportWidth) : viewportWidth;
   const scale = viewportWidth > BASE_APP_WIDTH ? visualWidth / BASE_APP_WIDTH : 1;
   const fontScale = 1 + ((scale - 1) * 0.8);
@@ -33,6 +33,5 @@ window.addEventListener("load", () => {
   }
 });
 
-window.visualViewport?.addEventListener("resize", updateAppScale);
 window.addEventListener("resize", updateAppScale);
 window.addEventListener("orientationchange", updateAppScale);
