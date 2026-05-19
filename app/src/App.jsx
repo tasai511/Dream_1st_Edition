@@ -1579,6 +1579,17 @@ function DailyResultCard({ card, showBadges, dismissedHomeBadges = new Set(), on
   const displayRemainingValue = targetBadge ? Math.max(0, targetBadge.target - (card.value || 0)) : 0;
   const showHomeRemaining = showBadges && Boolean(displayRemainingBadge);
   const isRemainingComplete = showHomeRemaining && !targetBadge;
+  const remainingBadgeDefinition = displayRemainingBadge?.label
+    ? makeBadgeDefinition(canonicalBadgeLabel(displayRemainingBadge.label), { description: displayRemainingBadge.description })
+    : null;
+  const openRemainingBadgeDetail = () => {
+    if (!remainingBadgeDefinition) return;
+    setSelectedBadge({
+      ...remainingBadgeDefinition,
+      earnedCount: isRemainingComplete ? 1 : 0,
+      lockedSecret: false,
+    });
+  };
   const skin = SCORE_CARD_SKINS[card.key] || SCORE_CARD_SKINS.count;
 
   return (
@@ -1601,14 +1612,19 @@ function DailyResultCard({ card, showBadges, dismissedHomeBadges = new Set(), on
           </div>
           <div className="daily-badge-stage">
             {showHomeRemaining ? (
-              <div className={`target-remaining ${isRemainingComplete ? "complete" : ""}`} aria-label={isRemainingComplete ? "コンプリート" : `次のバッジまで${displayRemainingValue}${card.unit}`}>
+              <button
+                type="button"
+                className={`target-remaining ${isRemainingComplete ? "complete" : ""}`}
+                onClick={openRemainingBadgeDetail}
+                aria-label={isRemainingComplete ? "コンプリートバッジの詳細" : `次のバッジ ${remainingBadgeDefinition?.label || ""} の詳細`}
+              >
                 {!isRemainingComplete && <span>次のバッジまで</span>}
                 {isRemainingComplete ? (
                   <strong>コンプリート</strong>
                 ) : (
                   <strong>{Number(displayRemainingValue).toLocaleString("ja-JP")}<small>{card.unit}</small></strong>
                 )}
-              </div>
+              </button>
             ) : null}
           </div>
           <div className={`milestone-track ${showMilestoneTrack ? "" : "placeholder"} ${showEmptyTrackMessage ? "with-message" : ""} ${visibleMilestones.length ? "earned" : ""}`}>
