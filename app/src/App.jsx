@@ -1703,7 +1703,7 @@ function DailyResultCard({ card, showBadges, dismissedHomeBadges = new Set(), on
             <span className="milestone-fill" />
             {showMilestoneTrack && visibleMilestones.map((milestone, index) => {
               const alpha = milestoneAlpha(milestone.position);
-              const isTargetMilestone = targetBadge?.label === milestone.label;
+              const isTargetMilestone = targetBadge?.label === milestone.label || completeBadge?.label === milestone.label;
               const milestoneState = isTargetMilestone ? "target" : milestone.earned ? "earned" : "locked";
               const dotScale = isTargetMilestone ? 1.12 : milestone.earned ? 0.86 : 0.62;
               const definition = makeBadgeDefinition(canonicalBadgeLabel(milestone.label), { description: milestone.description || `${milestone.label}をゲット` });

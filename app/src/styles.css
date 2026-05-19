@@ -11052,7 +11052,7 @@ body .app .daily-result-card .milestone-dot {
     radial-gradient(circle at 50% 68%, rgba(0, 0, 0, 0.24) 0 16%, transparent 52%) padding-box,
     radial-gradient(circle, color-mix(in srgb, var(--score-color), white 25%), var(--score-dark)) padding-box,
     linear-gradient(
-      to top,
+      90deg,
       color-mix(in srgb, var(--score-color) 86%, #1478e8) 0%,
       color-mix(in srgb, var(--score-color) 86%, #1478e8) var(--milestone-target-progress-percent, 0%),
       #ffffff var(--milestone-target-progress-percent, 0%),
@@ -11068,7 +11068,7 @@ body .app .daily-result-card .milestone-dot.locked {
     radial-gradient(circle at 50% 68%, rgba(0, 0, 0, 0.16) 0 16%, transparent 52%) padding-box,
     radial-gradient(circle, #d6dce5, #8f9aaa) padding-box,
     linear-gradient(
-      to top,
+      90deg,
       #9aa6b6 0%,
       #9aa6b6 var(--milestone-target-progress-percent, 0%),
       #ffffff var(--milestone-target-progress-percent, 0%),
