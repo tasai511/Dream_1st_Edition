@@ -5,7 +5,7 @@
   --app-scale: 1;
   --app-font-scale: 1;
   --app-layout-width: min(480px, 100%);
-  --app-visual-width: min(480px, 100vw);
+  --app-visual-width: min(640px, 100vw);
   --app-min-height: 100vh;
   --bg: #111218;
   --panel: rgba(255, 255, 255, 0.055);
@@ -2446,7 +2446,7 @@ p {
   object-fit: contain;
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
-  will-change: filter;
+  will-change: auto;
 }
 
 .milestone-track {
@@ -3689,7 +3689,7 @@ input::placeholder {
 }
 
 .badge-heading-count strong {
-  color: #e02232;
+  color: var(--badge-count-blue);
   font-size: 1.9rem;
   font-weight: 950;
   -webkit-text-stroke: 0.45px rgba(255, 255, 255, 0.9);
@@ -3750,7 +3750,7 @@ input::placeholder {
   align-items: baseline;
   gap: 5px;
   margin-bottom: 0;
-  color: var(--hot);
+  color: var(--badge-count-blue);
 }
 
 .badge-total strong {
@@ -3789,7 +3789,7 @@ input::placeholder {
 }
 
 .badge-group-title strong {
-  color: var(--hot);
+  color: var(--badge-count-blue);
   font-size: 0.82rem;
   font-weight: 950;
 }
@@ -4165,7 +4165,7 @@ input::placeholder {
 .badge-point-card strong {
   display: block;
   margin-top: 4px;
-  color: var(--hot);
+  color: var(--badge-count-blue);
   font-size: 2.45rem;
   line-height: 1;
   font-weight: 950;
@@ -4184,7 +4184,7 @@ input::placeholder {
 }
 
 .badge-point-card .badge-point-meta b {
-  color: var(--hot);
+  color: var(--badge-count-blue);
   font-size: 1rem;
   font-weight: 950;
 }
@@ -4571,7 +4571,7 @@ input::placeholder {
 }
 
 .collection-popover .earned-count {
-  color: var(--hot);
+  color: var(--badge-count-blue);
   font-weight: 950;
 }
 
@@ -9613,13 +9613,15 @@ body .app {
   --game-blue: #0879f2;
   --game-blue-dark: #0447a9;
   --game-blue-deep: #072f7d;
+  --badge-count-blue: #0879f2;
+  --badge-count-blue-dark: #0447a9;
   --game-cream: #fffaf0;
   --game-paper: rgba(255, 255, 255, 0.92);
   --game-shadow: rgba(11, 54, 121, 0.28);
 }
 
 body .app .phone-shell {
-  max-width: 480px;
+  max-width: var(--app-layout-width);
 }
 
 body .app .app-title {
@@ -10140,6 +10142,49 @@ body .app .bottom-nav button.active span {
   text-shadow:
     0 1px 0 rgba(0, 29, 92, 0.8),
     0 0 5px rgba(255, 255, 255, 0.42) !important;
+}
+
+/* iPhone safe-area authority: keep the main tabs painted and visible at the scroll end. */
+html,
+body {
+  background-color: #070a10;
+}
+
+body .app {
+  background-color: #070a10;
+}
+
+body .app .bottom-nav {
+  height: 58px !important;
+  min-height: 58px !important;
+  max-height: 58px !important;
+  padding-bottom: 4px !important;
+  overflow: visible !important;
+  isolation: isolate !important;
+  z-index: 120 !important;
+}
+
+body .app .bottom-nav::after {
+  display: none !important;
+  content: none !important;
+  pointer-events: none !important;
+}
+
+body .app .bottom-nav button {
+  z-index: 1 !important;
+}
+
+/* Fixed-nav authority: keep the main tabs outside the scaled scrolling shell on iOS. */
+body .app > .bottom-nav {
+  right: auto !important;
+  bottom: 0 !important;
+  left: 50% !important;
+  width: var(--app-layout-width) !important;
+  transform: translateX(-50%) scale(var(--app-scale)) !important;
+  transform-origin: 50% 100% !important;
+  -webkit-transform: translateX(-50%) scale(var(--app-scale)) !important;
+  -webkit-transform-origin: 50% 100% !important;
+  will-change: transform !important;
 }
 
 /* Final polish: tune the record input title balance. */
@@ -10919,6 +10964,30 @@ body .app .phone-shell .challenge-period-panel > .daily-result-grid > .daily-res
   margin: 0 !important;
 }
 
+/* Scale authority: tablet growth comes from --app-scale, not viewport-sized text. */
+body .app .daily-result-card .daily-score-row > strong,
+body .app .phone-shell .home-score-input-grid .daily-result-card > .daily-score-row > strong,
+body .app .phone-shell .challenge-period-panel > .daily-result-grid > .daily-result-card > .daily-score-row > strong {
+  font-size: 2.36rem !important;
+}
+
+body .app .challenge-range-tabs .challenge-tab-period {
+  font-size: 0.96rem !important;
+}
+
+body .app .daily-result-card .target-remaining > span {
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: clip !important;
+}
+
+body .app .phone-shell .settings-view .add-row .primary.add-text-button {
+  display: inline-grid !important;
+  place-items: center !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+}
+
 body .app .phone-shell .home-score-input-grid .daily-result-card > .milestone-track,
 body .app .phone-shell .challenge-period-panel > .daily-result-grid > .daily-result-card > .milestone-track {
   position: absolute !important;
@@ -10972,4 +11041,74 @@ body .app .phone-shell .home-score-input-grid .home-input-panel .swing-form-titl
 
 body .app .phone-shell .home-score-input-grid .home-input-panel .form-pen-icon {
   flex: 0 0 auto !important;
+}
+
+body .app .daily-result-card .milestone-dot {
+  width: clamp(15px, calc(28px * var(--milestone-dot-scale, 1)), 32px) !important;
+  height: clamp(15px, calc(28px * var(--milestone-dot-scale, 1)), 32px) !important;
+  border: clamp(2px, calc(3px * var(--milestone-dot-scale, 1)), 3.4px) solid transparent !important;
+  background:
+    radial-gradient(circle at 32% 22%, rgba(255, 255, 255, 0.98) 0 13%, transparent 28%) padding-box,
+    radial-gradient(circle at 50% 68%, rgba(0, 0, 0, 0.24) 0 16%, transparent 52%) padding-box,
+    radial-gradient(circle, color-mix(in srgb, var(--score-color), white 25%), var(--score-dark)) padding-box,
+    linear-gradient(
+      to top,
+      color-mix(in srgb, var(--score-color) 86%, #1478e8) 0%,
+      color-mix(in srgb, var(--score-color) 86%, #1478e8) var(--milestone-target-progress-percent, 0%),
+      #ffffff var(--milestone-target-progress-percent, 0%),
+      #ffffff 100%
+    ) border-box !important;
+  transform: translate(-100%, -50%) !important;
+}
+
+body .app .daily-result-card .milestone-dot.locked {
+  opacity: 0.72 !important;
+  background:
+    radial-gradient(circle at 32% 22%, rgba(255, 255, 255, 0.82) 0 13%, transparent 28%) padding-box,
+    radial-gradient(circle at 50% 68%, rgba(0, 0, 0, 0.16) 0 16%, transparent 52%) padding-box,
+    radial-gradient(circle, #d6dce5, #8f9aaa) padding-box,
+    linear-gradient(
+      to top,
+      #9aa6b6 0%,
+      #9aa6b6 var(--milestone-target-progress-percent, 0%),
+      #ffffff var(--milestone-target-progress-percent, 0%),
+      #ffffff 100%
+    ) border-box !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 9, 28, 0.28),
+    inset 0 2px 2px rgba(255, 255, 255, 0.62),
+    0 1px 0 rgba(255, 255, 255, 0.58),
+    0 2px 4px rgba(47, 37, 16, 0.18) !important;
+}
+
+body .app .daily-result-card .milestone-dot.earned {
+  opacity: 1 !important;
+}
+
+body .app .daily-result-card .milestone-dot.target {
+  z-index: 5 !important;
+  opacity: 1 !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 9, 28, 0.62),
+    inset 0 2px 2px rgba(255, 255, 255, 0.82),
+    inset 0 0 0 2.4px color-mix(in srgb, var(--score-color) 74%, #ffffff),
+    inset 0 -4px 6px rgba(0, 20, 78, 0.28),
+    0 1px 0 rgba(255, 255, 255, 0.82),
+    0 5px 10px rgba(47, 37, 16, 0.36),
+    0 0 16px color-mix(in srgb, var(--meter-glow, var(--score-color)) 48%, transparent) !important;
+}
+
+body .app .daily-result-card .milestone-dot.locked .rarity-icon {
+  opacity: 0.7 !important;
+}
+
+body .app .daily-result-card .milestone-dot.locked .rarity-icon svg,
+body .app .daily-result-card .milestone-dot.locked .rarity-icon svg * {
+  color: #eef3f8 !important;
+  fill: #eef3f8 !important;
+  stroke: #eef3f8 !important;
+}
+
+body .app .daily-result-card .milestone-dot > span:not(.rarity-icon) {
+  white-space: nowrap !important;
 }

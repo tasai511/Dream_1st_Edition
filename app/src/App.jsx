@@ -15,6 +15,7 @@ const kMinChartVisibleDays = 7;
 const kMaxChartVisibleDays = 365;
 const kCompactLayoutWidth = 390;
 const kCompactLayoutHeight = 844;
+const kMaxVisualWidth = 640;
 const kScoreProgressAnimationDuration = 5000;
 const CHALLENGE_RANGE_TABS = [
   { range: RANGE_WEEK, period: "週間" },
@@ -149,6 +150,25 @@ const MONTHLY_AVG_UPDATE_BADGE = "先月より平均アップ";
 const MONTHLY_BEST_UPDATE_BADGE = "先月のベスト更新";
 const YEARLY_AVG_UPDATE_BADGE = "去年より平均アップ";
 const YEARLY_BEST_UPDATE_BADGE = "去年のベスト更新";
+const SCORE_BAR_SCORE_START = 100;
+const SCORE_BAR_HOME_SCORE_END = 999;
+const SCORE_BAR_GROWTH_STEPS = [20, 40, 60, 80, 100];
+const SCORE_BAR_GROWTH_PREVIOUS_LABELS = {
+  [RANGE_WEEK]: "先週",
+  [RANGE_MONTH]: "先月",
+  [RANGE_YEAR]: "去年",
+};
+function scoreGrowthBadgeLabel(range, metric, delta) {
+  const previousLabel = SCORE_BAR_GROWTH_PREVIOUS_LABELS[range] || "前回";
+  const metricLabel = metric === "best" ? "ベスト" : "平均";
+  return `${previousLabel}の${metricLabel}を${delta}点超えた`;
+}
+const CONTEXT_SCORE_GROWTH_BADGES = [RANGE_WEEK, RANGE_MONTH, RANGE_YEAR].flatMap((range) => (
+  SCORE_BAR_GROWTH_STEPS.flatMap((delta) => [
+    scoreGrowthBadgeLabel(range, "avg", delta),
+    scoreGrowthBadgeLabel(range, "best", delta),
+  ])
+));
 const CONTEXT_GROWTH_BADGES = [
   "先週より多く振った",
   "先月より多く振った",
@@ -158,6 +178,7 @@ const CONTEXT_GROWTH_BADGES = [
   MONTHLY_BEST_UPDATE_BADGE,
   YEARLY_AVG_UPDATE_BADGE,
   YEARLY_BEST_UPDATE_BADGE,
+  ...CONTEXT_SCORE_GROWTH_BADGES,
 ];
 const CONTEXT_SECRET_BADGES = [
   "ラッキー7",
@@ -597,6 +618,39 @@ function growthBadgeLabelsForRange(range) {
   return null;
 }
 
+function scoreGrowthBadgeDefinitions(range, metric, summary) {
+  const targetKey = metric === "best" ? "bestTarget" : "avgTarget";
+  const baseTarget = Number(summary?.[targetKey]);
+  if (!SCORE_BAR_GROWTH_PREVIOUS_LABELS[range] || !Number.isFinite(baseTarget) || baseTarget <= 0) return [];
+  return SCORE_BAR_GROWTH_STEPS.map((delta) => ({
+    period: range,
+    group: range,
+    metric,
+    target: baseTarget + delta,
+    displayTarget: `+${delta}`,
+    scoreBarStart: SCORE_BAR_SCORE_START,
+    scoreBarEnd: baseTarget + SCORE_BAR_GROWTH_STEPS[SCORE_BAR_GROWTH_STEPS.length - 1],
+    label: scoreGrowthBadgeLabel(range, metric, delta),
+    description: `${SCORE_BAR_GROWTH_PREVIOUS_LABELS[range]}の${metric === "best" ? "ベスト" : "平均"}を${delta}点超える`,
+  }));
+}
+
+function scoreBarDomainForCard(card, definitions) {
+  const numericTargets = definitions
+    .map((definition) => Number(definition.target))
+    .filter((target) => Number.isFinite(target));
+  const maxTarget = Math.max(...numericTargets, 1);
+  if (card.metric === "count") return { start: 0, end: maxTarget };
+  if (card.metric === "avg" || card.metric === "best") {
+    if (card.range === RANGE_TODAY) return { start: SCORE_BAR_SCORE_START, end: SCORE_BAR_HOME_SCORE_END };
+    return {
+      start: SCORE_BAR_SCORE_START,
+      end: Math.max(SCORE_BAR_SCORE_START + 1, ...numericTargets),
+    };
+  }
+  return { start: 0, end: maxTarget };
+}
+
 function badgeFilterWindow(filter, baseDate = parseISO(todayISO()), records = []) {
   if (filter === RANGE_TODAY) return { start: baseDate, end: baseDate };
   if (filter === RANGE_WEEK) return { start: startOfWeek(baseDate), end: endOfWeek(baseDate) };
@@ -792,6 +846,12 @@ function isHomeBadgeEarned(definition, summary) {
 function badgesFor(records, baseDate = todayISO()) {
   const daily = aggregate(records);
   const dailyMap = new Map(daily.map((day) => [day.date, day]));
+  const recordsByDate = new Map();
+  records.forEach((record) => {
+    const dateRecords = recordsByDate.get(record.date) || [];
+    dateRecords.push(record);
+    recordsByDate.set(record.date, dateRecords);
+  });
   const streaks = streakByDate(daily);
   const byDate = new Map();
   const uniqueEarned = new Set();
@@ -802,7 +862,7 @@ function badgesFor(records, baseDate = todayISO()) {
   let cumulativeBest = 0;
 
   daily.forEach((day) => {
-    const dayRecords = records.filter((record) => record.date === day.date);
+    const dayRecords = recordsByDate.get(day.date) || [];
     dayRecords.forEach((record) => {
       const stats = batStats.get(record.bat) || { count: 0, days: new Set(), best: 0 };
       stats.count += record.count;
@@ -871,11 +931,19 @@ function badgesFor(records, baseDate = todayISO()) {
       const previousRecords = daily.filter((day) => day.date >= toISO(previousStart) && day.date <= toISO(previousEnd));
       const previousDailyMap = new Map(previousRecords.map((day) => [day.date, day]));
       const previousSummary = periodSummaryFromDaily(previousDailyMap, previousStart, previousEnd, toISO(previousEnd));
-      if (previousRecords.length && previousSummary.avg > 0 && summary.avg > previousSummary.avg) {
-        addHomeBadge(byDate, period.earnedAt, growthLabels.avg);
+      if (previousRecords.length && previousSummary.avg > 0) {
+        SCORE_BAR_GROWTH_STEPS.forEach((delta) => {
+          if (summary.avg >= previousSummary.avg + delta) {
+            addHomeBadge(byDate, period.earnedAt, scoreGrowthBadgeLabel(period.period, "avg", delta));
+          }
+        });
       }
-      if (previousRecords.length && previousSummary.best > 0 && summary.best > previousSummary.best) {
-        addHomeBadge(byDate, period.earnedAt, growthLabels.best);
+      if (previousRecords.length && previousSummary.best > 0) {
+        SCORE_BAR_GROWTH_STEPS.forEach((delta) => {
+          if (summary.best >= previousSummary.best + delta) {
+            addHomeBadge(byDate, period.earnedAt, scoreGrowthBadgeLabel(period.period, "best", delta));
+          }
+        });
       }
     }
   });
@@ -1250,20 +1318,32 @@ function AchievementCompactCard({ card, onSelect }) {
   );
 }
 
-function dailyBadgeMilestones(metric, value, targets = null) {
+function dailyBadgeMilestones(metric, value, targets = null, domain = null) {
   const definitions = targets || HOME_BADGE_DEFINITIONS
     .filter((definition) => definition.period === RANGE_TODAY && definition.metric === metric && typeof definition.target === "number");
+  const numericDefinitions = definitions.filter((definition) => Number.isFinite(Number(definition.target)));
+  const numericTargets = numericDefinitions.map((definition) => Number(definition.target));
+  const start = Number.isFinite(domain?.start) ? Number(domain.start) : 0;
+  const end = Number.isFinite(domain?.end) ? Number(domain.end) : Math.max(...numericTargets, 1);
+  const span = Math.max(1, end - start);
+  const safeValue = Number(value) || 0;
   return definitions
+    .filter((definition) => Number.isFinite(Number(definition.target)))
     .sort((a, b) => a.target - b.target)
-    .map((definition) => ({
-      ...definition,
-      earned: value >= definition.target,
-      position: value > 0 ? clamp((definition.target / value) * 100, 0, 100) : 0,
-    }));
+    .map((definition) => {
+      const target = Number(definition.target);
+      return {
+        ...definition,
+        target,
+        earned: safeValue >= target,
+        position: clamp(((target - start) / span) * 100, 0, 100),
+        targetProgress: clamp((safeValue - start) / Math.max(1, target - start), 0, 1),
+      };
+    });
 }
 
-function dailyResultBadge(metric, value, targets = null) {
-  return [...dailyBadgeMilestones(metric, value, targets)].reverse().find((definition) => definition.earned) || null;
+function dailyResultBadge(metric, value, targets = null, domain = null) {
+  return [...dailyBadgeMilestones(metric, value, targets, domain)].reverse().find((definition) => definition.earned) || null;
 }
 
 function badgeDefinitionsForMetric(range, metric, variableTarget = null) {
@@ -1279,15 +1359,15 @@ function badgeDefinitionsForMetric(range, metric, variableTarget = null) {
     }));
 }
 
-function targetProgressInfo(value, milestones) {
+function targetProgressInfo(value, milestones, domain = null) {
   const earned = milestones.filter((milestone) => milestone.earned);
   const current = earned.at(-1) || null;
   const next = milestones.find((milestone) => !milestone.earned) || null;
-  const startTarget = current?.target || 0;
-  const endTarget = next?.target || Math.max(startTarget, value || 0, 1);
+  const startTarget = Number.isFinite(domain?.start) ? Number(domain.start) : 0;
+  const endTarget = Number.isFinite(domain?.end) ? Number(domain.end) : Math.max(...milestones.map((milestone) => milestone.target), value || 0, 1);
   const span = Math.max(1, endTarget - startTarget);
-  const fillRatio = next ? clamp(((value || 0) - startTarget) / span, 0, 1) : 1;
-  const visibleMilestones = earned;
+  const fillRatio = clamp(((value || 0) - startTarget) / span, 0, 1);
+  const visibleMilestones = milestones;
 
   return { current, next, fillRatio, visibleMilestones };
 }
@@ -1313,14 +1393,15 @@ function fixedTargetProgressInfo(value, target, labelPrefix, unit, scaleSpan = n
 
 function targetInfoForDailyCard(card, value = card.value) {
   const badgeDefinitions = card.badgeDefinitions || badgeDefinitionsForMetric(card.range, card.metric, card.variableTarget);
-  const milestones = dailyBadgeMilestones(card.metric, value, badgeDefinitions);
+  const scoreBarDomain = scoreBarDomainForCard(card, badgeDefinitions);
+  const milestones = dailyBadgeMilestones(card.metric, value, badgeDefinitions, scoreBarDomain);
   if (!badgeDefinitions.length && !Number.isFinite(card.targetValue)) return null;
-  if (card.badgeDefinitions) return { ...targetProgressInfo(value, milestones), badgeDefinitions, milestones };
+  if (card.badgeDefinitions) return { ...targetProgressInfo(value, milestones, scoreBarDomain), badgeDefinitions, milestones, scoreBarDomain };
   if (card.metric === "best") {
     const fixedTargetInfo = fixedTargetProgressInfo(value, card.targetValue, "ベスト", card.unit, 100);
-    if (fixedTargetInfo) return { ...fixedTargetInfo, badgeDefinitions, milestones };
+    if (!badgeDefinitions.length && fixedTargetInfo) return { ...fixedTargetInfo, badgeDefinitions, milestones, scoreBarDomain };
   }
-  return { ...targetProgressInfo(value, milestones), badgeDefinitions, milestones };
+  return { ...targetProgressInfo(value, milestones, scoreBarDomain), badgeDefinitions, milestones, scoreBarDomain };
 }
 
 function emptyDailySummary(date = todayISO()) {
@@ -1351,6 +1432,11 @@ function interpolateDailySummary(from, to, progress) {
 
 function scoreProgressEase(progress) {
   return 1 - Math.pow(1 - progress, 3);
+}
+
+function scoreBarFillRatio(value, domain) {
+  if (!domain) return 1;
+  return clamp(((Number(value) || 0) - domain.start) / Math.max(1, domain.end - domain.start), 0, 1);
 }
 
 function useScoreProgressAnimation(animationId, { enabled = true, onComplete = null } = {}) {
@@ -1465,14 +1551,7 @@ function DailyResultCards({ summary, showBadges = true, selected = false, onSele
       metric: "avg",
       range,
       targetValue: summary.avgTarget,
-      badgeDefinitions: summary.avgTarget ? [{
-        period: range,
-        group: range,
-        metric: "avg",
-        target: summary.avgTarget,
-        label: summary.avgTargetLabel || `平均${summary.avgTarget}`,
-        description: summary.avgTargetLabel ? `${summary.avgTargetPreviousLabel || growthLabels?.previousLabel || "前回"}の平均${summary.avgTarget}点を更新` : undefined,
-      }] : null,
+      badgeDefinitions: summary.avgTarget ? scoreGrowthBadgeDefinitions(range, "avg", summary) : null,
       emptyTrackMessage: growthLabels && !summary.avgTarget ? previousScoreMissingMessage : "",
       fillRatio: animation?.fillRatios?.avg,
       badgeOverride: animation?.badgeOverrides?.avg,
@@ -1487,14 +1566,7 @@ function DailyResultCards({ summary, showBadges = true, selected = false, onSele
       metric: "best",
       range,
       targetValue: summary.bestTarget,
-      badgeDefinitions: summary.bestTarget ? [{
-        period: range,
-        group: range,
-        metric: "best",
-        target: summary.bestTarget,
-        label: summary.bestTargetLabel || `ベスト${summary.bestTarget}`,
-        description: summary.bestTargetLabel ? `${summary.bestTargetPreviousLabel || growthLabels?.previousLabel || "前回"}のベスト${summary.bestTarget}点を更新` : undefined,
-      }] : null,
+      badgeDefinitions: summary.bestTarget ? scoreGrowthBadgeDefinitions(range, "best", summary) : null,
       emptyTrackMessage: growthLabels && !summary.bestTarget ? previousScoreMissingMessage : "",
       fillRatio: animation?.fillRatios?.best,
       badgeOverride: animation?.badgeOverrides?.best,
@@ -1547,19 +1619,20 @@ function DailyResultCards({ summary, showBadges = true, selected = false, onSele
 function DailyResultCard({ card, showBadges, dismissedHomeBadges = new Set(), onDismissHomeBadge = null }) {
   const [selectedBadge, setSelectedBadge] = useState(null);
   const badgeDefinitions = card.badgeDefinitions || badgeDefinitionsForMetric(card.range, card.metric, card.variableTarget);
-  const milestones = dailyBadgeMilestones(card.metric, card.value, badgeDefinitions);
-  const earnedBadge = dailyResultBadge(card.metric, card.value, badgeDefinitions);
+  const scoreBarDomain = scoreBarDomainForCard(card, badgeDefinitions);
+  const milestones = dailyBadgeMilestones(card.metric, card.value, badgeDefinitions, scoreBarDomain);
+  const earnedBadge = dailyResultBadge(card.metric, card.value, badgeDefinitions, scoreBarDomain);
   const isCardAnimating = card.revealBadge === false;
   const targetInfo = showBadges ? targetInfoForDailyCard(card) : null;
   const targetBadge = targetInfo?.next || null;
   const completeBadge = targetInfo?.current && !targetBadge ? targetInfo.current : null;
   const stageBadge = completeBadge || card.badgeOverride || earnedBadge;
   const isCompleteBadgeStage = Boolean(completeBadge);
-  const visibleMilestones = milestones.filter((milestone) => milestone.earned);
+  const visibleMilestones = targetInfo?.visibleMilestones || milestones;
   const revealBadge = card.revealBadge !== false || Boolean(card.badgeOverride);
   const showEmptyTrackMessage = showBadges && !targetInfo && Boolean(card.emptyTrackMessage);
   const showMilestoneTrack = showBadges && !showEmptyTrackMessage && (Boolean(targetInfo) || !(card.metric === "best" && (card.range === RANGE_WEEK || card.range === RANGE_MONTH)));
-  const milestoneFillRatio = card.fillRatio ?? (card.badgeDefinitions ? targetInfo?.fillRatio : 1) ?? 1;
+  const milestoneFillRatio = card.fillRatio ?? targetInfo?.fillRatio ?? 1;
   const homeBadgeLabel = stageBadge?.label ? stageBadge.label : null;
   const homeBadgeDismissKey = homeBadgeLabel ? [
     card.range,
@@ -1601,7 +1674,7 @@ function DailyResultCard({ card, showBadges, dismissedHomeBadges = new Set(), on
       }}
     >
       <div className="metric-label">
-        {NEW_UI_ASSETS[card.key] ? <img className="metric-image-icon" src={NEW_UI_ASSETS[card.key]} alt="" aria-hidden="true" /> : <Icon type={card.icon} />}
+        {NEW_UI_ASSETS[card.key] ? <img className="metric-image-icon" src={NEW_UI_ASSETS[card.key]} width="80" height="80" decoding="async" alt="" aria-hidden="true" /> : <Icon type={card.icon} />}
         {card.label}
       </div>
       {showBadges && (
@@ -1626,28 +1699,32 @@ function DailyResultCard({ card, showBadges, dismissedHomeBadges = new Set(), on
               </button>
             ) : null}
           </div>
-          <div className={`milestone-track ${showMilestoneTrack ? "" : "placeholder"} ${showEmptyTrackMessage ? "with-message" : ""} ${visibleMilestones.length ? "earned" : ""}`}>
+          <div className={`milestone-track ${showMilestoneTrack ? "" : "placeholder"} ${showEmptyTrackMessage ? "with-message" : ""} ${earnedBadge ? "earned" : ""}`}>
             <span className="milestone-fill" />
             {showMilestoneTrack && visibleMilestones.map((milestone, index) => {
               const alpha = milestoneAlpha(milestone.position);
-              const dotScale = milestoneOrderScale(index, visibleMilestones.length);
+              const isTargetMilestone = targetBadge?.label === milestone.label;
+              const milestoneState = isTargetMilestone ? "target" : milestone.earned ? "earned" : "locked";
+              const dotScale = isTargetMilestone ? 1.12 : milestone.earned ? 0.86 : 0.62;
               const definition = makeBadgeDefinition(canonicalBadgeLabel(milestone.label), { description: milestone.description || `${milestone.label}をゲット` });
               return (
               <button
                 type="button"
-                className={`milestone-dot ${earnedBadge?.label === milestone.label ? "current" : ""}`}
+                className={`milestone-dot ${milestoneState} ${earnedBadge?.label === milestone.label ? "current" : ""}`}
                 style={{
                   left: `${milestone.position}%`,
                   "--milestone-alpha": alpha.toFixed(2),
                   "--milestone-ring-alpha": Math.max(0.08, alpha * 0.7).toFixed(2),
                   "--milestone-dot-scale": dotScale.toFixed(3),
+                  "--milestone-target-progress": (milestone.targetProgress ?? (milestone.earned ? 1 : 0)).toFixed(3),
+                  "--milestone-target-progress-percent": `${Math.round((milestone.targetProgress ?? (milestone.earned ? 1 : 0)) * 100)}%`,
                 }}
-                onClick={() => setSelectedBadge({ ...definition, earnedCount: 0, lockedSecret: false })}
+                onClick={() => setSelectedBadge({ ...definition, earnedCount: milestone.earned ? 1 : 0, lockedSecret: false })}
                 aria-label={`${definition.label}の詳細`}
                 key={milestone.label}
               >
                 <RarityIcon rarity={rarityForBadge(milestone.label)} />
-                <span>{milestone.target}</span>
+                <span>{milestone.displayTarget ?? milestone.target}</span>
               </button>
               );
             })}
@@ -2273,6 +2350,9 @@ function Chart({ data, initialRange }) {
             <stop offset="100%" stopColor="var(--active-graph-color, var(--graph-color, var(--hot)))" stopOpacity="0" />
           </linearGradient>
           <clipPath id="chartPlotClip">
+            <rect x={pad.left} y={pad.top - 8} width={plotW} height={plotH + 16} />
+          </clipPath>
+          <clipPath id="chartPointClip">
             <rect x={pad.left - 8} y={pad.top - 8} width={plotW + 16} height={plotH + 16} />
           </clipPath>
         </defs>
@@ -2291,6 +2371,8 @@ function Chart({ data, initialRange }) {
           {avgDisplayPoints.length > 1 && <path className="area" d={`${avgPath} L ${avgDisplayPoints.at(-1).x} ${height - pad.bottom} L ${avgDisplayPoints[0].x} ${height - pad.bottom} Z`} />}
           {avgDisplayPoints.length > 1 && <path className="avg-path" d={avgPath} />}
           {bestDisplayPoints.length > 1 && <path className="best-path" d={bestPath} />}
+        </g>
+        <g clipPath="url(#chartPointClip)">
           {avgDisplayPoints.filter((pointItem) => pointItem.item.isToday).map((pointItem) => (
             <circle className="chart-today-point avg" cx={pointItem.x} cy={pointItem.y} r="5.5" key={`today-avg-${pointItem.item.label}`} />
           ))}
@@ -2472,9 +2554,9 @@ export default function App() {
     const root = document.documentElement;
     const updateAppScale = () => {
       const viewportWidth = Math.max(0, window.innerWidth || kCompactLayoutWidth);
-      const visualWidth = Math.min(480, viewportWidth);
+      const visualWidth = Math.min(kMaxVisualWidth, viewportWidth);
       const widthScale = visualWidth / kCompactLayoutWidth;
-      const scale = Math.max(0.72, Math.min(480 / kCompactLayoutWidth, widthScale));
+      const scale = Math.max(0.72, Math.min(kMaxVisualWidth / kCompactLayoutWidth, widthScale));
       root.style.setProperty("--app-scale", scale.toFixed(4));
       root.style.setProperty("--app-layout-width", `${kCompactLayoutWidth}px`);
       root.style.setProperty("--app-visual-width", `${visualWidth}px`);
@@ -2504,6 +2586,9 @@ export default function App() {
   const homeActiveDate = db.testInputDefaults ? activeDate : homeViewDate;
   const homeForName = useMemo(() => allForNameRaw.filter((record) => record.date <= homeActiveDate), [allForNameRaw, homeActiveDate]);
   const badgeMap = useMemo(() => badgesFor(allForName, activeDate), [allForName, activeDate]);
+  const homeBadgeMap = useMemo(() => (
+    homeActiveDate === activeDate ? badgeMap : badgesFor(homeForName, homeActiveDate)
+  ), [activeDate, badgeMap, homeActiveDate, homeForName]);
 
   useEffect(() => {
     if ((!db.names.length || !db.bats.length) && tab !== "settings") setTab("settings");
@@ -2745,6 +2830,7 @@ export default function App() {
               scoreAnimation={scoreAnimation}
               setScoreAnimation={setScoreAnimation}
               onScoreAnimationComplete={markScoreAnimationPlayed}
+              badgeMap={homeBadgeMap}
             />
           )}
           {tab === "record" && (
@@ -2763,6 +2849,7 @@ export default function App() {
               scoreAnimation={scoreAnimation}
               setScoreAnimation={setScoreAnimation}
               onScoreAnimationComplete={markScoreAnimationPlayed}
+              badgeMap={homeBadgeMap}
               resultRange={challengeRange}
               onChallengeRangeChange={setChallengeRange}
               title="チャレンジ"
@@ -2795,26 +2882,25 @@ export default function App() {
           )}
         </main>
 
-        <BottomNav tab={tab} setTab={(nextTab) => {
-          if (nextTab !== "settings" && (!db.names.length || !db.bats.length)) {
-            setTab("settings");
-            scrollPageToTop();
-            return;
-          }
-          if (nextTab === "record" && tab !== "record") {
-            setChallengeRange(RANGE_WEEK);
-          }
-          setTab(nextTab);
-          scrollPageToTop();
-        }} />
-
         {pendingDelete && <DeleteDialog pending={pendingDelete} onCancel={() => setPendingDelete(null)} onConfirm={confirmDelete} />}
       </div>
+      <BottomNav tab={tab} setTab={(nextTab) => {
+        if (nextTab !== "settings" && (!db.names.length || !db.bats.length)) {
+          setTab("settings");
+          scrollPageToTop();
+          return;
+        }
+        if (nextTab === "record" && tab !== "record") {
+          setChallengeRange(RANGE_WEEK);
+        }
+        setTab(nextTab);
+        scrollPageToTop();
+      }} />
     </div>
   );
 }
 
-function HomeView({ db, setDb, currentName, allForName, allForNameRaw = allForName, addRecord, activeDate = todayISO(), appActiveDate = todayISO(), setHomeViewDate, dismissedHomeBadgesByDate, setDismissedHomeBadgesByDate, scoreAnimation, setScoreAnimation, onScoreAnimationComplete, resultRange = RANGE_TODAY, onChallengeRangeChange = null, title = "今日の結果", titleIcon = "home", badgeTitle = "今日のバッジ" }) {
+function HomeView({ db, setDb, currentName, allForName, allForNameRaw = allForName, addRecord, activeDate = todayISO(), appActiveDate = todayISO(), setHomeViewDate, dismissedHomeBadgesByDate, setDismissedHomeBadgesByDate, scoreAnimation, setScoreAnimation, onScoreAnimationComplete, resultRange = RANGE_TODAY, onChallengeRangeChange = null, title = "今日の結果", titleIcon = "home", badgeTitle = "今日のバッジ", badgeMap: precomputedBadgeMap = null }) {
   const [formResetKey, setFormResetKey] = useState(0);
   const showHomeEntryTools = resultRange === RANGE_TODAY;
   const scoreAnimationPlayed = Boolean(scoreAnimation?.playedRanges?.includes(resultRange));
@@ -2839,40 +2925,37 @@ function HomeView({ db, setDb, currentName, allForName, allForNameRaw = allForNa
   const viewRecords = useMemo(() => recordsForViewRange(allFiltered, resultRange, activeDate), [allFiltered, resultRange, activeDate]);
   const todaySummary = useMemo(() => summaryForRecordsRange(allFiltered, resultRange, activeDate), [allFiltered, resultRange, activeDate]);
   const hasTodayRecord = todayRecords.length > 0;
-  const todayByBat = aggregateByBat(viewRecords);
+  const todayByBat = useMemo(() => aggregateByBat(viewRecords), [viewRecords]);
   const shouldPlayScoreAnimation = Boolean(scoreAnimation && !scoreAnimationPlayed && canPlayScoreAnimation);
   const effectiveScoreAnimationProgress = shouldPlayScoreAnimation ? scoreProgressAnimation.progress : 1;
   const isScoreAnimating = Boolean(shouldPlayScoreAnimation && scoreProgressAnimation.active);
   const displayTodaySummary = shouldPlayScoreAnimation
     ? interpolateDailySummary(animationFromSummary, animationToSummary, effectiveScoreAnimationProgress)
     : todaySummary;
-  const bestDefinitionsForSummary = (summary) => summary?.bestTarget ? [{
-    period: resultRange,
-    group: resultRange,
-    metric: "best",
-    target: summary.bestTarget,
-    label: summary.bestTargetLabel || `ベスト${summary.bestTarget}`,
-    description: summary.bestTargetLabel ? `${summary.bestTargetPreviousLabel || growthBadgeLabelsForRange(resultRange)?.previousLabel || "前回"}のベスト${summary.bestTarget}点を更新` : undefined,
-  }] : badgeDefinitionsForMetric(resultRange, "best");
-  const avgDefinitionsForSummary = (summary) => summary?.avgTarget ? [{
-    period: resultRange,
-    group: resultRange,
-    metric: "avg",
-    target: summary.avgTarget,
-    label: summary.avgTargetLabel || `平均${summary.avgTarget}`,
-    description: summary.avgTargetLabel ? `${summary.avgTargetPreviousLabel || growthBadgeLabelsForRange(resultRange)?.previousLabel || "前回"}の平均${summary.avgTarget}点を更新` : undefined,
-  }] : badgeDefinitionsForMetric(resultRange, "avg");
+  const bestDefinitionsForSummary = (summary) => {
+    const growthDefinitions = scoreGrowthBadgeDefinitions(resultRange, "best", summary);
+    return growthDefinitions.length ? growthDefinitions : badgeDefinitionsForMetric(resultRange, "best");
+  };
+  const avgDefinitionsForSummary = (summary) => {
+    const growthDefinitions = scoreGrowthBadgeDefinitions(resultRange, "avg", summary);
+    return growthDefinitions.length ? growthDefinitions : badgeDefinitionsForMetric(resultRange, "avg");
+  };
   const daysBadgeDefinitions = badgeDefinitionsForMetric(resultRange, "days", animationFromSummary?.spanDays || todaySummary.spanDays);
   const countBadgeDefinitions = badgeDefinitionsForMetric(resultRange, "count");
   const avgBadgeDefinitions = avgDefinitionsForSummary(animationFromSummary);
   const bestBadgeDefinitions = bestDefinitionsForSummary(animationFromSummary);
+  const animatedFillRatioFor = (metric, fromValue, toValue, definitions) => {
+    const domain = scoreBarDomainForCard({ metric, range: resultRange }, definitions);
+    const value = interpolateNumber(fromValue || 0, toValue || 0, effectiveScoreAnimationProgress);
+    return scoreBarFillRatio(value, domain);
+  };
   const scoreCardAnimation = shouldPlayScoreAnimation ? {
     active: isScoreAnimating,
     fillRatios: {
-      days: animationFillRatio(animationFromSummary.days, animationToSummary.days, effectiveScoreAnimationProgress),
-      count: animationFillRatio(animationFromSummary.count, animationToSummary.count, effectiveScoreAnimationProgress),
-      avg: targetAnimationFillRatio(animationFromSummary.avg, animationToSummary.avg, animationToSummary.avgTarget, effectiveScoreAnimationProgress),
-      best: targetAnimationFillRatio(animationFromSummary.best, animationToSummary.best, animationToSummary.bestTarget, effectiveScoreAnimationProgress),
+      days: animatedFillRatioFor("days", animationFromSummary.days, animationToSummary.days, daysBadgeDefinitions),
+      count: animatedFillRatioFor("count", animationFromSummary.count, animationToSummary.count, countBadgeDefinitions),
+      avg: animatedFillRatioFor("avg", animationFromSummary.avg, animationToSummary.avg, avgBadgeDefinitions),
+      best: animatedFillRatioFor("best", animationFromSummary.best, animationToSummary.best, bestBadgeDefinitions),
     },
     badgeOverrides: animationFromSummary.count > 0 ? {
       days: dailyResultBadge("days", animationFromSummary.days, daysBadgeDefinitions),
@@ -2891,9 +2974,12 @@ function HomeView({ db, setDb, currentName, allForName, allForNameRaw = allForNa
         ),
       }
     : null;
-  const homeBatSummaries = todayByBat
-    .map((item) => (animatedBatSummary?.bat === item.bat ? { ...item, ...animatedBatSummary } : item))
-    .sort((a, b) => db.bats.indexOf(a.bat) - db.bats.indexOf(b.bat));
+  const homeBatSummaries = useMemo(() => {
+    const batOrder = new Map(db.bats.map((bat, index) => [bat, index]));
+    return todayByBat
+      .map((item) => (animatedBatSummary?.bat === item.bat ? { ...item, ...animatedBatSummary } : item))
+      .sort((a, b) => (batOrder.get(a.bat) ?? 9999) - (batOrder.get(b.bat) ?? 9999));
+  }, [animatedBatSummary, db.bats, todayByBat]);
   const testRecordValues = db.testInputDefaults && db.testRandomGeneration
     ? randomTestRecordValues(formResetKey + todayRecords.length * 31)
     : null;
@@ -2901,7 +2987,7 @@ function HomeView({ db, setDb, currentName, allForName, allForNameRaw = allForNa
   const viewWindow = useMemo(() => (
     resultRange === RANGE_TODAY ? null : viewWindowForRange(allFiltered, resultRange, activeDate)
   ), [allFiltered, resultRange, activeDate]);
-  const badgeMap = useMemo(() => badgesFor(allForName, activeDate), [allForName, activeDate]);
+  const badgeMap = precomputedBadgeMap || badgesFor(allForName, activeDate);
   const viewBadgeLabels = useMemo(() => [...badgeMap.entries()].flatMap(([date, labels]) => {
     if (resultRange === RANGE_TODAY) return date === activeDate ? labels : [];
     return date >= toISO(viewWindow.start) && date <= toISO(viewWindow.end) ? labels : [];
@@ -4343,7 +4429,7 @@ function BottomNav({ tab, setTab }) {
     <nav className="bottom-nav" aria-label="画面切り替え">
       {tabs.map(([key, iconUrl, label]) => (
         <button key={key} type="button" className={tab === key ? "active" : ""} onClick={() => setTab(key)} aria-label={key}>
-          <img className="bottom-nav-icon" src={iconUrl} alt="" aria-hidden="true" />
+          <img className="bottom-nav-icon" src={iconUrl} width="112" height="112" decoding="async" alt="" aria-hidden="true" />
           <span>{label}</span>
         </button>
       ))}
