@@ -1555,7 +1555,6 @@ function DailyResultCard({ card, showBadges, dismissedHomeBadges = new Set(), on
   const completeBadge = targetInfo?.current && !targetBadge ? targetInfo.current : null;
   const stageBadge = completeBadge || card.badgeOverride || earnedBadge;
   const isCompleteBadgeStage = Boolean(completeBadge);
-  const remainingValue = targetBadge ? Math.max(0, targetBadge.target - (card.value || 0)) : 0;
   const visibleMilestones = milestones.filter((milestone) => milestone.earned);
   const revealBadge = card.revealBadge !== false || Boolean(card.badgeOverride);
   const showEmptyTrackMessage = showBadges && !targetInfo && Boolean(card.emptyTrackMessage);
@@ -2325,36 +2324,44 @@ function Chart({ data, initialRange }) {
   );
 }
 
-function demoDb() {
-  const names = ["はるた", "おとー"];
-  const bats = ["しきバット", "だめバット", "ミニバット"];
+function demoDb(base = null) {
+  const fallbackNames = ["はるた", "おとー"];
+  const fallbackBats = ["しきバット", "だめバット", "ミニバット"];
+  const names = base?.names?.length ? [...base.names] : fallbackNames;
+  const bats = base?.bats?.length ? [...base.bats] : fallbackBats;
   const start = parseISO("2024-01-01");
   const end = addDays(parseISO(todayISO()), -1);
   const demoDays = Math.max(0, Math.floor((end - start) / 86400000));
   const records = [];
-  const nameColors = {
+  const fallbackNameColors = {
     "はるた": "#2f86ff",
     "おとー": "#249c68",
   };
-  const batColors = {
+  const fallbackBatColors = {
     "しきバット": "#ff9f1c",
     "だめバット": "#a26bff",
     "ミニバット": "#8d95a4",
   };
+  const nameColors = normalizeNameColors(base?.nameColors || fallbackNameColors, names, base?.theme);
+  const batColors = normalizeBatColors(base?.batColors || fallbackBatColors, bats);
+  const activeName = names.includes(base?.activeName) ? base.activeName : names[0];
+  const defaultBat = bats.includes(base?.defaultBat) ? base.defaultBat : bats[0];
   const rand = (seed) => {
     const value = Math.sin(seed * 12.9898) * 43758.5453;
     return value - Math.floor(value);
   };
   const batFor = (nameIndex, elapsed, progress, pick) => {
+    if (!bats.length) return "";
+    if (bats.length === 1) return bats[0];
     if (nameIndex === 0) {
       const miniBias = progress < 0.22 ? 0.24 : 0.12;
-      if (pick < miniBias) return "ミニバット";
-      if (pick < 0.72) return "しきバット";
-      return "だめバット";
+      if (bats[2] && pick < miniBias) return bats[2];
+      if (pick < 0.72) return bats[0];
+      return bats[1] || bats[0];
     }
-    if (pick < 0.42) return "ミニバット";
-    if (pick < 0.74) return "しきバット";
-    return "だめバット";
+    if (bats[2] && pick < 0.42) return bats[2];
+    if (pick < 0.74) return bats[0];
+    return bats[1] || bats[0];
   };
 
   for (let elapsed = 0; elapsed <= demoDays; elapsed += 1) {
@@ -2388,7 +2395,7 @@ function demoDb() {
       const best = Math.round(clamp(avg + bestSpike, avg + 20, nameIndex === 0 ? 940 : 820));
       const mainBat = batFor(nameIndex, elapsed, progress, rand(seed + 8));
       const split = bigDay && totalCount >= (nameIndex === 0 ? 180 : 115);
-      const secondBat = mainBat === "しきバット" ? "だめバット" : "しきバット";
+      const secondBat = bats.length > 1 ? (mainBat === bats[0] ? bats[1] : bats[0]) : mainBat;
       const chunks = split
         ? [
             [mainBat, Math.round(totalCount * (0.62 + rand(seed + 9) * 0.16))],
@@ -2399,7 +2406,8 @@ function demoDb() {
 
       chunks.forEach(([bat, count], index) => {
         if (count <= 0) return;
-        const batOffset = bat === "しきバット" ? 12 : bat === "だめバット" ? -6 : -18;
+        const batIndex = Math.max(0, bats.indexOf(bat));
+        const batOffset = batIndex === 0 ? 12 : batIndex === 1 ? -6 : -18;
         const recordAvg = Math.round(clamp(avg + batOffset + (rand(seed + 10 + index) - 0.5) * 34, 180, 999));
         const recordBest = Math.round(clamp(best + batOffset + (rand(seed + 20 + index) - 0.5) * 38, recordAvg, 999));
         records.push({
@@ -2416,13 +2424,13 @@ function demoDb() {
   }
 
   return {
-    activeName: names[0],
+    activeName,
     names,
     nameColors,
     bats,
     batColors,
-    defaultBat: bats[0],
-    theme: nameColors[names[0]],
+    defaultBat,
+    theme: nameColors[activeName] || base?.theme || "#2f86ff",
     records,
   };
 }
@@ -2611,9 +2619,6 @@ export default function App() {
       setDb({
         ...db,
         records: [],
-        testInputDefaults: false,
-        testRandomGeneration: false,
-        testDate: null,
       });
       return;
     }
@@ -4317,7 +4322,7 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
           <h2 className="icon-heading">テスト</h2>
           <p>検証用</p>
         </div>
-        <button type="button" className="ghost wide" onClick={() => setDb({ ...demoDb(), testInputDefaults: false, testRandomGeneration: false, testDate: null })}>デモデータ作成</button>
+        <button type="button" className="ghost wide" onClick={() => setDb({ ...demoDb(db), testInputDefaults: db.testInputDefaults, testRandomGeneration: db.testRandomGeneration, testDate: db.testDate || null })}>デモデータ作成</button>
         <button type="button" className={`ghost wide ${db.testInputDefaults ? "selected" : ""}`} onClick={() => setDb(db.testInputDefaults ? { ...db, testInputDefaults: false, testRandomGeneration: false, testDate: null } : { ...db, testInputDefaults: true, testRandomGeneration: true, testDate: todayISO() })}>
           テストモード {db.testInputDefaults ? "ON" : "OFF"}
         </button>
