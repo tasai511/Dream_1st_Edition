@@ -8016,9 +8016,9 @@ body {
 }
 
 .daily-result-card.best {
-  --score-color: #ff9f1c;
-  --score-dark: #d85a00;
-  --score-soft: rgba(255, 159, 28, 0.18);
+  --score-color: #ff7a00;
+  --score-dark: #c74400;
+  --score-soft: rgba(255, 122, 0, 0.2);
 }
 
 .daily-result-card.days {
@@ -10053,9 +10053,9 @@ body .app .daily-result-card .target-remaining.complete::after {
 body .app .bottom-nav {
   box-sizing: border-box !important;
   grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
-  height: calc(58px + env(safe-area-inset-bottom)) !important;
-  min-height: calc(58px + env(safe-area-inset-bottom)) !important;
-  max-height: calc(58px + env(safe-area-inset-bottom)) !important;
+  height: 58px !important;
+  min-height: 58px !important;
+  max-height: 58px !important;
   overflow: hidden !important;
   contain: layout paint !important;
 }
@@ -10515,7 +10515,7 @@ body .app .daily-result-card.avg {
 }
 
 body .app .daily-result-card.best {
-  --meter-glow: #ffbd22;
+  --meter-glow: #ff8f00;
 }
 
 body .app .daily-result-card.days {
