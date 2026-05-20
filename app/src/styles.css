@@ -10494,7 +10494,7 @@ body .app .daily-result-card.best .metric-label .metric-image-icon {
 body .app .daily-result-card .daily-score-row > strong {
   font-size: clamp(2.08rem, 9.2vw, 2.72rem) !important;
   line-height: 0.82 !important;
-  margin-top: -1px !important;
+  margin-top: 4px !important;
 }
 
 body .app .daily-result-card .daily-score-row::before {
@@ -10532,11 +10532,18 @@ body .app .daily-result-card .milestone-track::after {
 
 body .app .daily-result-card .milestone-fill {
   z-index: 1 !important;
+  inset: 0 auto 0 0 !important;
+  height: 100% !important;
+  width: min(100%, calc(var(--milestone-fill-ratio, 0) * 100% + var(--milestone-fill-bleed-px, 0px))) !important;
+  border-radius: inherit !important;
+  transform: none !important;
   background:
     linear-gradient(90deg,
       color-mix(in srgb, var(--score-color) 62%, #ffffff) 0%,
       var(--score-color) 48%,
       color-mix(in srgb, var(--meter-glow, var(--score-color)) 72%, var(--score-dark)) 100%) !important;
+  background-size: var(--milestone-track-width-px, 100%) 100% !important;
+  background-position: 0 0 !important;
   box-shadow: none !important;
 }
 
@@ -11029,19 +11036,20 @@ body .app .phone-shell .home-score-input-grid .home-input-panel .form-pen-icon {
 }
 
 body .app .daily-result-card .milestone-dot {
-  width: clamp(15px, calc(28px * var(--milestone-dot-scale, 1)), 32px) !important;
-  height: clamp(15px, calc(28px * var(--milestone-dot-scale, 1)), 32px) !important;
+  width: var(--milestone-dot-size-px, clamp(15px, calc(28px * var(--milestone-dot-scale, 1)), 32px)) !important;
+  height: var(--milestone-dot-size-px, clamp(15px, calc(28px * var(--milestone-dot-scale, 1)), 32px)) !important;
   border: clamp(3px, calc(4px * var(--milestone-dot-scale, 1)), 4.6px) solid transparent !important;
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent !important;
   background:
     radial-gradient(circle at 32% 22%, rgba(255, 255, 255, 0.98) 0 13%, transparent 28%) padding-box,
-    radial-gradient(circle at 50% 68%, rgba(0, 0, 0, 0.24) 0 16%, transparent 52%) padding-box,
     radial-gradient(circle, color-mix(in srgb, var(--score-color), white 25%), var(--score-dark)) padding-box,
     linear-gradient(
       90deg,
       transparent 0%,
-      transparent var(--milestone-target-progress-percent, 0%),
-      #ffffff var(--milestone-target-progress-percent, 0%),
-      #ffffff 100%
+      transparent var(--milestone-icon-fill-px, 0px),
+      color-mix(in srgb, var(--score-color) 12%, #ffffff) var(--milestone-icon-fill-px, 0px),
+      color-mix(in srgb, var(--score-color) 12%, #ffffff) 100%
     ) border-box,
     linear-gradient(
       90deg,
@@ -11052,33 +11060,38 @@ body .app .daily-result-card .milestone-dot {
   background-size:
     auto,
     auto,
-    auto,
     100% 100%,
     var(--milestone-track-width-px, 100%) 100% !important;
+  background-origin:
+    padding-box,
+    padding-box,
+    border-box,
+    border-box !important;
+  background-clip:
+    padding-box,
+    padding-box,
+    border-box,
+    border-box !important;
   background-position:
-    center,
     center,
     center,
     0 0,
     var(--milestone-dot-bg-x, 0px) 0 !important;
-  box-shadow:
-    inset 0 0 0 1px rgba(0, 9, 28, 0.24),
-    inset 0 1px 2px rgba(255, 255, 255, 0.42) !important;
-  transform: translate(-100%, -50%) !important;
+  box-shadow: none !important;
+  transform: translateY(-50%) !important;
 }
 
 body .app .daily-result-card .milestone-dot.locked {
   opacity: 0.72 !important;
   background:
     radial-gradient(circle at 32% 22%, rgba(255, 255, 255, 0.82) 0 13%, transparent 28%) padding-box,
-    radial-gradient(circle at 50% 68%, rgba(0, 0, 0, 0.16) 0 16%, transparent 52%) padding-box,
     radial-gradient(circle, #d6dce5, #8f9aaa) padding-box,
     linear-gradient(
       90deg,
       transparent 0%,
-      transparent var(--milestone-target-progress-percent, 0%),
-      #ffffff var(--milestone-target-progress-percent, 0%),
-      #ffffff 100%
+      transparent var(--milestone-icon-fill-px, 0px),
+      color-mix(in srgb, var(--score-color) 12%, #ffffff) var(--milestone-icon-fill-px, 0px),
+      color-mix(in srgb, var(--score-color) 12%, #ffffff) 100%
     ) border-box,
     linear-gradient(
       90deg,
@@ -11089,18 +11102,24 @@ body .app .daily-result-card .milestone-dot.locked {
   background-size:
     auto,
     auto,
-    auto,
     100% 100%,
     var(--milestone-track-width-px, 100%) 100% !important;
+  background-origin:
+    padding-box,
+    padding-box,
+    border-box,
+    border-box !important;
+  background-clip:
+    padding-box,
+    padding-box,
+    border-box,
+    border-box !important;
   background-position:
-    center,
     center,
     center,
     0 0,
     var(--milestone-dot-bg-x, 0px) 0 !important;
-  box-shadow:
-    inset 0 0 0 1px rgba(0, 9, 28, 0.18),
-    inset 0 1px 2px rgba(255, 255, 255, 0.36) !important;
+  box-shadow: none !important;
 }
 
 body .app .daily-result-card .milestone-dot.earned {
@@ -11110,10 +11129,139 @@ body .app .daily-result-card .milestone-dot.earned {
 body .app .daily-result-card .milestone-dot.target {
   z-index: 5 !important;
   opacity: 1 !important;
+  box-shadow: none !important;
+}
+
+body .app .daily-result-card .milestone-dot-frame {
+  position: absolute !important;
+  top: 50% !important;
+  z-index: 0 !important;
+  display: block !important;
+  width: var(--milestone-frame-size-px, calc(clamp(15px, calc(28px * var(--milestone-dot-scale, 1)), 32px) + 5px)) !important;
+  height: var(--milestone-frame-size-px, calc(clamp(15px, calc(28px * var(--milestone-dot-scale, 1)), 32px) + 5px)) !important;
+  border-radius: 999px !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+  transform: translateY(-50%) !important;
+  pointer-events: none !important;
+}
+
+body .app .daily-result-card .milestone-track {
+  isolation: isolate !important;
+  background: transparent !important;
+}
+
+body .app .daily-result-card .milestone-track::before {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 1 !important;
+  border-radius: inherit !important;
+  background: color-mix(in srgb, var(--score-color) 12%, #ffffff) !important;
+  content: "" !important;
+  pointer-events: none !important;
+}
+
+body .app .daily-result-card .milestone-fill {
+  z-index: 2 !important;
+  inset: 0 auto 0 0 !important;
+  height: 100% !important;
+  width: min(100%, calc(var(--milestone-fill-ratio, 0) * 100% + var(--milestone-fill-bleed-px, 0px))) !important;
+  border-radius: inherit !important;
+  transform: none !important;
+  background-size: var(--milestone-track-width-px, 100%) 100% !important;
+  background-position: 0 0 !important;
+}
+
+body .app .daily-result-card .milestone-dot {
+  z-index: 3 !important;
+}
+
+body .app .daily-result-card .milestone-dot.target {
+  z-index: 5 !important;
+}
+
+body .app .daily-result-card .milestone-empty-message {
+  position: relative !important;
+  z-index: 10 !important;
+}
+
+body .app .dialog-backdrop {
+  z-index: 80 !important;
+  padding: 24px !important;
+  background:
+    radial-gradient(circle at 50% 30%, rgba(47, 134, 255, 0.26), transparent 34%),
+    rgba(3, 22, 63, 0.48) !important;
+  backdrop-filter: blur(4px) !important;
+}
+
+body .app .dialog {
+  width: min(340px, 100%) !important;
+  border: 4px solid transparent !important;
+  border-radius: 18px !important;
+  padding: 18px 18px 16px !important;
+  color: var(--game-blue-deep) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.99), #f4f9ff) padding-box,
+    linear-gradient(180deg, #8bd0ff 0%, #0879f2 48%, #0542a6 100%) border-box !important;
   box-shadow:
-    inset 0 0 0 1px rgba(0, 9, 28, 0.28),
-    inset 0 1px 2px rgba(255, 255, 255, 0.42),
-    0 0 7px color-mix(in srgb, var(--meter-glow, var(--score-color)) 24%, transparent) !important;
+    inset 0 3px 0 rgba(255, 255, 255, 0.86),
+    0 0 0 3px #ffffff,
+    0 12px 0 rgba(4, 64, 157, 0.28),
+    0 22px 34px rgba(3, 30, 80, 0.28) !important;
+}
+
+body .app .dialog h2 {
+  margin: 0 !important;
+  color: var(--game-blue-deep) !important;
+  font-size: 1.16rem !important;
+  font-weight: 950 !important;
+  line-height: 1.15 !important;
+  text-shadow:
+    1.5px 0 #ffffff,
+    -1.5px 0 #ffffff,
+    0 1.5px #ffffff,
+    0 -1.5px #ffffff,
+    0 3px 0 rgba(5, 41, 116, 0.18) !important;
+}
+
+body .app .dialog p {
+  margin: 10px 0 0 !important;
+  color: #203a5f !important;
+  font-size: 0.88rem !important;
+  font-weight: 800 !important;
+  line-height: 1.45 !important;
+}
+
+body .app .dialog-actions {
+  gap: 10px !important;
+  margin-top: 18px !important;
+}
+
+body .app .dialog-actions button {
+  min-height: 40px !important;
+  border-radius: 999px !important;
+  font-weight: 950 !important;
+}
+
+body .app .dialog-actions .ghost {
+  border: 3px solid #0879f2 !important;
+  color: var(--game-blue-deep) !important;
+  background: #ffffff !important;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.9),
+    0 4px 0 rgba(6, 78, 181, 0.22) !important;
+}
+
+body .app .dialog-actions .danger {
+  border: 3px solid #ffffff !important;
+  color: #ffffff !important;
+  background:
+    linear-gradient(180deg, #ff6875 0%, #e52f43 56%, #b80f24 100%) !important;
+  box-shadow:
+    inset 0 3px 0 rgba(255, 255, 255, 0.34),
+    inset 0 -5px 0 rgba(103, 0, 15, 0.24),
+    0 4px 0 rgba(137, 0, 18, 0.42) !important;
+  text-shadow: 0 2px 0 rgba(91, 0, 15, 0.46) !important;
 }
 
 body .app .daily-result-card .milestone-dot.locked .rarity-icon {
@@ -11129,4 +11277,221 @@ body .app .daily-result-card .milestone-dot.locked .rarity-icon svg * {
 
 body .app .daily-result-card .milestone-dot > span:not(.rarity-icon) {
   white-space: nowrap !important;
+}
+
+/* Restored polish after accidental file recovery. */
+body .app .daily-result-card {
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--score-color) 22%, #ffffff) 0%, color-mix(in srgb, var(--score-color) 34%, #ffffff) 100%) padding-box,
+    radial-gradient(circle at 74% 46%, color-mix(in srgb, var(--score-color) 18%, transparent), transparent 34%) padding-box,
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--score-color) 48%, #ffffff) 0%,
+      var(--score-color) 48%,
+      color-mix(in srgb, var(--score-color) 82%, #052b75) 100%) border-box !important;
+  box-shadow:
+    inset 0 3px 0 rgba(255, 255, 255, 0.78),
+    inset 0 0 0 1.5px rgba(255, 255, 255, 0.82),
+    inset 0 -10px 22px color-mix(in srgb, var(--score-color) 14%, transparent),
+    0 10px 18px rgba(0, 0, 0, 0.16),
+    0 18px 28px rgba(0, 0, 0, 0.08) !important;
+}
+
+body .app .daily-result-card.best {
+  --score-color: #ffba26 !important;
+  --score-dark: #e98300 !important;
+  --meter-glow: #ffd447 !important;
+}
+
+body .app .daily-result-card.best .daily-score-row > strong {
+  color: #ff8f00 !important;
+}
+
+body .app .badge-collection {
+  display: grid !important;
+  gap: 10px !important;
+}
+
+body .app .badge-collection-heading-row {
+  margin: 12px 0 -3px !important;
+}
+
+body .app .badge-collection-heading-row.collection-heading-row {
+  margin-top: 18px !important;
+}
+
+body .app .badge-point-card {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 92px !important;
+  align-items: center !important;
+  gap: 10px 14px !important;
+  padding: 12px 14px !important;
+  --surface-color: #0879f2 !important;
+  --surface-dark: #053b98 !important;
+}
+
+body .app .badge-point-main {
+  min-width: 0 !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  align-items: start !important;
+  gap: 3px !important;
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+}
+
+body .app .badge-point-main > p,
+body .app .collection-card-heading {
+  display: none !important;
+}
+
+body .app .badge-point-card strong {
+  grid-row: auto !important;
+  align-self: start !important;
+  display: block !important;
+  color: var(--badge-count-blue, #0879f2) !important;
+  font-size: clamp(2.25rem, 10.5vw, 3.18rem) !important;
+  line-height: 0.88 !important;
+  text-shadow:
+    2px 0 #ffffff,
+    -2px 0 #ffffff,
+    0 2px #ffffff,
+    0 -2px #ffffff,
+    0 4px 0 rgba(5, 45, 120, 0.28) !important;
+}
+
+body .app .badge-point-card span {
+  display: block !important;
+  color: var(--game-blue-deep, #052b75) !important;
+  font-weight: 950 !important;
+  line-height: 1.08 !important;
+}
+
+body .app .badge-point-card .badge-point-meta b {
+  color: var(--badge-count-blue, #0879f2) !important;
+  text-shadow:
+    1px 0 #ffffff,
+    -1px 0 #ffffff,
+    0 1px #ffffff,
+    0 -1px #ffffff !important;
+}
+
+body .app .badge-point-meters {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  min-width: 92px !important;
+  display: grid !important;
+  place-items: center !important;
+}
+
+body .app .badge-reward-fields {
+  grid-column: 1 / -1 !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 0.74fr) minmax(0, 1fr) !important;
+  gap: 7px !important;
+  align-items: center !important;
+  margin-top: 2px !important;
+}
+
+body .app .badge-reward-field {
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 5px !important;
+  min-width: 0 !important;
+  border: 2px solid color-mix(in srgb, var(--game-blue-deep) 22%, #ffffff) !important;
+  border-radius: 999px !important;
+  padding: 3px 7px !important;
+  background: rgba(255, 255, 255, 0.82) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+}
+
+body .app .badge-reward-field span {
+  display: block !important;
+  color: var(--game-blue-deep, #052b75) !important;
+  font-size: 0.68rem !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+}
+
+body .app .badge-reward-field input {
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 25px !important;
+  border: 0 !important;
+  outline: none !important;
+  color: var(--game-blue-deep, #052b75) !important;
+  background: transparent !important;
+  font-size: 16px !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+}
+
+body .app .badge-reward-field input::placeholder {
+  color: rgba(5, 43, 117, 0.42) !important;
+}
+
+body .app .badge-reward-field em {
+  color: var(--game-blue-deep, #052b75) !important;
+  font-size: 0.62rem !important;
+  font-style: normal !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+}
+
+body .app .badge-point-meters .progress-meter {
+  width: 88px !important;
+  min-width: 88px !important;
+}
+
+body .app .badge-point-meters .meter-ring {
+  width: 88px !important;
+  height: 88px !important;
+  --meter-reached: #e73546;
+  --meter-unreached: #f7bdc5;
+}
+
+body .app .badge-point-meters .meter-ring svg {
+  width: 88px !important;
+  height: 88px !important;
+}
+
+body .app .badge-point-meters .meter-track {
+  stroke: var(--meter-unreached) !important;
+}
+
+body .app .badge-point-meters .meter-value {
+  stroke: var(--meter-reached) !important;
+}
+
+body .app .badge-point-meters .meter-glow {
+  display: none !important;
+}
+
+body .app .badge-point-card .badge-point-meters .meter-remaining {
+  color: var(--game-blue-deep, #052b75) !important;
+  text-shadow:
+    1px 0 #ffffff,
+    -1px 0 #ffffff,
+    0 1px #ffffff,
+    0 -1px #ffffff !important;
+}
+
+body .app .home-score-input-grid .home-input-panel::before {
+  background:
+    linear-gradient(180deg, transparent 0 36px, rgba(36, 104, 180, 0.13) 36px, rgba(36, 104, 180, 0.13) 37px, transparent 37px, transparent 39px, rgba(36, 104, 180, 0.1) 39px, rgba(36, 104, 180, 0.1) 40px, transparent 40px),
+    repeating-linear-gradient(180deg, transparent 0 28px, rgba(36, 104, 180, 0.08) 28px, rgba(36, 104, 180, 0.08) 29px),
+    linear-gradient(90deg, transparent 0 17px, rgba(224, 86, 70, 0.2) 18px, transparent 19px),
+    radial-gradient(circle at 16% 22%, var(--paper-fiber) 0 1px, transparent 1.6px),
+    radial-gradient(circle at 82% 68%, rgba(122, 96, 50, 0.04) 0 1.2px, transparent 1.8px),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.86), transparent 28%),
+    linear-gradient(180deg, var(--paper-base) 0%, #f8f1df 100%) !important;
+  background-position:
+    0 0,
+    0 40px,
+    0 0,
+    0 0,
+    0 0,
+    0 0,
+    0 0 !important;
 }

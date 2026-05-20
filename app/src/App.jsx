@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import batIconUrl from "./assets/images/bat-icon.svg";
 import premiumMeterBadgeUrl from "./assets/images/premium-meter-badge.svg";
@@ -16,7 +16,7 @@ const kMaxChartVisibleDays = 365;
 const kCompactLayoutWidth = 390;
 const kCompactLayoutHeight = 844;
 const kMaxVisualWidth = 640;
-const kScoreProgressAnimationDuration = 10000;
+const kScoreProgressAnimationDuration = 5000;
 const CHALLENGE_RANGE_TABS = [
   { range: RANGE_WEEK, period: "週間" },
   { range: RANGE_MONTH, period: "月間" },
@@ -69,6 +69,58 @@ const NEW_UI_ASSETS = {
   navData: `${PUBLIC_ASSET_BASE}images/icon_data_transparent.png`,
   navSettings: `${PUBLIC_ASSET_BASE}images/icon_settings_transparent.png`,
 };
+
+let appAudioContext = null;
+
+function audioContextForApp() {
+  if (typeof window === "undefined") return null;
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) return null;
+  if (!appAudioContext) appAudioContext = new AudioContextClass();
+  if (appAudioContext.state === "suspended") {
+    appAudioContext.resume().catch(() => {});
+  }
+  return appAudioContext;
+}
+
+function playTone(context, start, frequency, duration, volume = 0.14, type = "sine") {
+  const oscillator = context.createOscillator();
+  const gain = context.createGain();
+  oscillator.type = type;
+  oscillator.frequency.setValueAtTime(frequency, start);
+  gain.gain.setValueAtTime(0.0001, start);
+  gain.gain.exponentialRampToValueAtTime(volume, start + 0.012);
+  gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+  oscillator.connect(gain);
+  gain.connect(context.destination);
+  oscillator.start(start);
+  oscillator.stop(start + duration + 0.02);
+}
+
+function playAppSound(kind = "tap") {
+  const context = audioContextForApp();
+  if (!context) return;
+  const now = context.currentTime;
+  if (kind === "success") {
+    playTone(context, now, 523.25, 0.09, 0.18, "triangle");
+    playTone(context, now + 0.075, 659.25, 0.1, 0.16, "triangle");
+    playTone(context, now + 0.16, 783.99, 0.14, 0.14, "triangle");
+    return;
+  }
+  if (kind === "tab") {
+    playTone(context, now, 392, 0.045, 0.15, "square");
+    playTone(context, now + 0.035, 587.33, 0.055, 0.12, "triangle");
+    return;
+  }
+  playTone(context, now, 440, 0.045, 0.13, "square");
+}
+
+function soundKindForElement(element) {
+  if (!element?.closest) return null;
+  if (element.closest(".bottom-nav, .challenge-range-tabs, .collection-mode-tabs, .data-tabs")) return "tab";
+  if (element.closest("button, input[type='submit'], .standard-ok-button")) return "tap";
+  return null;
+}
 const SCORE_CARD_SKINS = {
   count: { meterGlow: "#37a4ff" },
   avg: { meterGlow: "#44ce35" },
@@ -221,6 +273,8 @@ const defaultDb = {
   theme: "#ff7a45",
   fontTheme: "system",
   records: [],
+  badgeRewardGoal: "",
+  badgeRewardText: "",
   testInputDefaults: false,
   testRandomGeneration: false,
   testDate: null,
@@ -517,7 +571,7 @@ function challengeYearCycleAt(records = [], cycleIndex = 0, baseDate = parseISO(
   const start = addYearsFromDate(firstDate, cycleIndex);
   const nextStart = addYearsFromDate(firstDate, cycleIndex + 1);
   const end = addDays(nextStart, -1);
-  return { index: cycleIndex, start, end, label: `${formatJapaneseDate(start)}〜${formatJapaneseFullDate(end)}` };
+  return { index: cycleIndex, start, end, label: `${start.getFullYear()}年` };
 }
 
 function currentChallengeYearIndex(records = [], baseDate = parseISO(todayISO())) {
@@ -537,13 +591,13 @@ function challengeYearWindowFromFirstDate(firstDate, baseDate = parseISO(todayIS
   if (!firstDate || baseDate < firstDate) {
     const start = firstDate || baseDate;
     const end = addDays(addYearsFromDate(start, 1), -1);
-    return { index: 0, start, end, label: `${formatJapaneseDate(start)}〜${formatJapaneseFullDate(end)}` };
+    return { index: 0, start, end, label: `${start.getFullYear()}年` };
   }
   let index = Math.max(0, baseDate.getFullYear() - firstDate.getFullYear());
   const cycleAt = (cycleIndex) => {
     const start = addYearsFromDate(firstDate, cycleIndex);
     const end = addDays(addYearsFromDate(firstDate, cycleIndex + 1), -1);
-    return { index: cycleIndex, start, end, label: `${formatJapaneseDate(start)}〜${formatJapaneseFullDate(end)}` };
+    return { index: cycleIndex, start, end, label: `${start.getFullYear()}年` };
   };
   let window = cycleAt(index);
   while (baseDate < window.start && index > 0) {
@@ -561,10 +615,11 @@ function challengeYearHistoryWindows(records = [], baseDate = parseISO(todayISO(
   const currentIndex = currentChallengeYearIndex(records, baseDate);
   return Array.from({ length: currentIndex }, (_, offset) => {
     const age = offset + 1;
+    const history = challengeYearCycleAt(records, currentIndex - age, baseDate);
     return {
-      ...challengeYearCycleAt(records, currentIndex - age, baseDate),
+      ...history,
       age,
-      title: `${age}年前`,
+      title: `${history.start.getFullYear()}年`,
     };
   });
 }
@@ -690,6 +745,8 @@ function loadDb() {
       theme: legacyTheme,
       fontTheme: fontThemeKey(parsed.fontTheme),
       records: Array.isArray(parsed.records) ? parsed.records : [],
+      badgeRewardGoal: String(parsed.badgeRewardGoal || ""),
+      badgeRewardText: String(parsed.badgeRewardText || ""),
       testInputDefaults: Boolean(parsed.testInputDefaults),
       testRandomGeneration: Boolean(parsed.testRandomGeneration),
       testDate: /^\d{4}-\d{2}-\d{2}$/.test(parsed.testDate || "") ? parsed.testDate : null,
@@ -1152,10 +1209,18 @@ function progressUnitForKind(kind) {
   return "";
 }
 
-function ProgressMeter({ kind, value, range, variableTarget, targets, focus = false, showBadgeIcon = true }) {
+function ProgressMeter({ kind, value, range, variableTarget, targets, focus = false, showBadgeIcon = true, customGoal = null }) {
   const [selectedBadge, setSelectedBadge] = useState(null);
   const meterRef = useRef(null);
-  const info = progressInfo(kind, Number(value || 0), range, variableTarget, targets);
+  const rawInfo = progressInfo(kind, Number(value || 0), range, variableTarget, targets);
+  const customGoalValue = Number(customGoal);
+  const hasCustomGoal = Number.isFinite(customGoalValue) && customGoalValue > 0;
+  const info = hasCustomGoal ? {
+    ...rawInfo,
+    previous: 0,
+    goal: customGoalValue,
+    remaining: Math.max(0, Math.ceil(customGoalValue - Number(value || 0))),
+  } : rawInfo;
   const targetBadge = makeBadgeDefinition(info.badgeLabel, {
     description: info.badgeDescription,
   });
@@ -1635,6 +1700,7 @@ function DailyResultCard({ card, showBadges, dismissedHomeBadges = new Set(), on
   const showEmptyTrackMessage = showBadges && !targetInfo && Boolean(card.emptyTrackMessage);
   const showMilestoneTrack = showBadges && !showEmptyTrackMessage && (Boolean(targetInfo) || !(card.metric === "best" && (card.range === RANGE_WEEK || card.range === RANGE_MONTH)));
   const milestoneFillRatio = card.fillRatio ?? targetInfo?.fillRatio ?? 1;
+  const milestoneFillBleedPx = milestoneFillRatio > 0 ? 2 : 0;
   const homeBadgeLabel = stageBadge?.label ? stageBadge.label : null;
   const homeBadgeDismissKey = homeBadgeLabel ? [
     card.range,
@@ -1685,6 +1751,7 @@ function DailyResultCard({ card, showBadges, dismissedHomeBadges = new Set(), on
       className={`daily-result-card ${card.key} ${card.revealBadge === false ? "animating" : ""}`}
       style={{
         "--milestone-fill-ratio": String(milestoneFillRatio),
+        "--milestone-fill-bleed-px": `${milestoneFillBleedPx}px`,
         "--meter-glow": skin.meterGlow,
         ...scoreFontTokens(card.value),
       }}
@@ -1723,32 +1790,50 @@ function DailyResultCard({ card, showBadges, dismissedHomeBadges = new Set(), on
               const milestoneState = isTargetMilestone ? "target" : milestone.earned ? "earned" : "locked";
               const dotScale = isTargetMilestone ? 1.12 : milestone.earned ? 0.86 : 0.62;
               const dotSize = clamp(28 * dotScale, 15, 32);
+              const visualDotSize = dotSize;
+              const frameSize = dotSize + 5;
               const fillPx = milestoneFillRatio * milestoneTrackWidth;
+              const effectiveFillPx = Math.min(milestoneTrackWidth, fillPx + milestoneFillBleedPx);
               const targetPx = (milestone.position / 100) * milestoneTrackWidth;
-              const dotLeftPx = targetPx - dotSize;
-              const iconFillRatio = milestoneTrackWidth > 0 ? clamp((fillPx - dotLeftPx) / dotSize, 0, 1) : milestone.earned ? 1 : 0;
+              const dotLeftPx = targetPx - visualDotSize;
+              const frameLeftPx = targetPx - (visualDotSize / 2) - (frameSize / 2);
+              const iconComplete = milestone.earned || effectiveFillPx >= targetPx;
+              const iconFillRatio = iconComplete ? 1 : milestoneTrackWidth > 0 ? clamp((effectiveFillPx - dotLeftPx) / visualDotSize, 0, 1) : 0;
+              const iconFillPx = iconComplete ? visualDotSize : milestoneTrackWidth > 0 ? clamp(effectiveFillPx - dotLeftPx, 0, visualDotSize) : 0;
               const definition = makeBadgeDefinition(canonicalBadgeLabel(milestone.label), { description: milestone.description || `${milestone.label}をゲット` });
               return (
-              <button
-                type="button"
-                className={`milestone-dot ${milestoneState} ${earnedBadge?.label === milestone.label ? "current" : ""}`}
-                style={{
-                  left: `${milestone.position}%`,
-                  "--milestone-alpha": alpha.toFixed(2),
-                  "--milestone-ring-alpha": Math.max(0.08, alpha * 0.7).toFixed(2),
-                  "--milestone-dot-scale": dotScale.toFixed(3),
-                  "--milestone-track-width-px": `${Math.max(1, milestoneTrackWidth)}px`,
-                  "--milestone-dot-bg-x": `${-dotLeftPx}px`,
-                  "--milestone-target-progress": iconFillRatio.toFixed(3),
-                  "--milestone-target-progress-percent": `${Math.round(iconFillRatio * 100)}%`,
-                }}
-                onClick={() => setSelectedBadge({ ...definition, earnedCount: milestone.earned ? 1 : 0, lockedSecret: false })}
-                aria-label={`${definition.label}の詳細`}
-                key={milestone.label}
-              >
-                <RarityIcon rarity={rarityForBadge(milestone.label)} />
-                <span>{milestone.displayTarget ?? milestone.target}</span>
-              </button>
+                <Fragment key={milestone.label}>
+                  <span
+                    className="milestone-dot-frame"
+                    style={{
+                      left: `${frameLeftPx}px`,
+                      "--milestone-dot-scale": dotScale.toFixed(3),
+                      "--milestone-frame-size-px": `${frameSize}px`,
+                    }}
+                    aria-hidden="true"
+                  />
+                  <button
+                    type="button"
+                    className={`milestone-dot ${milestoneState} ${earnedBadge?.label === milestone.label ? "current" : ""}`}
+                    style={{
+                      left: `${dotLeftPx}px`,
+                      "--milestone-alpha": alpha.toFixed(2),
+                      "--milestone-ring-alpha": Math.max(0.08, alpha * 0.7).toFixed(2),
+                      "--milestone-dot-scale": dotScale.toFixed(3),
+                      "--milestone-dot-size-px": `${visualDotSize}px`,
+                      "--milestone-track-width-px": `${Math.max(1, milestoneTrackWidth)}px`,
+                      "--milestone-dot-bg-x": `${-dotLeftPx}px`,
+                      "--milestone-icon-fill-px": `${iconFillPx}px`,
+                      "--milestone-target-progress": iconFillRatio.toFixed(3),
+                      "--milestone-target-progress-percent": `${Math.round(iconFillRatio * 100)}%`,
+                    }}
+                    onClick={() => setSelectedBadge({ ...definition, earnedCount: milestone.earned ? 1 : 0, lockedSecret: false })}
+                    aria-label={`${definition.label}の詳細`}
+                  >
+                    <RarityIcon rarity={rarityForBadge(milestone.label)} />
+                    <span>{milestone.displayTarget ?? milestone.target}</span>
+                  </button>
+                </Fragment>
               );
             })}
             {showEmptyTrackMessage && <span className="milestone-empty-message">{card.emptyTrackMessage}</span>}
@@ -2537,6 +2622,8 @@ function demoDb(base = null) {
     defaultBat,
     theme: nameColors[activeName] || base?.theme || "#2f86ff",
     records,
+    badgeRewardGoal: String(base?.badgeRewardGoal || ""),
+    badgeRewardText: String(base?.badgeRewardText || ""),
   };
 }
 
@@ -2618,8 +2705,17 @@ export default function App() {
   }, [db.names.length, db.bats.length, tab]);
 
   useEffect(() => {
-    if (!["home", "record"].includes(tab) && scoreAnimation) setScoreAnimation(null);
+    if (tab !== "home" && scoreAnimation) setScoreAnimation(null);
   }, [tab, scoreAnimation]);
+
+  useEffect(() => {
+    const playClickSound = (event) => {
+      const kind = soundKindForElement(event.target);
+      if (kind) playAppSound(kind);
+    };
+    document.addEventListener("click", playClickSound, true);
+    return () => document.removeEventListener("click", playClickSound, true);
+  }, []);
 
   useEffect(() => {
     if (!isNameMenuOpen) return undefined;
@@ -2664,6 +2760,7 @@ export default function App() {
       setScoreAnimation({ id: uid(), bat, fromSummary, toSummary, fromWeekSummary, toWeekSummary, fromBat, toBat, fromWeekBat, toWeekBat, playedRanges: [] });
     }
     setDb({ ...db, records: nextRecords });
+    playAppSound("success");
     return true;
   };
 
@@ -2869,9 +2966,9 @@ export default function App() {
               setHomeViewDate={setHomeViewDate}
               dismissedHomeBadgesByDate={dismissedHomeBadgesByDate}
               setDismissedHomeBadgesByDate={setDismissedHomeBadgesByDate}
-              scoreAnimation={scoreAnimation}
-              setScoreAnimation={setScoreAnimation}
-              onScoreAnimationComplete={markScoreAnimationPlayed}
+              scoreAnimation={null}
+              setScoreAnimation={() => {}}
+              onScoreAnimationComplete={() => {}}
               badgeMap={homeBadgeMap}
               resultRange={challengeRange}
               onChallengeRangeChange={setChallengeRange}
@@ -2888,7 +2985,7 @@ export default function App() {
             />
           )}
           {tab === "badges" && (
-            <BadgeCollectionView allForName={allForName} activeDate={activeDate} />
+            <BadgeCollectionView allForName={allForName} activeDate={activeDate} db={db} setDb={setDb} />
           )}
           {tab === "settings" && (
             <SettingsView
@@ -3719,7 +3816,7 @@ function BadgeChip({ label, count = 1, description = null, lockedSecret = false 
   );
 }
 
-function BadgeCollectionView({ allForName, activeDate = todayISO() }) {
+function BadgeCollectionView({ allForName, activeDate = todayISO(), db = defaultDb, setDb = null }) {
   const [selectedBadge, setSelectedBadge] = useState(null);
   const [selectedRarity, setSelectedRarity] = useState(RARITY_ORDER[0]);
   const [collectionMode, setCollectionMode] = useState("current");
@@ -3771,7 +3868,13 @@ function BadgeCollectionView({ allForName, activeDate = todayISO() }) {
     sum + earnedCountForDefinition(definition, badgeCounts, metaStats)
   ), 0);
   const badgePointTargets = META_BADGE_DEFINITIONS.filter((definition) => definition.metric === "points");
-  const badgeTypeTargets = META_BADGE_DEFINITIONS.filter((definition) => definition.metric === "types");
+  const rewardGoalInput = String(db?.badgeRewardGoal || "");
+  const rewardTextInput = String(db?.badgeRewardText || "");
+  const rewardGoal = Math.max(0, Math.trunc(Number(rewardGoalInput) || 0));
+  const updateBadgeReward = (patch) => {
+    if (!setDb) return;
+    setDb({ ...db, ...patch });
+  };
   const raritySummaries = RARITY_ORDER.map((rarity) => {
     const items = definitions.filter((definition) => definition.rarity === rarity);
     const earnedTotal = items.reduce((sum, definition) => sum + Math.min(1, earnedCountForDefinition(definition, badgeCounts, metaStats)), 0);
@@ -3814,8 +3917,11 @@ function BadgeCollectionView({ allForName, activeDate = todayISO() }) {
           </select>
         </label>
       ) : null}
+      <div className="section-row tight badge-collection-heading-row">
+        <h2 className="icon-heading"><Icon type="badge" />バッジポイント</h2>
+      </div>
       <div className="badge-point-card">
-        <div>
+        <div className="badge-point-main">
           <p>バッジポイント</p>
           <strong>{badgePointTotal.toLocaleString("ja-JP")}</strong>
           <span className="badge-point-meta"><b>{earnedTotal}</b>/{definitions.length} 種類</span>
@@ -3823,9 +3929,34 @@ function BadgeCollectionView({ allForName, activeDate = todayISO() }) {
           <span className="badge-point-meta badge-period-label">{activeWindow.label}</span>
         </div>
         <div className="badge-point-meters" aria-label="次に狙うバッジ">
-          <ProgressMeter kind="badge-points" value={basePointTotal} range={RANGE_TOTAL} targets={badgePointTargets} showBadgeIcon={false} />
-          <ProgressMeter kind="badge-types" value={baseEarnedTotal} range={RANGE_TOTAL} targets={badgeTypeTargets} showBadgeIcon={false} />
+          <ProgressMeter kind="badge-points" value={badgePointTotal} range={RANGE_TOTAL} targets={badgePointTargets} showBadgeIcon={false} customGoal={rewardGoal || null} />
         </div>
+        <div className="badge-reward-fields">
+          <label className="badge-reward-field">
+            <span>目標</span>
+            <input
+              type="number"
+              inputMode="numeric"
+              min="0"
+              value={rewardGoalInput}
+              onChange={(event) => updateBadgeReward({ badgeRewardGoal: event.target.value.replace(/[^\d]/g, "") })}
+              placeholder="0"
+            />
+            <em>pt</em>
+          </label>
+          <label className="badge-reward-field">
+            <span>ごほうび</span>
+            <input
+              type="text"
+              value={rewardTextInput}
+              onChange={(event) => updateBadgeReward({ badgeRewardText: event.target.value })}
+              placeholder="入力"
+            />
+          </label>
+        </div>
+      </div>
+      <div className="section-row tight badge-collection-heading-row collection-heading-row">
+        <h2 className="icon-heading"><Icon type="collection" />コレクション</h2>
       </div>
       <section className="collection-main-card">
         <div className="collection-card-heading">
