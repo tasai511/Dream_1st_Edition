@@ -16,7 +16,7 @@ const kMaxChartVisibleDays = 365;
 const kCompactLayoutWidth = 390;
 const kCompactLayoutHeight = 844;
 const kMaxVisualWidth = 640;
-const kScoreProgressAnimationDuration = 5000;
+const kScoreProgressAnimationDuration = 10000;
 const CHALLENGE_RANGE_TABS = [
   { range: RANGE_WEEK, period: "週間" },
   { range: RANGE_MONTH, period: "月間" },
@@ -1618,6 +1618,8 @@ function DailyResultCards({ summary, showBadges = true, selected = false, onSele
 
 function DailyResultCard({ card, showBadges, dismissedHomeBadges = new Set(), onDismissHomeBadge = null }) {
   const [selectedBadge, setSelectedBadge] = useState(null);
+  const milestoneTrackRef = useRef(null);
+  const [milestoneTrackWidth, setMilestoneTrackWidth] = useState(0);
   const badgeDefinitions = card.badgeDefinitions || badgeDefinitionsForMetric(card.range, card.metric, card.variableTarget);
   const scoreBarDomain = scoreBarDomainForCard(card, badgeDefinitions);
   const milestones = dailyBadgeMilestones(card.metric, card.value, badgeDefinitions, scoreBarDomain);
@@ -1664,6 +1666,20 @@ function DailyResultCard({ card, showBadges, dismissedHomeBadges = new Set(), on
   };
   const skin = SCORE_CARD_SKINS[card.key] || SCORE_CARD_SKINS.count;
 
+  useLayoutEffect(() => {
+    const node = milestoneTrackRef.current;
+    if (!node) return undefined;
+    const updateWidth = () => setMilestoneTrackWidth(node.getBoundingClientRect().width || 0);
+    updateWidth();
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", updateWidth);
+      return () => window.removeEventListener("resize", updateWidth);
+    }
+    const observer = new ResizeObserver(updateWidth);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <article
       className={`daily-result-card ${card.key} ${card.revealBadge === false ? "animating" : ""}`}
@@ -1699,13 +1715,18 @@ function DailyResultCard({ card, showBadges, dismissedHomeBadges = new Set(), on
               </button>
             ) : null}
           </div>
-          <div className={`milestone-track ${showMilestoneTrack ? "" : "placeholder"} ${showEmptyTrackMessage ? "with-message" : ""} ${earnedBadge ? "earned" : ""}`}>
+          <div ref={milestoneTrackRef} className={`milestone-track ${showMilestoneTrack ? "" : "placeholder"} ${showEmptyTrackMessage ? "with-message" : ""} ${earnedBadge ? "earned" : ""}`}>
             <span className="milestone-fill" />
-            {showMilestoneTrack && visibleMilestones.map((milestone, index) => {
+            {showMilestoneTrack && visibleMilestones.map((milestone) => {
               const alpha = milestoneAlpha(milestone.position);
               const isTargetMilestone = targetBadge?.label === milestone.label || completeBadge?.label === milestone.label;
               const milestoneState = isTargetMilestone ? "target" : milestone.earned ? "earned" : "locked";
               const dotScale = isTargetMilestone ? 1.12 : milestone.earned ? 0.86 : 0.62;
+              const dotSize = clamp(28 * dotScale, 15, 32);
+              const fillPx = milestoneFillRatio * milestoneTrackWidth;
+              const targetPx = (milestone.position / 100) * milestoneTrackWidth;
+              const dotLeftPx = targetPx - dotSize;
+              const iconFillRatio = milestoneTrackWidth > 0 ? clamp((fillPx - dotLeftPx) / dotSize, 0, 1) : milestone.earned ? 1 : 0;
               const definition = makeBadgeDefinition(canonicalBadgeLabel(milestone.label), { description: milestone.description || `${milestone.label}をゲット` });
               return (
               <button
@@ -1716,8 +1737,10 @@ function DailyResultCard({ card, showBadges, dismissedHomeBadges = new Set(), on
                   "--milestone-alpha": alpha.toFixed(2),
                   "--milestone-ring-alpha": Math.max(0.08, alpha * 0.7).toFixed(2),
                   "--milestone-dot-scale": dotScale.toFixed(3),
-                  "--milestone-target-progress": (milestone.targetProgress ?? (milestone.earned ? 1 : 0)).toFixed(3),
-                  "--milestone-target-progress-percent": `${Math.round((milestone.targetProgress ?? (milestone.earned ? 1 : 0)) * 100)}%`,
+                  "--milestone-track-width-px": `${Math.max(1, milestoneTrackWidth)}px`,
+                  "--milestone-dot-bg-x": `${-dotLeftPx}px`,
+                  "--milestone-target-progress": iconFillRatio.toFixed(3),
+                  "--milestone-target-progress-percent": `${Math.round(iconFillRatio * 100)}%`,
                 }}
                 onClick={() => setSelectedBadge({ ...definition, earnedCount: milestone.earned ? 1 : 0, lockedSecret: false })}
                 aria-label={`${definition.label}の詳細`}
