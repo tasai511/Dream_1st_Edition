@@ -11467,15 +11467,20 @@ body .app .badge-reward-input-field span {
 body .app .badge-reward-input-field input {
   width: min(144px, 100%) !important;
   min-width: 0 !important;
-  height: 1.08em !important;
+  height: 1em !important;
+  min-height: 0 !important;
+  max-height: 1em !important;
   overflow: hidden !important;
   border: 0 !important;
-  border-bottom: 1.5px solid color-mix(in srgb, var(--game-blue-deep) 34%, #ffffff) !important;
+  border-bottom: 0 !important;
   border-radius: 0 !important;
   outline: none !important;
   color: #e73546 !important;
   -webkit-text-fill-color: #e73546 !important;
-  background: transparent !important;
+  --reward-underline-color: color-mix(in srgb, var(--game-blue-deep) 34%, #ffffff);
+  background:
+    linear-gradient(var(--reward-underline-color), var(--reward-underline-color))
+    center calc(50% + 0.43em) / 100% 1.5px no-repeat transparent !important;
   font-size: var(--reward-input-font-size, 16px) !important;
   font-weight: 950 !important;
   line-height: 1 !important;
@@ -11497,7 +11502,7 @@ body .app .badge-reward-input-field::after {
 }
 
 body .app .badge-reward-input-field input:focus {
-  border-bottom-color: color-mix(in srgb, var(--game-blue-deep) 48%, #ffffff) !important;
+  --reward-underline-color: color-mix(in srgb, var(--game-blue-deep) 48%, #ffffff);
   -webkit-text-fill-color: #e73546 !important;
 }
 
@@ -11544,15 +11549,20 @@ body .app .badge-goal-field input {
   width: 42px !important;
   min-width: 0 !important;
   justify-self: center !important;
-  height: 1.08em !important;
+  height: 1em !important;
+  min-height: 0 !important;
+  max-height: 1em !important;
   overflow: hidden !important;
   border: 0 !important;
-  border-bottom: 1.5px solid color-mix(in srgb, var(--game-blue-deep) 34%, #ffffff) !important;
+  border-bottom: 0 !important;
   border-radius: 0 !important;
   outline: none !important;
   color: #e73546 !important;
   -webkit-text-fill-color: #e73546 !important;
-  background: transparent !important;
+  --reward-underline-color: color-mix(in srgb, var(--game-blue-deep) 34%, #ffffff);
+  background:
+    linear-gradient(var(--reward-underline-color), var(--reward-underline-color))
+    center calc(50% + 0.43em) / 100% 1.5px no-repeat transparent !important;
   font-size: var(--reward-input-font-size, 16px) !important;
   font-weight: 950 !important;
   line-height: 1 !important;
@@ -11580,7 +11590,7 @@ body .app .badge-goal-field em {
 }
 
 body .app .badge-goal-field input:focus {
-  border-bottom-color: color-mix(in srgb, var(--game-blue-deep) 48%, #ffffff) !important;
+  --reward-underline-color: color-mix(in srgb, var(--game-blue-deep) 48%, #ffffff);
   -webkit-text-fill-color: #e73546 !important;
 }
 
