@@ -57,6 +57,7 @@ const NEW_UI_ASSETS = {
   logo: `${PUBLIC_ASSET_BASE}images/logo.png`,
   background: `${PUBLIC_ASSET_BASE}images/field-bg.jpg`,
   pen: `${PUBLIC_ASSET_BASE}images/pen.svg`,
+  recordPen: `${PUBLIC_ASSET_BASE}images/pen.png`,
   bat: `${PUBLIC_ASSET_BASE}images/bat.svg`,
   days: `${PUBLIC_ASSET_BASE}images/calendar.svg`,
   count: `${PUBLIC_ASSET_BASE}images/count.svg`,
@@ -522,6 +523,10 @@ function monthLabel(date) {
 
 function formatRangeDate(date) {
   return `${date.getMonth() + 1}/${date.getDate()}`;
+}
+
+function formatDataRangeDate(date) {
+  return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
 }
 
 function formatJapaneseDate(date, includeMonth = true) {
@@ -3852,10 +3857,20 @@ function BadgeCollectionView({ allForName, activeDate = todayISO(), db = default
   const rewardGoalInput = String(db?.badgeRewardGoal || "");
   const rewardTextInput = String(db?.badgeRewardText || "");
   const rewardGoal = Math.max(0, Math.trunc(Number(rewardGoalInput) || 0));
+  const rewardEarned = rewardGoal > 0 && rewardTextInput.trim().length > 0 && badgePointTotal >= rewardGoal;
   const badgePointFontSize = clamp(2.62 - Math.max(0, String(badgePointTotal).length - 4) * 0.42, 1.72, 2.62);
   const rewardGoalFontSize = clamp(16 - Math.max(0, rewardGoalInput.length - 5) * 1.6, 8.5, 16);
   const rewardTextUnits = [...rewardTextInput].reduce((sum, char) => sum + (char.charCodeAt(0) <= 0x7f ? 0.58 : 1), 0);
   const rewardTextFontSize = clamp(Math.min(16, 132 / Math.max(1, rewardTextUnits)), 5.2, 16);
+  const badgeDataDates = collectionRecords
+    .map((record) => record.date)
+    .filter((date) => date <= activeDate)
+    .sort((a, b) => a.localeCompare(b));
+  const badgeDataStart = badgeDataDates[0] ? parseISO(badgeDataDates[0]) : null;
+  const badgeDataEnd = parseISO(activeDate);
+  const badgeDataRangeLabel = badgeDataStart
+    ? `${formatDataRangeDate(badgeDataStart)} - ${formatDataRangeDate(badgeDataEnd)}`
+    : "No data";
   const updateBadgeReward = (patch) => {
     if (!setDb) return;
     setDb({ ...db, ...patch });
@@ -3880,6 +3895,7 @@ function BadgeCollectionView({ allForName, activeDate = todayISO(), db = default
           <strong style={{ "--badge-point-font-size": `${badgePointFontSize}rem` }}>{badgePointTotal.toLocaleString("ja-JP")}<small>ポイント</small></strong>
           <span className="badge-point-meta"><b>{earnedTotal}</b>/{definitions.length} 種類</span>
           <span className="badge-point-meta"><b>{earnedInstanceTotal.toLocaleString("ja-JP")}</b>個</span>
+          <span className="badge-point-data-range">{badgeDataRangeLabel}</span>
         </div>
         <div className="badge-point-side">
           <label className="badge-goal-field">
@@ -3909,6 +3925,7 @@ function BadgeCollectionView({ allForName, activeDate = todayISO(), db = default
               placeholder=""
             />
             <img className="edit-pencil-icon" src={NEW_UI_ASSETS.pen} alt="" aria-hidden="true" />
+            {rewardEarned && <span className="badge-reward-get-stamp" aria-hidden="true">GET</span>}
           </label>
         </div>
       </div>
@@ -4175,7 +4192,7 @@ function SwingForm({ bats, defaultBat, onSubmit, submitLabel, defaultValues = nu
   };
   return (
     <form className="input-grid swing-form" onSubmit={onSubmit} style={{ "--selected-bat-color": selectedBatColor }}>
-      <h3 className="swing-form-title"><img className="form-pen-icon" src={NEW_UI_ASSETS.pen} alt="" aria-hidden="true" />記録入力</h3>
+      <h3 className="swing-form-title"><img className="form-pen-icon" src={NEW_UI_ASSETS.recordPen} alt="" aria-hidden="true" />記録入力</h3>
       <BatSelect value={selectedBat} onChange={setSelectedBat} bats={bats} batColors={batColors} name="bat" required className="home-form-bat-controls" />
       <label className="field-label"><span className="field-title">回数</span><span className="paper-input-cell"><input name="count" type="number" inputMode="numeric" min="1" max="999" step="1" required value={countValue} onChange={(event) => setCountValue(event.target.value)} aria-label="回数" /><span aria-hidden="true">回</span></span></label>
       <label className="field-label"><span className="field-title">平均</span><span className="paper-input-cell"><input name="avg" type="number" inputMode="numeric" min="0" max="999" step="1" required value={avgValue} onChange={(event) => setAvgValue(event.target.value)} aria-label="平均" /><span aria-hidden="true">点</span></span></label>

@@ -10263,7 +10263,7 @@ body .app .home-score-input-grid .home-input-panel::before {
   background:
     linear-gradient(180deg, transparent 0 36px, rgba(36, 104, 180, 0.13) 36px, rgba(36, 104, 180, 0.13) 37px, transparent 37px, transparent 39px, rgba(36, 104, 180, 0.1) 39px, rgba(36, 104, 180, 0.1) 40px, transparent 40px),
     repeating-linear-gradient(180deg, transparent 0 28px, rgba(36, 104, 180, 0.08) 28px, rgba(36, 104, 180, 0.08) 29px),
-    linear-gradient(90deg, transparent 0 17px, rgba(224, 86, 70, 0.2) 18px, transparent 19px),
+    linear-gradient(90deg, transparent 0 13px, rgba(224, 86, 70, 0.2) 14px, transparent 15px),
     radial-gradient(circle at 16% 22%, var(--paper-fiber) 0 1px, transparent 1.6px),
     radial-gradient(circle at 82% 68%, rgba(122, 96, 50, 0.04) 0 1.2px, transparent 1.8px),
     linear-gradient(135deg, rgba(255, 255, 255, 0.86), transparent 28%),
@@ -10988,6 +10988,15 @@ body .app .phone-shell .home-score-input-grid .home-input-panel .swing-form-titl
   writing-mode: horizontal-tb !important;
 }
 
+body .app .phone-shell .home-score-input-grid .home-input-panel .swing-form {
+  grid-template-columns: minmax(0, 1fr) repeat(3, minmax(72px, 98px)) minmax(0, 1fr) !important;
+  grid-template-areas:
+    "form-title bat bat bat ."
+    ". count-label avg-label best-label ."
+    ". count avg best ."
+    "heading heading heading heading heading" !important;
+}
+
 body .app .phone-shell .home-score-input-grid .home-input-panel .form-pen-icon {
   flex: 0 0 auto !important;
 }
@@ -11289,6 +11298,7 @@ body .app .badge-collection-heading-row.collection-heading-row {
 }
 
 body .app .badge-point-card {
+  position: relative !important;
   display: grid !important;
   grid-template-columns: minmax(0, 1fr) 104px !important;
   grid-template-areas:
@@ -11298,6 +11308,24 @@ body .app .badge-point-card {
   padding: 12px 14px 7px !important;
   --surface-color: #0879f2 !important;
   --surface-dark: #053b98 !important;
+}
+
+body .app .badge-point-card .badge-point-data-range {
+  position: absolute !important;
+  left: 14px !important;
+  bottom: 6px !important;
+  z-index: 2 !important;
+  display: block !important;
+  max-width: calc(100% - 132px) !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  color: rgba(5, 43, 117, 0.66) !important;
+  font-size: 0.58rem !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.68) !important;
 }
 
 body .app .badge-point-main {
@@ -11424,8 +11452,8 @@ body .app .badge-reward-input-field input {
   border-bottom: 0 !important;
   border-radius: 0 !important;
   outline: none !important;
-  color: #e73546 !important;
-  -webkit-text-fill-color: #e73546 !important;
+  color: #1c9a58 !important;
+  -webkit-text-fill-color: #1c9a58 !important;
   --reward-underline-color: color-mix(in srgb, var(--game-blue-deep) 34%, #ffffff);
   background:
     linear-gradient(var(--reward-underline-color), var(--reward-underline-color))
@@ -11467,6 +11495,37 @@ body .app .badge-reward-input-field .edit-pencil-icon {
   left: 0 !important;
 }
 
+body .app .badge-reward-input-field .badge-reward-get-stamp {
+  position: absolute !important;
+  top: 17px !important;
+  right: 0 !important;
+  z-index: 3 !important;
+  display: grid !important;
+  place-items: center !important;
+  width: 42px !important;
+  height: 24px !important;
+  margin: 0 !important;
+  border: 1.5px solid #ff3044 !important;
+  border-radius: 5px !important;
+  color: #ff3044 !important;
+  background: rgba(255, 48, 68, 0.08) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 48, 68, 0.18),
+    0 4px 8px rgba(5, 47, 125, 0.16) !important;
+  font-size: 0.68rem !important;
+  font-weight: 950 !important;
+  letter-spacing: 0 !important;
+  line-height: 1 !important;
+  text-shadow:
+    1px 0 rgba(255, 255, 255, 0.68),
+    -1px 0 rgba(255, 255, 255, 0.68),
+    0 1px rgba(255, 255, 255, 0.68),
+    0 -1px rgba(255, 255, 255, 0.68) !important;
+  transform: rotate(-11deg) !important;
+  pointer-events: none !important;
+  animation: get-stamp-pop 360ms cubic-bezier(0.18, 0.92, 0.28, 1.18) both !important;
+}
+
 body .app .badge-reward-input-field::after {
   display: none !important;
   content: none !important;
@@ -11474,7 +11533,7 @@ body .app .badge-reward-input-field::after {
 
 body .app .badge-reward-input-field input:focus {
   --reward-underline-color: color-mix(in srgb, var(--game-blue-deep) 48%, #ffffff);
-  -webkit-text-fill-color: #e73546 !important;
+  -webkit-text-fill-color: #1c9a58 !important;
 }
 
 body .app .badge-goal-field {
@@ -11531,8 +11590,8 @@ body .app .badge-goal-field input {
   border-bottom: 0 !important;
   border-radius: 0 !important;
   outline: none !important;
-  color: #e73546 !important;
-  -webkit-text-fill-color: #e73546 !important;
+  color: #1c9a58 !important;
+  -webkit-text-fill-color: #1c9a58 !important;
   --reward-underline-color: color-mix(in srgb, var(--game-blue-deep) 34%, #ffffff);
   background:
     linear-gradient(var(--reward-underline-color), var(--reward-underline-color))
@@ -11567,7 +11626,7 @@ body .app .badge-goal-field em {
 
 body .app .badge-goal-field input:focus {
   --reward-underline-color: color-mix(in srgb, var(--game-blue-deep) 48%, #ffffff);
-  -webkit-text-fill-color: #e73546 !important;
+  -webkit-text-fill-color: #1c9a58 !important;
 }
 
 body .app .badge-goal-field input[type="number"] {
@@ -11583,8 +11642,8 @@ body .app .badge-goal-field input[type="number"]::-webkit-inner-spin-button {
 }
 
 body .app .badge-goal-field input::placeholder {
-  color: color-mix(in srgb, #e73546 55%, #ffffff) !important;
-  -webkit-text-fill-color: color-mix(in srgb, #e73546 55%, #ffffff) !important;
+  color: color-mix(in srgb, #1c9a58 55%, #ffffff) !important;
+  -webkit-text-fill-color: color-mix(in srgb, #1c9a58 55%, #ffffff) !important;
 }
 
 body .app .badge-point-meters .progress-meter {
@@ -11595,8 +11654,8 @@ body .app .badge-point-meters .progress-meter {
 body .app .badge-point-meters .meter-ring {
   width: 88px !important;
   height: 88px !important;
-  --meter-reached: #e73546;
-  --meter-unreached: #f7bdc5;
+  --meter-reached: #1c9a58;
+  --meter-unreached: #bde8ce;
 }
 
 body .app .badge-point-meters .meter-ring svg {
@@ -11629,7 +11688,7 @@ body .app .home-score-input-grid .home-input-panel::before {
   background:
     linear-gradient(180deg, transparent 0 36px, rgba(36, 104, 180, 0.13) 36px, rgba(36, 104, 180, 0.13) 37px, transparent 37px, transparent 39px, rgba(36, 104, 180, 0.1) 39px, rgba(36, 104, 180, 0.1) 40px, transparent 40px),
     repeating-linear-gradient(180deg, transparent 0 28px, rgba(36, 104, 180, 0.08) 28px, rgba(36, 104, 180, 0.08) 29px),
-    linear-gradient(90deg, transparent 0 17px, rgba(224, 86, 70, 0.2) 18px, transparent 19px),
+    linear-gradient(90deg, transparent 0 13px, rgba(224, 86, 70, 0.2) 14px, transparent 15px),
     radial-gradient(circle at 16% 22%, var(--paper-fiber) 0 1px, transparent 1.6px),
     radial-gradient(circle at 82% 68%, rgba(122, 96, 50, 0.04) 0 1.2px, transparent 1.8px),
     linear-gradient(135deg, rgba(255, 255, 255, 0.86), transparent 28%),
