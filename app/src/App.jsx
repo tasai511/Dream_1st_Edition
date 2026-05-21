@@ -15,7 +15,6 @@ const kMinChartVisibleDays = 7;
 const kMaxChartVisibleDays = 365;
 const kCompactLayoutWidth = 390;
 const kCompactLayoutHeight = 844;
-const kMaxVisualWidth = 640;
 const kScoreProgressAnimationDuration = 5000;
 const CHALLENGE_RANGE_TABS = [
   { range: RANGE_WEEK, period: "週間" },
@@ -88,13 +87,11 @@ function playTone(context, start, frequency, duration, volume = 0.14, type = "si
   const gain = context.createGain();
   oscillator.type = type;
   oscillator.frequency.setValueAtTime(frequency, start);
-  gain.gain.setValueAtTime(0.0001, start);
-  gain.gain.exponentialRampToValueAtTime(volume, start + 0.012);
-  gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+  gain.gain.setValueAtTime(volume, start);
   oscillator.connect(gain);
   gain.connect(context.destination);
   oscillator.start(start);
-  oscillator.stop(start + duration + 0.02);
+  oscillator.stop(start + duration);
 }
 
 function playAppSound(kind = "tap") {
@@ -117,7 +114,7 @@ function playAppSound(kind = "tap") {
 
 function soundKindForElement(element) {
   if (!element?.closest) return null;
-  if (element.closest(".bottom-nav, .challenge-range-tabs, .collection-mode-tabs, .data-tabs")) return "tab";
+  if (element.closest(".bottom-nav, .challenge-range-tabs, .data-tabs")) return "tab";
   if (element.closest("button, input[type='submit'], .standard-ok-button")) return "tap";
   return null;
 }
@@ -141,7 +138,7 @@ function scoreFontTokens(value) {
   const scale = digitCount <= 3 ? 1 : digitCount === 4 ? 0.88 : digitCount === 5 ? 0.76 : digitCount === 6 ? 0.66 : 0.58;
   return {
     "--score-font-min": `${(2.16 * scale).toFixed(3)}rem`,
-    "--score-font-mid": `${(9.45 * scale).toFixed(3)}vw`,
+    "--score-font-mid": `${(2.82 * scale).toFixed(3)}rem`,
     "--score-font-max": `${(2.82 * scale).toFixed(3)}rem`,
   };
 }
@@ -2664,10 +2661,12 @@ export default function App() {
     const root = document.documentElement;
     const updateAppScale = () => {
       const viewportWidth = Math.max(0, window.innerWidth || kCompactLayoutWidth);
-      const visualWidth = Math.min(kMaxVisualWidth, viewportWidth);
+      const visualWidth = viewportWidth;
       const widthScale = visualWidth / kCompactLayoutWidth;
-      const scale = Math.max(0.72, Math.min(kMaxVisualWidth / kCompactLayoutWidth, widthScale));
+      const scale = Math.max(0.72, widthScale);
+      const fontScale = Math.min(1, 1 / Math.sqrt(scale));
       root.style.setProperty("--app-scale", scale.toFixed(4));
+      root.style.setProperty("--app-font-scale", fontScale.toFixed(4));
       root.style.setProperty("--app-layout-width", `${kCompactLayoutWidth}px`);
       root.style.setProperty("--app-visual-width", `${visualWidth}px`);
       root.style.setProperty("--app-min-height", "100vh");
@@ -2678,6 +2677,7 @@ export default function App() {
     return () => {
       window.removeEventListener("resize", updateAppScale);
       root.style.removeProperty("--app-scale");
+      root.style.removeProperty("--app-font-scale");
       root.style.removeProperty("--app-layout-width");
       root.style.removeProperty("--app-visual-width");
       root.style.removeProperty("--app-min-height");
@@ -3819,26 +3819,7 @@ function BadgeChip({ label, count = 1, description = null, lockedSecret = false 
 function BadgeCollectionView({ allForName, activeDate = todayISO(), db = defaultDb, setDb = null }) {
   const [selectedBadge, setSelectedBadge] = useState(null);
   const [selectedRarity, setSelectedRarity] = useState(RARITY_ORDER[0]);
-  const [collectionMode, setCollectionMode] = useState("current");
-  const histories = useMemo(() => challengeYearHistoryWindows(allForName, parseISO(activeDate)), [allForName, activeDate]);
-  const [selectedHistoryAge, setSelectedHistoryAge] = useState(1);
-  useEffect(() => {
-    if (!histories.length && collectionMode === "history") {
-      setCollectionMode("current");
-      return;
-    }
-    if (histories.length && !histories.some((history) => history.age === selectedHistoryAge)) {
-      setSelectedHistoryAge(histories[0].age);
-    }
-  }, [histories, collectionMode, selectedHistoryAge]);
-  const currentWindow = useMemo(() => challengeYearWindow(allForName, parseISO(activeDate)), [allForName, activeDate]);
-  const selectedHistory = histories.find((history) => history.age === selectedHistoryAge) || histories[0] || null;
-  const activeWindow = collectionMode === "history" && selectedHistory ? selectedHistory : currentWindow;
-  const collectionRecords = useMemo(() => {
-    const startISO = toISO(activeWindow.start);
-    const endISO = toISO(activeWindow.end) < activeDate ? toISO(activeWindow.end) : activeDate;
-    return allForName.filter((record) => record.date >= startISO && record.date <= endISO);
-  }, [allForName, activeWindow.start, activeWindow.end, activeDate]);
+  const collectionRecords = allForName;
   const badgeCounts = useMemo(() => new Map(collectBadgeCounts(collectionRecords, RANGE_ALL, activeDate)), [collectionRecords, activeDate]);
   const definitions = useMemo(() => allBadgeDefinitions(), []);
   const baseDefinitions = definitions.filter((definition) => !META_BADGE_DEFINITIONS.some((item) => item.label === definition.label));
@@ -3890,37 +3871,6 @@ function BadgeCollectionView({ allForName, activeDate = todayISO(), db = default
   const activeRaritySummary = raritySummaries.find((summary) => summary.rarity === selectedRarity) || raritySummaries[0];
   return (
     <section className="badge-collection">
-      <div className="collection-mode-tabs" role="tablist" aria-label="バッジコレクション表示">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={collectionMode === "current"}
-          className={collectionMode === "current" ? "selected" : ""}
-          onClick={() => setCollectionMode("current")}
-        >
-          コレクション
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={collectionMode === "history"}
-          className={collectionMode === "history" ? "selected" : ""}
-          onClick={() => histories.length && setCollectionMode("history")}
-          disabled={!histories.length}
-        >
-          履歴
-        </button>
-      </div>
-      {collectionMode === "history" && histories.length ? (
-        <label className="history-select-field">
-          <span>履歴</span>
-          <select value={selectedHistoryAge} onChange={(event) => setSelectedHistoryAge(Number(event.target.value))}>
-            {histories.map((history) => (
-              <option value={history.age} key={history.age}>{history.title}</option>
-            ))}
-          </select>
-        </label>
-      ) : null}
       <div className="section-row tight badge-collection-heading-row">
         <h2 className="icon-heading"><Icon type="badge" />バッジポイント</h2>
       </div>
@@ -3930,7 +3880,6 @@ function BadgeCollectionView({ allForName, activeDate = todayISO(), db = default
           <strong style={{ "--badge-point-font-size": `${badgePointFontSize}rem` }}>{badgePointTotal.toLocaleString("ja-JP")}<small>ポイント</small></strong>
           <span className="badge-point-meta"><b>{earnedTotal}</b>/{definitions.length} 種類</span>
           <span className="badge-point-meta"><b>{earnedInstanceTotal.toLocaleString("ja-JP")}</b>個</span>
-          <span className="badge-point-meta badge-period-label">{activeWindow.label}</span>
         </div>
         <div className="badge-point-side">
           <label className="badge-goal-field">
@@ -3944,6 +3893,7 @@ function BadgeCollectionView({ allForName, activeDate = todayISO(), db = default
               onChange={(event) => updateBadgeReward({ badgeRewardGoal: event.target.value.replace(/[^\d]/g, "") })}
               placeholder="0"
             />
+            <i className="edit-pencil-icon" aria-hidden="true" />
             <em>ポイント</em>
           </label>
           <div className="badge-point-meters" aria-label="次に狙うバッジ">
@@ -3958,6 +3908,7 @@ function BadgeCollectionView({ allForName, activeDate = todayISO(), db = default
               onChange={(event) => updateBadgeReward({ badgeRewardText: event.target.value })}
               placeholder=""
             />
+            <i className="edit-pencil-icon" aria-hidden="true" />
           </label>
         </div>
       </div>

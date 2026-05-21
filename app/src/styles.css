@@ -5,7 +5,7 @@
   --app-scale: 1;
   --app-font-scale: 1;
   --app-layout-width: min(480px, 100%);
-  --app-visual-width: min(640px, 100vw);
+  --app-visual-width: 100vw;
   --app-min-height: 100vh;
   --bg: #111218;
   --panel: rgba(255, 255, 255, 0.055);
@@ -4024,62 +4024,6 @@ input::placeholder {
   gap: 12px;
 }
 
-.collection-mode-tabs {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 4px;
-  border-radius: var(--radius);
-  padding: 4px;
-  background: transparent;
-}
-
-.collection-mode-tabs button {
-  display: grid;
-  align-content: center;
-  justify-items: center;
-  min-height: 38px;
-  border: 0;
-  border-radius: 6px;
-  padding: 3px 4px;
-  color: var(--muted);
-  background: transparent;
-  font-size: 0.94rem;
-  font-weight: 950;
-  line-height: 1;
-}
-
-.collection-mode-tabs button.selected {
-  color: #ffffff;
-  background: rgba(var(--hot-rgb), 0.78);
-}
-
-.collection-mode-tabs button:disabled {
-  opacity: 0.36;
-}
-
-.history-select-field {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-}
-
-.history-select-field > span {
-  color: var(--muted);
-  font-size: 0.72rem;
-  font-weight: 950;
-}
-
-.history-select-field select {
-  min-height: 34px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 0 10px;
-  color: var(--text);
-  background: #1d222d;
-  font-weight: 900;
-}
 
 .rarity-badge-preview {
   display: grid;
@@ -4187,11 +4131,6 @@ input::placeholder {
   color: var(--badge-count-blue);
   font-size: 1rem;
   font-weight: 950;
-}
-
-.badge-point-card .badge-period-label {
-  color: var(--muted);
-  font-size: 0.66rem;
 }
 
 .badge-point-meters {
@@ -6495,7 +6434,7 @@ select:focus,
 }
 
 .record-section .count-bars {
-  --count-bar-width: clamp(42px, calc((100vw - 56px) / 7), 54px);
+  --count-bar-width: 48px;
   display: flex !important;
   width: max-content !important;
   min-width: max-content !important;
@@ -7863,7 +7802,7 @@ body {
 
 .app-title {
   display: block !important;
-  width: min(54vw, 210px);
+  width: 210px;
   padding: 0 !important;
   line-height: 0 !important;
   text-shadow: none !important;
@@ -8094,7 +8033,7 @@ body {
   align-items: baseline !important;
   gap: 4px !important;
   color: var(--score-dark) !important;
-  font-size: clamp(2.55rem, 11vw, 3.35rem) !important;
+  font-size: 3.35rem !important;
   line-height: 0.9 !important;
   text-shadow:
     0 1px 0 rgba(255, 255, 255, 0.76),
@@ -8236,54 +8175,52 @@ body {
   transform: translateY(-2pt) !important;
 }
 
-@media (max-width: 390px) {
-  .score-list,
-  .daily-result-grid {
-    gap: 8px !important;
-  }
+.score-list,
+.daily-result-grid {
+  gap: 8px !important;
+}
 
-  .daily-result-card {
-    grid-template-columns: 42px minmax(0, 1fr) 58px !important;
-    grid-template-rows: auto 31px !important;
-    gap: 6px !important;
-    min-height: 82px !important;
-    padding: 8px 7px !important;
-  }
+.daily-result-card {
+  grid-template-columns: 42px minmax(0, 1fr) 58px !important;
+  grid-template-rows: auto 31px !important;
+  gap: 6px !important;
+  min-height: 82px !important;
+  padding: 8px 7px !important;
+}
 
-  .daily-result-card .metric-label {
-    width: 40px !important;
-    height: 40px !important;
-    min-width: 40px !important;
-  }
+.daily-result-card .metric-label {
+  width: 40px !important;
+  height: 40px !important;
+  min-width: 40px !important;
+}
 
-  .daily-result-card .metric-label svg,
-  .daily-result-card .metric-label .metric-image-icon {
-    width: 25px !important;
-    height: 25px !important;
-  }
+.daily-result-card .metric-label svg,
+.daily-result-card .metric-label .metric-image-icon {
+  width: 25px !important;
+  height: 25px !important;
+}
 
-  .daily-result-card .daily-score-row::before {
-    font-size: 0.78rem !important;
-  }
+.daily-result-card .daily-score-row::before {
+  font-size: 0.78rem !important;
+}
 
-  .daily-result-card .daily-score-row > strong {
-    font-size: 2.2rem !important;
-  }
+.daily-result-card .daily-score-row > strong {
+  font-size: 2.2rem !important;
+}
 
-  .daily-result-card .daily-score-row > strong span {
-    font-size: 0.82rem !important;
-  }
+.daily-result-card .daily-score-row > strong span {
+  font-size: 0.82rem !important;
+}
 
-  .daily-result-card .daily-badge-stage {
-    min-width: 56px !important;
-    min-height: 38px !important;
-  }
+.daily-result-card .daily-badge-stage {
+  min-width: 56px !important;
+  min-height: 38px !important;
+}
 
-  .daily-result-card .daily-badge-mark {
-    width: 38px !important;
-    height: 38px !important;
-    min-width: 38px !important;
-  }
+.daily-result-card .daily-badge-mark {
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
 }
 
 /* Final authority: challenge tabs replace the heading inside the same slot. */
@@ -9625,7 +9562,7 @@ body .app .phone-shell {
 }
 
 body .app .app-title {
-  width: min(64vw, 285px) !important;
+  width: 285px !important;
   transform: rotate(-2deg);
 }
 
@@ -10055,9 +9992,9 @@ body .app .daily-result-card .target-remaining.complete::after {
 body .app .bottom-nav {
   box-sizing: border-box !important;
   grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
-  height: 64px !important;
-  min-height: 64px !important;
-  max-height: 64px !important;
+  height: 72px !important;
+  min-height: 72px !important;
+  max-height: 72px !important;
   overflow: hidden !important;
   contain: layout paint !important;
 }
@@ -10074,7 +10011,7 @@ body .app .bottom-nav button {
   align-content: center !important;
   gap: 0 !important;
   isolation: isolate !important;
-  transform: translateY(-3px) !important;
+  transform: translateY(0) !important;
 }
 
 body .app .bottom-nav button::before {
@@ -10139,7 +10076,7 @@ body .app .bottom-nav button.active .bottom-nav-icon {
 }
 
 body .app .bottom-nav button.active {
-  transform: translateY(-3px) !important;
+  transform: translateY(0) !important;
 }
 
 body .app .bottom-nav button.active span {
@@ -10160,10 +10097,15 @@ body .app {
 }
 
 body .app .bottom-nav {
-  height: 64px !important;
-  min-height: 64px !important;
-  max-height: 64px !important;
-  padding: 3px 5px 9px !important;
+  height: 72px !important;
+  min-height: 72px !important;
+  max-height: 72px !important;
+  padding: 5px 5px 13px !important;
+  border-bottom: 0 !important;
+  box-shadow:
+    0 0 0 3px var(--game-blue-dark, #0447a9),
+    inset 0 2px 0 rgba(255, 255, 255, 0.84),
+    inset 0 -2px 0 rgba(5, 47, 125, 0.18) !important;
   overflow: visible !important;
   isolation: isolate !important;
   z-index: 120 !important;
@@ -10223,7 +10165,7 @@ body .app .result-heading.with-tabs > p {
 /* Final polish: simplify the player pill and slightly shrink the logo. */
 body .app .app-title {
   transform: translateX(-6px) !important;
-  width: min(58vw, 224px) !important;
+  width: 224px !important;
 }
 
 body .app .active-player,
@@ -10510,7 +10452,7 @@ body .app .daily-result-card.best .metric-label .metric-image-icon {
 }
 
 body .app .daily-result-card .daily-score-row > strong {
-  font-size: clamp(2.08rem, 9.2vw, 2.72rem) !important;
+  font-size: 2.72rem !important;
   line-height: 0.82 !important;
   margin-top: 4px !important;
 }
@@ -10778,7 +10720,6 @@ body .app .badge-inline-section .badge-list-window {
 body .app .challenge-range-tabs,
 body .app .challenge-tabs,
 body .app .data-tabs,
-body .app .collection-mode-tabs,
 body .app .badge-filter-tabs,
 body .app .record-tabs,
 body .app .compare-tabs,
@@ -10796,7 +10737,6 @@ body .app .graph-range-tabs {
 body .app .challenge-range-tabs button,
 body .app .challenge-tabs button,
 body .app .data-tabs button,
-body .app .collection-mode-tabs button,
 body .app .badge-filter-tabs button,
 body .app .record-tabs button,
 body .app .compare-tabs button,
@@ -10812,7 +10752,6 @@ body .app .graph-range-tabs button {
 body .app .challenge-range-tabs button.selected,
 body .app .challenge-tabs button.selected,
 body .app .data-tabs button.selected,
-body .app .collection-mode-tabs button.selected,
 body .app .badge-filter-tabs button.selected,
 body .app .record-tabs button.selected,
 body .app .compare-tabs button.selected,
@@ -10840,7 +10779,7 @@ body .app .challenge-range-tabs button {
 
 body .app .challenge-range-tabs .challenge-tab-period {
   color: inherit !important;
-  font-size: clamp(0.78rem, 4vw, 1.04rem) !important;
+  font-size: 1.04rem !important;
   line-height: 0.95 !important;
   text-shadow: inherit !important;
 }
@@ -10943,7 +10882,7 @@ body .app .phone-shell .challenge-period-panel > .daily-result-grid > .daily-res
 
 body .app .phone-shell .home-score-input-grid .daily-result-card > .daily-score-row::before,
 body .app .phone-shell .challenge-period-panel > .daily-result-grid > .daily-result-card > .daily-score-row::before {
-  margin: -4px 0 1px !important;
+  margin: -4px 0 7px !important;
   font-size: 0.78rem !important;
   line-height: 0.95 !important;
 }
@@ -10954,7 +10893,7 @@ body .app .phone-shell .challenge-period-panel > .daily-result-grid > .daily-res
   max-width: 100% !important;
   overflow: visible !important;
   margin: 0 !important;
-  font-size: clamp(var(--score-font-min, 2.16rem), var(--score-font-mid, 9.45vw), var(--score-font-max, 2.82rem)) !important;
+  font-size: var(--score-font-max, 2.82rem) !important;
   line-height: 0.8 !important;
   transform: none !important;
   white-space: nowrap !important;
@@ -11003,7 +10942,7 @@ body .app .phone-shell .challenge-period-panel > .daily-result-grid > .daily-res
   position: absolute !important;
   top: auto !important;
   right: 30px !important;
-  bottom: 20px !important;
+  bottom: 24px !important;
   left: 30px !important;
   z-index: 2 !important;
   width: auto !important;
@@ -11241,7 +11180,7 @@ body .app .dialog {
 }
 
 body .app .dialog h2 {
-  margin: 0 !important;
+  margin: 8px 0 0 !important;
   color: var(--game-blue-deep) !important;
   font-size: 1.16rem !important;
   font-weight: 950 !important;
@@ -11380,7 +11319,7 @@ body .app .badge-point-card strong {
   align-self: start !important;
   display: block !important;
   color: var(--badge-count-blue, #0879f2) !important;
-  font-size: min(clamp(1.9rem, 8.6vw, 2.62rem), var(--badge-point-font-size, 2.62rem)) !important;
+  font-size: min(2.36rem, var(--badge-point-font-size, 2.36rem)) !important;
   line-height: 0.88 !important;
   white-space: nowrap !important;
   text-shadow:
@@ -11392,7 +11331,7 @@ body .app .badge-point-card strong {
 }
 
 body .app .badge-point-card strong small {
-  font-size: 0.5rem !important;
+  font-size: 0.62rem !important;
   font-weight: 950 !important;
   line-height: 1 !important;
   margin-left: 2px !important;
@@ -11505,6 +11444,47 @@ body .app .badge-reward-input-field input {
     0 -1px rgba(255, 255, 255, 0.72) !important;
 }
 
+body .app .badge-goal-field .edit-pencil-icon,
+body .app .badge-reward-input-field .edit-pencil-icon {
+  position: absolute !important;
+  z-index: 2 !important;
+  display: block !important;
+  width: 9px !important;
+  height: 2.5px !important;
+  border-radius: 999px !important;
+  background: var(--game-blue-deep, #052b75) !important;
+  box-shadow:
+    1px 0 rgba(255, 255, 255, 0.74),
+    -1px 0 rgba(255, 255, 255, 0.74),
+    0 1px rgba(255, 255, 255, 0.74),
+    0 -1px rgba(255, 255, 255, 0.74) !important;
+  pointer-events: none !important;
+  transform: rotate(-35deg) !important;
+}
+
+body .app .badge-goal-field .edit-pencil-icon::after,
+body .app .badge-reward-input-field .edit-pencil-icon::after {
+  position: absolute !important;
+  top: 0 !important;
+  right: -3px !important;
+  width: 0 !important;
+  height: 0 !important;
+  border-top: 1.25px solid transparent !important;
+  border-bottom: 1.25px solid transparent !important;
+  border-left: 3px solid #e73546 !important;
+  content: "" !important;
+}
+
+body .app .badge-goal-field .edit-pencil-icon {
+  top: 8px !important;
+  left: 82px !important;
+}
+
+body .app .badge-reward-input-field .edit-pencil-icon {
+  top: 18px !important;
+  right: -2px !important;
+}
+
 body .app .badge-reward-input-field::after {
   display: none !important;
   content: none !important;
@@ -11595,7 +11575,7 @@ body .app .badge-goal-field em {
   justify-self: start !important;
   align-self: center !important;
   color: var(--game-blue-deep, #052b75) !important;
-  font-size: 0.42rem !important;
+  font-size: 0.5rem !important;
   font-style: normal !important;
   font-weight: 950 !important;
   line-height: 1 !important;
