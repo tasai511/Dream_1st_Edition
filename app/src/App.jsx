@@ -3871,6 +3871,8 @@ function BadgeCollectionView({ allForName, activeDate = todayISO(), db = default
   const rewardGoalInput = String(db?.badgeRewardGoal || "");
   const rewardTextInput = String(db?.badgeRewardText || "");
   const rewardGoal = Math.max(0, Math.trunc(Number(rewardGoalInput) || 0));
+  const rewardGoalFontSize = clamp(16 - Math.max(0, rewardGoalInput.length - 4) * 1.35, 10.5, 16);
+  const rewardTextFontSize = clamp(16 - Math.max(0, rewardTextInput.length - 12) * 0.72, 8.8, 16);
   const updateBadgeReward = (patch) => {
     if (!setDb) return;
     setDb({ ...db, ...patch });
@@ -3928,29 +3930,31 @@ function BadgeCollectionView({ allForName, activeDate = todayISO(), db = default
           <span className="badge-point-meta"><b>{earnedInstanceTotal.toLocaleString("ja-JP")}</b>個</span>
           <span className="badge-point-meta badge-period-label">{activeWindow.label}</span>
         </div>
-        <div className="badge-point-meters" aria-label="次に狙うバッジ">
-          <ProgressMeter kind="badge-points" value={badgePointTotal} range={RANGE_TOTAL} targets={badgePointTargets} showBadgeIcon={false} customGoal={rewardGoal || null} />
-        </div>
-        <div className="badge-reward-fields">
-          <label className="badge-reward-field">
+        <div className="badge-point-side">
+          <label className="badge-goal-field">
             <span>目標</span>
             <input
               type="number"
               inputMode="numeric"
               min="0"
               value={rewardGoalInput}
+              style={{ "--reward-input-font-size": `${rewardGoalFontSize}px` }}
               onChange={(event) => updateBadgeReward({ badgeRewardGoal: event.target.value.replace(/[^\d]/g, "") })}
               placeholder="0"
             />
             <em>pt</em>
           </label>
-          <label className="badge-reward-field">
+          <div className="badge-point-meters" aria-label="次に狙うバッジ">
+            <ProgressMeter kind="badge-points" value={badgePointTotal} range={RANGE_TOTAL} targets={badgePointTargets} showBadgeIcon={false} customGoal={rewardGoal || null} />
+          </div>
+          <label className="badge-reward-input-field">
             <span>ごほうび</span>
             <input
               type="text"
               value={rewardTextInput}
+              style={{ "--reward-input-font-size": `${rewardTextFontSize}px` }}
               onChange={(event) => updateBadgeReward({ badgeRewardText: event.target.value })}
-              placeholder="入力"
+              placeholder=""
             />
           </label>
         </div>

@@ -10055,9 +10055,9 @@ body .app .daily-result-card .target-remaining.complete::after {
 body .app .bottom-nav {
   box-sizing: border-box !important;
   grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
-  height: 58px !important;
-  min-height: 58px !important;
-  max-height: 58px !important;
+  height: 64px !important;
+  min-height: 64px !important;
+  max-height: 64px !important;
   overflow: hidden !important;
   contain: layout paint !important;
 }
@@ -10069,11 +10069,12 @@ body .app .bottom-nav button {
   height: 47px !important;
   min-height: 47px !important;
   max-height: 47px !important;
-  padding: 3px 1px 2px !important;
+  padding: 2px 1px 2px !important;
   overflow: hidden !important;
-  align-content: end !important;
+  align-content: center !important;
   gap: 0 !important;
   isolation: isolate !important;
+  transform: translateY(-3px) !important;
 }
 
 body .app .bottom-nav button::before {
@@ -10137,6 +10138,10 @@ body .app .bottom-nav button.active .bottom-nav-icon {
   transform: translateY(-1px) scale(1.03) !important;
 }
 
+body .app .bottom-nav button.active {
+  transform: translateY(-3px) !important;
+}
+
 body .app .bottom-nav button.active span {
   color: #ffffff !important;
   text-shadow:
@@ -10155,10 +10160,10 @@ body .app {
 }
 
 body .app .bottom-nav {
-  height: 58px !important;
-  min-height: 58px !important;
-  max-height: 58px !important;
-  padding-bottom: 4px !important;
+  height: 64px !important;
+  min-height: 64px !important;
+  max-height: 64px !important;
+  padding: 3px 5px 9px !important;
   overflow: visible !important;
   isolation: isolate !important;
   z-index: 120 !important;
@@ -10364,14 +10369,27 @@ body .app .home-score-input-grid .home-input-panel .swing-form input {
 body .app .home-score-input-grid .home-input-panel .swing-form input {
   border: 0 !important;
   border-radius: 0 !important;
+  appearance: textfield !important;
+  -webkit-appearance: none !important;
+  display: block !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
   color: #12243a !important;
   background: transparent !important;
   box-shadow: none !important;
   font-size: 0.92rem !important;
   font-weight: 950 !important;
+  line-height: 29px !important;
   padding: 0 18px 0 4px !important;
   text-align: right !important;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.72) !important;
+}
+
+body .app .home-score-input-grid .home-input-panel .swing-form input[type="number"]::-webkit-outer-spin-button,
+body .app .home-score-input-grid .home-input-panel .swing-form input[type="number"]::-webkit-inner-spin-button {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  margin: 0 !important;
 }
 
 body .app .home-score-input-grid .home-input-panel .paper-input-cell {
@@ -11038,11 +11056,13 @@ body .app .phone-shell .home-score-input-grid .home-input-panel .form-pen-icon {
 body .app .daily-result-card .milestone-dot {
   width: var(--milestone-dot-size-px, clamp(15px, calc(28px * var(--milestone-dot-scale, 1)), 32px)) !important;
   height: var(--milestone-dot-size-px, clamp(15px, calc(28px * var(--milestone-dot-scale, 1)), 32px)) !important;
+  --milestone-dot-border-width: clamp(3px, calc(4px * var(--milestone-dot-scale, 1)), 4.6px);
+  position: absolute !important;
   border: clamp(3px, calc(4px * var(--milestone-dot-scale, 1)), 4.6px) solid transparent !important;
   outline: none !important;
   -webkit-tap-highlight-color: transparent !important;
   background:
-    radial-gradient(circle at 32% 22%, rgba(255, 255, 255, 0.98) 0 13%, transparent 28%) padding-box,
+    radial-gradient(circle at 32% 22%, rgba(255, 255, 255, 0.96) 0 9%, transparent 22%) padding-box,
     radial-gradient(circle, color-mix(in srgb, var(--score-color), white 25%), var(--score-dark)) padding-box,
     linear-gradient(
       90deg,
@@ -11081,10 +11101,20 @@ body .app .daily-result-card .milestone-dot {
   transform: translateY(-50%) !important;
 }
 
+body .app .daily-result-card .milestone-dot::before {
+  position: absolute !important;
+  inset: 0 !important;
+  border: 1.5px solid #ffffff !important;
+  border-radius: inherit !important;
+  box-shadow: none !important;
+  content: "" !important;
+  pointer-events: none !important;
+}
+
 body .app .daily-result-card .milestone-dot.locked {
   opacity: 0.72 !important;
   background:
-    radial-gradient(circle at 32% 22%, rgba(255, 255, 255, 0.82) 0 13%, transparent 28%) padding-box,
+    radial-gradient(circle at 32% 22%, rgba(255, 255, 255, 0.78) 0 9%, transparent 22%) padding-box,
     radial-gradient(circle, #d6dce5, #8f9aaa) padding-box,
     linear-gradient(
       90deg,
@@ -11321,9 +11351,11 @@ body .app .badge-collection-heading-row.collection-heading-row {
 
 body .app .badge-point-card {
   display: grid !important;
-  grid-template-columns: minmax(0, 1fr) 92px !important;
+  grid-template-columns: minmax(0, 1fr) 104px !important;
+  grid-template-areas:
+    "main side" !important;
   align-items: center !important;
-  gap: 10px 14px !important;
+  gap: 3px 14px !important;
   padding: 12px 14px !important;
   --surface-color: #0879f2 !important;
   --surface-dark: #053b98 !important;
@@ -11335,8 +11367,7 @@ body .app .badge-point-main {
   grid-template-columns: minmax(0, 1fr) !important;
   align-items: start !important;
   gap: 3px !important;
-  grid-column: 1 !important;
-  grid-row: 1 !important;
+  grid-area: main !important;
 }
 
 body .app .badge-point-main > p,
@@ -11376,67 +11407,196 @@ body .app .badge-point-card .badge-point-meta b {
 }
 
 body .app .badge-point-meters {
-  grid-column: 2 !important;
-  grid-row: 1 !important;
-  min-width: 92px !important;
+  min-width: 104px !important;
   display: grid !important;
+  justify-self: center !important;
+  align-self: center !important;
   place-items: center !important;
+  margin-top: -2px !important;
 }
 
-body .app .badge-reward-fields {
-  grid-column: 1 / -1 !important;
+body .app .badge-point-side {
+  grid-area: side !important;
   display: grid !important;
-  grid-template-columns: minmax(0, 0.74fr) minmax(0, 1fr) !important;
-  gap: 7px !important;
+  grid-template-columns: 104px !important;
+  justify-items: center !important;
   align-items: center !important;
-  margin-top: 2px !important;
+  align-content: center !important;
+  gap: 2px !important;
+  width: 104px !important;
+  min-width: 104px !important;
+  text-align: center !important;
+  transform: translate(-14px, -7px) !important;
 }
 
-body .app .badge-reward-field {
+body .app .badge-reward-input-field {
+  position: relative !important;
   display: grid !important;
-  grid-template-columns: auto minmax(0, 1fr) auto !important;
-  align-items: center !important;
-  gap: 5px !important;
-  min-width: 0 !important;
-  border: 2px solid color-mix(in srgb, var(--game-blue-deep) 22%, #ffffff) !important;
-  border-radius: 999px !important;
-  padding: 3px 7px !important;
-  background: rgba(255, 255, 255, 0.82) !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  justify-items: center !important;
+  justify-self: center !important;
+  gap: 1px !important;
+  width: 144px !important;
+  max-width: 144px !important;
+  margin: -4px 0 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  text-align: center !important;
+  transform: translateX(-10px) !important;
 }
 
-body .app .badge-reward-field span {
+body .app .badge-reward-input-field span {
   display: block !important;
+  justify-self: center !important;
+  width: 144px !important;
+  color: var(--game-blue-deep, #052b75) !important;
+  font-size: 0.72rem !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+  text-shadow:
+    1px 0 rgba(255, 255, 255, 0.78),
+    -1px 0 rgba(255, 255, 255, 0.78),
+    0 1px rgba(255, 255, 255, 0.78),
+    0 -1px rgba(255, 255, 255, 0.78) !important;
+}
+
+body .app .badge-reward-input-field input {
+  width: min(144px, 100%) !important;
+  min-width: 0 !important;
+  height: 1.08em !important;
+  overflow: hidden !important;
+  border: 0 !important;
+  border-bottom: 1.5px solid color-mix(in srgb, var(--game-blue-deep) 34%, #ffffff) !important;
+  border-radius: 0 !important;
+  outline: none !important;
+  color: #e73546 !important;
+  -webkit-text-fill-color: #e73546 !important;
+  background: transparent !important;
+  font-size: var(--reward-input-font-size, 16px) !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  text-align: center !important;
+  text-overflow: clip !important;
+  caret-color: var(--game-blue-deep, #052b75) !important;
+  text-shadow:
+    1px 0 rgba(255, 255, 255, 0.72),
+    -1px 0 rgba(255, 255, 255, 0.72),
+    0 1px rgba(255, 255, 255, 0.72),
+    0 -1px rgba(255, 255, 255, 0.72) !important;
+}
+
+body .app .badge-reward-input-field::after {
+  display: none !important;
+  content: none !important;
+}
+
+body .app .badge-reward-input-field input:focus {
+  border-bottom-color: color-mix(in srgb, var(--game-blue-deep) 48%, #ffffff) !important;
+  -webkit-text-fill-color: #e73546 !important;
+}
+
+body .app .badge-goal-field {
+  position: relative !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) !important;
+  align-items: baseline !important;
+  justify-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  width: 104px !important;
+  max-width: 104px !important;
+  min-width: 0 !important;
+  justify-self: center !important;
+  text-align: center !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+body .app .badge-goal-field::after {
+  display: none !important;
+  content: none !important;
+}
+
+body .app .badge-goal-field span {
+  display: block !important;
+  justify-self: end !important;
   color: var(--game-blue-deep, #052b75) !important;
   font-size: 0.68rem !important;
   font-weight: 950 !important;
-  line-height: 1 !important;
+  line-height: 0.92 !important;
   white-space: nowrap !important;
 }
 
-body .app .badge-reward-field input {
-  width: 100% !important;
+body .app .badge-goal-field input {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  width: min(58px, 15vw) !important;
   min-width: 0 !important;
-  height: 25px !important;
+  justify-self: center !important;
+  height: 1.08em !important;
+  overflow: hidden !important;
   border: 0 !important;
+  border-bottom: 1.5px solid color-mix(in srgb, var(--game-blue-deep) 34%, #ffffff) !important;
+  border-radius: 0 !important;
   outline: none !important;
-  color: var(--game-blue-deep, #052b75) !important;
+  color: #e73546 !important;
+  -webkit-text-fill-color: #e73546 !important;
   background: transparent !important;
-  font-size: 16px !important;
+  font-size: var(--reward-input-font-size, 16px) !important;
   font-weight: 950 !important;
   line-height: 1 !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  text-align: center !important;
+  text-overflow: clip !important;
+  caret-color: var(--game-blue-deep, #052b75) !important;
+  text-shadow:
+    1px 0 rgba(255, 255, 255, 0.72),
+    -1px 0 rgba(255, 255, 255, 0.72),
+    0 1px rgba(255, 255, 255, 0.72),
+    0 -1px rgba(255, 255, 255, 0.72) !important;
 }
 
-body .app .badge-reward-field input::placeholder {
-  color: rgba(5, 43, 117, 0.42) !important;
-}
-
-body .app .badge-reward-field em {
+body .app .badge-goal-field em {
+  justify-self: start !important;
+  align-self: end !important;
   color: var(--game-blue-deep, #052b75) !important;
   font-size: 0.62rem !important;
   font-style: normal !important;
   font-weight: 950 !important;
   line-height: 1 !important;
+}
+
+body .app .badge-goal-field input:focus {
+  border-bottom-color: color-mix(in srgb, var(--game-blue-deep) 48%, #ffffff) !important;
+  -webkit-text-fill-color: #e73546 !important;
+}
+
+body .app .badge-goal-field input[type="number"] {
+  appearance: textfield !important;
+  -webkit-appearance: none !important;
+}
+
+body .app .badge-goal-field input[type="number"]::-webkit-outer-spin-button,
+body .app .badge-goal-field input[type="number"]::-webkit-inner-spin-button {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  margin: 0 !important;
+}
+
+body .app .badge-goal-field input::placeholder {
+  color: color-mix(in srgb, #e73546 55%, #ffffff) !important;
+  -webkit-text-fill-color: color-mix(in srgb, #e73546 55%, #ffffff) !important;
 }
 
 body .app .badge-point-meters .progress-meter {
