@@ -11444,7 +11444,7 @@ body .app .badge-reward-input-field {
   background: transparent !important;
   box-shadow: none !important;
   text-align: center !important;
-  transform: translateX(-10px) !important;
+  transform: translateX(-18px) !important;
 }
 
 body .app .badge-reward-input-field span {
@@ -11504,11 +11504,12 @@ body .app .badge-reward-input-field input:focus {
 body .app .badge-goal-field {
   position: relative !important;
   display: grid !important;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) !important;
-  align-items: baseline !important;
+  grid-template-columns: max-content 42px max-content !important;
+  align-items: center !important;
   justify-items: center !important;
   justify-content: center !important;
-  gap: 4px !important;
+  column-gap: 3px !important;
+  row-gap: 0 !important;
   width: 104px !important;
   max-width: 104px !important;
   min-width: 0 !important;
@@ -11540,7 +11541,7 @@ body .app .badge-goal-field span {
 body .app .badge-goal-field input {
   grid-column: 2 !important;
   grid-row: 1 !important;
-  width: min(58px, 15vw) !important;
+  width: 42px !important;
   min-width: 0 !important;
   justify-self: center !important;
   height: 1.08em !important;
@@ -11569,12 +11570,13 @@ body .app .badge-goal-field input {
 
 body .app .badge-goal-field em {
   justify-self: start !important;
-  align-self: end !important;
+  align-self: center !important;
   color: var(--game-blue-deep, #052b75) !important;
   font-size: 0.62rem !important;
   font-style: normal !important;
   font-weight: 950 !important;
   line-height: 1 !important;
+  transform: translateY(-0.5px) !important;
 }
 
 body .app .badge-goal-field input:focus {
