@@ -11413,8 +11413,9 @@ body .app .badge-reward-input-field span {
 }
 
 body .app .badge-reward-input-field input {
-  width: min(144px, 100%) !important;
+  width: min(126px, 100%) !important;
   min-width: 0 !important;
+  justify-self: end !important;
   height: 1.52em !important;
   min-height: 0 !important;
   max-height: 1.52em !important;
@@ -11449,21 +11450,21 @@ body .app .badge-reward-input-field .edit-pencil-icon {
   position: absolute !important;
   z-index: 2 !important;
   display: block !important;
-  width: 13px !important;
-  height: 13px !important;
+  width: 12px !important;
+  height: 12px !important;
   object-fit: contain !important;
   filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.72)) drop-shadow(0 1px 1px rgba(5, 47, 125, 0.24)) !important;
   pointer-events: none !important;
 }
 
 body .app .badge-goal-field .edit-pencil-icon {
-  top: 5px !important;
-  left: 83px !important;
+  top: 9px !important;
+  left: 31px !important;
 }
 
 body .app .badge-reward-input-field .edit-pencil-icon {
-  top: 15px !important;
-  right: -4px !important;
+  top: 23px !important;
+  left: 0 !important;
 }
 
 body .app .badge-reward-input-field::after {
@@ -11479,14 +11480,14 @@ body .app .badge-reward-input-field input:focus {
 body .app .badge-goal-field {
   position: relative !important;
   display: grid !important;
-  grid-template-columns: max-content 56px max-content !important;
+  grid-template-columns: max-content 12px 56px max-content !important;
   align-items: center !important;
   justify-items: center !important;
   justify-content: center !important;
   column-gap: 5px !important;
   row-gap: 0 !important;
-  width: 122px !important;
-  max-width: 122px !important;
+  width: 136px !important;
+  max-width: 136px !important;
   min-width: 0 !important;
   justify-self: center !important;
   text-align: center !important;
@@ -11517,7 +11518,7 @@ body .app .badge-goal-field span {
 }
 
 body .app .badge-goal-field input {
-  grid-column: 2 !important;
+  grid-column: 3 !important;
   grid-row: 1 !important;
   width: 56px !important;
   min-width: 0 !important;
@@ -11553,6 +11554,7 @@ body .app .badge-goal-field input {
 }
 
 body .app .badge-goal-field em {
+  grid-column: 4 !important;
   justify-self: start !important;
   align-self: center !important;
   color: var(--game-blue-deep, #052b75) !important;

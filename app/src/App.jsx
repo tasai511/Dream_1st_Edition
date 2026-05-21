@@ -56,7 +56,7 @@ function cssImageUrl(assetUrl) {
 const NEW_UI_ASSETS = {
   logo: `${PUBLIC_ASSET_BASE}images/logo.png`,
   background: `${PUBLIC_ASSET_BASE}images/field-bg.jpg`,
-  pen: `${PUBLIC_ASSET_BASE}images/pen.png`,
+  pen: `${PUBLIC_ASSET_BASE}images/pen.svg`,
   bat: `${PUBLIC_ASSET_BASE}images/bat.svg`,
   days: `${PUBLIC_ASSET_BASE}images/calendar.svg`,
   count: `${PUBLIC_ASSET_BASE}images/count.svg`,
