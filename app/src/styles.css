@@ -11356,7 +11356,7 @@ body .app .badge-point-card {
     "main side" !important;
   align-items: center !important;
   gap: 3px 14px !important;
-  padding: 12px 14px !important;
+  padding: 12px 14px 7px !important;
   --surface-color: #0879f2 !important;
   --surface-dark: #053b98 !important;
 }
@@ -11380,14 +11380,22 @@ body .app .badge-point-card strong {
   align-self: start !important;
   display: block !important;
   color: var(--badge-count-blue, #0879f2) !important;
-  font-size: clamp(2.25rem, 10.5vw, 3.18rem) !important;
+  font-size: min(clamp(1.9rem, 8.6vw, 2.62rem), var(--badge-point-font-size, 2.62rem)) !important;
   line-height: 0.88 !important;
+  white-space: nowrap !important;
   text-shadow:
     2px 0 #ffffff,
     -2px 0 #ffffff,
     0 2px #ffffff,
     0 -2px #ffffff,
     0 4px 0 rgba(5, 45, 120, 0.28) !important;
+}
+
+body .app .badge-point-card strong small {
+  font-size: 0.5rem !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  margin-left: 2px !important;
 }
 
 body .app .badge-point-card span {
@@ -11412,7 +11420,8 @@ body .app .badge-point-meters {
   justify-self: center !important;
   align-self: center !important;
   place-items: center !important;
-  margin-top: -2px !important;
+  margin-top: 2px !important;
+  transform: translateX(4px) !important;
 }
 
 body .app .badge-point-side {
@@ -11444,7 +11453,7 @@ body .app .badge-reward-input-field {
   background: transparent !important;
   box-shadow: none !important;
   text-align: center !important;
-  transform: translateX(-18px) !important;
+  transform: translateX(-8px) !important;
 }
 
 body .app .badge-reward-input-field span {
@@ -11467,9 +11476,9 @@ body .app .badge-reward-input-field span {
 body .app .badge-reward-input-field input {
   width: min(144px, 100%) !important;
   min-width: 0 !important;
-  height: 1em !important;
+  height: 1.52em !important;
   min-height: 0 !important;
-  max-height: 1em !important;
+  max-height: 1.52em !important;
   overflow: hidden !important;
   border: 0 !important;
   border-bottom: 0 !important;
@@ -11480,7 +11489,7 @@ body .app .badge-reward-input-field input {
   --reward-underline-color: color-mix(in srgb, var(--game-blue-deep) 34%, #ffffff);
   background:
     linear-gradient(var(--reward-underline-color), var(--reward-underline-color))
-    center calc(50% + 0.43em) / 100% 1.5px no-repeat transparent !important;
+    center calc(100% - 1px) / 100% 1.5px no-repeat transparent !important;
   font-size: var(--reward-input-font-size, 16px) !important;
   font-weight: 950 !important;
   line-height: 1 !important;
@@ -11509,14 +11518,14 @@ body .app .badge-reward-input-field input:focus {
 body .app .badge-goal-field {
   position: relative !important;
   display: grid !important;
-  grid-template-columns: max-content 42px max-content !important;
+  grid-template-columns: max-content 56px max-content !important;
   align-items: center !important;
   justify-items: center !important;
   justify-content: center !important;
-  column-gap: 3px !important;
+  column-gap: 5px !important;
   row-gap: 0 !important;
-  width: 104px !important;
-  max-width: 104px !important;
+  width: 122px !important;
+  max-width: 122px !important;
   min-width: 0 !important;
   justify-self: center !important;
   text-align: center !important;
@@ -11526,6 +11535,7 @@ body .app .badge-goal-field {
   padding: 0 !important;
   background: transparent !important;
   box-shadow: none !important;
+  transform: translateX(-4px) !important;
 }
 
 body .app .badge-goal-field::after {
@@ -11536,22 +11546,24 @@ body .app .badge-goal-field::after {
 body .app .badge-goal-field span {
   display: block !important;
   justify-self: end !important;
+  align-self: center !important;
   color: var(--game-blue-deep, #052b75) !important;
   font-size: 0.68rem !important;
   font-weight: 950 !important;
   line-height: 0.92 !important;
   white-space: nowrap !important;
+  transform: translateY(0.5px) !important;
 }
 
 body .app .badge-goal-field input {
   grid-column: 2 !important;
   grid-row: 1 !important;
-  width: 42px !important;
+  width: 56px !important;
   min-width: 0 !important;
   justify-self: center !important;
-  height: 1em !important;
+  height: 1.52em !important;
   min-height: 0 !important;
-  max-height: 1em !important;
+  max-height: 1.52em !important;
   overflow: hidden !important;
   border: 0 !important;
   border-bottom: 0 !important;
@@ -11562,7 +11574,7 @@ body .app .badge-goal-field input {
   --reward-underline-color: color-mix(in srgb, var(--game-blue-deep) 34%, #ffffff);
   background:
     linear-gradient(var(--reward-underline-color), var(--reward-underline-color))
-    center calc(50% + 0.43em) / 100% 1.5px no-repeat transparent !important;
+    center calc(100% - 1px) / 100% 1.5px no-repeat transparent !important;
   font-size: var(--reward-input-font-size, 16px) !important;
   font-weight: 950 !important;
   line-height: 1 !important;
@@ -11576,17 +11588,18 @@ body .app .badge-goal-field input {
     -1px 0 rgba(255, 255, 255, 0.72),
     0 1px rgba(255, 255, 255, 0.72),
     0 -1px rgba(255, 255, 255, 0.72) !important;
+  transform: translateY(2px) !important;
 }
 
 body .app .badge-goal-field em {
   justify-self: start !important;
   align-self: center !important;
   color: var(--game-blue-deep, #052b75) !important;
-  font-size: 0.62rem !important;
+  font-size: 0.42rem !important;
   font-style: normal !important;
   font-weight: 950 !important;
   line-height: 1 !important;
-  transform: translateY(-0.5px) !important;
+  transform: translateY(4px) !important;
 }
 
 body .app .badge-goal-field input:focus {

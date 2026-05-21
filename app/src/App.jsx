@@ -3871,8 +3871,10 @@ function BadgeCollectionView({ allForName, activeDate = todayISO(), db = default
   const rewardGoalInput = String(db?.badgeRewardGoal || "");
   const rewardTextInput = String(db?.badgeRewardText || "");
   const rewardGoal = Math.max(0, Math.trunc(Number(rewardGoalInput) || 0));
-  const rewardGoalFontSize = clamp(16 - Math.max(0, rewardGoalInput.length - 4) * 1.35, 10.5, 16);
-  const rewardTextFontSize = clamp(16 - Math.max(0, rewardTextInput.length - 12) * 0.72, 8.8, 16);
+  const badgePointFontSize = clamp(2.62 - Math.max(0, String(badgePointTotal).length - 4) * 0.42, 1.72, 2.62);
+  const rewardGoalFontSize = clamp(16 - Math.max(0, rewardGoalInput.length - 5) * 1.6, 8.5, 16);
+  const rewardTextUnits = [...rewardTextInput].reduce((sum, char) => sum + (char.charCodeAt(0) <= 0x7f ? 0.58 : 1), 0);
+  const rewardTextFontSize = clamp(Math.min(16, 132 / Math.max(1, rewardTextUnits)), 5.2, 16);
   const updateBadgeReward = (patch) => {
     if (!setDb) return;
     setDb({ ...db, ...patch });
@@ -3925,7 +3927,7 @@ function BadgeCollectionView({ allForName, activeDate = todayISO(), db = default
       <div className="badge-point-card">
         <div className="badge-point-main">
           <p>バッジポイント</p>
-          <strong>{badgePointTotal.toLocaleString("ja-JP")}</strong>
+          <strong style={{ "--badge-point-font-size": `${badgePointFontSize}rem` }}>{badgePointTotal.toLocaleString("ja-JP")}<small>ポイント</small></strong>
           <span className="badge-point-meta"><b>{earnedTotal}</b>/{definitions.length} 種類</span>
           <span className="badge-point-meta"><b>{earnedInstanceTotal.toLocaleString("ja-JP")}</b>個</span>
           <span className="badge-point-meta badge-period-label">{activeWindow.label}</span>
@@ -3942,7 +3944,7 @@ function BadgeCollectionView({ allForName, activeDate = todayISO(), db = default
               onChange={(event) => updateBadgeReward({ badgeRewardGoal: event.target.value.replace(/[^\d]/g, "") })}
               placeholder="0"
             />
-            <em>pt</em>
+            <em>ポイント</em>
           </label>
           <div className="badge-point-meters" aria-label="次に狙うバッジ">
             <ProgressMeter kind="badge-points" value={badgePointTotal} range={RANGE_TOTAL} targets={badgePointTargets} showBadgeIcon={false} customGoal={rewardGoal || null} />
