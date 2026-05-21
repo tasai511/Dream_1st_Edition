@@ -11449,40 +11449,21 @@ body .app .badge-reward-input-field .edit-pencil-icon {
   position: absolute !important;
   z-index: 2 !important;
   display: block !important;
-  width: 9px !important;
-  height: 2.5px !important;
-  border-radius: 999px !important;
-  background: var(--game-blue-deep, #052b75) !important;
-  box-shadow:
-    1px 0 rgba(255, 255, 255, 0.74),
-    -1px 0 rgba(255, 255, 255, 0.74),
-    0 1px rgba(255, 255, 255, 0.74),
-    0 -1px rgba(255, 255, 255, 0.74) !important;
+  width: 13px !important;
+  height: 13px !important;
+  object-fit: contain !important;
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.72)) drop-shadow(0 1px 1px rgba(5, 47, 125, 0.24)) !important;
   pointer-events: none !important;
-  transform: rotate(-35deg) !important;
-}
-
-body .app .badge-goal-field .edit-pencil-icon::after,
-body .app .badge-reward-input-field .edit-pencil-icon::after {
-  position: absolute !important;
-  top: 0 !important;
-  right: -3px !important;
-  width: 0 !important;
-  height: 0 !important;
-  border-top: 1.25px solid transparent !important;
-  border-bottom: 1.25px solid transparent !important;
-  border-left: 3px solid #e73546 !important;
-  content: "" !important;
 }
 
 body .app .badge-goal-field .edit-pencil-icon {
-  top: 8px !important;
-  left: 82px !important;
+  top: 5px !important;
+  left: 83px !important;
 }
 
 body .app .badge-reward-input-field .edit-pencil-icon {
-  top: 18px !important;
-  right: -2px !important;
+  top: 15px !important;
+  right: -4px !important;
 }
 
 body .app .badge-reward-input-field::after {

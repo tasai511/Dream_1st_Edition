@@ -3893,7 +3893,7 @@ function BadgeCollectionView({ allForName, activeDate = todayISO(), db = default
               onChange={(event) => updateBadgeReward({ badgeRewardGoal: event.target.value.replace(/[^\d]/g, "") })}
               placeholder="0"
             />
-            <i className="edit-pencil-icon" aria-hidden="true" />
+            <img className="edit-pencil-icon" src={NEW_UI_ASSETS.pen} alt="" aria-hidden="true" />
             <em>ポイント</em>
           </label>
           <div className="badge-point-meters" aria-label="次に狙うバッジ">
@@ -3908,7 +3908,7 @@ function BadgeCollectionView({ allForName, activeDate = todayISO(), db = default
               onChange={(event) => updateBadgeReward({ badgeRewardText: event.target.value })}
               placeholder=""
             />
-            <i className="edit-pencil-icon" aria-hidden="true" />
+            <img className="edit-pencil-icon" src={NEW_UI_ASSETS.pen} alt="" aria-hidden="true" />
           </label>
         </div>
       </div>
