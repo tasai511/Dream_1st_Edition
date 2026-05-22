@@ -11452,8 +11452,8 @@ body .app .badge-reward-input-field input {
   border-bottom: 0 !important;
   border-radius: 0 !important;
   outline: none !important;
-  color: #1c9a58 !important;
-  -webkit-text-fill-color: #1c9a58 !important;
+  color: #e73546 !important;
+  -webkit-text-fill-color: #e73546 !important;
   --reward-underline-color: color-mix(in srgb, var(--game-blue-deep) 34%, #ffffff);
   background:
     linear-gradient(var(--reward-underline-color), var(--reward-underline-color))
@@ -11497,22 +11497,23 @@ body .app .badge-reward-input-field .edit-pencil-icon {
 
 body .app .badge-reward-input-field .badge-reward-get-stamp {
   position: absolute !important;
-  top: 17px !important;
-  right: 0 !important;
+  top: 10px !important;
+  right: auto !important;
+  left: 18px !important;
   z-index: 3 !important;
   display: grid !important;
   place-items: center !important;
-  width: 42px !important;
-  height: 24px !important;
+  width: 34px !important;
+  height: 19px !important;
   margin: 0 !important;
-  border: 1.5px solid #ff3044 !important;
+  border: 1.25px solid #f28a08 !important;
   border-radius: 5px !important;
-  color: #ff3044 !important;
-  background: rgba(255, 48, 68, 0.08) !important;
+  color: #f28a08 !important;
+  background: rgba(242, 138, 8, 0.12) !important;
   box-shadow:
-    inset 0 0 0 1px rgba(255, 48, 68, 0.18),
+    inset 0 0 0 1px rgba(242, 138, 8, 0.18),
     0 4px 8px rgba(5, 47, 125, 0.16) !important;
-  font-size: 0.68rem !important;
+  font-size: 0.54rem !important;
   font-weight: 950 !important;
   letter-spacing: 0 !important;
   line-height: 1 !important;
@@ -11521,7 +11522,7 @@ body .app .badge-reward-input-field .badge-reward-get-stamp {
     -1px 0 rgba(255, 255, 255, 0.68),
     0 1px rgba(255, 255, 255, 0.68),
     0 -1px rgba(255, 255, 255, 0.68) !important;
-  transform: rotate(-11deg) !important;
+  transform: rotate(-17deg) !important;
   pointer-events: none !important;
   animation: get-stamp-pop 360ms cubic-bezier(0.18, 0.92, 0.28, 1.18) both !important;
 }
@@ -11533,7 +11534,7 @@ body .app .badge-reward-input-field::after {
 
 body .app .badge-reward-input-field input:focus {
   --reward-underline-color: color-mix(in srgb, var(--game-blue-deep) 48%, #ffffff);
-  -webkit-text-fill-color: #1c9a58 !important;
+  -webkit-text-fill-color: #e73546 !important;
 }
 
 body .app .badge-goal-field {
@@ -11590,8 +11591,8 @@ body .app .badge-goal-field input {
   border-bottom: 0 !important;
   border-radius: 0 !important;
   outline: none !important;
-  color: #1c9a58 !important;
-  -webkit-text-fill-color: #1c9a58 !important;
+  color: #e73546 !important;
+  -webkit-text-fill-color: #e73546 !important;
   --reward-underline-color: color-mix(in srgb, var(--game-blue-deep) 34%, #ffffff);
   background:
     linear-gradient(var(--reward-underline-color), var(--reward-underline-color))
@@ -11626,7 +11627,7 @@ body .app .badge-goal-field em {
 
 body .app .badge-goal-field input:focus {
   --reward-underline-color: color-mix(in srgb, var(--game-blue-deep) 48%, #ffffff);
-  -webkit-text-fill-color: #1c9a58 !important;
+  -webkit-text-fill-color: #e73546 !important;
 }
 
 body .app .badge-goal-field input[type="number"] {
@@ -11642,8 +11643,8 @@ body .app .badge-goal-field input[type="number"]::-webkit-inner-spin-button {
 }
 
 body .app .badge-goal-field input::placeholder {
-  color: color-mix(in srgb, #1c9a58 55%, #ffffff) !important;
-  -webkit-text-fill-color: color-mix(in srgb, #1c9a58 55%, #ffffff) !important;
+  color: color-mix(in srgb, #e73546 55%, #ffffff) !important;
+  -webkit-text-fill-color: color-mix(in srgb, #e73546 55%, #ffffff) !important;
 }
 
 body .app .badge-point-meters .progress-meter {
@@ -11654,8 +11655,8 @@ body .app .badge-point-meters .progress-meter {
 body .app .badge-point-meters .meter-ring {
   width: 88px !important;
   height: 88px !important;
-  --meter-reached: #1c9a58;
-  --meter-unreached: #bde8ce;
+  --meter-reached: #e73546;
+  --meter-unreached: #f7bdc5;
 }
 
 body .app .badge-point-meters .meter-ring svg {
