@@ -21,30 +21,30 @@ const CHALLENGE_RANGE_TABS = [
   { range: RANGE_MONTH, period: "月間" },
   { range: RANGE_YEAR, period: "年間" },
 ];
-const RARITY_ORDER = ["C", "U", "R", "RR", "SR", "UR"];
+const RARITY_ORDER = ["D", "C", "B", "A", "S", "SS"];
 const RARITY_LABELS = {
-  C: "Common",
-  U: "Uncommon",
-  R: "Rare",
-  RR: "Double Rare",
-  SR: "Super Rare",
-  UR: "Ultra Rare",
+  D: "Dream",
+  C: "Challenge",
+  B: "Brave",
+  A: "Ace",
+  S: "Star",
+  SS: "Super Star",
 };
 const RARITY_POINTS = {
-  C: 1,
-  U: 2,
-  R: 3,
-  RR: 5,
-  SR: 10,
-  UR: 30,
+  D: 1,
+  C: 2,
+  B: 3,
+  A: 5,
+  S: 8,
+  SS: 13,
 };
 const RARITY_COLORS = {
-  C: "#8a5430",
-  U: "#2f8f62",
-  R: "#4d8dff",
-  RR: "#a878ff",
-  SR: "#d7dee8",
-  UR: "#ffd700",
+  D: "#ab7b52",
+  C: "#63b15f",
+  B: "#55a9ff",
+  A: "#ff7a45",
+  S: "#dfe5ee",
+  SS: "#ffd447",
 };
 const PUBLIC_ASSET_BASE = import.meta.env.BASE_URL || "./";
 const ALL_BAT_FILTER_COLOR = "#0879f2";
@@ -63,6 +63,8 @@ const NEW_UI_ASSETS = {
   count: `${PUBLIC_ASSET_BASE}images/count.svg`,
   avg: `${PUBLIC_ASSET_BASE}images/average.svg`,
   best: `${PUBLIC_ASSET_BASE}images/best.svg`,
+  flag: `${PUBLIC_ASSET_BASE}images/flag.svg`,
+  trophy: `${PUBLIC_ASSET_BASE}images/trophy.svg`,
   navHome: `${PUBLIC_ASSET_BASE}images/icon_home_transparent.png`,
   navChallenge: `${PUBLIC_ASSET_BASE}images/icon_challenge_transparent.png`,
   navBadge: `${PUBLIC_ASSET_BASE}images/icon_badge_transparent.png`,
@@ -144,121 +146,434 @@ function scoreFontTokens(value) {
   };
 }
 const FIXED_UI_THEME = "#2f86ff";
-const DAILY_RARITY_IMAGE_URLS = {
-  C: `${PUBLIC_ASSET_BASE}images/rarity_c_common.png?v=4`,
-  U: `${PUBLIC_ASSET_BASE}images/rarity_u_uncommon.png?v=4`,
-  R: `${PUBLIC_ASSET_BASE}images/rarity_r_rare.png?v=4`,
-  RR: `${PUBLIC_ASSET_BASE}images/rarity_rr_double_rare.png?v=4`,
-  SR: `${PUBLIC_ASSET_BASE}images/rarity_sr_super_rare.png?v=4`,
-  UR: `${PUBLIC_ASSET_BASE}images/rarity_ur_ultra_rare.png?v=4`,
+const RARITY_IMAGE_URLS = {
+  D: `${PUBLIC_ASSET_BASE}images/rarity_d.svg`,
+  C: `${PUBLIC_ASSET_BASE}images/rarity_c.svg`,
+  B: `${PUBLIC_ASSET_BASE}images/rarity_b.svg`,
+  A: `${PUBLIC_ASSET_BASE}images/rarity_a.svg`,
+  S: `${PUBLIC_ASSET_BASE}images/rarity_s.svg`,
+  SS: `${PUBLIC_ASSET_BASE}images/rarity_ss.svg`,
 };
-const UNIQUE_TOTAL_COUNT_TARGETS = [100, 500, 1000, 3000, 5000, 10000, 30000, 50000, 100000];
-const UNIQUE_BEST_TARGETS = [500, 600, 700, 800, 900, 999];
-const UNIQUE_STREAK_TARGETS = [2, 3, 7, 14, 30, 60, 100, 365];
-const BAT_COUNT_TARGETS = [100, 500, 1000, 3000, 5000, 10000];
-const BAT_DAYS_TARGETS = [3, 7, 14, 30, 60, 100];
-const BAT_BEST_TARGETS = [500, 600, 700, 800, 900, 999];
-const BAT_BADGE_DEFINITIONS = [
-  ...BAT_COUNT_TARGETS.map((target) => ({ metric: "count", target, label: `相棒${target}回`, description: `このバットで累計${target}回スイング` })),
-  ...BAT_DAYS_TARGETS.map((target) => ({ metric: "days", target, label: `相棒${target}日`, description: `このバットで${target}日記録` })),
-  ...BAT_BEST_TARGETS.map((target) => ({ metric: "best", target, label: `相棒ベスト${target}`, description: `このバットでベスト${target}点到達` })),
-];
+const RARITY_NAMEPLATE_URLS = {
+  D: `${PUBLIC_ASSET_BASE}images/D_bronze_nameplate.png`,
+  C: `${PUBLIC_ASSET_BASE}images/C_green_nameplate.png`,
+  B: `${PUBLIC_ASSET_BASE}images/B_blue_nameplate.png`,
+  A: `${PUBLIC_ASSET_BASE}images/A_red_nameplate.png`,
+  S: `${PUBLIC_ASSET_BASE}images/S_silver_nameplate.png`,
+  SS: `${PUBLIC_ASSET_BASE}images/SS_gold_nameplate.png`,
+};
+const RARITY_CARD_URLS = {
+  D: `${PUBLIC_ASSET_BASE}images/D_card.png`,
+  C: `${PUBLIC_ASSET_BASE}images/C_card.png`,
+  B: `${PUBLIC_ASSET_BASE}images/B_card.png`,
+  A: `${PUBLIC_ASSET_BASE}images/A_card.png`,
+  S: `${PUBLIC_ASSET_BASE}images/S_card.png`,
+  SS: `${PUBLIC_ASSET_BASE}images/SS_card.png`,
+};
+const CATEGORY_ICON_URLS = {
+  count: NEW_UI_ASSETS.count,
+  average: NEW_UI_ASSETS.avg,
+  best: NEW_UI_ASSETS.best,
+  calendar: NEW_UI_ASSETS.days,
+  flag: NEW_UI_ASSETS.flag,
+  trophy: NEW_UI_ASSETS.trophy,
+};
+const DEFAULT_SEASON_EVENT_SETTINGS = {
+  spring: { startMonth: 3, startDay: 20, endMonth: 4, endDay: 7 },
+  summer: { startMonth: 7, startDay: 20, endMonth: 8, endDay: 31 },
+  winter: { startMonth: 12, startDay: 25, endMonth: 1, endDay: 7 },
+};
 const BADGE_PERIODS = [
   ["daily", "毎日バッジ"],
   ["weekly", "毎週バッジ"],
   ["monthly", "毎月バッジ"],
   ["yearly", "毎年バッジ"],
-  ["total", "累計バッジ"],
+  ["seasonal", "イベントバッジ"],
+  ["special", "特別バッジ"],
 ];
-const periodCountBadgeLabel = (prefix, target) => `${prefix}回数${target}`;
-const HOME_BADGE_DEFINITIONS = [
-  ...[50, 100, 200, 300, 500].map((target) => ({ period: RANGE_TODAY, group: "daily", metric: "count", target, label: periodCountBadgeLabel("毎日", target) })),
-  ...[300, 400, 500, 600, 700].map((target) => ({ period: RANGE_TODAY, group: "daily", metric: "avg", target, label: `毎日平均${target}` })),
-  ...[500, 600, 700, 800, 900].map((target) => ({ period: RANGE_TODAY, group: "daily", metric: "best", target, label: `毎日ベスト${target}` })),
-  ...[2, 3, 7, 14, 30, 60, 100, 365].map((target) => ({ period: RANGE_TODAY, group: "daily", metric: "streak", target, label: `${target}日連続練習`, trigger: "exact" })),
-  ...[300, 500, 1000, 2000].map((target) => ({ period: RANGE_WEEK, group: "weekly", metric: "count", target, label: periodCountBadgeLabel("毎週", target) })),
-  ...[[3, "毎週3日練習"], [5, "毎週5日練習"], [7, "毎週皆勤"]].map(([target, label]) => ({ period: RANGE_WEEK, group: "weekly", metric: "days", target, label })),
-  ...[500, 1000, 2000, 3000, 5000].map((target) => ({ period: RANGE_MONTH, group: "monthly", metric: "count", target, label: periodCountBadgeLabel("毎月", target) })),
-  ...[[5, "毎月5日練習"], [10, "毎月10日練習"], [20, "毎月20日練習"], ["all", "毎月毎日練習"]].map(([target, label]) => ({ period: RANGE_MONTH, group: "monthly", metric: "days", target, label })),
-  ...[10000, 30000, 50000, 100000, 200000].map((target) => ({ period: RANGE_YEAR, group: "yearly", metric: "count", target, label: periodCountBadgeLabel("毎年", target) })),
-  ...[[30, "毎年30日練習"], [60, "毎年60日練習"], [100, "毎年100日練習"], [200, "毎年200日練習"], ["all", "毎年毎日練習"]].map(([target, label]) => ({ period: RANGE_YEAR, group: "yearly", metric: "days", target, label })),
-  ...UNIQUE_TOTAL_COUNT_TARGETS.map((target) => ({ period: RANGE_TOTAL, group: "total", metric: "count", target, label: `累計回数${target}` })),
-  ...[300, 400, 500, 600, 700].map((target) => ({ period: RANGE_TOTAL, group: "total", metric: "avg", target, label: `累計平均${target}` })),
-  ...UNIQUE_BEST_TARGETS.map((target) => ({ period: RANGE_TOTAL, group: "total", metric: "best", target, label: `累計ベスト${target}` })),
-  ...[3, 7, 14, 30, 60, 100, 365].map((target) => ({ period: RANGE_TOTAL, group: "total", metric: "days", target, label: `累計${target}日練習` })),
-];
-const UNIQUE_BADGE_DEFINITIONS = [
-  ...UNIQUE_TOTAL_COUNT_TARGETS.map((target) => ({ metric: "count", target, label: `累計${target}回` })),
-  ...UNIQUE_BEST_TARGETS.map((target) => ({ metric: "best", target, label: `初${target}点` })),
-];
-const CONTEXT_START_BADGES = ["はじめの一歩", "初めての50回", "初めての100回"];
-const CONTEXT_STREAK_BADGES = UNIQUE_STREAK_TARGETS.map((target) => `${target}日連続`);
-const CONTEXT_BAT_BADGES = ["相棒100回", "相棒1000回", "相棒5000回", "バットコレクター", "全バット練習"];
-const WEEKLY_AVG_UPDATE_BADGE = "先週より平均アップ";
-const WEEKLY_BEST_UPDATE_BADGE = "先週のベスト更新";
-const MONTHLY_AVG_UPDATE_BADGE = "先月より平均アップ";
-const MONTHLY_BEST_UPDATE_BADGE = "先月のベスト更新";
-const YEARLY_AVG_UPDATE_BADGE = "去年より平均アップ";
-const YEARLY_BEST_UPDATE_BADGE = "去年のベスト更新";
+const WEEKLY_GROWTH_THRESHOLDS = {
+  avg: [10, 30, 50],
+  best: [10, 50, 100],
+};
+const MONTHLY_GROWTH_THRESHOLDS = {
+  avg: [10, 30, 50],
+  best: [30, 80, 150],
+};
 const SCORE_BAR_SCORE_START = 100;
 const SCORE_BAR_HOME_SCORE_END = 999;
-const SCORE_BAR_GROWTH_STEPS = [20, 40, 60, 80, 100];
 const SCORE_BAR_GROWTH_PREVIOUS_LABELS = {
   [RANGE_WEEK]: "先週",
   [RANGE_MONTH]: "先月",
-  [RANGE_YEAR]: "去年",
 };
 function scoreGrowthBadgeLabel(range, metric, delta) {
-  const previousLabel = SCORE_BAR_GROWTH_PREVIOUS_LABELS[range] || "前回";
-  const metricLabel = metric === "best" ? "ベスト" : "平均";
-  return `${previousLabel}の${metricLabel}を${delta}点超えた`;
+  const periodLabel = range === RANGE_WEEK ? "今週" : "今月";
+  const metricLabel = metric === "best" ? "ベストスコアアップ" : "平均スコアアップ";
+  return `${periodLabel}の${metricLabel} +${delta}`;
 }
-const CONTEXT_SCORE_GROWTH_BADGES = [RANGE_WEEK, RANGE_MONTH, RANGE_YEAR].flatMap((range) => (
-  SCORE_BAR_GROWTH_STEPS.flatMap((delta) => [
-    scoreGrowthBadgeLabel(range, "avg", delta),
-    scoreGrowthBadgeLabel(range, "best", delta),
-  ])
-));
-const CONTEXT_GROWTH_BADGES = [
-  "先週より多く振った",
-  "先月より多く振った",
-  WEEKLY_AVG_UPDATE_BADGE,
-  WEEKLY_BEST_UPDATE_BADGE,
-  MONTHLY_AVG_UPDATE_BADGE,
-  MONTHLY_BEST_UPDATE_BADGE,
-  YEARLY_AVG_UPDATE_BADGE,
-  YEARLY_BEST_UPDATE_BADGE,
-  ...CONTEXT_SCORE_GROWTH_BADGES,
+const DAILY_BADGE_DEFINITIONS = [
+  ...[
+    ["D", 10],
+    ["C", 30],
+    ["B", 50],
+    ["A", 100],
+  ].map(([rarity, target]) => makeThresholdBadge({
+    id: `daily-count-${target}`,
+    label: `今日のスイング回数 ${target}回`,
+    name: "今日のスイング回数",
+    description: `今日のスイング回数が${target}回以上`,
+    conditionText: `${target}回`,
+    rarity,
+    category: "count",
+    period: RANGE_TODAY,
+    metric: "count",
+    target,
+  })),
+  ...[
+    ["D", 200],
+    ["C", 350],
+    ["B", 500],
+    ["A", 650],
+  ].map(([rarity, target]) => makeThresholdBadge({
+    id: `daily-avg-${target}`,
+    label: `今日の平均スコア ${target}`,
+    name: "今日の平均スコア",
+    description: `今日の平均スコアが${target}点以上`,
+    conditionText: `平均${target}以上`,
+    rarity,
+    category: "average",
+    period: RANGE_TODAY,
+    metric: "avg",
+    target,
+  })),
+  ...[
+    ["D", 300],
+    ["C", 500],
+    ["B", 700],
+    ["A", 850],
+  ].map(([rarity, target]) => makeThresholdBadge({
+    id: `daily-best-${target}`,
+    label: `今日のベストスコア ${target}`,
+    name: "今日のベストスコア",
+    description: `今日のベストスコアが${target}点以上`,
+    conditionText: `ベスト${target}以上`,
+    rarity,
+    category: "best",
+    period: RANGE_TODAY,
+    metric: "best",
+    target,
+  })),
 ];
-const CONTEXT_SECRET_BADGES = [
-  "ラッキー7",
-  "スリーナイン",
-  "ぴったり500",
-  "777スイング",
-  "七日目の覚醒",
-  "大晦日の素振り",
-  "元日の一振り",
-  "復活の一振り",
+const WEEKLY_BADGE_DEFINITIONS = [
+  ...[
+    ["C", 100],
+    ["B", 250],
+    ["A", 500],
+  ].map(([rarity, target]) => makeThresholdBadge({
+    id: `weekly-count-${target}`,
+    label: `今週のスイング回数 ${target}回`,
+    name: "今週のスイング回数",
+    description: `今週のスイング回数が${target}回以上`,
+    conditionText: `${target}回`,
+    rarity,
+    category: "count",
+    period: RANGE_WEEK,
+    metric: "count",
+    target,
+  })),
+  ...[
+    ["C", 2],
+    ["B", 4],
+    ["A", 6],
+  ].map(([rarity, target]) => makeThresholdBadge({
+    id: `weekly-days-${target}`,
+    label: `今週の練習日数 ${target}日`,
+    name: "今週の練習日数",
+    description: `今週の練習日数が${target}日以上`,
+    conditionText: `${target}日`,
+    rarity,
+    category: "calendar",
+    period: RANGE_WEEK,
+    metric: "days",
+    target,
+  })),
+  ...WEEKLY_GROWTH_THRESHOLDS.avg.map((target, index) => makeThresholdBadge({
+    id: `weekly-avg-growth-${target}`,
+    label: scoreGrowthBadgeLabel(RANGE_WEEK, "avg", target),
+    name: "今週の平均スコアアップ",
+    description: `今週の平均スコアが先週より${target}点以上アップ`,
+    conditionText: `先週比 +${target}`,
+    rarity: ["C", "B", "A"][index],
+    category: "average",
+    period: RANGE_WEEK,
+    metric: "avg-growth",
+    target,
+  })),
+  ...WEEKLY_GROWTH_THRESHOLDS.best.map((target, index) => makeThresholdBadge({
+    id: `weekly-best-growth-${target}`,
+    label: scoreGrowthBadgeLabel(RANGE_WEEK, "best", target),
+    name: "今週のベストスコアアップ",
+    description: `今週のベストスコアが先週より${target}点以上アップ`,
+    conditionText: `先週比 +${target}`,
+    rarity: ["C", "B", "A"][index],
+    category: "best",
+    period: RANGE_WEEK,
+    metric: "best-growth",
+    target,
+  })),
 ];
-const META_BADGE_DEFINITIONS = [
-  ...[100, 300, 500, 1000, 2000, 5000, 10000].map((target) => ({
-    metric: "points",
+const MONTHLY_BADGE_DEFINITIONS = [
+  ...[
+    ["B", 500],
+    ["A", 1000],
+    ["S", 2000],
+  ].map(([rarity, target]) => makeThresholdBadge({
+    id: `monthly-count-${target}`,
+    label: `今月のスイング回数 ${target}回`,
+    name: "今月のスイング回数",
+    description: `今月のスイング回数が${target}回以上`,
+    conditionText: `${target}回`,
+    rarity,
+    category: "count",
+    period: RANGE_MONTH,
+    metric: "count",
     target,
-    label: `バッジポイント${target}`,
-    description: `バッジポイント${target}pt到達`,
   })),
-  ...[10, 25, 50, 75, 100].map((target) => ({
-    metric: "types",
+  ...[
+    ["B", 8],
+    ["A", 15],
+    ["S", 25],
+  ].map(([rarity, target]) => makeThresholdBadge({
+    id: `monthly-days-${target}`,
+    label: `今月の練習日数 ${target}日`,
+    name: "今月の練習日数",
+    description: `今月の練習日数が${target}日以上`,
+    conditionText: `${target}日`,
+    rarity,
+    category: "calendar",
+    period: RANGE_MONTH,
+    metric: "days",
     target,
-    label: `バッジ${target}種類`,
-    description: `バッジを${target}種類集める`,
   })),
-  ...[50, 100, 300, 500, 1000, 3000].map((target) => ({
-    metric: "instances",
+  ...MONTHLY_GROWTH_THRESHOLDS.avg.map((target, index) => makeThresholdBadge({
+    id: `monthly-avg-growth-${target}`,
+    label: scoreGrowthBadgeLabel(RANGE_MONTH, "avg", target),
+    name: "今月の平均スコアアップ",
+    description: `今月の平均スコアが先月より${target}点以上アップ`,
+    conditionText: `先月比 +${target}`,
+    rarity: ["B", "A", "S"][index],
+    category: "average",
+    period: RANGE_MONTH,
+    metric: "avg-growth",
     target,
-    label: `バッジ${target}個`,
-    description: `重複を含めてバッジを${target}個集める`,
   })),
+  ...MONTHLY_GROWTH_THRESHOLDS.best.map((target, index) => makeThresholdBadge({
+    id: `monthly-best-growth-${target}`,
+    label: scoreGrowthBadgeLabel(RANGE_MONTH, "best", target),
+    name: "今月のベストスコアアップ",
+    description: `今月のベストスコアが先月より${target}点以上アップ`,
+    conditionText: `先月比 +${target}`,
+    rarity: ["B", "A", "S"][index],
+    category: "best",
+    period: RANGE_MONTH,
+    metric: "best-growth",
+    target,
+  })),
+];
+const BALANCE_BADGE_DEFINITIONS = [
+  ...[
+    ["B", RANGE_TODAY, "今日のバランス", 30, 500],
+    ["A", RANGE_TODAY, "今日のバランス", 50, 600],
+    ["S", RANGE_TODAY, "今日のバランス", 100, 650],
+    ["B", RANGE_WEEK, "今週のバランス", 150, 500],
+    ["A", RANGE_WEEK, "今週のバランス", 300, 600],
+    ["S", RANGE_WEEK, "今週のバランス", 500, 650],
+    ["B", RANGE_MONTH, "今月のバランス", 300, 500],
+    ["A", RANGE_MONTH, "今月のバランス", 600, 600],
+    ["S", RANGE_MONTH, "今月のバランス", 1000, 650],
+  ].map(([rarity, period, name, countTarget, avgTarget]) => makeCompositeBadge({
+    id: `balance-${period}-${rarity.toLowerCase()}`,
+    label: `${name} ${rarity}`,
+    name,
+    description: `${periodLabelForBadge(period)}スイング${countTarget}回以上かつ平均${avgTarget}点以上`,
+    conditionText: `${countTarget}回以上 & 平均${avgTarget}以上`,
+    rarity,
+    category: "trophy",
+    period,
+    metric: "balance",
+    requirements: { count: countTarget, avg: avgTarget },
+  })),
+];
+const POWER_BADGE_DEFINITIONS = [
+  makeCompositeBadge({
+    id: "monthly-challenger",
+    label: "月間チャレンジャー",
+    name: "月間チャレンジャー",
+    description: "今月400回以上、平均500点以上、ベスト750点以上",
+    conditionText: "月400回以上 & 平均500以上 & ベスト750以上",
+    rarity: "A",
+    category: "trophy",
+    period: RANGE_MONTH,
+    metric: "power",
+    requirements: { count: 400, avg: 500, best: 750 },
+  }),
+  makeCompositeBadge({
+    id: "monthly-champion",
+    label: "月間チャンピオン",
+    name: "月間チャンピオン",
+    description: "今月700回以上、平均600点以上、ベスト850点以上",
+    conditionText: "月700回以上 & 平均600以上 & ベスト850以上",
+    rarity: "S",
+    category: "trophy",
+    period: RANGE_MONTH,
+    metric: "power",
+    requirements: { count: 700, avg: 600, best: 850 },
+  }),
+  makeCompositeBadge({
+    id: "dream-master",
+    label: "ドリームマスター",
+    name: "ドリームマスター",
+    description: "今月1000回以上、平均650点以上、ベスト900点以上",
+    conditionText: "月1000回以上 & 平均650以上 & ベスト900以上",
+    rarity: "SS",
+    category: "trophy",
+    period: RANGE_MONTH,
+    metric: "power",
+    requirements: { count: 1000, avg: 650, best: 900 },
+  }),
+];
+const YEARLY_COUNT_BADGE_DEFINITIONS = [
+  ["D", 500, "年間500スイング"],
+  ["C", 1000, "年間1000スイング"],
+  ["B", 2000, "年間2000スイング"],
+  ["A", 3000, "年間3000本チャレンジ"],
+  ["S", 5000, "年間5000本ノック"],
+  ["SS", 10000, "年間10000スイングレジェンド"],
+].map(([rarity, target, name]) => makeThresholdBadge({
+  id: `yearly-count-${target}`,
+  label: name,
+  name,
+  description: `${target}回以上スイングする`,
+  conditionText: `年間${target}回`,
+  rarity,
+  category: "count",
+  period: RANGE_YEAR,
+  metric: "count",
+  target,
+}));
+const YEARLY_DAYS_BADGE_DEFINITIONS = [
+  ["D", 10, "年間10日チャレンジ"],
+  ["C", 30, "年間30日練習"],
+  ["B", 50, "年間50日プレイヤー"],
+  ["A", 100, "年間100日スイング"],
+  ["S", 200, "年間200日スラッガー"],
+  ["SS", 300, "年間300日レジェンド"],
+].map(([rarity, target, name]) => makeThresholdBadge({
+  id: `yearly-days-${target}`,
+  label: name,
+  name,
+  description: `${target}日以上練習する`,
+  conditionText: `年間練習${target}日`,
+  rarity,
+  category: "calendar",
+  period: RANGE_YEAR,
+  metric: "days",
+  target,
+}));
+const PERSONAL_BEST_BADGE_DEFINITIONS = [
+  ["C", 1, "自己ベスト更新", "自己ベスト更新"],
+  ["B", 30, "自己ベスト更新 +30", "自己ベストを+30以上更新"],
+  ["A", 50, "自己ベスト更新 +50", "自己ベストを+50以上更新"],
+  ["S", 100, "自己ベスト更新 +100", "自己ベストを+100以上更新"],
+].map(([rarity, target, label, description]) => makeThresholdBadge({
+  id: `personal-best-${target}`,
+  label,
+  name: "自己ベスト更新",
+  description,
+  conditionText: target === 1 ? "自己ベスト更新" : `+${target}以上更新`,
+  rarity,
+  category: "trophy",
+  period: "special",
+  metric: "personal-best",
+  target,
+  type: "repeatable",
+}));
+const EXACT_SCORE_BADGE_DEFINITIONS = [
+  makeThresholdBadge({
+    id: "exact-best-777",
+    label: "ベストスコア777",
+    name: "ピッタリ系",
+    description: "今日のベストスコアがちょうど777点",
+    conditionText: "ベストスコア777",
+    rarity: "A",
+    category: "trophy",
+    period: "special",
+    metric: "best-exact",
+    target: 777,
+    trigger: "exact",
+    type: "repeatable",
+  }),
+  makeThresholdBadge({
+    id: "exact-avg-777",
+    label: "平均スコア777",
+    name: "ピッタリ系",
+    description: "今日の平均スコアがちょうど777点",
+    conditionText: "平均スコア777",
+    rarity: "S",
+    category: "trophy",
+    period: "special",
+    metric: "avg-exact",
+    target: 777,
+    trigger: "exact",
+    type: "repeatable",
+  }),
+];
+const SEASONAL_BADGE_DEFINITIONS = [
+  ...[
+    ["spring", "春休み", "C", 1, "春休みに1日練習"],
+    ["spring", "春休み", "B", 300, "春休みに300回"],
+    ["spring", "春休み", "A", 700, "春休みに700回"],
+    ["spring", "春休み", "S", 1200, "春休みに1200回"],
+    ["summer", "夏休み", "C", 1, "夏休みに1日練習"],
+    ["summer", "夏休み", "B", 500, "夏休みに500回"],
+    ["summer", "夏休み", "A", 1500, "夏休みに1500回"],
+    ["summer", "夏休み", "S", 3000, "夏休みに3000回"],
+    ["winter", "冬休み", "C", 1, "冬休みに1日練習"],
+    ["winter", "冬休み", "B", 300, "冬休みに300回"],
+    ["winter", "冬休み", "A", 800, "冬休みに800回"],
+    ["winter", "冬休み", "S", 1500, "冬休みに1500回"],
+  ].map(([eventKey, eventName, rarity, target, label]) => makeThresholdBadge({
+    id: `season-${eventKey}-${target}`,
+    label,
+    name: eventName,
+    description: target === 1 ? `${eventName}期間中に1日以上練習する` : `${eventName}期間中に${target}回以上スイングする`,
+    conditionText: target === 1 ? "1日練習" : `${target}回`,
+    rarity,
+    category: "flag",
+    period: "seasonal",
+    metric: target === 1 ? "season-days" : "season-count",
+    target,
+    eventKey,
+  })),
+];
+const BADGE_DEFINITIONS = [
+  ...DAILY_BADGE_DEFINITIONS,
+  ...WEEKLY_BADGE_DEFINITIONS,
+  ...MONTHLY_BADGE_DEFINITIONS,
+  ...BALANCE_BADGE_DEFINITIONS,
+  ...POWER_BADGE_DEFINITIONS,
+  ...YEARLY_COUNT_BADGE_DEFINITIONS,
+  ...YEARLY_DAYS_BADGE_DEFINITIONS,
+  ...PERSONAL_BEST_BADGE_DEFINITIONS,
+  ...EXACT_SCORE_BADGE_DEFINITIONS,
+  ...SEASONAL_BADGE_DEFINITIONS,
+];
+const BADGE_DEFINITION_MAP = new Map(BADGE_DEFINITIONS.map((definition) => [definition.label, definition]));
+const HOME_BADGE_DEFINITIONS = [
+  ...DAILY_BADGE_DEFINITIONS,
+  ...WEEKLY_BADGE_DEFINITIONS.filter((definition) => ["count", "days"].includes(definition.metric)),
+  ...MONTHLY_BADGE_DEFINITIONS.filter((definition) => ["count", "days"].includes(definition.metric)),
+  ...YEARLY_COUNT_BADGE_DEFINITIONS,
+  ...YEARLY_DAYS_BADGE_DEFINITIONS,
 ];
 
 const defaultDb = {
@@ -271,6 +586,7 @@ const defaultDb = {
   theme: "#ff7a45",
   fontTheme: "system",
   records: [],
+  seasonEventSettings: DEFAULT_SEASON_EVENT_SETTINGS,
   badgeRewardGoal: "",
   badgeRewardText: "",
   testInputDefaults: false,
@@ -450,12 +766,14 @@ function SvgIcon({ type }) {
   if (type === "font") return <svg {...props}><rect x="4" y="5" width="16" height="14" rx="2.4" /><path d="M8 16 11.1 8h1.8L16 16" /><path d="M9.2 13h5.6" /><path d="M7 21h10" /></svg>;
   if (type === "collection") return <svg {...props}><circle cx="12" cy="9" r="5.6" /><path d="M9.1 13.8 7.3 20.4l4.7-2.7 4.7 2.7-1.8-6.6" /><path d="M12 5.9l.9 1.8 2 .3-1.5 1.4.4 2-1.8-1-1.8 1 .4-2L9.1 8l2-.3L12 5.9Z" /></svg>;
   if (type === "lock") return <svg {...props}><rect x="5" y="10" width="14" height="10" rx="2.4" /><path d="M8.4 10V7.5a3.6 3.6 0 0 1 7.2 0V10" /><path d="M12 14v2.4" /></svg>;
-  if (type === "calendar") return <svg {...props}><rect x="4" y="5" width="16" height="15" rx="3" /><path d="M8 3v4M16 3v4M4 10h16" /><path d="M8 14h2M12 14h2M16 14h1M8 17h2M12 17h2" /></svg>;
+  if (type === "calendar") return <img className="bat-image-icon" src={NEW_UI_ASSETS.days} alt="" aria-hidden="true" />;
   if (type === "check") return <svg {...props}><path d="m5 12 4 4 10-10" /></svg>;
   if (type === "person") return <svg {...props}><circle cx="12" cy="7.4" r="3.4" /><path d="M5 21c.8-4.6 3.2-7 7-7s6.2 2.4 7 7" /></svg>;
-  if (type === "count") return <svg {...props}><path d="M4 7h16M4 12h16M4 17h10" /></svg>;
-  if (type === "avg") return <svg {...props}><path d="M4 17 9 12l4 4 7-9" /><path d="M16 7h4v4" /></svg>;
-  if (type === "best") return <svg {...props}><path d="M12 3 9.5 8.5 4 9l4.2 3.8L7 18.5l5-3 5 3-1.2-5.7L20 9l-5.5-.5L12 3Z" /></svg>;
+  if (type === "count") return <img className="bat-image-icon" src={NEW_UI_ASSETS.count} alt="" aria-hidden="true" />;
+  if (type === "avg") return <img className="bat-image-icon" src={NEW_UI_ASSETS.avg} alt="" aria-hidden="true" />;
+  if (type === "best") return <img className="bat-image-icon" src={NEW_UI_ASSETS.best} alt="" aria-hidden="true" />;
+  if (type === "flag") return <img className="bat-image-icon" src={NEW_UI_ASSETS.flag} alt="" aria-hidden="true" />;
+  if (type === "trophy") return <img className="bat-image-icon" src={NEW_UI_ASSETS.trophy} alt="" aria-hidden="true" />;
   if (type === "bat") return <img className="bat-image-icon" src={batIconUrl} alt="" aria-hidden="true" />;
   if (type === "badge") return <svg {...props}><circle cx="12" cy="8" r="4" /><path d="m9 12-2 8 5-3 5 3-2-8" /></svg>;
   if (type === "plus") return <svg {...props}><path d="M12 5v14M5 12h14" /></svg>;
@@ -467,6 +785,45 @@ function SvgIcon({ type }) {
 
 function Icon({ type }) {
   return <span className="icon"><SvgIcon type={type} /></span>;
+}
+
+function normalizeSeasonEventSettings(source) {
+  const normalized = {};
+  Object.entries(DEFAULT_SEASON_EVENT_SETTINGS).forEach(([key, base]) => {
+    const candidate = source?.[key] || {};
+    normalized[key] = {
+      startMonth: clamp(Math.trunc(Number(candidate.startMonth) || base.startMonth), 1, 12),
+      startDay: clamp(Math.trunc(Number(candidate.startDay) || base.startDay), 1, 31),
+      endMonth: clamp(Math.trunc(Number(candidate.endMonth) || base.endMonth), 1, 12),
+      endDay: clamp(Math.trunc(Number(candidate.endDay) || base.endDay), 1, 31),
+    };
+  });
+  return normalized;
+}
+
+function makeThresholdBadge(definition) {
+  return {
+    type: "repeatable",
+    trigger: "gte",
+    sortOrder: 0,
+    ...definition,
+  };
+}
+
+function makeCompositeBadge(definition) {
+  return {
+    type: "repeatable",
+    sortOrder: 0,
+    ...definition,
+  };
+}
+
+function periodLabelForBadge(period) {
+  if (period === RANGE_TODAY) return "今日";
+  if (period === RANGE_WEEK) return "今週";
+  if (period === RANGE_MONTH) return "今月";
+  if (period === RANGE_YEAR) return "今年";
+  return "";
 }
 
 function BatIcon({ color = "#8d95a4" }) {
@@ -659,18 +1016,9 @@ function previousChallengeWindow(records, range, start, end) {
 function growthBadgeLabelsForRange(range) {
   if (range === RANGE_WEEK) return {
     previousLabel: "先週",
-    avg: WEEKLY_AVG_UPDATE_BADGE,
-    best: WEEKLY_BEST_UPDATE_BADGE,
   };
   if (range === RANGE_MONTH) return {
     previousLabel: "先月",
-    avg: MONTHLY_AVG_UPDATE_BADGE,
-    best: MONTHLY_BEST_UPDATE_BADGE,
-  };
-  if (range === RANGE_YEAR) return {
-    previousLabel: "去年",
-    avg: YEARLY_AVG_UPDATE_BADGE,
-    best: YEARLY_BEST_UPDATE_BADGE,
   };
   return null;
 }
@@ -678,15 +1026,20 @@ function growthBadgeLabelsForRange(range) {
 function scoreGrowthBadgeDefinitions(range, metric, summary) {
   const targetKey = metric === "best" ? "bestTarget" : "avgTarget";
   const baseTarget = Number(summary?.[targetKey]);
-  if (!SCORE_BAR_GROWTH_PREVIOUS_LABELS[range] || !Number.isFinite(baseTarget) || baseTarget <= 0) return [];
-  return SCORE_BAR_GROWTH_STEPS.map((delta) => ({
+  const deltas = range === RANGE_WEEK
+    ? WEEKLY_GROWTH_THRESHOLDS[metric]
+    : range === RANGE_MONTH
+      ? MONTHLY_GROWTH_THRESHOLDS[metric]
+      : null;
+  if (!SCORE_BAR_GROWTH_PREVIOUS_LABELS[range] || !Number.isFinite(baseTarget) || baseTarget <= 0 || !deltas?.length) return [];
+  return deltas.map((delta) => ({
     period: range,
     group: range,
     metric,
     target: baseTarget + delta,
     displayTarget: `+${delta}`,
     scoreBarStart: SCORE_BAR_SCORE_START,
-    scoreBarEnd: baseTarget + SCORE_BAR_GROWTH_STEPS[SCORE_BAR_GROWTH_STEPS.length - 1],
+    scoreBarEnd: baseTarget + deltas[deltas.length - 1],
     label: scoreGrowthBadgeLabel(range, metric, delta),
     description: `${SCORE_BAR_GROWTH_PREVIOUS_LABELS[range]}の${metric === "best" ? "ベスト" : "平均"}を${delta}点超える`,
   }));
@@ -747,6 +1100,7 @@ function loadDb() {
       theme: legacyTheme,
       fontTheme: fontThemeKey(parsed.fontTheme),
       records: Array.isArray(parsed.records) ? parsed.records : [],
+      seasonEventSettings: normalizeSeasonEventSettings(parsed.seasonEventSettings),
       badgeRewardGoal: String(parsed.badgeRewardGoal || ""),
       badgeRewardText: String(parsed.badgeRewardText || ""),
       testInputDefaults: Boolean(parsed.testInputDefaults),
@@ -839,14 +1193,12 @@ function summaryForRecordsRange(records, range = RANGE_TODAY, activeDate = today
       const previousRecords = records.filter((record) => record.date >= toISO(previousStart) && record.date <= toISO(previousEnd));
       const previousDailyMap = new Map(aggregate(previousRecords).map((day) => [day.date, day]));
       const previousSummary = periodSummaryFromDaily(previousDailyMap, previousStart, previousEnd, toISO(previousEnd));
-      if (previousRecords.length && previousSummary.avg > 0) {
+      if (previousRecords.length && previousSummary.count > 0) {
         summary.avgTarget = previousSummary.avg;
-        summary.avgTargetLabel = growthLabels.avg;
         summary.avgTargetPreviousLabel = growthLabels.previousLabel;
       }
-      if (previousRecords.length && previousSummary.best > 0) {
+      if (previousRecords.length && previousSummary.count > 0) {
         summary.bestTarget = previousSummary.best;
-        summary.bestTargetLabel = growthLabels.best;
         summary.bestTargetPreviousLabel = growthLabels.previousLabel;
       }
     }
@@ -881,15 +1233,14 @@ function streakByDate(daily) {
 
 function homeBadgeMetricValue(definition, summary) {
   if (definition.metric === "count") return summary.count;
-  if (definition.metric === "avg") return summary.badgeAvg ?? summary.avg;
+  if (definition.metric === "avg") return summary.avg;
   if (definition.metric === "best") return summary.best;
   if (definition.metric === "days") return summary.days;
-  if (definition.metric === "streak") return summary.streak;
   return 0;
 }
 
 function homeBadgeTarget(definition, summary) {
-  return definition.target === "all" ? summary.spanDays : definition.target;
+  return definition.target;
 }
 
 function addHomeBadge(map, date, label) {
@@ -902,56 +1253,43 @@ function isHomeBadgeEarned(definition, summary) {
   return definition.trigger === "exact" ? value === target : value >= target;
 }
 
+function seasonWindowForYear(settings, year) {
+  const start = new Date(year, settings.startMonth - 1, settings.startDay);
+  const wraps = settings.endMonth < settings.startMonth || (
+    settings.endMonth === settings.startMonth && settings.endDay < settings.startDay
+  );
+  const endYear = wraps ? year + 1 : year;
+  const end = new Date(endYear, settings.endMonth - 1, settings.endDay);
+  return { start, end, wraps };
+}
+
+function seasonSummaryForWindow(dailyMap, start, end) {
+  let count = 0;
+  let days = 0;
+  for (let cursor = new Date(start); cursor <= end; cursor = addDays(cursor, 1)) {
+    const day = dailyMap.get(toISO(cursor));
+    if (!day) continue;
+    count += day.count || 0;
+    if ((day.count || 0) > 0) days += 1;
+  }
+  return { count, days };
+}
+
+function compareGrowthSummary(currentSummary, previousSummary, metric, delta) {
+  if (!previousSummary || previousSummary.count <= 0) return false;
+  if (metric === "avg") return currentSummary.avg >= previousSummary.avg + delta;
+  return currentSummary.best >= previousSummary.best + delta;
+}
+
 function badgesFor(records, baseDate = todayISO()) {
   const daily = aggregate(records);
   const dailyMap = new Map(daily.map((day) => [day.date, day]));
-  const recordsByDate = new Map();
-  records.forEach((record) => {
-    const dateRecords = recordsByDate.get(record.date) || [];
-    dateRecords.push(record);
-    recordsByDate.set(record.date, dateRecords);
-  });
-  const streaks = streakByDate(daily);
   const byDate = new Map();
-  const uniqueEarned = new Set();
-  const batEarned = new Set();
-  const batStats = new Map();
-  const firstDate = firstRecordDate(records);
-  let cumulativeCount = 0;
-  let cumulativeBest = 0;
+  const seasonSettings = normalizeSeasonEventSettings(loadDb().seasonEventSettings);
+  let personalBest = 0;
 
   daily.forEach((day) => {
-    const dayRecords = recordsByDate.get(day.date) || [];
-    dayRecords.forEach((record) => {
-      const stats = batStats.get(record.bat) || { count: 0, days: new Set(), best: 0 };
-      stats.count += record.count;
-      stats.days.add(record.date);
-      stats.best = Math.max(stats.best, record.best || 0);
-      batStats.set(record.bat, stats);
-
-      BAT_BADGE_DEFINITIONS.forEach((definition) => {
-        const key = `${record.bat}:${definition.label}`;
-        if (batEarned.has(key)) return;
-        const value = definition.metric === "count" ? stats.count : definition.metric === "days" ? stats.days.size : stats.best;
-        if (value >= definition.target) {
-          addHomeBadge(byDate, day.date, `${record.bat} ${definition.label}`);
-          batEarned.add(key);
-        }
-      });
-    });
-
-    cumulativeCount += day.count;
-    cumulativeBest = Math.max(cumulativeBest, day.best || 0);
-    UNIQUE_BADGE_DEFINITIONS.forEach((definition) => {
-      if (uniqueEarned.has(definition.label)) return;
-      const value = definition.metric === "count" ? cumulativeCount : cumulativeBest;
-      if (value >= definition.target) {
-        addHomeBadge(byDate, day.date, definition.label);
-        uniqueEarned.add(definition.label);
-      }
-    });
-
-    const summary = { ...day, badgeAvg: day.avg, days: 1, spanDays: 1, streak: streaks.get(day.date) || 0 };
+    const summary = { ...day, days: day.count > 0 ? 1 : 0, spanDays: 1 };
     HOME_BADGE_DEFINITIONS
       .filter((definition) => definition.period === RANGE_TODAY)
       .forEach((definition) => {
@@ -959,6 +1297,32 @@ function badgesFor(records, baseDate = todayISO()) {
           addHomeBadge(byDate, day.date, definition.label);
         }
       });
+
+    BALANCE_BADGE_DEFINITIONS
+      .filter((definition) => definition.period === RANGE_TODAY)
+      .forEach((definition) => {
+        if (summary.count >= definition.requirements.count && summary.avg >= definition.requirements.avg) {
+          addHomeBadge(byDate, day.date, definition.label);
+        }
+      });
+
+    if (personalBest > 0 && day.best > personalBest) {
+      const diff = day.best - personalBest;
+      PERSONAL_BEST_BADGE_DEFINITIONS.forEach((definition) => {
+        if (diff >= definition.target) {
+          addHomeBadge(byDate, day.date, definition.label);
+        }
+      });
+    }
+
+    EXACT_SCORE_BADGE_DEFINITIONS.forEach((definition) => {
+      const metricValue = definition.metric === "best-exact" ? day.best : day.avg;
+      if (metricValue === definition.target) {
+        addHomeBadge(byDate, day.date, definition.label);
+      }
+    });
+
+    personalBest = Math.max(personalBest, day.best || 0);
   });
 
   const periodKeys = new Map();
@@ -966,22 +1330,40 @@ function badgesFor(records, baseDate = todayISO()) {
     const dateValue = parseISO(day.date);
     const weekKey = toISO(startOfWeek(dateValue));
     const monthKey = day.date.slice(0, 7);
-    const yearWindow = challengeYearWindowFromFirstDate(firstDate, dateValue);
-    const yearKey = `${yearWindow.index}:${toISO(yearWindow.start)}`;
     periodKeys.set(`week:${weekKey}`, { period: RANGE_WEEK, start: startOfWeek(dateValue), end: endOfWeek(dateValue), earnedAt: day.date });
     periodKeys.set(`month:${monthKey}`, { period: RANGE_MONTH, start: startOfMonth(dateValue), end: endOfMonth(dateValue), earnedAt: day.date });
-    periodKeys.set(`year:${yearKey}`, { period: RANGE_YEAR, start: yearWindow.start, end: yearWindow.end, earnedAt: day.date });
+    periodKeys.set(`year:${dateValue.getFullYear()}`, {
+      period: RANGE_YEAR,
+      start: new Date(dateValue.getFullYear(), 0, 1),
+      end: new Date(dateValue.getFullYear(), 11, 31),
+      earnedAt: day.date,
+    });
   });
 
   periodKeys.forEach((period) => {
     const summary = periodSummaryFromDaily(dailyMap, period.start, period.end, baseDate);
-    HOME_BADGE_DEFINITIONS
-      .filter((definition) => definition.period === period.period)
-      .forEach((definition) => {
-        if (isHomeBadgeEarned(definition, summary)) {
-          addHomeBadge(byDate, period.earnedAt, definition.label);
-        }
-      });
+    HOME_BADGE_DEFINITIONS.filter((definition) => definition.period === period.period).forEach((definition) => {
+      if (isHomeBadgeEarned(definition, summary)) {
+        addHomeBadge(byDate, period.earnedAt, definition.label);
+      }
+    });
+
+    BALANCE_BADGE_DEFINITIONS.filter((definition) => definition.period === period.period).forEach((definition) => {
+      if (summary.count >= definition.requirements.count && summary.avg >= definition.requirements.avg) {
+        addHomeBadge(byDate, period.earnedAt, definition.label);
+      }
+    });
+
+    POWER_BADGE_DEFINITIONS.filter((definition) => definition.period === period.period).forEach((definition) => {
+      if (
+        summary.count >= definition.requirements.count &&
+        summary.avg >= definition.requirements.avg &&
+        summary.best >= definition.requirements.best
+      ) {
+        addHomeBadge(byDate, period.earnedAt, definition.label);
+      }
+    });
+
     const growthLabels = growthBadgeLabelsForRange(period.period);
     const previousWindow = previousChallengeWindow(records, period.period, period.start, period.end);
     if (growthLabels && previousWindow) {
@@ -990,21 +1372,38 @@ function badgesFor(records, baseDate = todayISO()) {
       const previousRecords = daily.filter((day) => day.date >= toISO(previousStart) && day.date <= toISO(previousEnd));
       const previousDailyMap = new Map(previousRecords.map((day) => [day.date, day]));
       const previousSummary = periodSummaryFromDaily(previousDailyMap, previousStart, previousEnd, toISO(previousEnd));
-      if (previousRecords.length && previousSummary.avg > 0) {
-        SCORE_BAR_GROWTH_STEPS.forEach((delta) => {
-          if (summary.avg >= previousSummary.avg + delta) {
-            addHomeBadge(byDate, period.earnedAt, scoreGrowthBadgeLabel(period.period, "avg", delta));
-          }
-        });
-      }
-      if (previousRecords.length && previousSummary.best > 0) {
-        SCORE_BAR_GROWTH_STEPS.forEach((delta) => {
-          if (summary.best >= previousSummary.best + delta) {
-            addHomeBadge(byDate, period.earnedAt, scoreGrowthBadgeLabel(period.period, "best", delta));
-          }
-        });
-      }
+      const avgDeltas = period.period === RANGE_WEEK ? WEEKLY_GROWTH_THRESHOLDS.avg : MONTHLY_GROWTH_THRESHOLDS.avg;
+      const bestDeltas = period.period === RANGE_WEEK ? WEEKLY_GROWTH_THRESHOLDS.best : MONTHLY_GROWTH_THRESHOLDS.best;
+      avgDeltas.forEach((delta) => {
+        if (compareGrowthSummary(summary, previousSummary, "avg", delta)) {
+          addHomeBadge(byDate, period.earnedAt, scoreGrowthBadgeLabel(period.period, "avg", delta));
+        }
+      });
+      bestDeltas.forEach((delta) => {
+        if (compareGrowthSummary(summary, previousSummary, "best", delta)) {
+          addHomeBadge(byDate, period.earnedAt, scoreGrowthBadgeLabel(period.period, "best", delta));
+        }
+      });
     }
+  });
+
+  const years = [...new Set(daily.map((day) => parseISO(day.date).getFullYear()))];
+  years.forEach((year) => {
+    ["spring", "summer", "winter"].forEach((eventKey) => {
+      const seasonDefinition = seasonSettings[eventKey];
+      if (!seasonDefinition) return;
+      const { start, end } = seasonWindowForYear(seasonDefinition, year);
+      const summary = seasonSummaryForWindow(dailyMap, start, end);
+      const earnedAt = toISO(end > parseISO(baseDate) ? parseISO(baseDate) : end);
+      SEASONAL_BADGE_DEFINITIONS
+        .filter((definition) => definition.eventKey === eventKey)
+        .forEach((definition) => {
+          const value = definition.metric === "season-days" ? summary.days : summary.count;
+          if (value >= definition.target) {
+            addHomeBadge(byDate, earnedAt, definition.label);
+          }
+        });
+    });
   });
 
   return byDate;
@@ -1868,7 +2267,7 @@ function DailyBadgeMark({ label, description, onDismiss = null, complete = false
         onClick={handleClick}
         aria-label={`${definition.label}の詳細`}
       >
-        <img className="daily-badge-image" src={DAILY_RARITY_IMAGE_URLS[definition.rarity]} alt="" aria-hidden="true" />
+          <img className="daily-badge-image" src={RARITY_IMAGE_URLS[definition.rarity]} alt="" aria-hidden="true" />
         {complete && <span className="daily-complete-stamp" aria-hidden="true">COMPLETE</span>}
       </button>
       {selectedBadge && (
@@ -1890,7 +2289,7 @@ function RarityBadgePreview({ summaries, activeRarity, onSelect }) {
           onClick={() => onSelect(rarity)}
           key={rarity}
         >
-          <img className="daily-badge-image" src={DAILY_RARITY_IMAGE_URLS[rarity]} alt="" aria-hidden="true" />
+          <img className="daily-badge-image" src={RARITY_IMAGE_URLS[rarity]} alt="" aria-hidden="true" />
           <span className="preview-rarity-label">{rarity}</span>
         </button>
       ))}
@@ -3478,19 +3877,18 @@ function collectBadgeCounts(records, filter = RANGE_ALL, baseDate = todayISO()) 
 }
 
 function badgeCategory(label) {
-  if (label.includes("相棒ベスト")) return "score";
-  if (label.startsWith("初")) return "score";
-  return label.includes("平均") || label.includes("ベスト") ? "score" : "count";
+  const definition = BADGE_DEFINITION_MAP.get(label);
+  return definition?.category || "trophy";
 }
 
 function badgePeriod(label) {
-  if (label.includes("相棒")) return "total";
-  if (label.startsWith("累計") || label.startsWith("初")) return "total";
-  if (label.includes("日連続練習")) return "daily";
-  if (label.startsWith("毎日") || label.startsWith("今日") || label.startsWith("日平均")) return "daily";
-  if (label.startsWith("毎週") || label.startsWith("今週") || label.startsWith("週平均")) return "weekly";
-  if (label.startsWith("毎月") || label.startsWith("月間")) return "monthly";
-  if (label.startsWith("月平均") || label.startsWith("今月")) return "monthly";
+  const definition = BADGE_DEFINITION_MAP.get(label);
+  if (definition?.period === RANGE_TODAY) return "daily";
+  if (definition?.period === RANGE_WEEK) return "weekly";
+  if (definition?.period === RANGE_MONTH) return "monthly";
+  if (definition?.period === RANGE_YEAR) return "yearly";
+  if (definition?.period === "seasonal") return "seasonal";
+  if (definition?.period === "special") return "special";
   return "other";
 }
 
@@ -3499,15 +3897,35 @@ function badgeGroupKey(label) {
 }
 
 function badgeValue(label) {
-  const matches = label.match(/[\d,.]+/g) || [];
-  return Number(matches.at(-1)?.replace(/,/g, "") || 0);
+  const definition = BADGE_DEFINITION_MAP.get(label);
+  if (!definition) return 0;
+  if (Number.isFinite(definition.target)) return definition.target;
+  if (definition.requirements?.best) return definition.requirements.best;
+  if (definition.requirements?.avg) return definition.requirements.avg;
+  if (definition.requirements?.count) return definition.requirements.count;
+  return 0;
 }
 
 function badgeSortKey(label) {
-  const value = badgeValue(label);
-  const period = badgePeriod(label) === "daily" ? 0 : badgePeriod(label) === "weekly" ? 1 : badgePeriod(label) === "monthly" ? 2 : badgePeriod(label) === "total" ? 3 : 9;
-  const metric = label.includes("回数") || /回$/.test(label) ? 0 : label.includes("平均") ? 1 : label.includes("ベスト") ? 2 : label.includes("練習") || label.includes("皆勤") || label.includes("毎日") ? 3 : 0;
-  return [period, metric, value || 9999, label];
+  const definition = BADGE_DEFINITION_MAP.get(label);
+  const periodValue = {
+    daily: 0,
+    weekly: 1,
+    monthly: 2,
+    yearly: 3,
+    seasonal: 4,
+    special: 5,
+    other: 9,
+  }[badgePeriod(label)] || 9;
+  const categoryValue = {
+    count: 0,
+    average: 1,
+    best: 2,
+    calendar: 3,
+    flag: 4,
+    trophy: 5,
+  }[definition?.category || "trophy"] || 9;
+  return [periodValue, categoryValue, badgeValue(label) || 9999, label];
 }
 
 function compareBadgesByRarity(a, b) {
@@ -3547,77 +3965,15 @@ function settingsChipTextSize(text) {
 }
 
 function canonicalBadgeLabel(label) {
-  const batBadgeIndex = label.indexOf(" 相棒");
-  const baseLabel = batBadgeIndex >= 0 ? label.slice(batBadgeIndex + 1) : label;
-  return baseLabel
-    .replace(/^今日(?=\d+回)/, "毎日回数")
-    .replace(/^毎日(?=\d+回)/, "毎日回数")
-    .replace(/^毎日回数([\d,.]+)回$/, "毎日回数$1")
-    .replace(/^日平均(?=\d+)/, "毎日平均")
-    .replace(/^今日ベスト(?=\d+)/, "毎日ベスト")
-    .replace(/^今週(?=\d+回)/, "毎週回数")
-    .replace(/^毎週(?=\d+回)/, "毎週回数")
-    .replace(/^毎週回数([\d,.]+)回$/, "毎週回数$1")
-    .replace(/^週平均(?=\d+)/, "毎週平均")
-    .replace(/^今週(?=\d+日練習|皆勤)/, "毎週")
-    .replace(/^月間(?=\d+回)/, "毎月回数")
-    .replace(/^毎月(?=\d+回)/, "毎月回数")
-    .replace(/^毎月回数([\d,.]+)回$/, "毎月回数$1")
-    .replace(/^月平均(?=\d+)/, "毎月平均")
-    .replace(/^今月(?=\d+日練習|毎日練習)/, "毎月");
+  return label;
 }
 
 function badgeTypeForLabel(label) {
-  if (
-    label.startsWith("初") ||
-    label.startsWith("累計") ||
-    label.startsWith("バッジポイント") ||
-    /^バッジ\d/.test(label) ||
-    label.includes("日連続") ||
-    label === "はじめの一歩" ||
-    label.startsWith("初めて") ||
-    label === "バットコレクター" ||
-    label === "全バット練習" ||
-    label === "ラッキー7" ||
-    label === "スリーナイン" ||
-    label === "七日目の覚醒"
-  ) {
-    return "unique";
-  }
-  return "repeatable";
+  return BADGE_DEFINITION_MAP.get(label)?.type || "repeatable";
 }
 
 function rarityForBadge(label) {
-  const value = badgeValue(label);
-  if (label.startsWith("バッジポイント")) {
-    if (value >= 10000) return "UR";
-    if (value >= 3000) return "SR";
-    if (value >= 1000) return "RR";
-    if (value >= 500) return "R";
-    if (value >= 300) return "U";
-    return "C";
-  }
-  if (/^バッジ\d+種類/.test(label)) {
-    if (value >= 100) return "UR";
-    if (value >= 75) return "SR";
-    if (value >= 50) return "RR";
-    if (value >= 25) return "R";
-    return "U";
-  }
-  if (/^バッジ\d+個/.test(label)) {
-    if (value >= 3000) return "UR";
-    if (value >= 1000) return "SR";
-    if (value >= 500) return "RR";
-    if (value >= 100) return "R";
-    return "U";
-  }
-  if (["ラッキー7", "スリーナイン", "七日目の覚醒"].includes(label) || value >= 50000 || label.includes("365日")) return "UR";
-  if (["ぴったり500", "777スイング", "復活の一振り"].includes(label) || label.includes("100日") || label.includes("999")) return "UR";
-  if (["大晦日の素振り", "元日の一振り"].includes(label) || label.includes("初800") || label.includes("初900") || label.includes("30日") || label.includes("毎月平均600") || label.includes("毎週平均600") || value >= 10000 || label.includes("60日") || label.includes("相棒5000")) return "SR";
-  if (label.includes("毎日回数300") || label.includes("毎日回数500") || label.includes("毎日平均600") || label.includes("毎日平均700") || label.includes("毎週回数1000") || label.includes("毎週回数2000") || label.includes("毎月回数2000") || label.includes("毎月回数3000") || label.includes("毎月回数5000") || label.includes("14日")) return "RR";
-  if (label.includes("毎日平均500") || label.includes("毎日回数200") || label.includes("毎日ベスト700") || label.includes("初700") || label.includes("毎週回数500") || label.includes("毎週平均500") || label.includes("毎月平均500") || label.includes("毎月平均400") || label.includes("毎月回数1000") || label.includes("7日") || value >= 3000) return "R";
-  if (label.includes("毎日回数100") || label.includes("毎日平均400") || label.includes("毎日ベスト600") || label.includes("毎週回数300") || label.includes("毎週平均400") || label.includes("毎月回数500") || label.includes("毎週3日") || label.includes("毎週5日") || label.includes("毎月5日") || label.includes("3日") || label.includes("初めて")) return "U";
-  return "C";
+  return BADGE_DEFINITION_MAP.get(label)?.rarity || "D";
 }
 
 function rarityColorFor(rarity) {
@@ -3625,50 +3981,27 @@ function rarityColorFor(rarity) {
 }
 
 function badgeDescriptionFor(label, type) {
-  if (label === "はじめの一歩") return "初めて記録する";
-  if (label.includes("ひみつ")) return "条件はひみつ";
-  if (label.startsWith("バッジポイント")) return `${label.replace("バッジポイント", "")}ptまで集める`;
-  if (/^バッジ\d+種類/.test(label)) return `${label.replace("バッジ", "")}集める`;
-  if (/^バッジ\d+個/.test(label)) return `重複を含めて${label.replace("バッジ", "")}集める`;
-  if (label.includes("平均")) return `${label}を達成`;
-  if (label.includes("ベスト") || label.startsWith("初")) return `${label}を達成`;
-  if (label.includes("連続")) return `${label}で練習する`;
-  if (label.includes("相棒")) return `${label}を達成`;
-  if (label.includes("多く振った") || label.includes("平均アップ") || label.includes("ベスト更新")) return `${label}したときに獲得`;
-  return `${label}を${type === "unique" ? "1回だけ獲得可" : "達成するたび獲得可"}`;
+  return BADGE_DEFINITION_MAP.get(label)?.description || `${label}を${type === "unique" ? "1回だけ獲得可" : "達成するたび獲得可"}`;
 }
 
 function makeBadgeDefinition(label, options = {}) {
-  const type = options.type || badgeTypeForLabel(label);
+  const base = BADGE_DEFINITION_MAP.get(label);
+  const type = options.type || base?.type || badgeTypeForLabel(label);
   return {
-    id: label,
-    label,
+    id: options.id || base?.id || label,
+    label: options.label || base?.label || label,
+    name: options.name || base?.name || label,
     type,
-    rarity: options.rarity || rarityForBadge(label),
-    secret: Boolean(options.secret),
-    description: options.description || badgeDescriptionFor(label, type),
+    rarity: options.rarity || base?.rarity || rarityForBadge(label),
+    category: options.category || base?.category || "trophy",
+    conditionText: options.conditionText || base?.conditionText || "",
+    secret: Boolean(options.secret || base?.secret),
+    description: options.description || base?.description || badgeDescriptionFor(label, type),
   };
 }
 
 function allBadgeDefinitions() {
-  const definitions = [
-    ...HOME_BADGE_DEFINITIONS.map((definition) => makeBadgeDefinition(definition.label, { type: "repeatable" })),
-    ...UNIQUE_BADGE_DEFINITIONS.map((definition) => makeBadgeDefinition(definition.label, { type: "unique" })),
-    ...CONTEXT_START_BADGES.map((label) => makeBadgeDefinition(label, { type: "unique" })),
-    ...CONTEXT_STREAK_BADGES.map((label) => makeBadgeDefinition(label, { type: "unique" })),
-    ...CONTEXT_BAT_BADGES.map((label) => makeBadgeDefinition(label, { type: label.includes("コレクター") || label.includes("全バット") ? "unique" : "repeatable" })),
-    ...BAT_BADGE_DEFINITIONS.map((definition) => makeBadgeDefinition(definition.label, { type: "unique", description: definition.description })),
-    ...CONTEXT_GROWTH_BADGES.map((label) => makeBadgeDefinition(label, { type: "repeatable" })),
-    ...CONTEXT_SECRET_BADGES.map((label) => makeBadgeDefinition(label, { type: label === "ラッキー7" || label === "スリーナイン" || label === "七日目の覚醒" ? "unique" : "repeatable", secret: true })),
-    ...META_BADGE_DEFINITIONS.map((definition) => makeBadgeDefinition(definition.label, { type: "unique", description: definition.description })),
-  ];
-  const map = new Map();
-  definitions.forEach((definition) => {
-    if (!map.has(definition.label)) {
-      map.set(definition.label, definition);
-    }
-  });
-  return [...map.values()].sort((a, b) => (
+  return [...BADGE_DEFINITIONS].map((definition) => makeBadgeDefinition(definition.label)).sort((a, b) => (
     RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity) ||
     badgeSortKey(a.label)[1] - badgeSortKey(b.label)[1] ||
     badgeSortKey(a.label)[2] - badgeSortKey(b.label)[2] ||
@@ -3677,67 +4010,14 @@ function allBadgeDefinitions() {
 }
 
 function earnedCountForDefinition(definition, badgeCounts, metaStats = null) {
-  if (metaStats) {
-    const metaDefinition = META_BADGE_DEFINITIONS.find((item) => item.label === definition.label);
-    if (metaDefinition) {
-      return metaStats[metaDefinition.metric] >= metaDefinition.target ? 1 : 0;
-    }
-  }
   const exact = badgeCounts.get(definition.label) || 0;
-  if (exact) return exact;
-  if (definition.label.startsWith("相棒")) {
-    return [...badgeCounts.entries()]
-      .filter(([label]) => label.endsWith(definition.label))
-      .reduce((sum, [, count]) => sum + count, 0);
-  }
-  return 0;
+  return exact || 0;
 }
 
 function RarityIcon({ rarity }) {
   return (
     <span className={`rarity-icon rarity-${rarity.toLowerCase()}`} aria-hidden="true">
-      <svg viewBox="0 0 64 64" focusable="false">
-        {rarity === "C" && (
-          <>
-            <circle cx="32" cy="32" r="20" fill="currentColor" fillOpacity="0.5" stroke="currentColor" strokeWidth="4" />
-            <circle cx="32" cy="32" r="6" fill="currentColor" opacity="0.9" />
-          </>
-        )}
-        {rarity === "U" && (
-          <>
-            <path d="M32 10 L54 32 L32 54 L10 32 Z" fill="currentColor" fillOpacity="0.5" stroke="currentColor" strokeWidth="4" strokeLinejoin="round" />
-            <path d="M32 22 L42 32 L32 42 L22 32 Z" fill="currentColor" opacity="0.9" />
-          </>
-        )}
-        {rarity === "R" && (
-          <>
-            <path d="M32 8 L39 24 L56 25 L43 37 L47 54 L32 45 L17 54 L21 37 L8 25 L25 24 Z" fill="currentColor" fillOpacity="0.5" stroke="currentColor" strokeWidth="4" strokeLinejoin="round" />
-            <circle cx="32" cy="32" r="5" fill="currentColor" />
-          </>
-        )}
-        {rarity === "RR" && (
-          <>
-            <path d="M26 9 L32 23 L47 24 L36 35 L39 50 L26 42 L13 50 L16 35 L5 24 L20 23 Z" fill="currentColor" fillOpacity="0.5" stroke="currentColor" strokeWidth="3.5" strokeLinejoin="round" />
-            <path d="M42 14 L47 26 L60 27 L50 36 L53 50 L42 43 L31 50 L34 36 L24 27 L37 26 Z" fill="currentColor" fillOpacity="0.5" stroke="currentColor" strokeWidth="3.5" strokeLinejoin="round" opacity="0.82" />
-            <path d="M32 20 L36 30 L47 31 L39 38 L41 49 L32 43 L23 49 L25 38 L17 31 L28 30 Z" fill="currentColor" opacity="0.28" />
-          </>
-        )}
-        {rarity === "SR" && (
-          <>
-            <path d="M32 6 L37 22 L54 15 L46 31 L60 40 L43 42 L45 59 L32 48 L19 59 L21 42 L4 40 L18 31 L10 15 L27 22 Z" fill="currentColor" fillOpacity="0.5" stroke="currentColor" strokeWidth="3.7" strokeLinejoin="round" />
-            <circle cx="32" cy="32" r="19" fill="currentColor" fillOpacity="0.5" stroke="currentColor" strokeWidth="2" opacity="0.35" />
-            <path d="M32 19 L35 29 L45 29 L37 35 L40 45 L32 39 L24 45 L27 35 L19 29 L29 29 Z" fill="currentColor" opacity="0.85" />
-          </>
-        )}
-        {rarity === "UR" && (
-          <>
-            <circle cx="32" cy="32" r="24" fill="currentColor" fillOpacity="0.5" stroke="currentColor" strokeWidth="3" />
-            <path d="M32 5 L36 20 L48 10 L43 25 L59 24 L45 33 L57 44 L41 41 L42 58 L32 45 L22 58 L23 41 L7 44 L19 33 L5 24 L21 25 L16 10 L28 20 Z" fill="currentColor" fillOpacity="0.5" stroke="currentColor" strokeWidth="3.4" strokeLinejoin="round" />
-            <circle cx="32" cy="32" r="8" fill="currentColor" opacity="0.25" />
-            <circle cx="32" cy="32" r="3.5" fill="currentColor" />
-          </>
-        )}
-      </svg>
+      <img src={RARITY_IMAGE_URLS[rarity]} alt="" />
     </span>
   );
 }
@@ -3771,16 +4051,18 @@ function BadgeDetailPopover({ badge, onClose }) {
             <path d="M16.5 7.5 7.5 16.5" />
           </svg>
         </button>
-        <div className="collection-popover-head">
-          <span className={`popover-badge-image rarity-${badge.rarity.toLowerCase()}`} aria-hidden="true">
-            <img src={DAILY_RARITY_IMAGE_URLS[badge.rarity]} alt="" />
-          </span>
-          <div>
-            <strong>{badge.lockedSecret ? "???" : badge.label}</strong>
-            <span>{badge.rarity} / {RARITY_LABELS[badge.rarity]}</span>
+        <div className="badge-popup-card" style={{ "--badge-rarity-color": rarityColorFor(badge.rarity) }}>
+          <img className="badge-popup-card-bg" src={RARITY_CARD_URLS[badge.rarity]} alt="" aria-hidden="true" />
+          <div className="badge-popup-card-medal" aria-hidden="true">
+            <img src={CATEGORY_ICON_URLS[badge.category]} alt="" />
+          </div>
+          <div className="badge-popup-card-copy">
+            <strong>{badge.lockedSecret ? "???" : badge.name || badge.label}</strong>
+            <span className="badge-popup-card-rarity">{badge.rarity} / {RARITY_LABELS[badge.rarity]}</span>
+            <span className="badge-popup-card-condition">{badge.lockedSecret ? "ひみつ" : badge.conditionText}</span>
+            <p>{badge.lockedSecret ? "ひみつ" : badge.description}</p>
           </div>
         </div>
-        <p>{badge.lockedSecret ? "ひみつ" : badge.description}</p>
         <small>
           {badge.type === "unique" ? "達成時に1回だけ獲得可" : "達成したら何回でも獲得可"}
           {" / "}
@@ -3806,11 +4088,18 @@ function BadgeChip({ label, count = 1, description = null, lockedSecret = false 
         <button
           className={`badge collection-badge rarity-${definition.rarity.toLowerCase()}`}
           type="button"
-          style={{ "--badge-chip-font-size": badgeChipFontSize(lockedSecret ? "???" : definition.label) }}
+          style={{
+            "--badge-chip-font-size": badgeChipFontSize(lockedSecret ? "???" : definition.label),
+            "--badge-rarity-color": rarityColorFor(definition.rarity),
+            backgroundImage: `url("${RARITY_NAMEPLATE_URLS[definition.rarity]}")`,
+          }}
           onClick={() => setSelectedBadge({ ...definition, earnedCount: count, lockedSecret: false })}
         >
+          <span className="badge-chip-icon" aria-hidden="true">
+            <img src={CATEGORY_ICON_URLS[definition.category]} alt="" />
+          </span>
+          <span className="badge-label">{lockedSecret ? "???" : definition.name || definition.label}</span>
           <RarityIcon rarity={definition.rarity} />
-          <span className="badge-label">{lockedSecret ? "???" : definition.label}</span>
         </button>
         <b>{count > 1 ? `x${count}` : ""}</b>
       </span>
@@ -3827,33 +4116,21 @@ function BadgeCollectionView({ allForName, activeDate = todayISO(), db = default
   const collectionRecords = allForName;
   const badgeCounts = useMemo(() => new Map(collectBadgeCounts(collectionRecords, RANGE_ALL, activeDate)), [collectionRecords, activeDate]);
   const definitions = useMemo(() => allBadgeDefinitions(), []);
-  const baseDefinitions = definitions.filter((definition) => !META_BADGE_DEFINITIONS.some((item) => item.label === definition.label));
-  const basePointTotal = baseDefinitions.reduce((sum, definition) => {
+  const badgePointTotal = definitions.reduce((sum, definition) => {
     const earnedCount = earnedCountForDefinition(definition, badgeCounts);
     return sum + (earnedCount * RARITY_POINTS[definition.rarity]);
   }, 0);
-  const baseEarnedTotal = baseDefinitions.reduce((sum, definition) => (
+  const earnedTotal = definitions.reduce((sum, definition) => (
     sum + Math.min(1, earnedCountForDefinition(definition, badgeCounts))
   ), 0);
-  const baseEarnedInstanceTotal = baseDefinitions.reduce((sum, definition) => (
+  const earnedInstanceTotal = definitions.reduce((sum, definition) => (
     sum + earnedCountForDefinition(definition, badgeCounts)
   ), 0);
-  const metaStats = {
-    points: basePointTotal,
-    types: baseEarnedTotal,
-    instances: baseEarnedInstanceTotal,
-  };
-  const badgePointTotal = definitions.reduce((sum, definition) => {
-    const earnedCount = earnedCountForDefinition(definition, badgeCounts, metaStats);
-    return sum + (earnedCount * RARITY_POINTS[definition.rarity]);
-  }, 0);
-  const earnedTotal = definitions.reduce((sum, definition) => (
-    sum + Math.min(1, earnedCountForDefinition(definition, badgeCounts, metaStats))
-  ), 0);
-  const earnedInstanceTotal = definitions.reduce((sum, definition) => (
-    sum + earnedCountForDefinition(definition, badgeCounts, metaStats)
-  ), 0);
-  const badgePointTargets = META_BADGE_DEFINITIONS.filter((definition) => definition.metric === "points");
+  const badgePointTargets = [30, 60, 120, 240, 360, 520].map((target) => ({
+    target,
+    label: `${target}pt`,
+    description: `バッジポイント${target}ptまであと少し`,
+  }));
   const rewardGoalInput = String(db?.badgeRewardGoal || "");
   const rewardTextInput = String(db?.badgeRewardText || "");
   const rewardGoal = Math.max(0, Math.trunc(Number(rewardGoalInput) || 0));
@@ -3877,9 +4154,9 @@ function BadgeCollectionView({ allForName, activeDate = todayISO(), db = default
   };
   const raritySummaries = RARITY_ORDER.map((rarity) => {
     const items = definitions.filter((definition) => definition.rarity === rarity);
-    const earnedTotal = items.reduce((sum, definition) => sum + Math.min(1, earnedCountForDefinition(definition, badgeCounts, metaStats)), 0);
+    const earnedTotal = items.reduce((sum, definition) => sum + Math.min(1, earnedCountForDefinition(definition, badgeCounts)), 0);
     const pointTotal = items.reduce((sum, definition) => (
-      sum + (earnedCountForDefinition(definition, badgeCounts, metaStats) * RARITY_POINTS[rarity])
+      sum + (earnedCountForDefinition(definition, badgeCounts) * RARITY_POINTS[rarity])
     ), 0);
     return { rarity, items, earnedTotal, pointTotal };
   }).filter((summary) => summary.items.length);
@@ -3958,7 +4235,7 @@ function BadgeCollectionView({ allForName, activeDate = todayISO(), db = default
                 </div>
                 <div className="collection-grid">
                   {items.map((definition) => {
-                    const earnedCount = earnedCountForDefinition(definition, badgeCounts, metaStats);
+                    const earnedCount = earnedCountForDefinition(definition, badgeCounts);
                     const lockedSecret = definition.secret && earnedCount === 0;
                     return (
                       <div

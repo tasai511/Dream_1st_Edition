@@ -1,4 +1,4 @@
-const CACHE_NAME = "swing-log-v98";
+const CACHE_NAME = "swing-log-v99";
 const ASSETS = [
   "./",
   "./index.html",
@@ -19,13 +19,27 @@ const ASSETS = [
   "./images/count.svg",
   "./images/average.svg",
   "./images/best.svg",
+  "./images/flag.svg",
+  "./images/trophy.svg",
   "./images/bat-icon.svg",
-  "./images/rarity_c_common.png",
-  "./images/rarity_u_uncommon.png",
-  "./images/rarity_r_rare.png",
-  "./images/rarity_rr_double_rare.png",
-  "./images/rarity_sr_super_rare.png",
-  "./images/rarity_ur_ultra_rare.png",
+  "./images/rarity_d.svg",
+  "./images/rarity_c.svg",
+  "./images/rarity_b.svg",
+  "./images/rarity_a.svg",
+  "./images/rarity_s.svg",
+  "./images/rarity_ss.svg",
+  "./images/D_bronze_nameplate.png",
+  "./images/C_green_nameplate.png",
+  "./images/B_blue_nameplate.png",
+  "./images/A_red_nameplate.png",
+  "./images/S_silver_nameplate.png",
+  "./images/SS_gold_nameplate.png",
+  "./images/D_card.png",
+  "./images/C_card.png",
+  "./images/B_card.png",
+  "./images/A_card.png",
+  "./images/S_card.png",
+  "./images/SS_card.png",
 ];
 
 self.addEventListener("install", (event) => {

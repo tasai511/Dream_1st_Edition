@@ -11703,3 +11703,225 @@ body .app .home-score-input-grid .home-input-panel::before {
     0 0,
     0 0 !important;
 }
+/* Dream Log badge rebuild */
+.daily-badge-mark.rarity-d,
+.rarity-d,
+.badge.collection-badge.rarity-d,
+.meter-badge.rarity-d,
+.progress-meter > .meter-badge.rarity-d,
+.meter-ring > .meter-badge.rarity-d,
+.meter-ring > .ring-meter-badge.rarity-d {
+  color: #ab7b52;
+}
+
+.daily-badge-mark.rarity-c,
+.rarity-c,
+.badge.collection-badge.rarity-c,
+.meter-badge.rarity-c,
+.progress-meter > .meter-badge.rarity-c,
+.meter-ring > .meter-badge.rarity-c,
+.meter-ring > .ring-meter-badge.rarity-c {
+  color: #63b15f;
+}
+
+.daily-badge-mark.rarity-b,
+.rarity-b,
+.badge.collection-badge.rarity-b,
+.meter-badge.rarity-b,
+.progress-meter > .meter-badge.rarity-b,
+.meter-ring > .meter-badge.rarity-b,
+.meter-ring > .ring-meter-badge.rarity-b {
+  color: #55a9ff;
+}
+
+.daily-badge-mark.rarity-a,
+.rarity-a,
+.badge.collection-badge.rarity-a,
+.meter-badge.rarity-a,
+.progress-meter > .meter-badge.rarity-a,
+.meter-ring > .meter-badge.rarity-a,
+.meter-ring > .ring-meter-badge.rarity-a {
+  color: #ff7a45;
+}
+
+.daily-badge-mark.rarity-s,
+.rarity-s,
+.badge.collection-badge.rarity-s,
+.meter-badge.rarity-s,
+.progress-meter > .meter-badge.rarity-s,
+.meter-ring > .meter-badge.rarity-s,
+.meter-ring > .ring-meter-badge.rarity-s {
+  color: #dfe5ee;
+}
+
+.daily-badge-mark.rarity-ss,
+.rarity-ss,
+.badge.collection-badge.rarity-ss,
+.meter-badge.rarity-ss,
+.progress-meter > .meter-badge.rarity-ss,
+.meter-ring > .meter-badge.rarity-ss,
+.meter-ring > .ring-meter-badge.rarity-ss {
+  color: #ffd447;
+}
+
+.daily-badge-mark.rarity-d {
+  --daily-badge-color: #ab7b52;
+  --daily-badge-glow-core: 0;
+  --daily-badge-glow-aura: 0;
+  --daily-badge-glow-core-mix: 0%;
+  --daily-badge-glow-aura-mix: 0%;
+}
+
+.daily-badge-mark.rarity-c {
+  --daily-badge-color: #63b15f;
+  --daily-badge-glow-core: 0;
+  --daily-badge-glow-aura: 0;
+  --daily-badge-glow-core-mix: 0%;
+  --daily-badge-glow-aura-mix: 0%;
+}
+
+.daily-badge-mark.rarity-b {
+  --daily-badge-color: #55a9ff;
+  --daily-badge-glow-core: 5px;
+  --daily-badge-glow-aura: 13px;
+  --daily-badge-glow-core-mix: 72%;
+  --daily-badge-glow-aura-mix: 44%;
+}
+
+.daily-badge-mark.rarity-a {
+  --daily-badge-color: #ff7a45;
+  --daily-badge-glow-core: 6px;
+  --daily-badge-glow-aura: 16px;
+  --daily-badge-glow-core-mix: 78%;
+  --daily-badge-glow-aura-mix: 50%;
+}
+
+.daily-badge-mark.rarity-s {
+  --daily-badge-color: #dfe5ee;
+  --daily-badge-glow-core: 8px;
+  --daily-badge-glow-aura: 24px;
+  --daily-badge-glow-core-mix: 86%;
+  --daily-badge-glow-aura-mix: 60%;
+}
+
+.daily-badge-mark.rarity-ss {
+  --daily-badge-color: #ffd447;
+  --daily-badge-glow-core: 10px;
+  --daily-badge-glow-aura: 30px;
+  --daily-badge-glow-core-mix: 92%;
+  --daily-badge-glow-aura-mix: 66%;
+}
+
+.rarity-icon img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+}
+
+.daily-badge-image,
+.popover-badge-image img {
+  filter:
+    brightness(0) invert(1)
+    drop-shadow(0 0 var(--daily-badge-glow-core) color-mix(in srgb, var(--daily-badge-color) var(--daily-badge-glow-core-mix), transparent))
+    drop-shadow(0 0 var(--daily-badge-glow-aura) color-mix(in srgb, var(--daily-badge-color) var(--daily-badge-glow-aura-mix), transparent))
+    drop-shadow(0 7px 8px rgba(0, 0, 0, 0.38));
+}
+
+.badge.collection-badge {
+  min-height: 40px;
+  border: 0;
+  padding: 5px 12px 5px 9px;
+  color: #fff;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.24);
+}
+
+.badge.collection-badge .badge-chip-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+}
+
+.badge.collection-badge .badge-chip-icon img {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  filter: brightness(0) invert(1) drop-shadow(0 1px 3px rgba(0, 0, 0, 0.3));
+}
+
+.badge.collection-badge .badge-label {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.badge.collection-badge .rarity-icon {
+  width: 16px;
+  height: 16px;
+  margin-left: 6px;
+}
+
+.badge-popup-card {
+  position: relative;
+  width: min(100%, 280px);
+  margin: 0 auto 14px;
+  color: #fff;
+}
+
+.badge-popup-card-bg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.badge-popup-card-medal {
+  position: absolute;
+  top: 18%;
+  left: 50%;
+  width: 62px;
+  height: 62px;
+  transform: translateX(-50%);
+  display: grid;
+  place-items: center;
+}
+
+.badge-popup-card-medal img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  filter: brightness(0) invert(1) drop-shadow(0 3px 6px rgba(0, 0, 0, 0.34));
+}
+
+.badge-popup-card-copy {
+  position: absolute;
+  inset: 0;
+  padding: 124px 28px 20px;
+  text-align: center;
+}
+
+.badge-popup-card-copy strong {
+  display: block;
+  font-size: 1rem;
+  font-weight: 950;
+  line-height: 1.2;
+}
+
+.badge-popup-card-rarity,
+.badge-popup-card-condition {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.badge-popup-card-copy p {
+  margin: 12px 0 0;
+  font-size: 0.74rem;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.92);
+}
