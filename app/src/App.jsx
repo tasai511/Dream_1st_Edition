@@ -4095,7 +4095,7 @@ function BadgeChip({ label, count = 1, description = null, lockedSecret = false 
           }}
           onClick={() => setSelectedBadge({ ...definition, earnedCount: count, lockedSecret: false })}
         >
-          <span className="badge-chip-icon" aria-hidden="true">
+          <span className={`badge-chip-icon category-${definition.category}`} aria-hidden="true">
             <img src={CATEGORY_ICON_URLS[definition.category]} alt="" />
           </span>
           <span className="badge-label">{lockedSecret ? "???" : definition.name || definition.label}</span>

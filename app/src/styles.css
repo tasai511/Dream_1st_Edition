@@ -3645,7 +3645,7 @@ input::placeholder {
   display: inline-flex;
   width: fit-content;
   max-width: 100%;
-  max-height: 42px;
+  max-height: 54px;
   animation: badgeReveal 0.24s ease both;
   animation-delay: min(calc(var(--badge-index, 0) * 24ms), 180ms);
   transition: opacity 220ms ease, transform 260ms ease, max-height 260ms ease;
@@ -3654,7 +3654,7 @@ input::placeholder {
 .badge-list-window {
   overflow: hidden;
   display: grid;
-  grid-template-rows: 88px;
+  grid-template-rows: 120px;
   background: transparent;
   transition: grid-template-rows 320ms ease;
 }
@@ -3829,8 +3829,7 @@ input::placeholder {
 }
 
 .badge-inline-section .badge-motion-item,
-.badge-inline-section .badge-chip-wrap,
-.badge-inline-section .badge-chip-wrap .badge {
+.badge-inline-section .badge-chip-wrap {
   width: 100%;
   min-width: 0;
 }
@@ -3841,6 +3840,7 @@ input::placeholder {
 
 .badge-inline-section .badge-chip-wrap {
   gap: 3px;
+  justify-content: center;
 }
 
 .badge-inline-section .badge-chip-wrap > b:empty {
@@ -11844,39 +11844,83 @@ body .app .home-score-input-grid .home-input-panel::before {
 }
 
 .badge.collection-badge {
-  min-height: 46px;
+  width: min(100%, 124px);
+  min-width: 0;
+  max-width: 124px;
+  min-height: 0;
+  aspect-ratio: 1287 / 538;
   border: 0;
-  padding: 6px 16px 6px 10px;
+  border-radius: 0;
+  padding: 5px 12px 5px 0;
   color: var(--badge-chip-text, #ffffff);
   background-color: transparent;
-  background-position: center center;
+  background-position: left center;
   background-repeat: no-repeat;
-  background-size: 100% auto;
+  background-size: contain;
   box-shadow: none;
   filter: drop-shadow(0 4px 7px rgba(0, 0, 0, 0.22));
+  overflow: visible;
 }
 
 .badge.collection-badge .badge-chip-icon {
   display: inline-grid;
   place-items: center;
-  width: 26px;
-  height: 26px;
-  flex: 0 0 26px;
+  width: 47px;
+  height: 100%;
+  flex: 0 0 47px;
 }
 
 .badge.collection-badge .badge-chip-icon img {
-  width: 22px;
-  height: 22px;
+  width: 23px;
+  height: 23px;
   object-fit: contain;
-  filter: brightness(0) invert(1) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.26));
-  transform: translateX(-2px);
+  filter:
+    brightness(0) invert(1)
+    drop-shadow(0 0 0.35px rgba(0, 0, 0, 0.78))
+    drop-shadow(0.35px 0 0 rgba(0, 0, 0, 0.58))
+    drop-shadow(-0.35px 0 0 rgba(0, 0, 0, 0.58))
+    drop-shadow(0 0.35px 0 rgba(0, 0, 0, 0.58))
+    drop-shadow(0 -0.35px 0 rgba(0, 0, 0, 0.58))
+    drop-shadow(0 1px 2px rgba(0, 0, 0, 0.26));
+  transform: translateX(-3px);
+}
+
+.badge.collection-badge .badge-chip-icon:not(.category-trophy) img {
+  width: 27px;
+  height: 27px;
+}
+
+.badge.collection-badge .badge-chip-icon.category-best img {
+  width: 30px;
+  height: 30px;
+}
+
+.badge.collection-badge .badge-chip-icon.category-average img,
+.badge.collection-badge .badge-chip-icon.category-calendar img {
+  transform: translateX(-6px);
+}
+
+.badge.collection-badge .badge-chip-icon.category-average img {
+  transform: translateX(-5px);
+}
+
+.badge.collection-badge .badge-chip-icon.category-calendar img {
+  transform: translateX(-4px);
+}
+
+.badge.collection-badge .badge-chip-icon.category-flag img {
+  transform: translateX(-1px);
 }
 
 .badge.collection-badge .badge-label {
+  display: -webkit-box;
   flex: 1 1 auto;
   overflow: hidden;
-  text-overflow: ellipsis;
-  line-height: 1.1;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-height: 0.96;
+  white-space: normal;
+  overflow-wrap: anywhere;
   transform: translateY(-1px);
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.38);
 }
@@ -11885,14 +11929,34 @@ body .app .home-score-input-grid .home-input-panel::before {
 .badge.collection-badge.rarity-c { --badge-chip-text: #357b27; }
 .badge.collection-badge.rarity-b { --badge-chip-text: #0f5db5; }
 .badge.collection-badge.rarity-a { --badge-chip-text: #c72216; }
-.badge.collection-badge.rarity-s { --badge-chip-text: #2c3442; }
-.badge.collection-badge.rarity-ss { --badge-chip-text: #6a3b00; }
+.badge.collection-badge.rarity-s { --badge-chip-text: #000814; }
+.badge.collection-badge.rarity-ss { --badge-chip-text: #2f1800; }
+
+.badge.collection-badge.rarity-s .badge-label {
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.48),
+    0 0 2px rgba(255, 255, 255, 0.36);
+}
 
 .badge-popup-card {
   position: relative;
   width: min(100%, 280px);
   margin: 0 auto 14px;
+  border-radius: 18px;
   color: #fff;
+  overflow: hidden;
+}
+
+.badge-popup-card::after {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  border-radius: inherit;
+  box-shadow:
+    inset 0 0 0 2.5px var(--badge-rarity-color),
+    inset 0 0 0 3.5px color-mix(in srgb, var(--badge-rarity-color), rgba(255, 255, 255, 0.7) 28%);
+  pointer-events: none;
+  content: "";
 }
 
 .badge-popup-card-bg {
