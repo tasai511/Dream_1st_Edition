@@ -178,6 +178,15 @@ const CATEGORY_ICON_URLS = {
   flag: NEW_UI_ASSETS.flag,
   trophy: NEW_UI_ASSETS.trophy,
 };
+const COLLECTION_CATEGORY_FILTERS = [
+  { key: "all", label: "すべて", icon: "badge" },
+  { key: "count", label: "スイング回数系", icon: "count" },
+  { key: "calendar", label: "練習日数系", icon: "calendar" },
+  { key: "average", label: "平均スコア系", icon: "avg" },
+  { key: "best", label: "ベストスコア系", icon: "best" },
+  { key: "event", label: "イベント系", icon: "flag" },
+  { key: "other", label: "その他", icon: "trophy" },
+];
 const DEFAULT_SEASON_EVENT_SETTINGS = {
   spring: { startMonth: 3, startDay: 20, endMonth: 4, endDay: 7 },
   summer: { startMonth: 7, startDay: 20, endMonth: 8, endDay: 31 },
@@ -3980,6 +3989,12 @@ function rarityColorFor(rarity) {
   return RARITY_COLORS[rarity] || RARITY_COLORS.C;
 }
 
+function collectionCategoryKeyFor(definition) {
+  if (definition?.category === "flag") return "event";
+  if (definition?.category === "trophy") return "other";
+  return definition?.category || "other";
+}
+
 function badgeDescriptionFor(label, type) {
   return BADGE_DEFINITION_MAP.get(label)?.description || `${label}を${type === "unique" ? "1回だけ獲得可" : "達成するたび獲得可"}`;
 }
@@ -4091,7 +4106,6 @@ function BadgeChip({ label, count = 1, description = null, lockedSecret = false 
           style={{
             "--badge-chip-font-size": badgeChipFontSize(lockedSecret ? "???" : definition.label),
             "--badge-rarity-color": rarityColorFor(definition.rarity),
-            backgroundImage: `url("${RARITY_NAMEPLATE_URLS[definition.rarity]}")`,
           }}
           onClick={() => setSelectedBadge({ ...definition, earnedCount: count, lockedSecret: false })}
         >
@@ -4110,8 +4124,7 @@ function BadgeChip({ label, count = 1, description = null, lockedSecret = false 
 }
 
 function BadgeCollectionView({ allForName, activeDate = todayISO(), db = defaultDb, setDb = null }) {
-  const [selectedBadge, setSelectedBadge] = useState(null);
-  const [selectedRarity, setSelectedRarity] = useState(RARITY_ORDER[0]);
+  const [selectedCategory, setSelectedCategory] = useState("all");
   const collectionRecords = allForName;
   const badgeCounts = useMemo(() => new Map(collectBadgeCounts(collectionRecords, RANGE_ALL, activeDate)), [collectionRecords, activeDate]);
   const definitions = useMemo(() => allBadgeDefinitions(), []);
@@ -4151,15 +4164,17 @@ function BadgeCollectionView({ allForName, activeDate = todayISO(), db = default
     if (!setDb) return;
     setDb({ ...db, ...patch });
   };
-  const raritySummaries = RARITY_ORDER.map((rarity) => {
-    const items = definitions.filter((definition) => definition.rarity === rarity);
+  const collectionCategorySummaries = COLLECTION_CATEGORY_FILTERS.map((filter) => {
+    const items = filter.key === "all"
+      ? definitions
+      : definitions.filter((definition) => collectionCategoryKeyFor(definition) === filter.key);
     const earnedTotal = items.reduce((sum, definition) => sum + Math.min(1, earnedCountForDefinition(definition, badgeCounts)), 0);
     const pointTotal = items.reduce((sum, definition) => (
-      sum + (earnedCountForDefinition(definition, badgeCounts) * RARITY_POINTS[rarity])
+      sum + (earnedCountForDefinition(definition, badgeCounts) * RARITY_POINTS[definition.rarity])
     ), 0);
-    return { rarity, items, earnedTotal, pointTotal };
+    return { ...filter, items, earnedTotal, pointTotal };
   }).filter((summary) => summary.items.length);
-  const activeRaritySummary = raritySummaries.find((summary) => summary.rarity === selectedRarity) || raritySummaries[0];
+  const activeCategorySummary = collectionCategorySummaries.find((summary) => summary.key === selectedCategory) || collectionCategorySummaries[0];
   return (
     <section className="badge-collection">
       <div className="section-row tight badge-collection-heading-row">
@@ -4212,25 +4227,51 @@ function BadgeCollectionView({ allForName, activeDate = todayISO(), db = default
         <div className="collection-card-heading">
           <p>コレクション</p>
         </div>
-        <RarityBadgePreview
-          summaries={raritySummaries}
-          activeRarity={activeRaritySummary?.rarity}
-          onSelect={setSelectedRarity}
-        />
-        <div className="collection-groups">
-          {activeRaritySummary && (() => {
-            const { rarity, items, earnedTotal: rarityEarnedTotal, pointTotal: rarityPointTotal } = activeRaritySummary;
+        <div className="collection-category-filters" role="tablist" aria-label="バッジカテゴリ">
+          {collectionCategorySummaries.map((summary) => {
+            const isSelected = summary.key === activeCategorySummary?.key;
             return (
-              <section className={`collection-group rarity-${rarity.toLowerCase()}`} key={rarity}>
+              <button
+                key={summary.key}
+                type="button"
+                role="tab"
+                aria-selected={isSelected}
+                className={`collection-category-filter ${isSelected ? "selected" : ""}`}
+                onClick={() => setSelectedCategory(summary.key)}
+              >
+                <span className="collection-category-filter-icon" aria-hidden="true">
+                  {summary.icon === "badge" ? (
+                    <Icon type="badge" />
+                  ) : (
+                    <img src={CATEGORY_ICON_URLS[summary.icon]} alt="" />
+                  )}
+                </span>
+                <span className="collection-category-filter-copy">
+                  <b>{summary.label}</b>
+                  <small>{summary.earnedTotal}/{summary.items.length}</small>
+                </span>
+              </button>
+            );
+          })}
+        </div>
+        <div className="collection-groups">
+          {activeCategorySummary && (() => {
+            const { key, label, icon, items, earnedTotal: categoryEarnedTotal, pointTotal: categoryPointTotal } = activeCategorySummary;
+            return (
+              <section className={`collection-group category-${key}`} key={key}>
                 <div className="collection-group-title">
-                  <RarityIcon rarity={rarity} />
+                  <span className="collection-group-icon" aria-hidden="true">
+                    {icon === "badge" ? (
+                      <Icon type="badge" />
+                    ) : (
+                      <img src={CATEGORY_ICON_URLS[icon]} alt="" />
+                    )}
+                  </span>
                   <div>
-                    <h3>
-                      <span className="collection-rarity-initial">{RARITY_LABELS[rarity].charAt(0)}</span>
-                      {RARITY_LABELS[rarity].slice(1)} / {RARITY_POINTS[rarity]}pt
-                    </h3>
+                    <h3>{label}</h3>
+                    <p>{categoryPointTotal}pt</p>
                   </div>
-                  <strong>{rarityEarnedTotal}/{items.length}<span>{rarityPointTotal}pt</span></strong>
+                  <strong>{categoryEarnedTotal}/{items.length}<span>種類</span></strong>
                 </div>
                 <div className="collection-grid">
                   {items.map((definition) => {
@@ -4242,7 +4283,6 @@ function BadgeCollectionView({ allForName, activeDate = todayISO(), db = default
                         key={definition.label}
                       >
                         <BadgeChip label={definition.label} count={earnedCount} description={definition.description} lockedSecret={lockedSecret} />
-                        <span>{definition.type === "unique" ? "1回だけ" : "何回でも"}</span>
                       </div>
                     );
                   })}
@@ -4252,9 +4292,6 @@ function BadgeCollectionView({ allForName, activeDate = todayISO(), db = default
           })()}
         </div>
       </section>
-      {selectedBadge && (
-        <BadgeDetailPopover badge={selectedBadge} onClose={() => setSelectedBadge(null)} />
-      )}
     </section>
   );
 }
