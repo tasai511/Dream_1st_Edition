@@ -2199,8 +2199,8 @@ function DailyResultCard({ card, showBadges, dismissedHomeBadges = new Set(), on
               const dotLeftPx = targetPx - visualDotSize;
               const frameLeftPx = targetPx - (visualDotSize / 2) - (frameSize / 2);
               const iconComplete = milestone.earned || effectiveFillPx >= targetPx;
-              const iconFillRatio = iconComplete ? 1 : 0;
-              const iconFillPx = iconComplete ? 0 : visualDotSize;
+              const iconFillRatio = iconComplete ? 1 : milestoneTrackWidth > 0 ? clamp((effectiveFillPx - dotLeftPx) / visualDotSize, 0, 1) : 0;
+              const iconFillPx = iconComplete ? visualDotSize : milestoneTrackWidth > 0 ? clamp(effectiveFillPx - dotLeftPx, 0, visualDotSize) : 0;
               const definition = makeBadgeDefinition(canonicalBadgeLabel(milestone.label), { description: milestone.description || `${milestone.label}をゲット` });
               return (
                 <Fragment key={milestone.label}>
