@@ -3767,7 +3767,7 @@ function HomeDatePicker({ value, markedDates, minDate = "2024-01-01", maxDate = 
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
       >
-        <Icon type="calendar" />
+        <span className="test-date-calendar-icon" aria-hidden="true" />
       </button>
       {open && (
         <div className="home-calendar-popover">
@@ -4099,7 +4099,6 @@ function BadgeChip({ label, count = 1, description = null, lockedSecret = false 
             <img src={CATEGORY_ICON_URLS[definition.category]} alt="" />
           </span>
           <span className="badge-label">{lockedSecret ? "???" : definition.name || definition.label}</span>
-          <RarityIcon rarity={definition.rarity} />
         </button>
         <b>{count > 1 ? `x${count}` : ""}</b>
       </span>
