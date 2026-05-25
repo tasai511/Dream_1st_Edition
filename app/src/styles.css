@@ -4382,18 +4382,19 @@ input::placeholder {
 
 .collection-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
 
 .collection-card {
   position: relative;
   display: grid;
-  align-items: center;
+  align-content: start;
+  gap: 6px;
   min-width: 0;
   border: 1px solid color-mix(in srgb, currentColor 28%, var(--line));
-  border-radius: 12px;
-  padding: 8px;
+  border-radius: var(--radius);
+  padding: 10px;
   color: inherit;
   background: color-mix(in srgb, currentColor 8%, #171b24);
   text-align: left;
@@ -4438,7 +4439,7 @@ input::placeholder {
 
 .collection-card .badge-chip-wrap {
   width: 100%;
-  padding-right: 0;
+  padding-right: 22px;
 }
 
 .collection-card .badge-chip-wrap .badge {
@@ -11940,35 +11941,35 @@ body .app .home-score-input-grid .home-input-panel::before {
 }
 
 .badge.collection-badge {
-  width: 100%;
+  width: min(100%, 124px);
   min-width: 0;
-  max-width: none;
-  min-height: 54px;
-  border: 1px solid color-mix(in srgb, currentColor 26%, rgba(255, 255, 255, 0.16));
-  border-radius: 12px;
-  padding: 8px 10px 8px 8px;
+  max-width: 124px;
+  min-height: 0;
+  aspect-ratio: 1287 / 538;
+  border: 0;
+  border-radius: 0;
+  padding: 5px 12px 5px 0;
   color: var(--badge-chip-text, #ffffff);
-  background: linear-gradient(180deg, color-mix(in srgb, currentColor 14%, rgba(255, 255, 255, 0.92)), color-mix(in srgb, currentColor 8%, rgba(255, 255, 255, 0.86)));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.52),
-    0 3px 8px rgba(0, 0, 0, 0.14);
-  overflow: hidden;
+  background-color: transparent;
+  background-position: left center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  box-shadow: none;
+  filter: drop-shadow(0 4px 7px rgba(0, 0, 0, 0.22));
+  overflow: visible;
 }
 
 .badge.collection-badge .badge-chip-icon {
   display: inline-grid;
   place-items: center;
-  width: 34px;
-  height: 34px;
-  flex: 0 0 34px;
-  border-radius: 999px;
-  background: color-mix(in srgb, currentColor 12%, rgba(255, 255, 255, 0.9));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.56);
+  width: 47px;
+  height: 100%;
+  flex: 0 0 47px;
 }
 
 .badge.collection-badge .badge-chip-icon img {
-  width: 19px;
-  height: 19px;
+  width: 23px;
+  height: 23px;
   object-fit: contain;
   filter:
     brightness(0) invert(1)
@@ -11977,34 +11978,34 @@ body .app .home-score-input-grid .home-input-panel::before {
     drop-shadow(0 1px 0 rgba(0, 0, 0, 0.58))
     drop-shadow(0 -1px 0 rgba(0, 0, 0, 0.58))
     drop-shadow(0 1px 2px rgba(0, 0, 0, 0.26));
-  transform: none;
+  transform: translateX(-3px);
 }
 
 .badge.collection-badge .badge-chip-icon:not(.category-trophy) img {
-  width: 22px;
-  height: 22px;
+  width: 27px;
+  height: 27px;
 }
 
 .badge.collection-badge .badge-chip-icon.category-best img {
-  width: 24px;
-  height: 24px;
+  width: 30px;
+  height: 30px;
 }
 
 .badge.collection-badge .badge-chip-icon.category-average img,
 .badge.collection-badge .badge-chip-icon.category-calendar img {
-  transform: translateX(-2px);
+  transform: translateX(-6px);
 }
 
 .badge.collection-badge .badge-chip-icon.category-average img {
-  transform: translateX(-1px);
+  transform: translateX(-5px);
 }
 
 .badge.collection-badge .badge-chip-icon.category-calendar img {
-  transform: translateX(0);
+  transform: translateX(-4px);
 }
 
 .badge.collection-badge .badge-chip-icon.category-flag img {
-  transform: translateX(1px);
+  transform: translateX(-1px);
 }
 
 .badge.collection-badge .badge-label {
@@ -12013,12 +12014,11 @@ body .app .home-score-input-grid .home-input-panel::before {
   overflow: hidden;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
-  line-height: 1.08;
+  line-height: 0.96;
   white-space: normal;
   overflow-wrap: anywhere;
-  transform: none;
-  text-align: left;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.26);
+  transform: translateY(-1px);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.38);
 }
 
 .badge.collection-badge.rarity-d { --badge-chip-text: #7b3f17; }

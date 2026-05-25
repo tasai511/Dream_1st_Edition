@@ -4106,6 +4106,7 @@ function BadgeChip({ label, count = 1, description = null, lockedSecret = false 
           style={{
             "--badge-chip-font-size": badgeChipFontSize(lockedSecret ? "???" : definition.label),
             "--badge-rarity-color": rarityColorFor(definition.rarity),
+            backgroundImage: `url("${RARITY_NAMEPLATE_URLS[definition.rarity]}")`,
           }}
           onClick={() => setSelectedBadge({ ...definition, earnedCount: count, lockedSecret: false })}
         >
