@@ -548,6 +548,7 @@ h2 {
 .home-date-picker {
   position: relative;
   z-index: 30;
+  margin-right: 8px;
 }
 
 .home-calendar-popover {
@@ -686,6 +687,19 @@ h2 {
   left: 50%;
   width: 18px;
   height: 18px;
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.78));
+  transform: translate(-50%, -50%);
+}
+
+.test-date-calendar-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 22px;
+  height: 22px;
+  background: #0a3c99;
+  -webkit-mask: url("/images/calendar.svg") center / contain no-repeat;
+  mask: url("/images/calendar.svg") center / contain no-repeat;
   filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.78));
   transform: translate(-50%, -50%);
 }
@@ -11830,41 +11844,49 @@ body .app .home-score-input-grid .home-input-panel::before {
 }
 
 .badge.collection-badge {
-  min-height: 40px;
+  min-height: 46px;
   border: 0;
-  padding: 5px 12px 5px 9px;
-  color: #fff;
-  background-position: center;
+  padding: 6px 16px 6px 10px;
+  color: var(--badge-chip-text, #ffffff);
+  background-color: transparent;
+  background-position: center center;
   background-repeat: no-repeat;
-  background-size: 100% 100%;
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.24);
+  background-size: 100% auto;
+  box-shadow: none;
+  filter: drop-shadow(0 4px 7px rgba(0, 0, 0, 0.22));
 }
 
 .badge.collection-badge .badge-chip-icon {
   display: inline-grid;
   place-items: center;
-  width: 18px;
-  height: 18px;
+  width: 26px;
+  height: 26px;
+  flex: 0 0 26px;
 }
 
 .badge.collection-badge .badge-chip-icon img {
-  width: 16px;
-  height: 16px;
+  width: 22px;
+  height: 22px;
   object-fit: contain;
-  filter: brightness(0) invert(1) drop-shadow(0 1px 3px rgba(0, 0, 0, 0.3));
+  filter: brightness(0) invert(1) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.26));
+  transform: translateX(-2px);
 }
 
 .badge.collection-badge .badge-label {
   flex: 1 1 auto;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.1;
+  transform: translateY(-1px);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.38);
 }
 
-.badge.collection-badge .rarity-icon {
-  width: 16px;
-  height: 16px;
-  margin-left: 6px;
-}
+.badge.collection-badge.rarity-d { --badge-chip-text: #8d4e22; }
+.badge.collection-badge.rarity-c { --badge-chip-text: #357b27; }
+.badge.collection-badge.rarity-b { --badge-chip-text: #0f5db5; }
+.badge.collection-badge.rarity-a { --badge-chip-text: #c72216; }
+.badge.collection-badge.rarity-s { --badge-chip-text: #2c3442; }
+.badge.collection-badge.rarity-ss { --badge-chip-text: #6a3b00; }
 
 .badge-popup-card {
   position: relative;
