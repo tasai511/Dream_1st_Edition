@@ -367,7 +367,7 @@ h2 {
   color: var(--game-blue-deep);
   background: transparent;
   font: inherit;
-  font-size: 0.74rem;
+  font-size: 0.78rem;
   text-align: left;
   cursor: pointer;
 }
@@ -375,11 +375,9 @@ h2 {
 .bat-records-toggle span {
   color: inherit;
   text-shadow:
-    2px 0 #fff,
-    -2px 0 #fff,
-    0 2px #fff,
-    0 -2px #fff,
-    0 4px 0 rgba(5, 41, 116, 0.28);
+    0 1px 0 rgba(255, 255, 255, 0.92),
+    0 0 1px rgba(255, 255, 255, 0.78),
+    0 2px 2px rgba(5, 41, 116, 0.18);
 }
 
 .bat-records-toggle::after {
@@ -3706,23 +3704,21 @@ input::placeholder {
   color: var(--badge-count-blue);
   font-size: 1.9rem;
   font-weight: 950;
-  -webkit-text-stroke: 0.45px rgba(255, 255, 255, 0.9);
+  -webkit-text-stroke: 0.25px rgba(255, 255, 255, 0.78);
   text-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.84),
-    0 2px 0 rgba(5, 57, 142, 0.35),
-    0 4px 5px rgba(6, 34, 82, 0.3);
+    0 1px 0 rgba(255, 255, 255, 0.62),
+    0 2px 0 rgba(5, 57, 142, 0.22),
+    0 3px 4px rgba(6, 34, 82, 0.22);
 }
 
 .badge-heading-count span {
   color: var(--game-blue-deep);
-  font-size: 0.8rem;
+  font-size: 0.84rem;
   font-weight: 900;
   text-shadow:
-    2px 0 #fff,
-    -2px 0 #fff,
-    0 2px #fff,
-    0 -2px #fff,
-    0 4px 0 rgba(5, 41, 116, 0.28);
+    0 1px 0 rgba(255, 255, 255, 0.92),
+    0 0 1px rgba(255, 255, 255, 0.78),
+    0 2px 2px rgba(5, 41, 116, 0.18);
 }
 
 .badge-inline-section .section-row p {
@@ -11025,6 +11021,57 @@ body .app .daily-result-card .milestone-dot {
   -webkit-tap-highlight-color: transparent !important;
   background:
     radial-gradient(circle at 32% 22%, rgba(255, 255, 255, 0.96) 0 9%, transparent 22%) padding-box,
+    radial-gradient(circle, color-mix(in srgb, var(--score-color), white 25%), var(--score-dark)) padding-box !important;
+  background-size:
+    auto,
+    auto !important;
+  background-origin:
+    padding-box,
+    padding-box !important;
+  background-clip:
+    padding-box,
+    padding-box !important;
+  background-position:
+    center,
+    center !important;
+  box-shadow: none !important;
+  transform: translateY(-50%) !important;
+}
+
+body .app .daily-result-card .milestone-dot::before {
+  position: absolute !important;
+  inset: 0 !important;
+  border: 1.5px solid #ffffff !important;
+  border-radius: inherit !important;
+  box-shadow: none !important;
+  content: "" !important;
+  pointer-events: none !important;
+}
+
+body .app .daily-result-card .milestone-dot.locked {
+  opacity: 0.72 !important;
+  background:
+    radial-gradient(circle at 32% 22%, rgba(255, 255, 255, 0.78) 0 9%, transparent 22%) padding-box,
+    radial-gradient(circle, #d6dce5, #8f9aaa) padding-box !important;
+  background-size:
+    auto,
+    auto !important;
+  background-origin:
+    padding-box,
+    padding-box !important;
+  background-clip:
+    padding-box,
+    padding-box !important;
+  background-position:
+    center,
+    center !important;
+  box-shadow: none !important;
+}
+
+body .app .daily-result-card .milestone-dot.earned {
+  opacity: 1 !important;
+  background:
+    radial-gradient(circle at 32% 22%, rgba(255, 255, 255, 0.96) 0 9%, transparent 22%) padding-box,
     radial-gradient(circle, color-mix(in srgb, var(--score-color), white 25%), var(--score-dark)) padding-box,
     linear-gradient(
       90deg,
@@ -11059,25 +11106,15 @@ body .app .daily-result-card .milestone-dot {
     center,
     0 0,
     var(--milestone-dot-bg-x, 0px) 0 !important;
-  box-shadow: none !important;
-  transform: translateY(-50%) !important;
 }
 
-body .app .daily-result-card .milestone-dot::before {
-  position: absolute !important;
-  inset: 0 !important;
-  border: 1.5px solid #ffffff !important;
-  border-radius: inherit !important;
+body .app .daily-result-card .milestone-dot.target {
+  z-index: 5 !important;
+  opacity: 1 !important;
   box-shadow: none !important;
-  content: "" !important;
-  pointer-events: none !important;
-}
-
-body .app .daily-result-card .milestone-dot.locked {
-  opacity: 0.72 !important;
   background:
-    radial-gradient(circle at 32% 22%, rgba(255, 255, 255, 0.78) 0 9%, transparent 22%) padding-box,
-    radial-gradient(circle, #d6dce5, #8f9aaa) padding-box,
+    radial-gradient(circle at 32% 22%, rgba(255, 255, 255, 0.96) 0 9%, transparent 22%) padding-box,
+    radial-gradient(circle, color-mix(in srgb, var(--score-color), white 25%), var(--score-dark)) padding-box,
     linear-gradient(
       90deg,
       transparent 0%,
@@ -11111,17 +11148,6 @@ body .app .daily-result-card .milestone-dot.locked {
     center,
     0 0,
     var(--milestone-dot-bg-x, 0px) 0 !important;
-  box-shadow: none !important;
-}
-
-body .app .daily-result-card .milestone-dot.earned {
-  opacity: 1 !important;
-}
-
-body .app .daily-result-card .milestone-dot.target {
-  z-index: 5 !important;
-  opacity: 1 !important;
-  box-shadow: none !important;
 }
 
 body .app .daily-result-card .milestone-dot-frame {
@@ -11876,11 +11902,10 @@ body .app .home-score-input-grid .home-input-panel::before {
   object-fit: contain;
   filter:
     brightness(0) invert(1)
-    drop-shadow(0 0 0.35px rgba(0, 0, 0, 0.78))
-    drop-shadow(0.35px 0 0 rgba(0, 0, 0, 0.58))
-    drop-shadow(-0.35px 0 0 rgba(0, 0, 0, 0.58))
-    drop-shadow(0 0.35px 0 rgba(0, 0, 0, 0.58))
-    drop-shadow(0 -0.35px 0 rgba(0, 0, 0, 0.58))
+    drop-shadow(1px 0 0 rgba(0, 0, 0, 0.58))
+    drop-shadow(-1px 0 0 rgba(0, 0, 0, 0.58))
+    drop-shadow(0 1px 0 rgba(0, 0, 0, 0.58))
+    drop-shadow(0 -1px 0 rgba(0, 0, 0, 0.58))
     drop-shadow(0 1px 2px rgba(0, 0, 0, 0.26));
   transform: translateX(-3px);
 }
@@ -11925,17 +11950,38 @@ body .app .home-score-input-grid .home-input-panel::before {
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.38);
 }
 
-.badge.collection-badge.rarity-d { --badge-chip-text: #8d4e22; }
-.badge.collection-badge.rarity-c { --badge-chip-text: #357b27; }
-.badge.collection-badge.rarity-b { --badge-chip-text: #0f5db5; }
-.badge.collection-badge.rarity-a { --badge-chip-text: #c72216; }
-.badge.collection-badge.rarity-s { --badge-chip-text: #000814; }
-.badge.collection-badge.rarity-ss { --badge-chip-text: #2f1800; }
+.badge.collection-badge.rarity-d { --badge-chip-text: #7b3f17; }
+.badge.collection-badge.rarity-c { --badge-chip-text: #246f1f; }
+.badge.collection-badge.rarity-b { --badge-chip-text: #0b55aa; }
+.badge.collection-badge.rarity-a { --badge-chip-text: #b51220; }
+.badge.collection-badge.rarity-s { --badge-chip-text: #4b5563; }
+.badge.collection-badge.rarity-ss { --badge-chip-text: #a56b00; }
 
 .badge.collection-badge.rarity-s .badge-label {
+  color: #4b5563 !important;
   text-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.48),
-    0 0 2px rgba(255, 255, 255, 0.36);
+    0 1px 0 rgba(255, 255, 255, 0.28),
+    0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+.badge.collection-badge.rarity-ss .badge-label {
+  color: #a56b00 !important;
+}
+
+.badge.collection-badge.rarity-d .badge-label {
+  color: #7b3f17 !important;
+}
+
+.badge.collection-badge.rarity-c .badge-label {
+  color: #246f1f !important;
+}
+
+.badge.collection-badge.rarity-b .badge-label {
+  color: #0b55aa !important;
+}
+
+.badge.collection-badge.rarity-a .badge-label {
+  color: #b51220 !important;
 }
 
 .badge-popup-card {

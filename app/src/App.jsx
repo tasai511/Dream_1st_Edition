@@ -155,20 +155,20 @@ const RARITY_IMAGE_URLS = {
   SS: `${PUBLIC_ASSET_BASE}images/rarity_ss.svg`,
 };
 const RARITY_NAMEPLATE_URLS = {
-  D: `${PUBLIC_ASSET_BASE}images/D_bronze_nameplate.png`,
-  C: `${PUBLIC_ASSET_BASE}images/C_green_nameplate.png`,
-  B: `${PUBLIC_ASSET_BASE}images/B_blue_nameplate.png`,
-  A: `${PUBLIC_ASSET_BASE}images/A_red_nameplate.png`,
-  S: `${PUBLIC_ASSET_BASE}images/S_silver_nameplate.png`,
-  SS: `${PUBLIC_ASSET_BASE}images/SS_gold_nameplate.png`,
+  D: `${PUBLIC_ASSET_BASE}images/D_bronze_nameplate.png?v=100`,
+  C: `${PUBLIC_ASSET_BASE}images/C_green_nameplate.png?v=100`,
+  B: `${PUBLIC_ASSET_BASE}images/B_blue_nameplate.png?v=100`,
+  A: `${PUBLIC_ASSET_BASE}images/A_red_nameplate.png?v=100`,
+  S: `${PUBLIC_ASSET_BASE}images/S_silver_nameplate.png?v=100`,
+  SS: `${PUBLIC_ASSET_BASE}images/SS_gold_nameplate.png?v=100`,
 };
 const RARITY_CARD_URLS = {
-  D: `${PUBLIC_ASSET_BASE}images/D_card.png`,
-  C: `${PUBLIC_ASSET_BASE}images/C_card.png`,
-  B: `${PUBLIC_ASSET_BASE}images/B_card.png`,
-  A: `${PUBLIC_ASSET_BASE}images/A_card.png`,
-  S: `${PUBLIC_ASSET_BASE}images/S_card.png`,
-  SS: `${PUBLIC_ASSET_BASE}images/SS_card.png`,
+  D: `${PUBLIC_ASSET_BASE}images/D_card.png?v=100`,
+  C: `${PUBLIC_ASSET_BASE}images/C_card.png?v=100`,
+  B: `${PUBLIC_ASSET_BASE}images/B_card.png?v=100`,
+  A: `${PUBLIC_ASSET_BASE}images/A_card.png?v=100`,
+  S: `${PUBLIC_ASSET_BASE}images/S_card.png?v=100`,
+  SS: `${PUBLIC_ASSET_BASE}images/SS_card.png?v=100`,
 };
 const CATEGORY_ICON_URLS = {
   count: NEW_UI_ASSETS.count,
@@ -2199,8 +2199,8 @@ function DailyResultCard({ card, showBadges, dismissedHomeBadges = new Set(), on
               const dotLeftPx = targetPx - visualDotSize;
               const frameLeftPx = targetPx - (visualDotSize / 2) - (frameSize / 2);
               const iconComplete = milestone.earned || effectiveFillPx >= targetPx;
-              const iconFillRatio = iconComplete ? 1 : milestoneTrackWidth > 0 ? clamp((effectiveFillPx - dotLeftPx) / visualDotSize, 0, 1) : 0;
-              const iconFillPx = iconComplete ? visualDotSize : milestoneTrackWidth > 0 ? clamp(effectiveFillPx - dotLeftPx, 0, visualDotSize) : 0;
+              const iconFillRatio = iconComplete ? 1 : 0;
+              const iconFillPx = iconComplete ? 0 : visualDotSize;
               const definition = makeBadgeDefinition(canonicalBadgeLabel(milestone.label), { description: milestone.description || `${milestone.label}をゲット` });
               return (
                 <Fragment key={milestone.label}>
