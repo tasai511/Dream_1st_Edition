@@ -9526,7 +9526,6 @@ body .app .home-score-input-grid .home-input-panel .swing-form input::placeholde
   }
 }
 
-/* Final tap feedback authority: visual only, no sound. */
 button:not(:disabled),
 [role="button"],
 [role="tab"],
@@ -12030,10 +12029,6 @@ body .app .home-score-input-grid .home-input-panel::before {
   margin: 0 auto 14px;
   border-radius: 18px;
   color: var(--badge-card-name-color, #ffffff);
-  filter:
-    drop-shadow(0 26px 32px rgba(0, 0, 0, 0.48))
-    drop-shadow(0 8px 12px rgba(0, 0, 0, 0.32))
-    drop-shadow(0 0 22px color-mix(in srgb, var(--badge-rarity-color) 24%, transparent));
   overflow: hidden;
 }
 

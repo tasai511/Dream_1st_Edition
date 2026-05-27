@@ -73,79 +73,50 @@ const NEW_UI_ASSETS = {
   navSettings: `${PUBLIC_ASSET_BASE}images/icon_settings_transparent.png`,
 };
 
-let appAudioContext = null;
-let silentAudioKeeper = null;
+const AUDIO_ASSETS = {
+  error: `${PUBLIC_ASSET_BASE}audio/error.mp3`,
+  get: `${PUBLIC_ASSET_BASE}audio/get.mp3`,
+  popup: `${PUBLIC_ASSET_BASE}audio/popup.mp3`,
+  score: `${PUBLIC_ASSET_BASE}audio/score.mp3`,
+  start: `${PUBLIC_ASSET_BASE}audio/start.mp3`,
+  switch: `${PUBLIC_ASSET_BASE}audio/switch.mp3`,
+  tab: `${PUBLIC_ASSET_BASE}audio/tab.mp3`,
+  tap: `${PUBLIC_ASSET_BASE}audio/tap.mp3`,
+};
 
-function audioContextForApp() {
-  if (typeof window === "undefined") return null;
-  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-  if (!AudioContextClass) return null;
-  if (appAudioContext?.state === "closed") appAudioContext = null;
-  if (!appAudioContext) appAudioContext = new AudioContextClass();
-  return appAudioContext;
+const audioPlayers = new Map();
+
+function audioPlayerFor(effect) {
+  if (typeof Audio === "undefined" || !AUDIO_ASSETS[effect]) return null;
+  if (!audioPlayers.has(effect)) {
+    const audio = new Audio(AUDIO_ASSETS[effect]);
+    audio.preload = "auto";
+    audioPlayers.set(effect, audio);
+  }
+  return audioPlayers.get(effect);
 }
 
-function playTone(context, start, frequency, duration, volume = 0.14, type = "sine") {
-  const oscillator = context.createOscillator();
-  const gain = context.createGain();
-  oscillator.type = type;
-  oscillator.frequency.setValueAtTime(frequency, start);
-  gain.gain.setValueAtTime(volume, start);
-  oscillator.connect(gain);
-  gain.connect(context.destination);
-  oscillator.start(start);
-  oscillator.stop(start + duration);
+function preloadEffectSounds() {
+  Object.keys(AUDIO_ASSETS).forEach((effect) => audioPlayerFor(effect)?.load?.());
 }
 
-function keepAudioContextWarm(context) {
-  if (!context || silentAudioKeeper?.context === context) return;
+function playEffectSound(effect) {
+  const audio = audioPlayerFor(effect);
+  if (!audio) return;
   try {
-    const oscillator = context.createOscillator();
-    const gain = context.createGain();
-    gain.gain.setValueAtTime(0.00001, context.currentTime);
-    oscillator.frequency.setValueAtTime(20, context.currentTime);
-    oscillator.connect(gain);
-    gain.connect(context.destination);
-    oscillator.start();
-    silentAudioKeeper = { context, oscillator, gain };
+    audio.pause();
+    audio.currentTime = 0;
+    audio.play().catch(() => {});
   } catch {
-    silentAudioKeeper = null;
+    // Browser audio policy errors are harmless; the next user gesture can retry.
   }
 }
 
-function playAppSound(kind = "tap") {
-  const context = audioContextForApp();
-  if (!context) return;
-  if (context.state !== "running") {
-    context.resume?.().catch(() => {});
-    return;
-  }
-  keepAudioContextWarm(context);
-  const now = context.currentTime;
-  try {
-    if (kind === "success") {
-      playTone(context, now, 523.25, 0.09, 0.18, "triangle");
-      playTone(context, now + 0.075, 659.25, 0.1, 0.16, "triangle");
-      playTone(context, now + 0.16, 783.99, 0.14, 0.14, "triangle");
-      return;
-    }
-    if (kind === "tab") {
-      playTone(context, now, 392, 0.045, 0.15, "square");
-      playTone(context, now + 0.035, 587.33, 0.055, 0.12, "triangle");
-      return;
-    }
-    playTone(context, now, 440, 0.045, 0.13, "square");
-  } catch {
-    // Some mobile browsers reject audio nodes while resuming; the next tap will retry.
-  }
+function shouldPlayTapSound(element) {
+  if (element?.closest?.("[data-sound-effect]")) return false;
+  return Boolean(element?.closest?.("button, [role='button'], [role='tab'], input[type='submit'], .standard-ok-button, .file-control, select"));
 }
 
-function soundKindForElement(element) {
-  if (!element?.closest) return null;
-  if (element.closest(".bottom-nav, .challenge-range-tabs, .data-tabs")) return "tab";
-  if (element.closest("button, input[type='submit'], .standard-ok-button")) return "tap";
-  return null;
-}
 const SCORE_CARD_SKINS = {
   count: { meterGlow: "#37a4ff" },
   avg: { meterGlow: "#44ce35" },
@@ -1762,6 +1733,7 @@ function ProgressMeter({ kind, value, range, variableTarget, targets, focus = fa
           <button
             className={`meter-badge ring-meter-badge rarity-${targetBadge.rarity.toLowerCase()}`}
             type="button"
+            data-sound-effect="popup"
             aria-label={`${targetBadge.label}の詳細`}
             onClick={() => setSelectedBadge({ ...targetBadge, earnedCount: 0, lockedSecret: false })}
           >
@@ -2249,6 +2221,7 @@ function DailyResultCard({ card, showBadges, dismissedHomeBadges = new Set(), on
               <button
                 type="button"
                 className={`target-remaining ${isRemainingComplete ? "complete" : ""}`}
+                data-sound-effect="popup"
                 onClick={openRemainingBadgeDetail}
                 aria-label={isRemainingComplete ? "コンプリートバッジの詳細" : `次のバッジ ${remainingBadgeDefinition?.label || ""} の詳細`}
               >
@@ -2300,6 +2273,7 @@ function DailyResultCard({ card, showBadges, dismissedHomeBadges = new Set(), on
                   <button
                     type="button"
                     className={`milestone-dot ${milestoneState} ${earnedBadge?.label === milestone.label ? "current" : ""}`}
+                    data-sound-effect="popup"
                     style={{
                       left: `${dotLeftPx}px`,
                       "--milestone-alpha": alpha.toFixed(2),
@@ -2348,6 +2322,7 @@ function DailyBadgeMark({ label, description, onDismiss = null, complete = false
       <button
         type="button"
         className={`daily-badge-mark rarity-${definition.rarity.toLowerCase()} ${complete ? "complete" : ""}`}
+        data-sound-effect={onDismiss ? undefined : "popup"}
         onClick={handleClick}
         aria-label={`${definition.label}の詳細`}
       >
@@ -3198,12 +3173,13 @@ export default function App() {
   }, [tab, scoreAnimation]);
 
   useEffect(() => {
-    const playClickSound = (event) => {
-      const kind = soundKindForElement(event.target);
-      if (kind) playAppSound(kind);
+    preloadEffectSounds();
+    playEffectSound("start");
+    const playTapSound = (event) => {
+      if (shouldPlayTapSound(event.target)) playEffectSound("tap");
     };
-    document.addEventListener("click", playClickSound, true);
-    return () => document.removeEventListener("click", playClickSound, true);
+    document.addEventListener("click", playTapSound, true);
+    return () => document.removeEventListener("click", playTapSound, true);
   }, []);
 
   useEffect(() => {
@@ -3250,7 +3226,7 @@ export default function App() {
       setScoreAnimation({ id: uid(), bat, fromSummary, toSummary, fromWeekSummary, toWeekSummary, fromBat, toBat, fromWeekBat, toWeekBat, playedRanges: [], firstGetBadges: firstGetBadgesForRecord, firstGetShown: false });
     }
     setDb({ ...db, records: nextRecords });
-    playAppSound("success");
+    playEffectSound("score");
     return true;
   };
 
@@ -3266,6 +3242,7 @@ export default function App() {
       if (!current) return current;
       const playedRanges = Array.from(new Set([...(current.playedRanges || []), completedRange]));
       if (completedRange === RANGE_TODAY && !current.firstGetShown && current.firstGetBadges?.length) {
+        playEffectSound("get");
         setFirstGetBadges(current.firstGetBadges);
         return { ...current, playedRanges, firstGetShown: true };
       }
@@ -3414,10 +3391,12 @@ export default function App() {
                     type="button"
                     className={name === currentName ? "selected" : ""}
                     onClick={() => {
+                      if (name !== currentName) playEffectSound("switch");
                       setDb({ ...db, activeName: name });
                       setIsNameMenuOpen(false);
                     }}
                     role="menuitem"
+                    data-sound-effect="switch"
                     key={name}
                     style={{ "--player-menu-name-size": playerNameFontSize(name) }}
                   >
@@ -3507,10 +3486,12 @@ export default function App() {
       )}
       <BottomNav tab={tab} setTab={(nextTab) => {
         if (nextTab !== "settings" && (!db.names.length || !db.bats.length)) {
+          playEffectSound("error");
           setTab("settings");
           scrollPageToTop();
           return;
         }
+        if (nextTab !== tab) playEffectSound("tab");
         if (nextTab === "record" && tab !== "record") {
           setChallengeRange(RANGE_WEEK);
         }
@@ -4136,9 +4117,14 @@ function RarityIcon({ rarity }) {
 }
 
 function BadgeDetailPopover({ badge, onClose }) {
+  useEffect(() => {
+    playEffectSound("popup");
+  }, []);
+
   const closePopover = (event) => {
     event.preventDefault();
     event.stopPropagation();
+    if (event.target === event.currentTarget) playEffectSound("tap");
     onClose();
   };
   return createPortal(
@@ -4189,7 +4175,10 @@ function FirstGetBadgeShowcase({ badges, onAdvance }) {
     <div
       className={`first-get-backdrop rarity-${badge.rarity.toLowerCase()}`}
       style={{ "--badge-rarity-color": rarityColorFor(badge.rarity) }}
-      onClick={onAdvance}
+      onClick={() => {
+        playEffectSound("tap");
+        onAdvance();
+      }}
     >
       <aside
         className={`collection-popover first-get-popover rarity-${badge.rarity.toLowerCase()}`}
@@ -4237,6 +4226,7 @@ function BadgeChip({ label, count = 1, description = null, lockedSecret = false 
         <button
           className={`badge collection-badge rarity-${definition.rarity.toLowerCase()}`}
           type="button"
+          data-sound-effect="popup"
           style={{
             "--badge-chip-font-size": badgeChipFontSize(lockedSecret ? "???" : definition.label),
             "--badge-rarity-color": rarityColorFor(definition.rarity),
@@ -4641,7 +4631,7 @@ function SwingForm({ bats, defaultBat, onSubmit, submitLabel, defaultValues = nu
       <label className="field-label"><span className="field-title">ベスト</span><span className="paper-input-cell"><input name="best" type="number" inputMode="numeric" min="0" max="999" step="1" required value={bestValue} onChange={(event) => setBestValue(event.target.value)} aria-label="ベスト" /><span aria-hidden="true">点</span></span></label>
       <span className="home-ok-slot">
         {testAction && <button className="standard-ok-button settings-ok-button test-seed-button" type="button" onClick={handleTestAction} disabled={submitDisabled}>テスト</button>}
-        <button className="standard-ok-button settings-ok-button" type="submit" aria-label={submitLabel} disabled={submitDisabled}>OK</button>
+        <button className="standard-ok-button settings-ok-button" type="submit" aria-label={submitLabel} disabled={submitDisabled} data-sound-effect="score">OK</button>
       </span>
     </form>
   );
@@ -4887,7 +4877,16 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
               className={`chip name-settings-chip ${name === draft.activeName ? "active" : ""} ${openBatPalette === `name:${name}` ? "palette-open" : ""}`}
               style={{ "--name-chip-color": nameColorFor(draft, name), "--settings-chip-text-size": settingsChipTextSize(name) }}
             >
-              <button type="button" onClick={() => commitDraft({ ...draft, activeName: name })}><span>{name}</span></button>
+              <button
+                type="button"
+                data-sound-effect="switch"
+                onClick={() => {
+                  if (name !== draft.activeName) playEffectSound("switch");
+                  commitDraft({ ...draft, activeName: name });
+                }}
+              >
+                <span>{name}</span>
+              </button>
               {name === draft.activeName ? <small>使用中</small> : null}
               <button type="button" className="chip-delete" aria-label={`${name}を削除`} onClick={() => removeDraftName(name)}><SvgIcon type="trash" /></button>
             </span>
@@ -4911,7 +4910,14 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
               className={`chip bat-settings-chip ${bat === draft.defaultBat ? "active default" : ""} ${openBatPalette === bat ? "palette-open" : ""}`}
               style={{ "--bat-chip-color": batColorFor(draft, bat), "--settings-chip-text-size": settingsChipTextSize(bat) }}
             >
-              <button type="button" onClick={() => commitDraft({ ...draft, defaultBat: bat })}>
+              <button
+                type="button"
+                data-sound-effect="switch"
+                onClick={() => {
+                  if (bat !== draft.defaultBat) playEffectSound("switch");
+                  commitDraft({ ...draft, defaultBat: bat });
+                }}
+              >
                 <BatIcon color={batColorFor(draft, bat)} />
                 <span>{bat}</span>
               </button>
@@ -4998,7 +5004,7 @@ function BottomNav({ tab, setTab }) {
   return (
     <nav className="bottom-nav" aria-label="画面切り替え">
       {tabs.map(([key, iconUrl, label]) => (
-        <button key={key} type="button" className={tab === key ? "active" : ""} onClick={() => setTab(key)} aria-label={key}>
+        <button key={key} type="button" className={tab === key ? "active" : ""} onClick={() => setTab(key)} aria-label={key} data-sound-effect="tab">
           <img className="bottom-nav-icon" src={iconUrl} width="112" height="112" decoding="async" alt="" aria-hidden="true" />
           <span>{label}</span>
         </button>
