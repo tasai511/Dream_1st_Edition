@@ -514,6 +514,44 @@ const YEARLY_DAYS_BADGE_DEFINITIONS = [
   metric: "days",
   target,
 }));
+const YEARLY_AVG_BADGE_DEFINITIONS = [
+  ["D", 300, "年間平均スコア300"],
+  ["C", 400, "年間平均スコア400"],
+  ["B", 500, "年間平均スコア500"],
+  ["A", 600, "年間平均スコア600"],
+  ["S", 700, "年間平均スコア700"],
+  ["SS", 800, "年間平均スコア800"],
+].map(([rarity, target, name]) => makeThresholdBadge({
+  id: `yearly-avg-${target}`,
+  label: name,
+  name: "年間平均スコア",
+  description: `年間の平均スコアが${target}点以上`,
+  conditionText: `年間平均${target}以上`,
+  rarity,
+  category: "average",
+  period: RANGE_YEAR,
+  metric: "avg",
+  target,
+}));
+const YEARLY_BEST_BADGE_DEFINITIONS = [
+  ["D", 400, "年間ベストスコア400"],
+  ["C", 550, "年間ベストスコア550"],
+  ["B", 700, "年間ベストスコア700"],
+  ["A", 850, "年間ベストスコア850"],
+  ["S", 950, "年間ベストスコア950"],
+  ["SS", 999, "年間ベストスコア999"],
+].map(([rarity, target, name]) => makeThresholdBadge({
+  id: `yearly-best-${target}`,
+  label: name,
+  name: "年間ベストスコア",
+  description: `年間のベストスコアが${target}点以上`,
+  conditionText: `年間ベスト${target}以上`,
+  rarity,
+  category: "best",
+  period: RANGE_YEAR,
+  metric: "best",
+  target,
+}));
 const PERSONAL_BEST_BADGE_DEFINITIONS = [
   ["C", 1, "自己ベスト更新", "自己ベスト更新"],
   ["B", 30, "自己ベスト更新 +30", "自己ベストを+30以上更新"],
@@ -598,6 +636,8 @@ const BADGE_DEFINITIONS = [
   ...POWER_BADGE_DEFINITIONS,
   ...YEARLY_COUNT_BADGE_DEFINITIONS,
   ...YEARLY_DAYS_BADGE_DEFINITIONS,
+  ...YEARLY_AVG_BADGE_DEFINITIONS,
+  ...YEARLY_BEST_BADGE_DEFINITIONS,
   ...PERSONAL_BEST_BADGE_DEFINITIONS,
   ...EXACT_SCORE_BADGE_DEFINITIONS,
   ...SEASONAL_BADGE_DEFINITIONS,
@@ -609,6 +649,8 @@ const HOME_BADGE_DEFINITIONS = [
   ...MONTHLY_BADGE_DEFINITIONS.filter((definition) => ["count", "days"].includes(definition.metric)),
   ...YEARLY_COUNT_BADGE_DEFINITIONS,
   ...YEARLY_DAYS_BADGE_DEFINITIONS,
+  ...YEARLY_AVG_BADGE_DEFINITIONS,
+  ...YEARLY_BEST_BADGE_DEFINITIONS,
 ];
 
 const defaultDb = {
