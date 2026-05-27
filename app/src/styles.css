@@ -12178,3 +12178,98 @@ body .app .home-score-input-grid .home-input-panel::before {
   height: 15px !important;
   stroke-width: 2.4 !important;
 }
+
+.startup-splash {
+  --startup-logo-width: calc(210px * var(--app-scale));
+  --startup-logo-left: calc(((100vw - var(--app-visual-width)) / 2) + (14px * var(--app-scale)));
+  --startup-logo-top: max(14px, env(safe-area-inset-top));
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  overflow: hidden;
+  background: var(--app-bg, linear-gradient(180deg, #111824 0%, #070a10 100%));
+  pointer-events: none;
+  animation: startupSplashFade 1120ms ease forwards;
+}
+
+.startup-splash-logo {
+  position: absolute;
+  left: var(--startup-logo-left);
+  top: var(--startup-logo-top);
+  width: var(--startup-logo-width);
+  height: auto;
+  filter:
+    drop-shadow(0 14px 24px rgba(16, 65, 108, 0.26))
+    drop-shadow(0 0 18px rgba(255, 255, 255, 0.18));
+  transform-origin: 0 0;
+  animation: startupLogoLand 1040ms cubic-bezier(0.17, 0.92, 0.24, 1) forwards;
+}
+
+.app.startup-active .app-title,
+.app.startup-active .player-switcher,
+.app.startup-active .content,
+.app.startup-active > .bottom-nav {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.app.startup-ready .app-title,
+.app.startup-ready .player-switcher,
+.app.startup-ready .content,
+.app.startup-ready > .bottom-nav {
+  animation: startupContentIn 220ms ease both;
+}
+
+@keyframes startupLogoLand {
+  0% {
+    transform:
+      translate(
+        calc(50vw - var(--startup-logo-left) - (var(--startup-logo-width) / 2)),
+        calc(48svh - var(--startup-logo-top) - (var(--startup-logo-width) * 0.18))
+      )
+      scale(1.34);
+  }
+  56% {
+    transform:
+      translate(
+        calc(50vw - var(--startup-logo-left) - (var(--startup-logo-width) / 2)),
+        calc(48svh - var(--startup-logo-top) - (var(--startup-logo-width) * 0.18))
+      )
+      scale(1.34);
+  }
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+}
+
+@keyframes startupSplashFade {
+  0%,
+  82% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes startupContentIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .startup-splash,
+  .startup-splash-logo,
+  .app.startup-ready .app-title,
+  .app.startup-ready .player-switcher,
+  .app.startup-ready .content,
+  .app.startup-ready > .bottom-nav {
+    animation-duration: 1ms !important;
+  }
+}

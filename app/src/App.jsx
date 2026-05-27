@@ -78,60 +78,106 @@ const AUDIO_ASSETS = {
   get: `${PUBLIC_ASSET_BASE}audio/get.mp3`,
   popup: `${PUBLIC_ASSET_BASE}audio/popup.mp3`,
   score: `${PUBLIC_ASSET_BASE}audio/score.mp3`,
-  start: `${PUBLIC_ASSET_BASE}audio/start.mp3`,
   switch: `${PUBLIC_ASSET_BASE}audio/switch.mp3`,
   tab: `${PUBLIC_ASSET_BASE}audio/tab.mp3`,
   tap: `${PUBLIC_ASSET_BASE}audio/tap.mp3`,
 };
 
-const audioPools = new Map();
-const audioPoolIndexes = new Map();
+const AUDIO_PRELOAD_ORDER = ["tap", "tab", "switch", "score", "popup", "error", "get"];
+let effectAudioContext = null;
+let effectPreloadStarted = false;
+const effectAudioBuffers = new Map();
+const effectDecodePromises = new Map();
+let lastFormErrorSoundAt = 0;
 
-function audioPoolSize(effect) {
-  return effect === "tap" ? 4 : 2;
+function audioContextForEffects() {
+  if (typeof window === "undefined") return null;
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) return null;
+  if (effectAudioContext?.state === "closed") effectAudioContext = null;
+  if (!effectAudioContext) effectAudioContext = new AudioContextClass();
+  return effectAudioContext;
 }
 
-function audioPoolFor(effect) {
-  if (typeof Audio === "undefined" || !AUDIO_ASSETS[effect]) return null;
-  if (!audioPools.has(effect)) {
-    const pool = Array.from({ length: audioPoolSize(effect) }, () => {
-      const audio = new Audio(AUDIO_ASSETS[effect]);
-      audio.preload = "auto";
-      audio.load();
-      return audio;
-    });
-    audioPools.set(effect, pool);
-    audioPoolIndexes.set(effect, 0);
-  }
-  return audioPools.get(effect);
+function decodeEffectSound(effect) {
+  if (effectAudioBuffers.has(effect)) return Promise.resolve(effectAudioBuffers.get(effect));
+  if (effectDecodePromises.has(effect)) return effectDecodePromises.get(effect);
+  const context = audioContextForEffects();
+  if (!context || !AUDIO_ASSETS[effect]) return Promise.resolve(null);
+  const promise = fetch(AUDIO_ASSETS[effect], { cache: "force-cache" })
+    .then((response) => response.arrayBuffer())
+    .then((arrayBuffer) => context.decodeAudioData(arrayBuffer))
+    .then((buffer) => {
+      effectAudioBuffers.set(effect, buffer);
+      return buffer;
+    })
+    .catch(() => null);
+  effectDecodePromises.set(effect, promise);
+  return promise;
 }
 
 function preloadEffectSounds() {
-  Object.keys(AUDIO_ASSETS).forEach((effect) => {
-    audioPoolFor(effect);
+  if (effectPreloadStarted) return;
+  effectPreloadStarted = true;
+  AUDIO_PRELOAD_ORDER.forEach((effect) => {
     fetch(AUDIO_ASSETS[effect], { cache: "force-cache" }).catch(() => {});
   });
+  const preloadDecodedAudio = () => {
+    AUDIO_PRELOAD_ORDER.reduce(
+      (chain, effect) => chain.then(() => decodeEffectSound(effect)),
+      Promise.resolve(),
+    );
+  };
+  if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+    window.requestIdleCallback(preloadDecodedAudio, { timeout: 1200 });
+  } else {
+    window.setTimeout(preloadDecodedAudio, 250);
+  }
 }
 
-function playEffectSound(effect) {
-  const pool = audioPoolFor(effect);
-  if (!pool?.length) return;
-  const index = audioPoolIndexes.get(effect) || 0;
-  const audio = pool[index % pool.length];
-  audioPoolIndexes.set(effect, (index + 1) % pool.length);
-  if (!audio) return;
+function playDecodedEffect(context, buffer) {
   try {
-    audio.pause();
-    audio.currentTime = 0;
-    audio.play().catch(() => {});
+    const source = context.createBufferSource();
+    source.buffer = buffer;
+    source.connect(context.destination);
+    source.start();
   } catch {
     // Browser audio policy errors are harmless; the next user gesture can retry.
   }
 }
 
+function playEffectBuffer(effect, buffer, options = {}) {
+  const { resume = true } = options;
+  const context = audioContextForEffects();
+  if (!context || !buffer) return;
+  if (context.state === "running") {
+    playDecodedEffect(context, buffer);
+    return;
+  }
+  if (!resume) return;
+  context.resume?.().then(() => playDecodedEffect(context, buffer)).catch(() => {});
+}
+
+function playEffectSound(effect, options = {}) {
+  const context = audioContextForEffects();
+  const buffer = effectAudioBuffers.get(effect);
+  if (!context || !buffer) {
+    decodeEffectSound(effect).then((decodedBuffer) => playEffectBuffer(effect, decodedBuffer, options));
+    return;
+  }
+  playEffectBuffer(effect, buffer, options);
+}
+
 function shouldPlayTapSound(element) {
   if (element?.closest?.("[data-sound-effect]")) return false;
   return Boolean(element?.closest?.("button, [role='button'], [role='tab'], input[type='submit'], .standard-ok-button, .file-control, select"));
+}
+
+function playFormErrorSound() {
+  const now = typeof performance !== "undefined" ? performance.now() : Date.now();
+  if (now - lastFormErrorSoundAt < 350) return;
+  lastFormErrorSoundAt = now;
+  playEffectSound("error");
 }
 
 const SCORE_CARD_SKINS = {
@@ -3128,6 +3174,7 @@ function animationTestDb() {
 export default function App() {
   const [db, setDbState] = useState(loadDb);
   const [tab, setTab] = useState(() => (localStorage.getItem(STORAGE_KEY) ? "home" : "settings"));
+  const [isStartupSplashVisible, setIsStartupSplashVisible] = useState(true);
   const [challengeRange, setChallengeRange] = useState(RANGE_WEEK);
   const [selectedDate, setSelectedDate] = useState(todayISO);
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
@@ -3191,12 +3238,16 @@ export default function App() {
 
   useEffect(() => {
     preloadEffectSounds();
-    playEffectSound("start");
     const playTapSound = (event) => {
       if (shouldPlayTapSound(event.target)) playEffectSound("tap");
     };
     document.addEventListener("click", playTapSound, true);
     return () => document.removeEventListener("click", playTapSound, true);
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setIsStartupSplashVisible(false), 1120);
+    return () => window.clearTimeout(timer);
   }, []);
 
   useEffect(() => {
@@ -3383,12 +3434,17 @@ export default function App() {
 
   return (
     <div
-      className="app theme-blue font-rounded"
+      className={`app theme-blue font-rounded ${isStartupSplashVisible ? "startup-active" : "startup-ready"}`}
       style={{
         ...themeStyleFor(FIXED_UI_THEME),
         "--ballpark-bg-url": cssImageUrl(NEW_UI_ASSETS.background),
       }}
     >
+      {isStartupSplashVisible && (
+        <div className="startup-splash" aria-hidden="true">
+          <img className="startup-splash-logo" src={NEW_UI_ASSETS.logo} alt="" />
+        </div>
+      )}
       <div className="phone-shell">
         <header className="app-header">
           <strong className="app-title"><img src={NEW_UI_ASSETS.logo} alt="SWING LOG" /></strong>
@@ -4640,7 +4696,12 @@ function SwingForm({ bats, defaultBat, onSubmit, submitLabel, defaultValues = nu
     testAction?.(selectedBat);
   };
   return (
-    <form className="input-grid swing-form" onSubmit={onSubmit} style={{ "--selected-bat-color": selectedBatColor }}>
+    <form
+      className="input-grid swing-form"
+      onSubmit={onSubmit}
+      onInvalidCapture={playFormErrorSound}
+      style={{ "--selected-bat-color": selectedBatColor }}
+    >
       <h3 className="swing-form-title"><img className="form-pen-icon" src={NEW_UI_ASSETS.recordPen} alt="" aria-hidden="true" />記録入力</h3>
       <BatSelect value={selectedBat} onChange={setSelectedBat} bats={bats} batColors={batColors} name="bat" required className="home-form-bat-controls" />
       <label className="field-label"><span className="field-title">回数</span><span className="paper-input-cell"><input name="count" type="number" inputMode="numeric" min="1" max="999" step="1" required value={countValue} onChange={(event) => setCountValue(event.target.value)} aria-label="回数" /><span aria-hidden="true">回</span></span></label>

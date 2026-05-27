@@ -1,4 +1,4 @@
-const CACHE_NAME = "swing-log-v101";
+const CACHE_NAME = "swing-log-v102";
 const ASSETS = [
   "./",
   "./index.html",
@@ -44,7 +44,6 @@ const ASSETS = [
   "./audio/get.mp3",
   "./audio/popup.mp3",
   "./audio/score.mp3",
-  "./audio/start.mp3",
   "./audio/switch.mp3",
   "./audio/tab.mp3",
   "./audio/tap.mp3",
