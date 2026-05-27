@@ -1088,8 +1088,9 @@ function scoreBarDomainForCard(card, definitions) {
   if (card.metric === "count") return { start: 0, end: maxTarget };
   if (card.metric === "avg" || card.metric === "best") {
     if (card.range === RANGE_TODAY) return { start: SCORE_BAR_SCORE_START, end: SCORE_BAR_HOME_SCORE_END };
+    const firstTarget = Math.min(...numericTargets);
     return {
-      start: SCORE_BAR_SCORE_START,
+      start: Number.isFinite(firstTarget) ? firstTarget - 100 : SCORE_BAR_SCORE_START,
       end: Math.max(SCORE_BAR_SCORE_START + 1, ...numericTargets),
     };
   }
