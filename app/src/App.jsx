@@ -3142,6 +3142,7 @@ export default function App() {
   const [pendingDelete, setPendingDelete] = useState(null);
   const [isNameMenuOpen, setIsNameMenuOpen] = useState(false);
   const [scoreAnimation, setScoreAnimation] = useState(null);
+  const [firstGetBadges, setFirstGetBadges] = useState([]);
   const [homeViewDate, setHomeViewDate] = useState(todayISO);
   const [dismissedHomeBadgesByDate, setDismissedHomeBadgesByDate] = useState({});
 
@@ -3245,7 +3246,8 @@ export default function App() {
       const weekRecordsAfter = recordsForViewRange(recordsForNameAfter, RANGE_WEEK, date);
       const fromWeekBat = aggregateByBat(weekRecordsBefore).find((item) => item.bat === bat) || { bat, count: 0, avg: 0, best: 0 };
       const toWeekBat = aggregateByBat(weekRecordsAfter).find((item) => item.bat === bat) || { bat, count: 0, avg: 0, best: 0 };
-      setScoreAnimation({ id: uid(), bat, fromSummary, toSummary, fromWeekSummary, toWeekSummary, fromBat, toBat, fromWeekBat, toWeekBat, playedRanges: [] });
+      const firstGetBadgesForRecord = firstEarnedBadgeDefinitions(recordsForNameBefore, recordsForNameAfter, date);
+      setScoreAnimation({ id: uid(), bat, fromSummary, toSummary, fromWeekSummary, toWeekSummary, fromBat, toBat, fromWeekBat, toWeekBat, playedRanges: [], firstGetBadges: firstGetBadgesForRecord, firstGetShown: false });
     }
     setDb({ ...db, records: nextRecords });
     playAppSound("success");
@@ -3263,8 +3265,16 @@ export default function App() {
     setScoreAnimation((current) => {
       if (!current) return current;
       const playedRanges = Array.from(new Set([...(current.playedRanges || []), completedRange]));
+      if (completedRange === RANGE_TODAY && !current.firstGetShown && current.firstGetBadges?.length) {
+        setFirstGetBadges(current.firstGetBadges);
+        return { ...current, playedRanges, firstGetShown: true };
+      }
       return { ...current, playedRanges };
     });
+  };
+
+  const advanceFirstGetBadge = () => {
+    setFirstGetBadges((current) => current.slice(1));
   };
 
   const addName = (event) => {
@@ -3492,6 +3502,9 @@ export default function App() {
 
         {pendingDelete && <DeleteDialog pending={pendingDelete} onCancel={() => setPendingDelete(null)} onConfirm={confirmDelete} />}
       </div>
+      {firstGetBadges.length > 0 && (
+        <FirstGetBadgeShowcase badges={firstGetBadges} onAdvance={advanceFirstGetBadge} />
+      )}
       <BottomNav tab={tab} setTab={(nextTab) => {
         if (nextTab !== "settings" && (!db.names.length || !db.bats.length)) {
           setTab("settings");
@@ -3637,7 +3650,8 @@ function HomeView({ db, setDb, currentName, allForName, allForNameRaw = allForNa
     const fromBat = { bat, count: 0, avg: 0, best: 0 };
     const toBat = aggregateByBat(todayRecordsAfter).find((item) => item.bat === bat) || fromBat;
     const toWeekBat = aggregateByBat(recordsForViewRange(recordsForNameAfter, RANGE_WEEK, activeDate)).find((item) => item.bat === bat) || fromBat;
-    setScoreAnimation?.({ id: uid(), bat, fromSummary, toSummary, fromWeekSummary, toWeekSummary, fromBat, toBat, fromWeekBat: fromBat, toWeekBat, playedRanges: [] });
+    const firstGetBadgesForRecord = firstEarnedBadgeDefinitions([], recordsForNameAfter, activeDate);
+    setScoreAnimation?.({ id: uid(), bat, fromSummary, toSummary, fromWeekSummary, toWeekSummary, fromBat, toBat, fromWeekBat: fromBat, toWeekBat, playedRanges: [], firstGetBadges: firstGetBadgesForRecord, firstGetShown: false });
     setDb({
       ...db,
       records: nextRecords,
@@ -3960,6 +3974,15 @@ function collectBadgeCounts(records, filter = RANGE_ALL, baseDate = todayISO()) 
   });
 }
 
+function firstEarnedBadgeDefinitions(beforeRecords, afterRecords, baseDate = todayISO()) {
+  const beforeCounts = new Map(collectBadgeCounts(beforeRecords, RANGE_ALL, baseDate));
+  const afterCounts = new Map(collectBadgeCounts(afterRecords, RANGE_ALL, baseDate));
+  return [...afterCounts.entries()]
+    .filter(([label, count]) => count > 0 && !beforeCounts.get(label))
+    .sort(([a], [b]) => compareBadgesByRarity(a, b))
+    .map(([label, count]) => makeBadgeDefinition(canonicalBadgeLabel(label), { earnedCount: count }));
+}
+
 function badgeCategory(label) {
   const definition = BADGE_DEFINITION_MAP.get(label);
   return definition?.category || "trophy";
@@ -4157,6 +4180,53 @@ function BadgeDetailPopover({ badge, onClose }) {
   );
 }
 
+function FirstGetBadgeShowcase({ badges, onAdvance }) {
+  const badge = badges?.[0];
+  if (!badge) return null;
+  const remaining = badges.length;
+  const closeLabel = remaining > 1 ? "次の初ゲットバッジへ" : "初ゲットバッジを閉じる";
+  return createPortal(
+    <div
+      className={`first-get-backdrop rarity-${badge.rarity.toLowerCase()}`}
+      style={{ "--badge-rarity-color": rarityColorFor(badge.rarity) }}
+      onClick={onAdvance}
+    >
+      <aside
+        className={`collection-popover first-get-popover rarity-${badge.rarity.toLowerCase()}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label="初ゲットバッジ"
+        onPointerDown={(event) => event.stopPropagation()}
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="first-get-title" aria-hidden="true">初ゲット</div>
+        <button
+          type="button"
+          className="collection-popover-close"
+          aria-label={closeLabel}
+          onClick={onAdvance}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M7.5 7.5 16.5 16.5" />
+            <path d="M16.5 7.5 7.5 16.5" />
+          </svg>
+        </button>
+        <div className="badge-popup-card" style={{ "--badge-rarity-color": rarityColorFor(badge.rarity) }}>
+          <img className="badge-popup-card-bg" src={RARITY_CARD_URLS[badge.rarity]} alt="" aria-hidden="true" />
+          <div className={`badge-popup-card-medal category-${badge.category}`} aria-hidden="true">
+            <img src={CATEGORY_ICON_URLS[badge.category]} alt="" />
+          </div>
+          <div className="badge-popup-card-copy">
+            <strong>{badge.name || badge.label}</strong>
+            <p>{badge.description}</p>
+          </div>
+        </div>
+      </aside>
+    </div>,
+    document.body
+  );
+}
+
 function BadgeChip({ label, count = 1, description = null, lockedSecret = false }) {
   const [selectedBadge, setSelectedBadge] = useState(null);
   const canonicalLabel = canonicalBadgeLabel(label);
@@ -4193,21 +4263,28 @@ function BadgeCollectionView({ allForName, activeDate = todayISO(), db = default
   const collectionRecords = allForName;
   const badgeCounts = useMemo(() => new Map(collectBadgeCounts(collectionRecords, RANGE_ALL, activeDate)), [collectionRecords, activeDate]);
   const definitions = useMemo(() => allBadgeDefinitions(), []);
-  const badgePointTotal = definitions.reduce((sum, definition) => {
-    const earnedCount = earnedCountForDefinition(definition, badgeCounts);
-    return sum + (earnedCount * RARITY_POINTS[definition.rarity]);
-  }, 0);
-  const earnedTotal = definitions.reduce((sum, definition) => (
-    sum + Math.min(1, earnedCountForDefinition(definition, badgeCounts))
-  ), 0);
-  const earnedInstanceTotal = definitions.reduce((sum, definition) => (
-    sum + earnedCountForDefinition(definition, badgeCounts)
-  ), 0);
-  const badgePointTargets = [30, 60, 120, 240, 360, 520].map((target) => ({
+  const badgePointTargets = useMemo(() => [30, 60, 120, 240, 360, 520].map((target) => ({
     target,
     label: `${target}pt`,
     description: `バッジポイント${target}ptまであと少し`,
-  }));
+  })), []);
+  const badgeStats = useMemo(() => {
+    const items = definitions.map((definition) => {
+      const earnedCount = earnedCountForDefinition(definition, badgeCounts);
+      return {
+        definition,
+        earnedCount,
+        lockedSecret: definition.secret && earnedCount === 0,
+      };
+    });
+    return {
+      items,
+      badgePointTotal: items.reduce((sum, item) => sum + (item.earnedCount * RARITY_POINTS[item.definition.rarity]), 0),
+      earnedTotal: items.reduce((sum, item) => sum + Math.min(1, item.earnedCount), 0),
+      earnedInstanceTotal: items.reduce((sum, item) => sum + item.earnedCount, 0),
+    };
+  }, [definitions, badgeCounts]);
+  const { badgePointTotal, earnedTotal, earnedInstanceTotal } = badgeStats;
   const rewardGoalInput = String(db?.badgeRewardGoal || "");
   const rewardTextInput = String(db?.badgeRewardText || "");
   const rewardGoal = Math.max(0, Math.trunc(Number(rewardGoalInput) || 0));
@@ -4217,10 +4294,10 @@ function BadgeCollectionView({ allForName, activeDate = todayISO(), db = default
   const rewardGoalFontSize = clamp(17 - Math.max(0, rewardGoalDisplay.length - 5) * 1.45, 8.5, 17);
   const rewardTextUnits = [...rewardTextInput].reduce((sum, char) => sum + (char.charCodeAt(0) <= 0x7f ? 0.58 : 1), 0);
   const rewardTextFontSize = clamp(Math.min(16, 132 / Math.max(1, rewardTextUnits)), 5.2, 16);
-  const badgeDataDates = collectionRecords
+  const badgeDataDates = useMemo(() => collectionRecords
     .map((record) => record.date)
     .filter((date) => date <= activeDate)
-    .sort((a, b) => a.localeCompare(b));
+    .sort((a, b) => a.localeCompare(b)), [collectionRecords, activeDate]);
   const badgeDataStart = badgeDataDates[0] ? parseISO(badgeDataDates[0]) : null;
   const badgeDataEnd = parseISO(activeDate);
   const badgeDataRangeLabel = badgeDataStart
@@ -4230,18 +4307,24 @@ function BadgeCollectionView({ allForName, activeDate = todayISO(), db = default
     if (!setDb) return;
     setDb({ ...db, ...patch });
   };
-  const collectionCategorySummaries = COLLECTION_CATEGORY_FILTERS.map((filter) => {
-    const baseItems = filter.key === "all"
-      ? definitions
-      : definitions.filter((definition) => collectionCategoryKeyFor(definition) === filter.key);
-    const items = [...baseItems].sort((a, b) => compareBadgesByRarity(a.label, b.label));
-    const earnedTotal = items.reduce((sum, definition) => sum + Math.min(1, earnedCountForDefinition(definition, badgeCounts)), 0);
-    const pointTotal = items.reduce((sum, definition) => (
-      sum + (earnedCountForDefinition(definition, badgeCounts) * RARITY_POINTS[definition.rarity])
-    ), 0);
-    return { ...filter, items, earnedTotal, pointTotal };
-  }).filter((summary) => summary.items.length);
-  const activeCategorySummary = collectionCategorySummaries.find((summary) => summary.key === selectedCategory) || collectionCategorySummaries[0];
+  const collectionCategorySummaries = useMemo(() => {
+    const grouped = new Map(COLLECTION_CATEGORY_FILTERS.map((filter) => [filter.key, []]));
+    badgeStats.items.forEach((item) => {
+      grouped.get("all")?.push(item);
+      grouped.get(collectionCategoryKeyFor(item.definition))?.push(item);
+    });
+    return COLLECTION_CATEGORY_FILTERS.map((filter) => {
+      const items = [...(grouped.get(filter.key) || [])].sort((a, b) => compareBadgesByRarity(a.definition.label, b.definition.label));
+      const earnedTotal = items.reduce((sum, item) => sum + Math.min(1, item.earnedCount), 0);
+      const pointTotal = items.reduce((sum, item) => (
+        sum + (item.earnedCount * RARITY_POINTS[item.definition.rarity])
+      ), 0);
+      return { ...filter, items, earnedTotal, pointTotal };
+    }).filter((summary) => summary.items.length);
+  }, [badgeStats.items]);
+  const activeCategorySummary = useMemo(() => (
+    collectionCategorySummaries.find((summary) => summary.key === selectedCategory) || collectionCategorySummaries[0]
+  ), [collectionCategorySummaries, selectedCategory]);
   return (
     <section className="badge-collection">
       <div className="section-row tight badge-collection-heading-row">
@@ -4321,9 +4404,7 @@ function BadgeCollectionView({ allForName, activeDate = todayISO(), db = default
             return (
               <section className={`collection-group category-${key}`} key={key}>
                 <div className="badge-list two-col collection-badge-list">
-                  {items.map((definition, index) => {
-                    const earnedCount = earnedCountForDefinition(definition, badgeCounts);
-                    const lockedSecret = definition.secret && earnedCount === 0;
+                  {items.map(({ definition, earnedCount, lockedSecret }, index) => {
                     return (
                       <span
                         className={`badge-motion-item ${earnedCount ? "earned" : "locked"} ${definition.secret ? "secret" : ""}`}
