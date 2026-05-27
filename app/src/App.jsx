@@ -2455,7 +2455,7 @@ function EarnedBadgesCard({ badgeCounts, title = "獲得バッジ" }) {
   ), [badgeCounts]);
   const featuredBadges = useMemo(() => allBadges.slice(0, 6), [allBadges]);
   const visibleBadges = expanded ? allBadges : featuredBadges;
-  const badgeTotal = badgeCounts.length;
+  const badgeTotal = badgeCounts.reduce((sum, [, count]) => sum + count, 0);
   const toggleExpanded = () => {
     setExpanded((value) => !value);
   };
@@ -2466,7 +2466,7 @@ function EarnedBadgesCard({ badgeCounts, title = "獲得バッジ" }) {
         <div>
           <h2 className="icon-heading"><Icon type="badge" />{title}</h2>
         </div>
-        <div className="badge-heading-count"><strong>{badgeTotal.toLocaleString("ja-JP")}</strong><span>種類</span></div>
+        <div className="badge-heading-count"><strong>{badgeTotal.toLocaleString("ja-JP")}</strong><span>個</span></div>
       </div>
       {badgeCounts.length ? (
         <>
@@ -4143,25 +4143,14 @@ function BadgeDetailPopover({ badge, onClose }) {
         </button>
         <div className="badge-popup-card" style={{ "--badge-rarity-color": rarityColorFor(badge.rarity) }}>
           <img className="badge-popup-card-bg" src={RARITY_CARD_URLS[badge.rarity]} alt="" aria-hidden="true" />
-          <div className="badge-popup-card-medal" aria-hidden="true">
+          <div className={`badge-popup-card-medal category-${badge.category}`} aria-hidden="true">
             <img src={CATEGORY_ICON_URLS[badge.category]} alt="" />
           </div>
           <div className="badge-popup-card-copy">
             <strong>{badge.lockedSecret ? "???" : badge.name || badge.label}</strong>
-            <span className="badge-popup-card-rarity">{badge.rarity} / {RARITY_LABELS[badge.rarity]}</span>
-            <span className="badge-popup-card-condition">{badge.lockedSecret ? "ひみつ" : badge.conditionText}</span>
             <p>{badge.lockedSecret ? "ひみつ" : badge.description}</p>
           </div>
         </div>
-        <small>
-          {badge.type === "unique" ? "達成時に1回だけ獲得可" : "達成したら何回でも獲得可"}
-          {" / "}
-          {badge.earnedCount > 0 ? (
-            <span className="earned-count">獲得 {badge.earnedCount}回</span>
-          ) : (
-            "未取得"
-          )}
-        </small>
       </aside>
     </div>,
     document.body
@@ -4328,21 +4317,9 @@ function BadgeCollectionView({ allForName, activeDate = todayISO(), db = default
         </div>
         <div className="collection-groups">
           {activeCategorySummary && (() => {
-            const { key, label, icon, items, earnedTotal: categoryEarnedTotal, pointTotal: categoryPointTotal } = activeCategorySummary;
+            const { key, items } = activeCategorySummary;
             return (
               <section className={`collection-group category-${key}`} key={key}>
-                <div className="collection-group-title">
-                  <span className="collection-group-icon" aria-hidden="true">
-                    <img src={CATEGORY_ICON_URLS[icon]} alt="" />
-                  </span>
-                  <div>
-                    <h3>{label}</h3>
-                  </div>
-                  <strong>
-                    <span className="collection-count-line">{categoryEarnedTotal}/{items.length}<em>種類</em></span>
-                    <span className="collection-point-line">{categoryPointTotal.toLocaleString("ja-JP")}<em>pt</em></span>
-                  </strong>
-                </div>
                 <div className="badge-list two-col collection-badge-list">
                   {items.map((definition, index) => {
                     const earnedCount = earnedCountForDefinition(definition, badgeCounts);
