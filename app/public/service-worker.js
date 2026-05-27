@@ -1,4 +1,4 @@
-const CACHE_NAME = "swing-log-v100";
+const CACHE_NAME = "swing-log-v101";
 const ASSETS = [
   "./",
   "./index.html",
@@ -40,6 +40,14 @@ const ASSETS = [
   "./images/A_card.png",
   "./images/S_card.png",
   "./images/SS_card.png",
+  "./audio/error.mp3",
+  "./audio/get.mp3",
+  "./audio/popup.mp3",
+  "./audio/score.mp3",
+  "./audio/start.mp3",
+  "./audio/switch.mp3",
+  "./audio/tab.mp3",
+  "./audio/tap.mp3",
 ];
 
 self.addEventListener("install", (event) => {

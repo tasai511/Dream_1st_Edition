@@ -84,24 +84,41 @@ const AUDIO_ASSETS = {
   tap: `${PUBLIC_ASSET_BASE}audio/tap.mp3`,
 };
 
-const audioPlayers = new Map();
+const audioPools = new Map();
+const audioPoolIndexes = new Map();
 
-function audioPlayerFor(effect) {
+function audioPoolSize(effect) {
+  return effect === "tap" ? 4 : 2;
+}
+
+function audioPoolFor(effect) {
   if (typeof Audio === "undefined" || !AUDIO_ASSETS[effect]) return null;
-  if (!audioPlayers.has(effect)) {
-    const audio = new Audio(AUDIO_ASSETS[effect]);
-    audio.preload = "auto";
-    audioPlayers.set(effect, audio);
+  if (!audioPools.has(effect)) {
+    const pool = Array.from({ length: audioPoolSize(effect) }, () => {
+      const audio = new Audio(AUDIO_ASSETS[effect]);
+      audio.preload = "auto";
+      audio.load();
+      return audio;
+    });
+    audioPools.set(effect, pool);
+    audioPoolIndexes.set(effect, 0);
   }
-  return audioPlayers.get(effect);
+  return audioPools.get(effect);
 }
 
 function preloadEffectSounds() {
-  Object.keys(AUDIO_ASSETS).forEach((effect) => audioPlayerFor(effect)?.load?.());
+  Object.keys(AUDIO_ASSETS).forEach((effect) => {
+    audioPoolFor(effect);
+    fetch(AUDIO_ASSETS[effect], { cache: "force-cache" }).catch(() => {});
+  });
 }
 
 function playEffectSound(effect) {
-  const audio = audioPlayerFor(effect);
+  const pool = audioPoolFor(effect);
+  if (!pool?.length) return;
+  const index = audioPoolIndexes.get(effect) || 0;
+  const audio = pool[index % pool.length];
+  audioPoolIndexes.set(effect, (index + 1) % pool.length);
   if (!audio) return;
   try {
     audio.pause();
