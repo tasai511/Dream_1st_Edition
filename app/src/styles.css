@@ -4351,6 +4351,40 @@ input::placeholder {
   background: transparent;
 }
 
+.collection-rarity-section {
+  display: grid;
+  gap: 3px;
+}
+
+.collection-rarity-heading {
+  display: flex;
+  align-items: baseline;
+  min-height: 17px;
+  margin: 0;
+  padding: 0 10px 0 2px;
+  color: var(--badge-rarity-heading-color, #0a3c99);
+  font-size: 1.24rem;
+  font-weight: 950;
+  line-height: 1;
+  text-shadow:
+    1px 0 #ffffff,
+    -1px 0 #ffffff,
+    0 1px #ffffff,
+    0 -1px #ffffff,
+    0 2px 4px rgba(4, 43, 118, 0.16);
+}
+
+.collection-rarity-heading span {
+  font-size: 1.34rem;
+}
+
+.collection-rarity-section.rarity-d { --badge-rarity-heading-color: #7b4c2d; }
+.collection-rarity-section.rarity-c { --badge-rarity-heading-color: #317a2d; }
+.collection-rarity-section.rarity-b { --badge-rarity-heading-color: #126bc8; }
+.collection-rarity-section.rarity-a { --badge-rarity-heading-color: #c44722; }
+.collection-rarity-section.rarity-s { --badge-rarity-heading-color: #586271; }
+.collection-rarity-section.rarity-ss { --badge-rarity-heading-color: #b07300; }
+
 .collection-badge-list {
   padding-top: 2px;
   padding-right: 10px;
@@ -10302,7 +10336,6 @@ body .app .home-score-input-grid .home-input-panel::before {
   z-index: 0 !important;
   background:
     linear-gradient(180deg, transparent 0 36px, rgba(36, 104, 180, 0.13) 36px, rgba(36, 104, 180, 0.13) 37px, transparent 37px, transparent 39px, rgba(36, 104, 180, 0.1) 39px, rgba(36, 104, 180, 0.1) 40px, transparent 40px),
-    repeating-linear-gradient(180deg, transparent 0 28px, rgba(36, 104, 180, 0.08) 28px, rgba(36, 104, 180, 0.08) 29px),
     linear-gradient(90deg, transparent 0 13px, rgba(224, 86, 70, 0.2) 14px, transparent 15px),
     radial-gradient(circle at 16% 22%, var(--paper-fiber) 0 1px, transparent 1.6px),
     radial-gradient(circle at 82% 68%, rgba(122, 96, 50, 0.04) 0 1.2px, transparent 1.8px),
@@ -10310,7 +10343,6 @@ body .app .home-score-input-grid .home-input-panel::before {
     linear-gradient(180deg, var(--paper-base) 0%, #f8f1df 100%) !important;
   background-position:
     0 0,
-    0 11px,
     0 0,
     0 0,
     0 0,
@@ -11767,7 +11799,6 @@ body .app .badge-point-card .badge-point-meters .meter-remaining {
 body .app .home-score-input-grid .home-input-panel::before {
   background:
     linear-gradient(180deg, transparent 0 36px, rgba(36, 104, 180, 0.13) 36px, rgba(36, 104, 180, 0.13) 37px, transparent 37px, transparent 39px, rgba(36, 104, 180, 0.1) 39px, rgba(36, 104, 180, 0.1) 40px, transparent 40px),
-    repeating-linear-gradient(180deg, transparent 0 28px, rgba(36, 104, 180, 0.08) 28px, rgba(36, 104, 180, 0.08) 29px),
     linear-gradient(90deg, transparent 0 13px, rgba(224, 86, 70, 0.2) 14px, transparent 15px),
     radial-gradient(circle at 16% 22%, var(--paper-fiber) 0 1px, transparent 1.6px),
     radial-gradient(circle at 82% 68%, rgba(122, 96, 50, 0.04) 0 1.2px, transparent 1.8px),
@@ -11775,7 +11806,6 @@ body .app .home-score-input-grid .home-input-panel::before {
     linear-gradient(180deg, var(--paper-base) 0%, #f8f1df 100%) !important;
   background-position:
     0 0,
-    0 40px,
     0 0,
     0 0,
     0 0,
@@ -12023,6 +12053,23 @@ body .app .home-score-input-grid .home-input-panel::before {
   color: #b51220 !important;
 }
 
+.collection-badge-list .badge-chip-wrap.locked .badge.collection-badge,
+.collection-badge-list .badge.collection-badge.locked {
+  filter: grayscale(1) saturate(0.18) brightness(0.86);
+  opacity: 0.62;
+}
+
+.collection-badge-list .badge-chip-wrap.locked .badge-chip-icon img {
+  filter:
+    brightness(0) invert(0.62)
+    drop-shadow(0 2px 2px rgba(0, 0, 0, 0.18)) !important;
+}
+
+.collection-badge-list .badge-chip-wrap.locked .badge-label {
+  color: #6d7480 !important;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.34) !important;
+}
+
 .badge-popup-card {
   position: relative;
   width: min(100%, 280px);
@@ -12072,6 +12119,25 @@ body .app .home-score-input-grid .home-input-panel::before {
 .collection-popover.rarity-ss .badge-popup-card {
   --badge-card-name-color: #a56b00;
   --badge-card-name-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+.collection-popover.locked .badge-popup-card {
+  --badge-card-name-color: #6d7480;
+  --badge-card-name-shadow: 0 1px 0 rgba(255, 255, 255, 0.34);
+  filter: grayscale(1) saturate(0.08) brightness(0.66) contrast(0.92);
+  opacity: 0.88;
+}
+
+.collection-popover.locked .badge-popup-card::after {
+  box-shadow:
+    inset 0 0 0 2.5px rgba(124, 132, 144, 0.86),
+    inset 0 0 0 3.5px rgba(255, 255, 255, 0.52);
+}
+
+.collection-popover.locked .badge-popup-card-medal img {
+  filter:
+    brightness(0) invert(0.68)
+    drop-shadow(0 5px 8px rgba(0, 0, 0, 0.24)) !important;
 }
 
 .badge-popup-card-bg {
@@ -12180,71 +12246,135 @@ body .app .home-score-input-grid .home-input-panel::before {
 }
 
 .startup-splash {
-  --startup-logo-width: calc(210px * var(--app-scale));
-  --startup-logo-left: calc(((100vw - var(--app-visual-width)) / 2) + (14px * var(--app-scale)));
-  --startup-logo-top: max(14px, env(safe-area-inset-top));
   position: fixed;
   inset: 0;
   z-index: 10000;
   overflow: hidden;
-  background: var(--app-bg, linear-gradient(180deg, #111824 0%, #070a10 100%));
+  background: #f7fbff;
   pointer-events: none;
-  animation: startupSplashFade 1120ms ease forwards;
+}
+
+.startup-splash::before {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 0;
+  height: min(1040px, 118svh);
+  background:
+    linear-gradient(180deg, transparent 0 58%, rgba(247, 251, 255, 0.12) 74%, rgba(247, 251, 255, 0.34) 91%, #f7fbff 100%),
+    var(--ballpark-bg-url) center top / cover no-repeat,
+    #f7fbff;
+  content: "";
+}
+
+.startup-splash::after {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    radial-gradient(circle at 10% 3%, rgba(255, 255, 255, 0.8), transparent 18%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.12) 58%, rgba(255, 255, 255, 0.26) 86%, #f7fbff 100%);
+  content: "";
+}
+
+.startup-splash.running {
+  pointer-events: none;
+}
+
+.startup-splash.running::before,
+.startup-splash.running::after {
+  animation: startupSplashFade 1460ms ease forwards;
 }
 
 .startup-splash-logo {
-  position: absolute;
-  left: var(--startup-logo-left);
-  top: var(--startup-logo-top);
-  width: var(--startup-logo-width);
+  position: fixed;
+  left: 50%;
+  top: calc(38svh - 38px);
+  z-index: 10001;
+  display: block;
+  width: min(78vw, 300px);
   height: auto;
+  pointer-events: none;
   filter:
     drop-shadow(0 14px 24px rgba(16, 65, 108, 0.26))
     drop-shadow(0 0 18px rgba(255, 255, 255, 0.18));
-  transform-origin: 0 0;
-  animation: startupLogoLand 1040ms cubic-bezier(0.17, 0.92, 0.24, 1) forwards;
+  transform: translateX(-50%);
 }
 
-.app.startup-active .app-title,
-.app.startup-active .player-switcher,
-.app.startup-active .content,
-.app.startup-active > .bottom-nav {
+.startup-splash-logo.running,
+.startup-splash-logo.ready {
+  transform: none;
+}
+
+.startup-splash-logo.ready {
+  z-index: 2;
+}
+
+.startup-start-button {
+  position: fixed;
+  left: 50%;
+  top: calc(38svh + 104px);
+  z-index: 10002;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 112px;
+  min-width: 112px;
+  height: 38px;
+  min-height: 38px;
+  border: 3px solid color-mix(in srgb, #ffffff 18%, #ffffff);
+  border-radius: 999px;
+  padding: 0 12px;
+  color: #ffffff;
+  background:
+    linear-gradient(180deg, #48adff 0%, #0b7bf5 54%, #0055c9 100%);
+  box-shadow:
+    inset 0 3px 0 rgba(255, 255, 255, 0.42),
+    inset 0 -5px 0 rgba(0, 38, 112, 0.28),
+    0 4px 0 rgba(1, 62, 151, 0.62);
+  font-size: 0.7rem;
+  font-weight: 950;
+  line-height: 1;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.34);
+  -webkit-appearance: none;
+  appearance: none;
+  margin-left: -56px;
+  transform: scale(1.08);
+}
+
+.startup-start-button:focus,
+.startup-start-button:focus-visible {
+  outline: none;
+}
+
+.startup-start-button:active {
+  top: calc(38svh + 105px);
+  transform: scale(1.08);
+}
+
+.app.startup-idle .player-switcher,
+.app.startup-idle .content,
+.app.startup-idle > .bottom-nav,
+.app.startup-running .player-switcher,
+.app.startup-running .content,
+.app.startup-running > .bottom-nav {
   opacity: 0;
   pointer-events: none;
 }
 
-.app.startup-ready .app-title,
+.app .app-title {
+  opacity: 0;
+  pointer-events: none;
+}
+
 .app.startup-ready .player-switcher,
 .app.startup-ready .content,
 .app.startup-ready > .bottom-nav {
   animation: startupContentIn 220ms ease both;
 }
 
-@keyframes startupLogoLand {
-  0% {
-    transform:
-      translate(
-        calc(50vw - var(--startup-logo-left) - (var(--startup-logo-width) / 2)),
-        calc(48svh - var(--startup-logo-top) - (var(--startup-logo-width) * 0.18))
-      )
-      scale(1.34);
-  }
-  56% {
-    transform:
-      translate(
-        calc(50vw - var(--startup-logo-left) - (var(--startup-logo-width) / 2)),
-        calc(48svh - var(--startup-logo-top) - (var(--startup-logo-width) * 0.18))
-      )
-      scale(1.34);
-  }
-  100% {
-    transform: translate(0, 0) scale(1);
-  }
-}
-
 @keyframes startupSplashFade {
   0%,
-  82% {
+  90% {
     opacity: 1;
   }
   100% {
@@ -12266,10 +12396,11 @@ body .app .home-score-input-grid .home-input-panel::before {
 @media (prefers-reduced-motion: reduce) {
   .startup-splash,
   .startup-splash-logo,
-  .app.startup-ready .app-title,
   .app.startup-ready .player-switcher,
   .app.startup-ready .content,
   .app.startup-ready > .bottom-nav {
     animation-duration: 1ms !important;
+    transition-duration: 1ms !important;
+    transition-delay: 0ms !important;
   }
 }

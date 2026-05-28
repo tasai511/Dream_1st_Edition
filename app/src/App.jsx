@@ -16,6 +16,8 @@ const kMaxChartVisibleDays = 365;
 const kCompactLayoutWidth = 390;
 const kCompactLayoutHeight = 844;
 const kScoreProgressAnimationDuration = 5000;
+const kStartupSplashDuration = 1460;
+const kStartupLogoMoveDelay = 760;
 const CHALLENGE_RANGE_TABS = [
   { range: RANGE_WEEK, period: "週間" },
   { range: RANGE_MONTH, period: "月間" },
@@ -78,12 +80,13 @@ const AUDIO_ASSETS = {
   get: `${PUBLIC_ASSET_BASE}audio/get.mp3`,
   popup: `${PUBLIC_ASSET_BASE}audio/popup.mp3`,
   score: `${PUBLIC_ASSET_BASE}audio/score.mp3`,
+  start: `${PUBLIC_ASSET_BASE}audio/start.mp3`,
   switch: `${PUBLIC_ASSET_BASE}audio/switch.mp3`,
   tab: `${PUBLIC_ASSET_BASE}audio/tab.mp3`,
   tap: `${PUBLIC_ASSET_BASE}audio/tap.mp3`,
 };
 
-const AUDIO_PRELOAD_ORDER = ["tap", "tab", "switch", "score", "popup", "error", "get"];
+const AUDIO_PRELOAD_ORDER = ["tap", "tab", "switch", "score", "popup", "error", "get", "start"];
 let effectAudioContext = null;
 let effectPreloadStarted = false;
 const effectAudioBuffers = new Map();
@@ -161,6 +164,9 @@ function playEffectBuffer(effect, buffer, options = {}) {
 function playEffectSound(effect, options = {}) {
   const context = audioContextForEffects();
   const buffer = effectAudioBuffers.get(effect);
+  if (context && context.state !== "running" && options.resume !== false) {
+    context.resume?.().catch(() => {});
+  }
   if (!context || !buffer) {
     decodeEffectSound(effect).then((decodedBuffer) => playEffectBuffer(effect, decodedBuffer, options));
     return;
@@ -3174,7 +3180,7 @@ function animationTestDb() {
 export default function App() {
   const [db, setDbState] = useState(loadDb);
   const [tab, setTab] = useState(() => (localStorage.getItem(STORAGE_KEY) ? "home" : "settings"));
-  const [isStartupSplashVisible, setIsStartupSplashVisible] = useState(true);
+  const [startupPhase, setStartupPhase] = useState("idle");
   const [challengeRange, setChallengeRange] = useState(RANGE_WEEK);
   const [selectedDate, setSelectedDate] = useState(todayISO);
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
@@ -3184,6 +3190,10 @@ export default function App() {
   const [firstGetBadges, setFirstGetBadges] = useState([]);
   const [homeViewDate, setHomeViewDate] = useState(todayISO);
   const [dismissedHomeBadgesByDate, setDismissedHomeBadgesByDate] = useState({});
+  const headerLogoRef = useRef(null);
+  const startupLogoRef = useRef(null);
+  const startupTimerRef = useRef(null);
+  const startupSoundTimerRef = useRef(null);
 
   useLayoutEffect(() => {
     const root = document.documentElement;
@@ -3245,9 +3255,9 @@ export default function App() {
     return () => document.removeEventListener("click", playTapSound, true);
   }, []);
 
-  useEffect(() => {
-    const timer = window.setTimeout(() => setIsStartupSplashVisible(false), 1120);
-    return () => window.clearTimeout(timer);
+  useEffect(() => () => {
+    if (startupTimerRef.current) window.clearTimeout(startupTimerRef.current);
+    if (startupSoundTimerRef.current) window.clearTimeout(startupSoundTimerRef.current);
   }, []);
 
   useEffect(() => {
@@ -3432,22 +3442,72 @@ export default function App() {
     event.target.value = "";
   };
 
+  const startStartupSplash = () => {
+    if (startupPhase !== "idle") return;
+    audioContextForEffects()?.resume?.().catch(() => {});
+    decodeEffectSound("start");
+    setStartupPhase("running");
+    window.requestAnimationFrame(() => {
+      const logo = startupLogoRef.current;
+      const headerLogo = headerLogoRef.current;
+      if (!logo || !headerLogo) return;
+      const target = headerLogo.getBoundingClientRect();
+      const viewportWidth = window.innerWidth || kCompactLayoutWidth;
+      const viewportHeight = window.innerHeight || kCompactLayoutHeight;
+      const startWidth = Math.min(viewportWidth * 0.78, target.width * 1.34);
+      const startLeft = (viewportWidth - startWidth) / 2;
+      const startTop = Math.max(96, (viewportHeight * 0.38) - (startWidth * 0.18));
+      logo.style.left = `${startLeft}px`;
+      logo.style.top = `${startTop}px`;
+      logo.style.width = `${startWidth}px`;
+      logo.animate(
+        [
+          { left: `${startLeft}px`, top: `${startTop}px`, width: `${startWidth}px` },
+          { left: `${target.left}px`, top: `${target.top}px`, width: `${target.width}px` },
+        ],
+        {
+          duration: 600,
+          delay: kStartupLogoMoveDelay,
+          easing: "cubic-bezier(0.17, 0.92, 0.24, 1)",
+          fill: "forwards",
+        },
+      );
+    });
+    startupSoundTimerRef.current = window.setTimeout(() => {
+      playEffectSound("start");
+      startupSoundTimerRef.current = null;
+    }, kStartupLogoMoveDelay);
+    startupTimerRef.current = window.setTimeout(() => {
+      setStartupPhase("ready");
+      startupTimerRef.current = null;
+    }, kStartupSplashDuration);
+  };
+
   return (
     <div
-      className={`app theme-blue font-rounded ${isStartupSplashVisible ? "startup-active" : "startup-ready"}`}
+      className={`app theme-blue font-rounded startup-${startupPhase}`}
       style={{
         ...themeStyleFor(FIXED_UI_THEME),
         "--ballpark-bg-url": cssImageUrl(NEW_UI_ASSETS.background),
       }}
     >
-      {isStartupSplashVisible && (
-        <div className="startup-splash" aria-hidden="true">
-          <img className="startup-splash-logo" src={NEW_UI_ASSETS.logo} alt="" />
-        </div>
+      {startupPhase !== "ready" && (
+        <div className={`startup-splash ${startupPhase}`} aria-hidden="true" />
+      )}
+      <img ref={startupLogoRef} className={`startup-splash-logo ${startupPhase}`} src={NEW_UI_ASSETS.logo} alt="" aria-hidden="true" />
+      {startupPhase === "idle" && (
+        <button
+          type="button"
+          className="startup-start-button"
+          onClick={startStartupSplash}
+          data-sound-effect="start"
+        >
+          スタート
+        </button>
       )}
       <div className="phone-shell">
         <header className="app-header">
-          <strong className="app-title"><img src={NEW_UI_ASSETS.logo} alt="SWING LOG" /></strong>
+          <strong className="app-title" ref={headerLogoRef}><img src={NEW_UI_ASSETS.logo} alt="SWING LOG" /></strong>
           <div className="player-switcher">
             <button
               className="active-player"
@@ -4203,7 +4263,7 @@ function BadgeDetailPopover({ badge, onClose }) {
   return createPortal(
     <div className="collection-popover-backdrop" onClick={closePopover}>
       <aside
-        className={`collection-popover rarity-${badge.rarity.toLowerCase()}`}
+        className={`collection-popover rarity-${badge.rarity.toLowerCase()} ${badge.earnedCount === 0 ? "locked" : ""}`}
         role="dialog"
         aria-modal="true"
         onPointerDown={(event) => event.stopPropagation()}
@@ -4293,11 +4353,12 @@ function BadgeChip({ label, count = 1, description = null, lockedSecret = false 
   const [selectedBadge, setSelectedBadge] = useState(null);
   const canonicalLabel = canonicalBadgeLabel(label);
   const definition = makeBadgeDefinition(canonicalLabel, description ? { description } : {});
+  const isLocked = count === 0;
   return (
     <>
-      <span className="badge-chip-wrap">
+      <span className={`badge-chip-wrap ${isLocked ? "locked" : ""}`}>
         <button
-          className={`badge collection-badge rarity-${definition.rarity.toLowerCase()}`}
+          className={`badge collection-badge rarity-${definition.rarity.toLowerCase()} ${isLocked ? "locked" : ""}`}
           type="button"
           data-sound-effect="popup"
           style={{
@@ -4388,6 +4449,17 @@ function BadgeCollectionView({ allForName, activeDate = todayISO(), db = default
   const activeCategorySummary = useMemo(() => (
     collectionCategorySummaries.find((summary) => summary.key === selectedCategory) || collectionCategorySummaries[0]
   ), [collectionCategorySummaries, selectedCategory]);
+  const activeRaritySections = useMemo(() => {
+    if (!activeCategorySummary?.items?.length) return [];
+    return [...RARITY_ORDER].reverse().map((rarity) => {
+      const items = activeCategorySummary.items.filter((item) => item.definition.rarity === rarity);
+      return {
+        rarity,
+        items,
+        earnedTotal: items.reduce((sum, item) => sum + Math.min(1, item.earnedCount), 0),
+      };
+    }).filter((section) => section.items.length);
+  }, [activeCategorySummary]);
   return (
     <section className="badge-collection">
       <div className="section-row tight badge-collection-heading-row">
@@ -4463,22 +4535,27 @@ function BadgeCollectionView({ allForName, activeDate = todayISO(), db = default
         </div>
         <div className="collection-groups">
           {activeCategorySummary && (() => {
-            const { key, items } = activeCategorySummary;
+            const { key } = activeCategorySummary;
             return (
               <section className={`collection-group category-${key}`} key={key}>
-                <div className="badge-list two-col collection-badge-list">
-                  {items.map(({ definition, earnedCount, lockedSecret }, index) => {
-                    return (
-                      <span
-                        className={`badge-motion-item ${earnedCount ? "earned" : "locked"} ${definition.secret ? "secret" : ""}`}
-                        key={definition.label}
-                        style={{ "--badge-index": index }}
-                      >
-                        <BadgeChip label={definition.label} count={earnedCount} description={definition.description} lockedSecret={lockedSecret} />
-                      </span>
-                    );
-                  })}
-                </div>
+                {activeRaritySections.map((section) => (
+                  <section className={`collection-rarity-section rarity-${section.rarity.toLowerCase()}`} key={section.rarity}>
+                    <h3 className="collection-rarity-heading">
+                      <span>{section.rarity}</span>
+                    </h3>
+                    <div className="badge-list two-col collection-badge-list">
+                      {section.items.map(({ definition, earnedCount, lockedSecret }, index) => (
+                        <span
+                          className={`badge-motion-item ${earnedCount ? "earned" : "locked"} ${definition.secret ? "secret" : ""}`}
+                          key={definition.label}
+                          style={{ "--badge-index": index }}
+                        >
+                          <BadgeChip label={definition.label} count={earnedCount} description={definition.description} lockedSecret={lockedSecret} />
+                        </span>
+                      ))}
+                    </div>
+                  </section>
+                ))}
               </section>
             );
           })()}
