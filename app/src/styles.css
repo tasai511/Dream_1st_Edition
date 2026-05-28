@@ -12361,7 +12361,8 @@ body .app .home-score-input-grid .home-input-panel::before {
   pointer-events: none;
 }
 
-.app .app-title {
+.app.startup-idle .app-title,
+.app.startup-running .app-title {
   opacity: 0;
   pointer-events: none;
 }

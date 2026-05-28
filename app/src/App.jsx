@@ -3494,7 +3494,9 @@ export default function App() {
       {startupPhase !== "ready" && (
         <div className={`startup-splash ${startupPhase}`} aria-hidden="true" />
       )}
-      <img ref={startupLogoRef} className={`startup-splash-logo ${startupPhase}`} src={NEW_UI_ASSETS.logo} alt="" aria-hidden="true" />
+      {startupPhase !== "ready" && (
+        <img ref={startupLogoRef} className={`startup-splash-logo ${startupPhase}`} src={NEW_UI_ASSETS.logo} alt="" aria-hidden="true" />
+      )}
       {startupPhase === "idle" && (
         <button
           type="button"
