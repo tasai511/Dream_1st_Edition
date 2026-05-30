@@ -19,9 +19,9 @@ const kScoreProgressAnimationDuration = 5000;
 const kStartupSplashDuration = 1460;
 const kStartupLogoMoveDelay = 760;
 const CHALLENGE_RANGE_TABS = [
-  { range: RANGE_WEEK, period: "週間" },
-  { range: RANGE_MONTH, period: "月間" },
-  { range: RANGE_YEAR, period: "年間" },
+  { range: RANGE_WEEK, period: "今週" },
+  { range: RANGE_MONTH, period: "今月" },
+  { range: RANGE_YEAR, period: "今年" },
 ];
 const RARITY_ORDER = ["D", "C", "B", "A", "S", "SS"];
 const RARITY_LABELS = {
@@ -245,12 +245,9 @@ const CATEGORY_ICON_URLS = {
   trophy: NEW_UI_ASSETS.trophy,
 };
 const COLLECTION_CATEGORY_FILTERS = [
-  { key: "count", label: "スイング回数", icon: "count" },
-  { key: "average", label: "平均スコア", icon: "average" },
-  { key: "best", label: "ベストスコア", icon: "best" },
-  { key: "calendar", label: "練習日数", icon: "calendar" },
-  { key: "event", label: "イベント", icon: "flag" },
-  { key: "other", label: "激ムズ", icon: "trophy" },
+  { key: "count", label: "スイング数", icon: "count" },
+  { key: "calendar", label: "日数", icon: "calendar" },
+  { key: "growth", label: "成長", icon: "trophy" },
   { key: "all", label: "すべて", icon: "badge" },
 ];
 const DEFAULT_SEASON_EVENT_SETTINGS = {
@@ -259,20 +256,19 @@ const DEFAULT_SEASON_EVENT_SETTINGS = {
   winter: { startMonth: 12, startDay: 25, endMonth: 1, endDay: 7 },
 };
 const BADGE_PERIODS = [
-  ["daily", "毎日バッジ"],
-  ["weekly", "毎週バッジ"],
-  ["monthly", "毎月バッジ"],
-  ["yearly", "毎年バッジ"],
-  ["seasonal", "イベントバッジ"],
-  ["special", "特別バッジ"],
+  ["daily", "今日"],
+  ["weekly", "今週"],
+  ["monthly", "今月"],
+  ["yearly", "今年"],
+  ["special", "自己ベスト"],
 ];
 const WEEKLY_GROWTH_THRESHOLDS = {
-  avg: [10, 30, 50],
-  best: [10, 50, 100],
+  avg: [20, 40, 60, 80],
+  best: [20, 40, 60, 80],
 };
 const MONTHLY_GROWTH_THRESHOLDS = {
-  avg: [10, 30, 50],
-  best: [30, 80, 150],
+  avg: [20, 40, 60, 80],
+  best: [20, 40, 60, 80],
 };
 const SCORE_BAR_SCORE_START = 100;
 const SCORE_BAR_HOME_SCORE_END = 999;
@@ -282,19 +278,18 @@ const SCORE_BAR_GROWTH_PREVIOUS_LABELS = {
 };
 function scoreGrowthBadgeLabel(range, metric, delta) {
   const periodLabel = range === RANGE_WEEK ? "今週" : "今月";
-  const metricLabel = metric === "best" ? "ベストスコアアップ" : "平均スコアアップ";
-  return `${periodLabel}の${metricLabel} +${delta}`;
+  return `${periodLabel}の${metric === "best" ? "ベストスコア" : "平均スコア"}アップ +${delta}`;
 }
 const DAILY_BADGE_DEFINITIONS = [
   ...[
-    ["D", 10],
-    ["C", 30],
-    ["B", 50],
-    ["A", 100],
+    ["D", 25],
+    ["D", 50],
+    ["C", 75],
+    ["B", 100],
   ].map(([rarity, target]) => makeThresholdBadge({
     id: `daily-count-${target}`,
-    label: `今日のスイング回数 ${target}回`,
-    name: "今日のスイング回数",
+    label: `今日のスイング ${target}回`,
+    name: "今日のスイング",
     description: `今日のスイング回数が${target}回以上`,
     conditionText: `${target}回`,
     rarity,
@@ -302,6 +297,7 @@ const DAILY_BADGE_DEFINITIONS = [
     period: RANGE_TODAY,
     metric: "count",
     target,
+    type: "unique",
   })),
   ...[
     ["D", 200],
@@ -319,6 +315,7 @@ const DAILY_BADGE_DEFINITIONS = [
     period: RANGE_TODAY,
     metric: "avg",
     target,
+    type: "current",
   })),
   ...[
     ["D", 300],
@@ -336,17 +333,19 @@ const DAILY_BADGE_DEFINITIONS = [
     period: RANGE_TODAY,
     metric: "best",
     target,
+    type: "unique",
   })),
 ];
 const WEEKLY_BADGE_DEFINITIONS = [
   ...[
-    ["C", 100],
-    ["B", 250],
-    ["A", 500],
+    ["D", 150],
+    ["C", 300],
+    ["B", 450],
+    ["A", 600],
   ].map(([rarity, target]) => makeThresholdBadge({
     id: `weekly-count-${target}`,
-    label: `今週のスイング回数 ${target}回`,
-    name: "今週のスイング回数",
+    label: `今週のスイング ${target}回`,
+    name: "今週のスイング",
     description: `今週のスイング回数が${target}回以上`,
     conditionText: `${target}回`,
     rarity,
@@ -354,11 +353,14 @@ const WEEKLY_BADGE_DEFINITIONS = [
     period: RANGE_WEEK,
     metric: "count",
     target,
+    type: "unique",
   })),
   ...[
-    ["C", 2],
+    ["D", 1],
+    ["D", 2],
+    ["C", 3],
     ["B", 4],
-    ["A", 6],
+    ["A", 5],
   ].map(([rarity, target]) => makeThresholdBadge({
     id: `weekly-days-${target}`,
     label: `今週の練習日数 ${target}日`,
@@ -370,6 +372,7 @@ const WEEKLY_BADGE_DEFINITIONS = [
     period: RANGE_WEEK,
     metric: "days",
     target,
+    type: "unique",
   })),
   ...WEEKLY_GROWTH_THRESHOLDS.avg.map((target, index) => makeThresholdBadge({
     id: `weekly-avg-growth-${target}`,
@@ -377,11 +380,12 @@ const WEEKLY_BADGE_DEFINITIONS = [
     name: "今週の平均スコアアップ",
     description: `今週の平均スコアが先週より${target}点以上アップ`,
     conditionText: `先週比 +${target}`,
-    rarity: ["C", "B", "A"][index],
-    category: "average",
+    rarity: ["D", "C", "B", "A"][index],
+    category: "trophy",
     period: RANGE_WEEK,
     metric: "avg-growth",
     target,
+    type: "current",
   })),
   ...WEEKLY_GROWTH_THRESHOLDS.best.map((target, index) => makeThresholdBadge({
     id: `weekly-best-growth-${target}`,
@@ -389,22 +393,24 @@ const WEEKLY_BADGE_DEFINITIONS = [
     name: "今週のベストスコアアップ",
     description: `今週のベストスコアが先週より${target}点以上アップ`,
     conditionText: `先週比 +${target}`,
-    rarity: ["C", "B", "A"][index],
-    category: "best",
+    rarity: ["D", "C", "B", "A"][index],
+    category: "trophy",
     period: RANGE_WEEK,
     metric: "best-growth",
     target,
+    type: "current",
   })),
 ];
 const MONTHLY_BADGE_DEFINITIONS = [
   ...[
-    ["B", 500],
-    ["A", 1000],
-    ["S", 2000],
+    ["C", 600],
+    ["B", 1200],
+    ["A", 1800],
+    ["S", 2400],
   ].map(([rarity, target]) => makeThresholdBadge({
     id: `monthly-count-${target}`,
-    label: `今月のスイング回数 ${target}回`,
-    name: "今月のスイング回数",
+    label: `今月のスイング ${target}回`,
+    name: "今月のスイング",
     description: `今月のスイング回数が${target}回以上`,
     conditionText: `${target}回`,
     rarity,
@@ -412,10 +418,13 @@ const MONTHLY_BADGE_DEFINITIONS = [
     period: RANGE_MONTH,
     metric: "count",
     target,
+    type: "unique",
   })),
   ...[
-    ["B", 8],
-    ["A", 15],
+    ["D", 5],
+    ["C", 10],
+    ["B", 15],
+    ["A", 20],
     ["S", 25],
   ].map(([rarity, target]) => makeThresholdBadge({
     id: `monthly-days-${target}`,
@@ -428,6 +437,7 @@ const MONTHLY_BADGE_DEFINITIONS = [
     period: RANGE_MONTH,
     metric: "days",
     target,
+    type: "unique",
   })),
   ...MONTHLY_GROWTH_THRESHOLDS.avg.map((target, index) => makeThresholdBadge({
     id: `monthly-avg-growth-${target}`,
@@ -435,11 +445,12 @@ const MONTHLY_BADGE_DEFINITIONS = [
     name: "今月の平均スコアアップ",
     description: `今月の平均スコアが先月より${target}点以上アップ`,
     conditionText: `先月比 +${target}`,
-    rarity: ["B", "A", "S"][index],
-    category: "average",
+    rarity: ["C", "B", "A", "S"][index],
+    category: "trophy",
     period: RANGE_MONTH,
     metric: "avg-growth",
     target,
+    type: "current",
   })),
   ...MONTHLY_GROWTH_THRESHOLDS.best.map((target, index) => makeThresholdBadge({
     id: `monthly-best-growth-${target}`,
@@ -447,240 +458,118 @@ const MONTHLY_BADGE_DEFINITIONS = [
     name: "今月のベストスコアアップ",
     description: `今月のベストスコアが先月より${target}点以上アップ`,
     conditionText: `先月比 +${target}`,
-    rarity: ["B", "A", "S"][index],
-    category: "best",
+    rarity: ["C", "B", "A", "S"][index],
+    category: "trophy",
     period: RANGE_MONTH,
     metric: "best-growth",
     target,
+    type: "current",
   })),
-];
-const BALANCE_BADGE_DEFINITIONS = [
-  ...[
-    ["B", RANGE_TODAY, "今日のバランス", 30, 500],
-    ["A", RANGE_TODAY, "今日のバランス", 50, 600],
-    ["S", RANGE_TODAY, "今日のバランス", 100, 650],
-    ["B", RANGE_WEEK, "今週のバランス", 150, 500],
-    ["A", RANGE_WEEK, "今週のバランス", 300, 600],
-    ["S", RANGE_WEEK, "今週のバランス", 500, 650],
-    ["B", RANGE_MONTH, "今月のバランス", 300, 500],
-    ["A", RANGE_MONTH, "今月のバランス", 600, 600],
-    ["S", RANGE_MONTH, "今月のバランス", 1000, 650],
-  ].map(([rarity, period, name, countTarget, avgTarget]) => makeCompositeBadge({
-    id: `balance-${period}-${rarity.toLowerCase()}`,
-    label: `${name} ${rarity}`,
-    name,
-    description: `${periodLabelForBadge(period)}スイング${countTarget}回以上かつ平均${avgTarget}点以上`,
-    conditionText: `${countTarget}回以上 & 平均${avgTarget}以上`,
-    rarity,
-    category: "trophy",
-    period,
-    metric: "balance",
-    requirements: { count: countTarget, avg: avgTarget },
-  })),
-];
-const POWER_BADGE_DEFINITIONS = [
-  makeCompositeBadge({
-    id: "monthly-challenger",
-    label: "月間チャレンジャー",
-    name: "月間チャレンジャー",
-    description: "今月400回以上、平均500点以上、ベスト750点以上",
-    conditionText: "月400回以上 & 平均500以上 & ベスト750以上",
-    rarity: "A",
-    category: "trophy",
-    period: RANGE_MONTH,
-    metric: "power",
-    requirements: { count: 400, avg: 500, best: 750 },
-  }),
-  makeCompositeBadge({
-    id: "monthly-champion",
-    label: "月間チャンピオン",
-    name: "月間チャンピオン",
-    description: "今月700回以上、平均600点以上、ベスト850点以上",
-    conditionText: "月700回以上 & 平均600以上 & ベスト850以上",
-    rarity: "S",
-    category: "trophy",
-    period: RANGE_MONTH,
-    metric: "power",
-    requirements: { count: 700, avg: 600, best: 850 },
-  }),
-  makeCompositeBadge({
-    id: "dream-master",
-    label: "ドリームマスター",
-    name: "ドリームマスター",
-    description: "今月1000回以上、平均650点以上、ベスト900点以上",
-    conditionText: "月1000回以上 & 平均650以上 & ベスト900以上",
-    rarity: "SS",
-    category: "trophy",
-    period: RANGE_MONTH,
-    metric: "power",
-    requirements: { count: 1000, avg: 650, best: 900 },
-  }),
 ];
 const YEARLY_COUNT_BADGE_DEFINITIONS = [
-  ["D", 500, "年間500スイング"],
-  ["C", 1000, "年間1000スイング"],
-  ["B", 2000, "年間2000スイング"],
-  ["A", 3000, "年間3000本チャレンジ"],
-  ["S", 5000, "年間5000本ノック"],
-  ["SS", 10000, "年間10000スイングレジェンド"],
+  ["B", 7000, "年間7000スイング"],
+  ["A", 14000, "年間14000スイング"],
+  ["S", 21000, "年間21000スイング"],
+  ["SS", 28000, "年間28000スイング"],
 ].map(([rarity, target, name]) => makeThresholdBadge({
   id: `yearly-count-${target}`,
   label: name,
   name,
-  description: `${target}回以上スイングする`,
+  description: `年間のスイング回数が${target}回以上`,
   conditionText: `年間${target}回`,
   rarity,
   category: "count",
   period: RANGE_YEAR,
   metric: "count",
   target,
+  type: "unique",
 }));
 const YEARLY_DAYS_BADGE_DEFINITIONS = [
-  ["D", 10, "年間10日チャレンジ"],
-  ["C", 30, "年間30日練習"],
-  ["B", 50, "年間50日プレイヤー"],
-  ["A", 100, "年間100日スイング"],
-  ["S", 200, "年間200日スラッガー"],
-  ["SS", 300, "年間300日レジェンド"],
+  ["D", 10, "年間練習日数 10日"],
+  ["C", 30, "年間練習日数 30日"],
+  ["B", 50, "年間練習日数 50日"],
+  ["A", 100, "年間練習日数 100日"],
+  ["S", 200, "年間練習日数 200日"],
+  ["SS", 300, "年間練習日数 300日"],
 ].map(([rarity, target, name]) => makeThresholdBadge({
   id: `yearly-days-${target}`,
   label: name,
   name,
-  description: `${target}日以上練習する`,
+  description: `年間の練習日数が${target}日以上`,
   conditionText: `年間練習${target}日`,
   rarity,
   category: "calendar",
   period: RANGE_YEAR,
   metric: "days",
   target,
-}));
-const YEARLY_AVG_BADGE_DEFINITIONS = [
-  ["D", 300, "年間平均スコア300"],
-  ["C", 400, "年間平均スコア400"],
-  ["B", 500, "年間平均スコア500"],
-  ["A", 600, "年間平均スコア600"],
-  ["S", 700, "年間平均スコア700"],
-  ["SS", 800, "年間平均スコア800"],
-].map(([rarity, target, name]) => makeThresholdBadge({
-  id: `yearly-avg-${target}`,
-  label: name,
-  name: "年間平均スコア",
-  description: `年間の平均スコアが${target}点以上`,
-  conditionText: `年間平均${target}以上`,
-  rarity,
-  category: "average",
-  period: RANGE_YEAR,
-  metric: "avg",
-  target,
-}));
-const YEARLY_BEST_BADGE_DEFINITIONS = [
-  ["D", 400, "年間ベストスコア400"],
-  ["C", 550, "年間ベストスコア550"],
-  ["B", 700, "年間ベストスコア700"],
-  ["A", 850, "年間ベストスコア850"],
-  ["S", 950, "年間ベストスコア950"],
-  ["SS", 999, "年間ベストスコア999"],
-].map(([rarity, target, name]) => makeThresholdBadge({
-  id: `yearly-best-${target}`,
-  label: name,
-  name: "年間ベストスコア",
-  description: `年間のベストスコアが${target}点以上`,
-  conditionText: `年間ベスト${target}以上`,
-  rarity,
-  category: "best",
-  period: RANGE_YEAR,
-  metric: "best",
-  target,
+  type: "unique",
 }));
 const PERSONAL_BEST_BADGE_DEFINITIONS = [
-  ["C", 1, "自己ベスト更新", "自己ベスト更新"],
-  ["B", 30, "自己ベスト更新 +30", "自己ベストを+30以上更新"],
-  ["A", 50, "自己ベスト更新 +50", "自己ベストを+50以上更新"],
-  ["S", 100, "自己ベスト更新 +100", "自己ベストを+100以上更新"],
+  ["D", 300, "自己ベスト 300", "自己ベストが300点以上に到達"],
+  ["C", 450, "自己ベスト 450", "自己ベストが450点以上に到達"],
+  ["B", 600, "自己ベスト 600", "自己ベストが600点以上に到達"],
+  ["A", 750, "自己ベスト 750", "自己ベストが750点以上に到達"],
+  ["S", 900, "自己ベスト 900", "自己ベストが900点以上に到達"],
 ].map(([rarity, target, label, description]) => makeThresholdBadge({
-  id: `personal-best-${target}`,
+  id: `personal-best-score-${target}`,
   label,
-  name: "自己ベスト更新",
+  name: label,
   description,
-  conditionText: target === 1 ? "自己ベスト更新" : `+${target}以上更新`,
+  conditionText: `自己ベスト${target}以上`,
   rarity,
   category: "trophy",
   period: "special",
   metric: "personal-best",
   target,
-  type: "repeatable",
+  type: "unique",
 }));
-const EXACT_SCORE_BADGE_DEFINITIONS = [
-  makeThresholdBadge({
-    id: "exact-best-777",
-    label: "ベストスコア777",
-    name: "ピッタリ系",
-    description: "今日のベストスコアがちょうど777点",
-    conditionText: "ベストスコア777",
-    rarity: "A",
-    category: "trophy",
-    period: "special",
-    metric: "best-exact",
-    target: 777,
-    trigger: "exact",
-    type: "repeatable",
-  }),
-  makeThresholdBadge({
-    id: "exact-avg-777",
-    label: "平均スコア777",
-    name: "ピッタリ系",
-    description: "今日の平均スコアがちょうど777点",
-    conditionText: "平均スコア777",
-    rarity: "S",
-    category: "trophy",
-    period: "special",
-    metric: "avg-exact",
-    target: 777,
-    trigger: "exact",
-    type: "repeatable",
-  }),
-];
-const SEASONAL_BADGE_DEFINITIONS = [
-  ...[
-    ["spring", "春休み", "C", 1, "春休みに1日練習"],
-    ["spring", "春休み", "B", 300, "春休みに300回"],
-    ["spring", "春休み", "A", 700, "春休みに700回"],
-    ["spring", "春休み", "S", 1200, "春休みに1200回"],
-    ["summer", "夏休み", "C", 1, "夏休みに1日練習"],
-    ["summer", "夏休み", "B", 500, "夏休みに500回"],
-    ["summer", "夏休み", "A", 1500, "夏休みに1500回"],
-    ["summer", "夏休み", "S", 3000, "夏休みに3000回"],
-    ["winter", "冬休み", "C", 1, "冬休みに1日練習"],
-    ["winter", "冬休み", "B", 300, "冬休みに300回"],
-    ["winter", "冬休み", "A", 800, "冬休みに800回"],
-    ["winter", "冬休み", "S", 1500, "冬休みに1500回"],
-  ].map(([eventKey, eventName, rarity, target, label]) => makeThresholdBadge({
-    id: `season-${eventKey}-${target}`,
-    label,
-    name: eventName,
-    description: target === 1 ? `${eventName}期間中に1日以上練習する` : `${eventName}期間中に${target}回以上スイングする`,
-    conditionText: target === 1 ? "1日練習" : `${target}回`,
-    rarity,
-    category: "flag",
-    period: "seasonal",
-    metric: target === 1 ? "season-days" : "season-count",
-    target,
-    eventKey,
-  })),
-];
+const ALL_TIME_AVG_BADGE_DEFINITIONS = [
+  ["C", 500],
+  ["B", 600],
+  ["A", 700],
+  ["S", 750],
+  ["SS", 800],
+].map(([rarity, target]) => makeThresholdBadge({
+  id: `all-time-avg-${target}`,
+  label: `過去最高平均スコア ${target}`,
+  name: "過去最高平均スコア",
+  description: `過去最高の平均スコアが${target}点以上に到達`,
+  conditionText: `平均${target}以上`,
+  rarity,
+  category: "average",
+  period: "special",
+  metric: "all-time-avg",
+  target,
+  type: "unique",
+}));
+const ALL_TIME_BEST_BADGE_DEFINITIONS = [
+  ["C", 700],
+  ["B", 800],
+  ["A", 900],
+  ["S", 950],
+  ["SS", 999],
+].map(([rarity, target]) => makeThresholdBadge({
+  id: `all-time-best-${target}`,
+  label: `過去最高ベストスコア ${target}`,
+  name: "過去最高ベストスコア",
+  description: `過去最高のベストスコアが${target}点以上に到達`,
+  conditionText: `ベスト${target}以上`,
+  rarity,
+  category: "best",
+  period: "special",
+  metric: "all-time-best",
+  target,
+  type: "unique",
+}));
 const BADGE_DEFINITIONS = [
   ...DAILY_BADGE_DEFINITIONS,
   ...WEEKLY_BADGE_DEFINITIONS,
   ...MONTHLY_BADGE_DEFINITIONS,
-  ...BALANCE_BADGE_DEFINITIONS,
-  ...POWER_BADGE_DEFINITIONS,
   ...YEARLY_COUNT_BADGE_DEFINITIONS,
   ...YEARLY_DAYS_BADGE_DEFINITIONS,
-  ...YEARLY_AVG_BADGE_DEFINITIONS,
-  ...YEARLY_BEST_BADGE_DEFINITIONS,
   ...PERSONAL_BEST_BADGE_DEFINITIONS,
-  ...EXACT_SCORE_BADGE_DEFINITIONS,
-  ...SEASONAL_BADGE_DEFINITIONS,
+  ...ALL_TIME_AVG_BADGE_DEFINITIONS,
+  ...ALL_TIME_BEST_BADGE_DEFINITIONS,
 ];
 const BADGE_DEFINITION_MAP = new Map(BADGE_DEFINITIONS.map((definition) => [definition.label, definition]));
 const HOME_BADGE_DEFINITIONS = [
@@ -689,8 +578,6 @@ const HOME_BADGE_DEFINITIONS = [
   ...MONTHLY_BADGE_DEFINITIONS.filter((definition) => ["count", "days"].includes(definition.metric)),
   ...YEARLY_COUNT_BADGE_DEFINITIONS,
   ...YEARLY_DAYS_BADGE_DEFINITIONS,
-  ...YEARLY_AVG_BADGE_DEFINITIONS,
-  ...YEARLY_BEST_BADGE_DEFINITIONS,
 ];
 
 const defaultDb = {
@@ -1025,6 +912,19 @@ function formatJapaneseMonthDay(date) {
   return `${date.getMonth() + 1}月${date.getDate()}日`;
 }
 
+function formatSlashMonthDay(date) {
+  return `${date.getMonth() + 1}/${date.getDate()}`;
+}
+
+function formatSlashMonthDayWithWeekday(date) {
+  const weekdays = ["日", "月", "火", "水", "木", "金", "土"];
+  return `${formatSlashMonthDay(date)}（${weekdays[date.getDay()]}）`;
+}
+
+function formatSlashRange(start, end) {
+  return `${formatSlashMonthDay(start)}〜${formatSlashMonthDay(end)}`;
+}
+
 function formatJapaneseMonthDayWithWeekday(date) {
   const weekdays = ["日", "月", "火", "水", "木", "金", "土"];
   return `${formatJapaneseMonthDay(date)}（${weekdays[date.getDay()]}）`;
@@ -1155,7 +1055,7 @@ function scoreGrowthBadgeDefinitions(range, metric, summary) {
     metric,
     target: baseTarget + delta,
     displayTarget: `+${delta}`,
-    scoreBarStart: SCORE_BAR_SCORE_START,
+    scoreBarStart: baseTarget,
     scoreBarEnd: baseTarget + deltas[deltas.length - 1],
     label: scoreGrowthBadgeLabel(range, metric, delta),
     description: `${SCORE_BAR_GROWTH_PREVIOUS_LABELS[range]}の${metric === "best" ? "ベスト" : "平均"}を${delta}点超える`,
@@ -1170,6 +1070,15 @@ function scoreBarDomainForCard(card, definitions) {
   if (card.metric === "count") return { start: 0, end: maxTarget };
   if (card.metric === "avg" || card.metric === "best") {
     if (card.range === RANGE_TODAY) return { start: SCORE_BAR_SCORE_START, end: SCORE_BAR_HOME_SCORE_END };
+    const customStart = Math.min(...definitions
+      .map((definition) => Number(definition.scoreBarStart))
+      .filter((target) => Number.isFinite(target)));
+    const customEnd = Math.max(...definitions
+      .map((definition) => Number(definition.scoreBarEnd))
+      .filter((target) => Number.isFinite(target)));
+    if (Number.isFinite(customStart) && Number.isFinite(customEnd) && customEnd > customStart) {
+      return { start: customStart, end: customEnd };
+    }
     const firstTarget = Math.min(...numericTargets);
     return {
       start: Number.isFinite(firstTarget) ? firstTarget - 100 : SCORE_BAR_SCORE_START,
@@ -1403,8 +1312,9 @@ function badgesFor(records, baseDate = todayISO()) {
   const daily = aggregate(records);
   const dailyMap = new Map(daily.map((day) => [day.date, day]));
   const byDate = new Map();
-  const seasonSettings = normalizeSeasonEventSettings(loadDb().seasonEventSettings);
   let personalBest = 0;
+  let allTimeAvgBest = 0;
+  let allTimeBestScore = 0;
 
   daily.forEach((day) => {
     const summary = { ...day, days: day.count > 0 ? 1 : 0, spanDays: 1 };
@@ -1416,31 +1326,33 @@ function badgesFor(records, baseDate = todayISO()) {
         }
       });
 
-    BALANCE_BADGE_DEFINITIONS
-      .filter((definition) => definition.period === RANGE_TODAY)
-      .forEach((definition) => {
-        if (summary.count >= definition.requirements.count && summary.avg >= definition.requirements.avg) {
-          addHomeBadge(byDate, day.date, definition.label);
-        }
-      });
-
-    if (personalBest > 0 && day.best > personalBest) {
-      const diff = day.best - personalBest;
+    if (day.best > personalBest) {
       PERSONAL_BEST_BADGE_DEFINITIONS.forEach((definition) => {
-        if (diff >= definition.target) {
+        if (day.best >= definition.target && personalBest < definition.target) {
           addHomeBadge(byDate, day.date, definition.label);
         }
       });
     }
 
-    EXACT_SCORE_BADGE_DEFINITIONS.forEach((definition) => {
-      const metricValue = definition.metric === "best-exact" ? day.best : day.avg;
-      if (metricValue === definition.target) {
-        addHomeBadge(byDate, day.date, definition.label);
-      }
-    });
-
     personalBest = Math.max(personalBest, day.best || 0);
+
+    if ((day.avg || 0) > allTimeAvgBest) {
+      ALL_TIME_AVG_BADGE_DEFINITIONS.forEach((definition) => {
+        if ((day.avg || 0) >= definition.target && allTimeAvgBest < definition.target) {
+          addHomeBadge(byDate, day.date, definition.label);
+        }
+      });
+    }
+    allTimeAvgBest = Math.max(allTimeAvgBest, day.avg || 0);
+
+    if ((day.best || 0) > allTimeBestScore) {
+      ALL_TIME_BEST_BADGE_DEFINITIONS.forEach((definition) => {
+        if ((day.best || 0) >= definition.target && allTimeBestScore < definition.target) {
+          addHomeBadge(byDate, day.date, definition.label);
+        }
+      });
+    }
+    allTimeBestScore = Math.max(allTimeBestScore, day.best || 0);
   });
 
   const periodKeys = new Map();
@@ -1466,22 +1378,6 @@ function badgesFor(records, baseDate = todayISO()) {
       }
     });
 
-    BALANCE_BADGE_DEFINITIONS.filter((definition) => definition.period === period.period).forEach((definition) => {
-      if (summary.count >= definition.requirements.count && summary.avg >= definition.requirements.avg) {
-        addHomeBadge(byDate, period.earnedAt, definition.label);
-      }
-    });
-
-    POWER_BADGE_DEFINITIONS.filter((definition) => definition.period === period.period).forEach((definition) => {
-      if (
-        summary.count >= definition.requirements.count &&
-        summary.avg >= definition.requirements.avg &&
-        summary.best >= definition.requirements.best
-      ) {
-        addHomeBadge(byDate, period.earnedAt, definition.label);
-      }
-    });
-
     const growthLabels = growthBadgeLabelsForRange(period.period);
     const previousWindow = previousChallengeWindow(records, period.period, period.start, period.end);
     if (growthLabels && previousWindow) {
@@ -1491,37 +1387,18 @@ function badgesFor(records, baseDate = todayISO()) {
       const previousDailyMap = new Map(previousRecords.map((day) => [day.date, day]));
       const previousSummary = periodSummaryFromDaily(previousDailyMap, previousStart, previousEnd, toISO(previousEnd));
       const avgDeltas = period.period === RANGE_WEEK ? WEEKLY_GROWTH_THRESHOLDS.avg : MONTHLY_GROWTH_THRESHOLDS.avg;
-      const bestDeltas = period.period === RANGE_WEEK ? WEEKLY_GROWTH_THRESHOLDS.best : MONTHLY_GROWTH_THRESHOLDS.best;
       avgDeltas.forEach((delta) => {
         if (compareGrowthSummary(summary, previousSummary, "avg", delta)) {
           addHomeBadge(byDate, period.earnedAt, scoreGrowthBadgeLabel(period.period, "avg", delta));
         }
       });
+      const bestDeltas = period.period === RANGE_WEEK ? WEEKLY_GROWTH_THRESHOLDS.best : MONTHLY_GROWTH_THRESHOLDS.best;
       bestDeltas.forEach((delta) => {
         if (compareGrowthSummary(summary, previousSummary, "best", delta)) {
           addHomeBadge(byDate, period.earnedAt, scoreGrowthBadgeLabel(period.period, "best", delta));
         }
       });
     }
-  });
-
-  const years = [...new Set(daily.map((day) => parseISO(day.date).getFullYear()))];
-  years.forEach((year) => {
-    ["spring", "summer", "winter"].forEach((eventKey) => {
-      const seasonDefinition = seasonSettings[eventKey];
-      if (!seasonDefinition) return;
-      const { start, end } = seasonWindowForYear(seasonDefinition, year);
-      const summary = seasonSummaryForWindow(dailyMap, start, end);
-      const earnedAt = toISO(end > parseISO(baseDate) ? parseISO(baseDate) : end);
-      SEASONAL_BADGE_DEFINITIONS
-        .filter((definition) => definition.eventKey === eventKey)
-        .forEach((definition) => {
-          const value = definition.metric === "season-days" ? summary.days : summary.count;
-          if (value >= definition.target) {
-            addHomeBadge(byDate, earnedAt, definition.label);
-          }
-        });
-    });
   });
 
   return byDate;
@@ -2162,6 +2039,7 @@ function DailyResultCards({ summary, showBadges = true, selected = false, onSele
   const cardPropsFor = (card) => ({
     card,
     showBadges,
+    showRemaining: range !== RANGE_TODAY,
     dismissedHomeBadges,
     onDismissHomeBadge,
   });
@@ -2201,7 +2079,7 @@ function DailyResultCards({ summary, showBadges = true, selected = false, onSele
   return <div className={`daily-result-grid card-count-${cards.length}`}>{displayCards.map((card) => <DailyResultCard {...cardPropsFor(card)} key={card.key} />)}</div>;
 }
 
-function DailyResultCard({ card, showBadges, dismissedHomeBadges = new Set(), onDismissHomeBadge = null }) {
+function DailyResultCard({ card, showBadges, showRemaining = true, dismissedHomeBadges = new Set(), onDismissHomeBadge = null }) {
   const [selectedBadge, setSelectedBadge] = useState(null);
   const milestoneTrackRef = useRef(null);
   const [milestoneTrackWidth, setMilestoneTrackWidth] = useState(0);
@@ -2218,7 +2096,7 @@ function DailyResultCard({ card, showBadges, dismissedHomeBadges = new Set(), on
   const visibleMilestones = targetInfo?.visibleMilestones || milestones;
   const revealBadge = card.revealBadge !== false || Boolean(card.badgeOverride);
   const showEmptyTrackMessage = showBadges && !targetInfo && Boolean(card.emptyTrackMessage);
-  const showMilestoneTrack = showBadges && !showEmptyTrackMessage && (Boolean(targetInfo) || !(card.metric === "best" && (card.range === RANGE_WEEK || card.range === RANGE_MONTH)));
+  const showMilestoneTrack = showBadges && !showEmptyTrackMessage && Boolean(targetInfo);
   const milestoneFillRatio = card.fillRatio ?? targetInfo?.fillRatio ?? 1;
   const milestoneFillBleedPx = milestoneFillRatio > 0 ? 2 : 0;
   const homeBadgeLabel = stageBadge?.label ? stageBadge.label : null;
@@ -2237,7 +2115,7 @@ function DailyResultCard({ card, showBadges, dismissedHomeBadges = new Set(), on
   ));
   const displayRemainingBadge = targetBadge || completeBadge || card.badgeOverride || earnedBadge;
   const displayRemainingValue = targetBadge ? Math.max(0, targetBadge.target - (card.value || 0)) : 0;
-  const showHomeRemaining = showBadges && Boolean(displayRemainingBadge);
+  const showHomeRemaining = showBadges && showRemaining && Boolean(displayRemainingBadge);
   const isRemainingComplete = showHomeRemaining && !targetBadge;
   const remainingBadgeDefinition = displayRemainingBadge?.label
     ? makeBadgeDefinition(canonicalBadgeLabel(displayRemainingBadge.label), { description: displayRemainingBadge.description })
@@ -2268,7 +2146,7 @@ function DailyResultCard({ card, showBadges, dismissedHomeBadges = new Set(), on
 
   return (
     <article
-      className={`daily-result-card ${card.key} ${card.revealBadge === false ? "animating" : ""}`}
+      className={`daily-result-card ${card.key} ${showRemaining ? "" : "no-remaining"} ${card.revealBadge === false ? "animating" : ""}`}
       style={{
         "--milestone-fill-ratio": String(milestoneFillRatio),
         "--milestone-fill-bleed-px": `${milestoneFillBleedPx}px`,
@@ -2285,8 +2163,9 @@ function DailyResultCard({ card, showBadges, dismissedHomeBadges = new Set(), on
           <div className="daily-score-row">
             <strong>{Number(card.value || 0).toLocaleString("ja-JP")}<span>{card.unit}</span></strong>
           </div>
-          <div className="daily-badge-stage">
-            {showHomeRemaining ? (
+          {showRemaining && (
+            <div className="daily-badge-stage">
+              {showHomeRemaining ? (
               <button
                 type="button"
                 className={`target-remaining ${isRemainingComplete ? "complete" : ""}`}
@@ -2301,8 +2180,9 @@ function DailyResultCard({ card, showBadges, dismissedHomeBadges = new Set(), on
                   <strong>{Number(displayRemainingValue).toLocaleString("ja-JP")}<small>{card.unit}</small></strong>
                 )}
               </button>
-            ) : null}
-          </div>
+              ) : null}
+            </div>
+          )}
           <div ref={milestoneTrackRef} className={`milestone-track ${showMilestoneTrack ? "" : "placeholder"} ${showEmptyTrackMessage ? "with-message" : ""} ${earnedBadge ? "earned" : ""}`}>
             <span className="milestone-fill" />
             {showMilestoneTrack && visibleMilestones.map((milestone) => {
@@ -3181,7 +3061,6 @@ export default function App() {
   const [db, setDbState] = useState(loadDb);
   const [tab, setTab] = useState(() => (localStorage.getItem(STORAGE_KEY) ? "home" : "settings"));
   const [startupPhase, setStartupPhase] = useState("idle");
-  const [challengeRange, setChallengeRange] = useState(RANGE_WEEK);
   const [selectedDate, setSelectedDate] = useState(todayISO);
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
   const [pendingDelete, setPendingDelete] = useState(null);
@@ -3566,28 +3445,7 @@ export default function App() {
             />
           )}
           {tab === "record" && (
-            <HomeView
-              db={db}
-              setDb={setDb}
-              currentName={currentName}
-              allForName={homeForName}
-              allForNameRaw={allForNameRaw}
-              addRecord={addRecord}
-              activeDate={homeActiveDate}
-              appActiveDate={activeDate}
-              setHomeViewDate={setHomeViewDate}
-              dismissedHomeBadgesByDate={dismissedHomeBadgesByDate}
-              setDismissedHomeBadgesByDate={setDismissedHomeBadgesByDate}
-              scoreAnimation={null}
-              setScoreAnimation={() => {}}
-              onScoreAnimationComplete={() => {}}
-              badgeMap={homeBadgeMap}
-              resultRange={challengeRange}
-              onChallengeRangeChange={setChallengeRange}
-              title="チャレンジ"
-              titleIcon="challenge"
-              badgeTitle={challengeRange === RANGE_WEEK ? "今週のバッジ" : challengeRange === RANGE_MONTH ? "今月のバッジ" : "今年のバッジ"}
-            />
+            <GrowthView allForName={allForName} activeDate={activeDate} />
           )}
           {tab === "data" && (
             <DataView
@@ -3627,9 +3485,6 @@ export default function App() {
           return;
         }
         if (nextTab !== tab) playEffectSound("tab");
-        if (nextTab === "record" && tab !== "record") {
-          setChallengeRange(RANGE_WEEK);
-        }
         setTab(nextTab);
         scrollPageToTop();
       }} />
@@ -3913,7 +3768,7 @@ function HomeView({ db, setDb, currentName, allForName, allForNameRaw = allForNa
 
 function ChallengeRangeTabs({ activeRange, onChange }) {
   return (
-    <div className="challenge-range-tabs" role="tablist" aria-label="チャレンジ期間">
+    <div className="challenge-range-tabs" role="tablist" aria-label="成長期間">
       {CHALLENGE_RANGE_TABS.map((tab) => (
         <button
           type="button"
@@ -3924,9 +3779,303 @@ function ChallengeRangeTabs({ activeRange, onChange }) {
           key={tab.range}
         >
           <span className="challenge-tab-period">{tab.period}</span>
-          <span className="challenge-tab-label">チャレンジ</span>
+          <span className="challenge-tab-label">成長</span>
         </button>
       ))}
+    </div>
+  );
+}
+
+function personalBestForRecords(records) {
+  return aggregate(records).reduce((best, day) => Math.max(best, day.best || 0), 0);
+}
+
+function highestAverageForRecords(records) {
+  return aggregate(records).reduce((best, day) => Math.max(best, day.avg || 0), 0);
+}
+
+function GrowthView({ allForName, activeDate = todayISO() }) {
+  const weekSummary = useMemo(() => summaryForRecordsRange(allForName, RANGE_WEEK, activeDate), [allForName, activeDate]);
+  const monthSummary = useMemo(() => summaryForRecordsRange(allForName, RANGE_MONTH, activeDate), [allForName, activeDate]);
+  const yearSummary = useMemo(() => summaryForRecordsRange(allForName, RANGE_YEAR, activeDate), [allForName, activeDate]);
+  const highestAverage = useMemo(() => highestAverageForRecords(allForName), [allForName]);
+  const personalBest = useMemo(() => personalBestForRecords(allForName), [allForName]);
+  const activeDateValue = parseISO(activeDate);
+  const weekRangeLabel = `${formatSlashMonthDayWithWeekday(startOfWeek(activeDateValue))}〜${formatSlashMonthDayWithWeekday(endOfWeek(activeDateValue))}`;
+  const monthRangeLabel = formatSlashRange(startOfMonth(activeDateValue), endOfMonth(activeDateValue));
+  const yearRangeLabel = `〜${formatSlashMonthDay(new Date(activeDateValue.getFullYear(), 11, 31))}`;
+
+  const countRows = [
+    { label: "今週", subLabel: weekRangeLabel, value: weekSummary.count, unit: "回", metric: "count", range: RANGE_WEEK },
+    { label: "今月", subLabel: monthRangeLabel, value: monthSummary.count, unit: "回", metric: "count", range: RANGE_MONTH },
+    { label: "今年", subLabel: yearRangeLabel, value: yearSummary.count, unit: "回", metric: "count", range: RANGE_YEAR },
+  ];
+  const dayRows = [
+    { label: "今週", subLabel: weekRangeLabel, value: weekSummary.days, unit: "日", metric: "days", range: RANGE_WEEK },
+    { label: "今月", subLabel: monthRangeLabel, value: monthSummary.days, unit: "日", metric: "days", range: RANGE_MONTH },
+    { label: "今年", subLabel: yearRangeLabel, value: yearSummary.days, unit: "日", metric: "days", range: RANGE_YEAR },
+  ];
+  const growthRows = [
+    {
+      label: "先週の平均より",
+      value: weekSummary.avg || 0,
+      displayValue: weekSummary.avgTarget ? (weekSummary.avg || 0) - weekSummary.avgTarget : null,
+      unit: "点",
+      metric: "avg",
+      range: RANGE_WEEK,
+      badgeDefinitions: weekSummary.avgTarget ? scoreGrowthBadgeDefinitions(RANGE_WEEK, "avg", weekSummary) : [],
+      emptyMessage: weekSummary.avgTarget ? "" : "先週の記録なし",
+      prefix: "signed",
+      referenceValue: weekSummary.avgTarget,
+      referenceLabel: weekSummary.avgTargetPreviousLabel || "先週",
+    },
+    {
+      label: "先週のベストより",
+      value: weekSummary.best || 0,
+      displayValue: weekSummary.bestTarget ? (weekSummary.best || 0) - weekSummary.bestTarget : null,
+      unit: "点",
+      metric: "best",
+      meterKind: "avg",
+      range: RANGE_WEEK,
+      badgeDefinitions: weekSummary.bestTarget ? scoreGrowthBadgeDefinitions(RANGE_WEEK, "best", weekSummary) : [],
+      emptyMessage: weekSummary.bestTarget ? "" : "先週の記録なし",
+      prefix: "signed",
+      referenceValue: weekSummary.bestTarget,
+      referenceLabel: weekSummary.bestTargetPreviousLabel || "先週",
+    },
+    {
+      label: "先月の平均より",
+      value: monthSummary.avg || 0,
+      displayValue: monthSummary.avgTarget ? (monthSummary.avg || 0) - monthSummary.avgTarget : null,
+      unit: "点",
+      metric: "avg",
+      range: RANGE_MONTH,
+      badgeDefinitions: monthSummary.avgTarget ? scoreGrowthBadgeDefinitions(RANGE_MONTH, "avg", monthSummary) : [],
+      emptyMessage: monthSummary.avgTarget ? "" : "先月の記録なし",
+      prefix: "signed",
+      referenceValue: monthSummary.avgTarget,
+      referenceLabel: monthSummary.avgTargetPreviousLabel || "先月",
+    },
+    {
+      label: "先月のベストより",
+      value: monthSummary.best || 0,
+      displayValue: monthSummary.bestTarget ? (monthSummary.best || 0) - monthSummary.bestTarget : null,
+      unit: "点",
+      metric: "best",
+      meterKind: "avg",
+      range: RANGE_MONTH,
+      badgeDefinitions: monthSummary.bestTarget ? scoreGrowthBadgeDefinitions(RANGE_MONTH, "best", monthSummary) : [],
+      emptyMessage: monthSummary.bestTarget ? "" : "先月の記録なし",
+      prefix: "signed",
+      referenceValue: monthSummary.bestTarget,
+      referenceLabel: monthSummary.bestTargetPreviousLabel || "先月",
+    },
+  ];
+  const allTimeRows = [
+    { label: "最高平均", value: highestAverage, unit: "点", metric: "avg", meterKind: "best", range: "special", badgeDefinitions: ALL_TIME_AVG_BADGE_DEFINITIONS },
+    { label: "最高ベスト", value: personalBest, unit: "点", metric: "best", meterKind: "best", range: "special", badgeDefinitions: ALL_TIME_BEST_BADGE_DEFINITIONS },
+  ];
+
+  return (
+    <section className="growth-view">
+      <div className="section-row tight result-header-row">
+        <ResultHeader
+          title="チャレンジ"
+          icon="challenge"
+          dateLabel=""
+        />
+      </div>
+      <div className="growth-section-stack">
+        <GrowthSectionCard icon="count" title="スイング数" rows={countRows} />
+        <GrowthSectionCard icon="calendar" title="練習日" rows={dayRows} />
+        <GrowthSectionCard icon="trophy" title="スコアアップ" rows={growthRows} />
+        <GrowthSectionCard icon="best" title="過去最高" rows={allTimeRows} />
+      </div>
+    </section>
+  );
+}
+
+function GrowthSectionCard({ icon, title, rows }) {
+  const assetKey = icon === "calendar" ? "days" : icon;
+  return (
+    <article className={`growth-section-card ${icon}`}>
+      <h2 className="growth-heading">
+        {NEW_UI_ASSETS[assetKey] ? (
+          <span className={`growth-heading-orb ${assetKey}`}>
+            <img className="metric-image-icon" src={NEW_UI_ASSETS[assetKey]} width="80" height="80" decoding="async" alt="" aria-hidden="true" />
+          </span>
+        ) : <Icon type={icon} />}
+        {title}
+      </h2>
+      <div className="growth-progress-list">
+        {rows.map((row) => <GrowthProgressRow row={row} key={`${row.range}:${row.metric}:${row.label}`} />)}
+      </div>
+    </article>
+  );
+}
+
+function GrowthProgressRow({ row }) {
+  const [selectedBadge, setSelectedBadge] = useState(null);
+  const milestoneTrackRef = useRef(null);
+  const [milestoneTrackWidth, setMilestoneTrackWidth] = useState(0);
+  const value = Number(row.value || 0);
+  const badgeDefinitions = row.badgeDefinitions || badgeDefinitionsForMetric(row.range, row.metric);
+  const targetInfo = row.emptyMessage ? null : targetInfoForDailyCard({
+    metric: row.metric,
+    range: row.range,
+    value,
+    unit: row.unit,
+    badgeDefinitions,
+  });
+  const milestones = targetInfo?.visibleMilestones || [];
+  const targetBadge = targetInfo?.next || targetInfo?.current || null;
+  const targetBadgeDefinition = targetBadge?.label
+    ? makeBadgeDefinition(canonicalBadgeLabel(targetBadge.label), { description: targetBadge.description })
+    : null;
+  const displayValue = row.displayValue ?? value;
+  const numericDisplayValue = displayValue === null ? null : Number(displayValue || 0);
+  const displayPrefix = row.prefix === "signed"
+    ? numericDisplayValue < 0 ? "-" : "+"
+    : row.prefix || "";
+  const displayNumber = row.prefix === "signed" && numericDisplayValue !== null
+    ? Math.abs(numericDisplayValue)
+    : numericDisplayValue;
+  const remaining = targetInfo?.next ? Math.max(0, targetInfo.next.target - value) : 0;
+  const milestoneFillRatio = targetInfo?.fillRatio || 0;
+  const milestoneFillBleedPx = milestoneFillRatio > 0 ? 2 : 0;
+  const homeMeterKind = row.meterKind || (row.metric === "count" ? "count" : row.metric === "days" ? "days" : row.metric === "best" ? "best" : "avg");
+  const skin = SCORE_CARD_SKINS[homeMeterKind] || SCORE_CARD_SKINS.count;
+  const remainingAnchor = targetInfo?.next || targetInfo?.current || null;
+  const remainingAnchorPositionPx = remainingAnchor && milestoneTrackWidth > 0
+    ? 13 + ((Number(remainingAnchor.position) || 0) / 100) * milestoneTrackWidth - (clamp(28 * 1.12, 15, 32) / 2)
+    : null;
+  const referenceValue = Number(row.referenceValue);
+  const referenceDomain = targetInfo?.scoreBarDomain || null;
+  const referencePosition = Number.isFinite(referenceValue) && referenceDomain
+    ? clamp(((referenceValue - referenceDomain.start) / Math.max(1, referenceDomain.end - referenceDomain.start)) * 100, 0, 100)
+    : null;
+
+  useLayoutEffect(() => {
+    const node = milestoneTrackRef.current;
+    if (!node) return undefined;
+    const updateWidth = () => setMilestoneTrackWidth(node.getBoundingClientRect().width || 0);
+    updateWidth();
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", updateWidth);
+      return () => window.removeEventListener("resize", updateWidth);
+    }
+    const observer = new ResizeObserver(updateWidth);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div className={`growth-progress-row ${row.metric}`}>
+      <div className="growth-progress-main">
+        <span>{row.label}{row.subLabel && <small>{row.subLabel}</small>}</span>
+        <strong>
+          {displayValue !== null ? displayPrefix : ""}
+          {displayValue === null ? "-" : Number(displayNumber || 0).toLocaleString("ja-JP")}
+          <small>{row.unit}</small>
+        </strong>
+      </div>
+      {row.emptyMessage ? (
+        <div className="growth-empty-track">{row.emptyMessage}</div>
+      ) : (
+        <>
+          <div
+            className={`growth-home-meter daily-result-card ${homeMeterKind}`}
+            style={{
+              "--milestone-fill-ratio": String(milestoneFillRatio),
+              "--milestone-fill-bleed-px": `${milestoneFillBleedPx}px`,
+              "--meter-glow": skin.meterGlow,
+            }}
+          >
+            <div ref={milestoneTrackRef} className={`milestone-track ${targetInfo?.current ? "earned" : ""}`}>
+              <span className="milestone-fill" />
+              {referencePosition !== null && (
+                <span
+                  className="growth-reference-marker"
+                  style={{ left: `${referencePosition}%` }}
+                  aria-label={`${row.referenceLabel || ""}の${row.metric === "best" ? "ベストスコア" : "平均スコア"} ${referenceValue.toLocaleString("ja-JP")}`}
+                >
+                  <span>
+                    <b>{row.referenceLabel || ""}</b>
+                    <em>{referenceValue.toLocaleString("ja-JP")}</em>
+                  </span>
+                </span>
+              )}
+              {milestones.map((milestone) => {
+                const alpha = milestoneAlpha(milestone.position);
+                const isTargetMilestone = targetInfo?.next?.label === milestone.label || (!targetInfo?.next && targetInfo?.current?.label === milestone.label);
+                const milestoneState = isTargetMilestone ? "target" : milestone.earned ? "earned" : "locked";
+                const dotScale = isTargetMilestone ? 1.12 : milestone.earned ? 0.86 : 0.62;
+                const dotSize = clamp(28 * dotScale, 15, 32);
+                const visualDotSize = dotSize;
+                const frameSize = dotSize + 5;
+                const fillPx = milestoneFillRatio * milestoneTrackWidth;
+                const effectiveFillPx = Math.min(milestoneTrackWidth, fillPx + milestoneFillBleedPx);
+                const targetPx = (milestone.position / 100) * milestoneTrackWidth;
+                const dotLeftPx = targetPx - visualDotSize;
+                const frameLeftPx = targetPx - (visualDotSize / 2) - (frameSize / 2);
+                const iconComplete = milestone.earned || effectiveFillPx >= targetPx;
+                const targetValue = Number(milestone.target);
+                const useZeroAnchoredIconFill = isTargetMilestone && dotLeftPx < 0 && Number.isFinite(targetValue) && targetValue > 0;
+                const continuousIconFillRatio = milestoneTrackWidth > 0 ? clamp((effectiveFillPx - dotLeftPx) / visualDotSize, 0, 1) : 0;
+                const zeroAnchoredIconFillRatio = useZeroAnchoredIconFill ? clamp(value / targetValue, 0, 1) : 0;
+                const iconFillRatio = iconComplete ? 1 : useZeroAnchoredIconFill ? zeroAnchoredIconFillRatio : continuousIconFillRatio;
+                const iconFillPx = iconComplete ? visualDotSize : visualDotSize * iconFillRatio;
+                const iconGradientWidthPx = useZeroAnchoredIconFill ? visualDotSize : Math.max(1, milestoneTrackWidth);
+                const iconGradientBgX = useZeroAnchoredIconFill ? 0 : -dotLeftPx;
+                const definition = makeBadgeDefinition(canonicalBadgeLabel(milestone.label), { description: milestone.description || `${milestone.label}をゲット` });
+                return (
+                  <Fragment key={milestone.label}>
+                    <span
+                      className="milestone-dot-frame"
+                      style={{
+                        left: `${frameLeftPx}px`,
+                        "--milestone-dot-scale": dotScale.toFixed(3),
+                        "--milestone-frame-size-px": `${frameSize}px`,
+                      }}
+                      aria-hidden="true"
+                    />
+                    <button
+                      type="button"
+                      className={`milestone-dot ${milestoneState}`}
+                      data-sound-effect="popup"
+                      style={{
+                        left: `${dotLeftPx}px`,
+                        "--milestone-alpha": alpha.toFixed(2),
+                        "--milestone-ring-alpha": Math.max(0.08, alpha * 0.7).toFixed(2),
+                        "--milestone-dot-scale": dotScale.toFixed(3),
+                        "--milestone-dot-size-px": `${visualDotSize}px`,
+                        "--milestone-track-width-px": `${iconGradientWidthPx}px`,
+                        "--milestone-dot-bg-x": `${iconGradientBgX}px`,
+                        "--milestone-icon-fill-px": `${iconFillPx}px`,
+                        "--milestone-target-progress": iconFillRatio.toFixed(3),
+                        "--milestone-target-progress-percent": `${Math.round(iconFillRatio * 100)}%`,
+                      }}
+                      onClick={() => setSelectedBadge({ ...definition, earnedCount: milestone.earned ? 1 : 0, lockedSecret: false })}
+                      aria-label={`${definition.label}の詳細`}
+                    >
+                      <RarityIcon rarity={rarityForBadge(milestone.label)} />
+                      <span>{milestone.displayTarget ?? milestone.target}</span>
+                    </button>
+                  </Fragment>
+                );
+              })}
+            </div>
+          </div>
+          <div
+            className="growth-progress-meta"
+            style={remainingAnchorPositionPx !== null ? { "--growth-remaining-x": `${remainingAnchorPositionPx}px` } : undefined}
+          >
+            <span aria-hidden="true" />
+            <small className={targetInfo?.next ? "" : "complete"}>{targetInfo?.next ? `あと${remaining.toLocaleString("ja-JP")}${row.unit}` : "コンプリート"}</small>
+          </div>
+        </>
+      )}
+      {selectedBadge && <BadgeDetailPopover badge={{ ...selectedBadge, lockedSecret: false }} onClose={() => setSelectedBadge(null)} />}
     </div>
   );
 }
@@ -3935,7 +4084,7 @@ function ResultHeader({ title, icon = null, dateLabel, headingSlot = null }) {
   return (
     <div className={`result-heading ${headingSlot ? "with-tabs" : ""}`}>
       {headingSlot || (title ? <h2 className="icon-heading">{icon && <Icon type={icon} />}{title}</h2> : <span aria-hidden="true" />)}
-      <p>{dateLabel}</p>
+      {dateLabel ? <p>{dateLabel}</p> : null}
     </div>
   );
 }
@@ -4080,7 +4229,8 @@ function collectBadgeCounts(records, filter = RANGE_ALL, baseDate = todayISO()) 
     if (startISO && date < startISO) return;
     if (endISO && date > endISO) return;
     badges.forEach((badge) => {
-      counts[badge] = (counts[badge] || 0) + 1;
+      const definition = BADGE_DEFINITION_MAP.get(badge);
+      counts[badge] = definition?.type === "unique" ? 1 : (counts[badge] || 0) + 1;
     });
   });
   return Object.entries(counts).sort(([a], [b]) => {
@@ -4204,13 +4354,16 @@ function rarityColorFor(rarity) {
 }
 
 function collectionCategoryKeyFor(definition) {
-  if (definition?.category === "flag") return "event";
-  if (definition?.category === "trophy") return "other";
+  if (definition?.category === "average" || definition?.category === "best") return "growth";
+  if (definition?.category === "trophy") return "growth";
   return definition?.category || "other";
 }
 
 function badgeDescriptionFor(label, type) {
-  return BADGE_DEFINITION_MAP.get(label)?.description || `${label}を${type === "unique" ? "1回だけ獲得可" : "達成するたび獲得可"}`;
+  if (BADGE_DEFINITION_MAP.get(label)?.description) return BADGE_DEFINITION_MAP.get(label).description;
+  if (type === "unique") return `${label}を1回だけ獲得可`;
+  if (type === "current") return `${label}の条件を満たしている間だけ獲得`;
+  return `${label}を達成するたび獲得可`;
 }
 
 function makeBadgeDefinition(label, options = {}) {
@@ -4240,7 +4393,7 @@ function allBadgeDefinitions() {
 
 function earnedCountForDefinition(definition, badgeCounts, metaStats = null) {
   const exact = badgeCounts.get(definition.label) || 0;
-  return exact || 0;
+  return definition.type === "unique" ? Math.min(1, exact) : exact || 0;
 }
 
 function RarityIcon({ rarity }) {
@@ -4591,7 +4744,7 @@ function badgeGroups(badgeCounts) {
       label,
       total: [...countBadges, ...scoreBadges].reduce((sum, [, count]) => sum + count, 0),
       sections: [
-        { key: "count", label: "回数", badges: countBadges },
+        { key: "count", label: "スイング数", badges: countBadges },
         { key: "score", label: "スコア", badges: scoreBadges },
       ],
     };
