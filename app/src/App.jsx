@@ -35,10 +35,10 @@ const RARITY_LABELS = {
 const RARITY_POINTS = {
   D: 1,
   C: 2,
-  B: 3,
-  A: 5,
-  S: 8,
-  SS: 13,
+  B: 5,
+  A: 10,
+  S: 25,
+  SS: 100,
 };
 const RARITY_COLORS = {
   D: "#ab7b52",
@@ -210,6 +210,11 @@ function scoreFontTokens(value) {
     "--score-font-max": `${(2.82 * scale).toFixed(3)}rem`,
   };
 }
+function growthValueFontTokens(value, baseRem) {
+  const digitCount = String(Math.max(0, Math.trunc(Math.abs(Number(value) || 0)))).length;
+  const scale = digitCount <= 5 ? 1 : digitCount === 6 ? 0.86 : digitCount === 7 ? 0.76 : 0.66;
+  return { "--growth-value-font-size": `${(baseRem * scale).toFixed(3)}rem` };
+}
 const FIXED_UI_THEME = "#2f86ff";
 const RARITY_IMAGE_URLS = {
   D: `${PUBLIC_ASSET_BASE}images/rarity_d.svg`,
@@ -246,8 +251,9 @@ const CATEGORY_ICON_URLS = {
 };
 const COLLECTION_CATEGORY_FILTERS = [
   { key: "count", label: "スイング数", icon: "count" },
-  { key: "calendar", label: "日数", icon: "calendar" },
-  { key: "growth", label: "成長", icon: "trophy" },
+  { key: "calendar", label: "練習日数", icon: "calendar" },
+  { key: "score-up", label: "スコア", icon: "average" },
+  { key: "high-score", label: "過去最高", icon: "trophy" },
   { key: "all", label: "すべて", icon: "badge" },
 ];
 const DEFAULT_SEASON_EVENT_SETTINGS = {
@@ -260,15 +266,15 @@ const BADGE_PERIODS = [
   ["weekly", "今週"],
   ["monthly", "今月"],
   ["yearly", "今年"],
-  ["special", "自己ベスト"],
+  ["special", "過去最高"],
 ];
 const WEEKLY_GROWTH_THRESHOLDS = {
-  avg: [20, 40, 60, 80],
-  best: [20, 40, 60, 80],
+  avg: [20, 30, 40, 50, 60],
+  best: [20, 30, 40, 50, 60],
 };
 const MONTHLY_GROWTH_THRESHOLDS = {
-  avg: [20, 40, 60, 80],
-  best: [20, 40, 60, 80],
+  avg: [20, 30, 40, 50, 60],
+  best: [20, 30, 40, 50, 60],
 };
 const SCORE_BAR_SCORE_START = 100;
 const SCORE_BAR_HOME_SCORE_END = 999;
@@ -300,10 +306,12 @@ const DAILY_BADGE_DEFINITIONS = [
     type: "unique",
   })),
   ...[
-    ["D", 200],
-    ["C", 350],
-    ["B", 500],
+    ["D", 250],
+    ["D", 350],
+    ["C", 450],
+    ["B", 550],
     ["A", 650],
+    ["S", 750],
   ].map(([rarity, target]) => makeThresholdBadge({
     id: `daily-avg-${target}`,
     label: `今日の平均スコア ${target}`,
@@ -318,10 +326,12 @@ const DAILY_BADGE_DEFINITIONS = [
     type: "current",
   })),
   ...[
-    ["D", 300],
-    ["C", 500],
-    ["B", 700],
-    ["A", 850],
+    ["D", 350],
+    ["D", 450],
+    ["C", 550],
+    ["B", 650],
+    ["A", 750],
+    ["S", 850],
   ].map(([rarity, target]) => makeThresholdBadge({
     id: `daily-best-${target}`,
     label: `今日のベストスコア ${target}`,
@@ -329,7 +339,7 @@ const DAILY_BADGE_DEFINITIONS = [
     description: `今日のベストスコアが${target}点以上`,
     conditionText: `ベスト${target}以上`,
     rarity,
-    category: "best",
+    category: "average",
     period: RANGE_TODAY,
     metric: "best",
     target,
@@ -338,10 +348,10 @@ const DAILY_BADGE_DEFINITIONS = [
 ];
 const WEEKLY_BADGE_DEFINITIONS = [
   ...[
-    ["D", 150],
-    ["C", 300],
-    ["B", 450],
-    ["A", 600],
+    ["D", 125],
+    ["C", 250],
+    ["B", 375],
+    ["A", 500],
   ].map(([rarity, target]) => makeThresholdBadge({
     id: `weekly-count-${target}`,
     label: `今週のスイング ${target}回`,
@@ -357,10 +367,10 @@ const WEEKLY_BADGE_DEFINITIONS = [
   })),
   ...[
     ["D", 1],
-    ["D", 2],
-    ["C", 3],
-    ["B", 4],
-    ["A", 5],
+    ["C", 2],
+    ["B", 3],
+    ["A", 4],
+    ["S", 5],
   ].map(([rarity, target]) => makeThresholdBadge({
     id: `weekly-days-${target}`,
     label: `今週の練習日数 ${target}日`,
@@ -380,8 +390,8 @@ const WEEKLY_BADGE_DEFINITIONS = [
     name: "今週の平均スコアアップ",
     description: `今週の平均スコアが先週より${target}点以上アップ`,
     conditionText: `先週比 +${target}`,
-    rarity: ["D", "C", "B", "A"][index],
-    category: "trophy",
+    rarity: ["D", "C", "B", "A", "S"][index],
+    category: "average",
     period: RANGE_WEEK,
     metric: "avg-growth",
     target,
@@ -393,8 +403,8 @@ const WEEKLY_BADGE_DEFINITIONS = [
     name: "今週のベストスコアアップ",
     description: `今週のベストスコアが先週より${target}点以上アップ`,
     conditionText: `先週比 +${target}`,
-    rarity: ["D", "C", "B", "A"][index],
-    category: "trophy",
+    rarity: ["D", "C", "B", "A", "S"][index],
+    category: "average",
     period: RANGE_WEEK,
     metric: "best-growth",
     target,
@@ -403,10 +413,10 @@ const WEEKLY_BADGE_DEFINITIONS = [
 ];
 const MONTHLY_BADGE_DEFINITIONS = [
   ...[
-    ["C", 600],
-    ["B", 1200],
-    ["A", 1800],
-    ["S", 2400],
+    ["C", 500],
+    ["B", 1000],
+    ["A", 1500],
+    ["S", 2000],
   ].map(([rarity, target]) => makeThresholdBadge({
     id: `monthly-count-${target}`,
     label: `今月のスイング ${target}回`,
@@ -421,11 +431,11 @@ const MONTHLY_BADGE_DEFINITIONS = [
     type: "unique",
   })),
   ...[
-    ["D", 5],
-    ["C", 10],
-    ["B", 15],
-    ["A", 20],
-    ["S", 25],
+    ["D", 4],
+    ["C", 8],
+    ["B", 12],
+    ["A", 16],
+    ["S", 20],
   ].map(([rarity, target]) => makeThresholdBadge({
     id: `monthly-days-${target}`,
     label: `今月の練習日数 ${target}日`,
@@ -445,8 +455,8 @@ const MONTHLY_BADGE_DEFINITIONS = [
     name: "今月の平均スコアアップ",
     description: `今月の平均スコアが先月より${target}点以上アップ`,
     conditionText: `先月比 +${target}`,
-    rarity: ["C", "B", "A", "S"][index],
-    category: "trophy",
+    rarity: ["D", "C", "B", "A", "S"][index],
+    category: "average",
     period: RANGE_MONTH,
     metric: "avg-growth",
     target,
@@ -458,8 +468,8 @@ const MONTHLY_BADGE_DEFINITIONS = [
     name: "今月のベストスコアアップ",
     description: `今月のベストスコアが先月より${target}点以上アップ`,
     conditionText: `先月比 +${target}`,
-    rarity: ["C", "B", "A", "S"][index],
-    category: "trophy",
+    rarity: ["D", "C", "B", "A", "S"][index],
+    category: "average",
     period: RANGE_MONTH,
     metric: "best-growth",
     target,
@@ -467,16 +477,16 @@ const MONTHLY_BADGE_DEFINITIONS = [
   })),
 ];
 const YEARLY_COUNT_BADGE_DEFINITIONS = [
-  ["B", 7000, "年間7000スイング"],
-  ["A", 14000, "年間14000スイング"],
-  ["S", 21000, "年間21000スイング"],
-  ["SS", 28000, "年間28000スイング"],
+  ["B", 6000, "今年のスイング 6000回"],
+  ["A", 12000, "今年のスイング 12000回"],
+  ["S", 18000, "今年のスイング 18000回"],
+  ["SS", 24000, "今年のスイング 24000回"],
 ].map(([rarity, target, name]) => makeThresholdBadge({
   id: `yearly-count-${target}`,
   label: name,
   name,
-  description: `年間のスイング回数が${target}回以上`,
-  conditionText: `年間${target}回`,
+  description: `今年のスイング回数が${target}回以上`,
+  conditionText: `今年${target}回`,
   rarity,
   category: "count",
   period: RANGE_YEAR,
@@ -485,18 +495,18 @@ const YEARLY_COUNT_BADGE_DEFINITIONS = [
   type: "unique",
 }));
 const YEARLY_DAYS_BADGE_DEFINITIONS = [
-  ["D", 50, "年間練習日数 50日"],
-  ["C", 100, "年間練習日数 100日"],
-  ["B", 150, "年間練習日数 150日"],
-  ["A", 200, "年間練習日数 200日"],
-  ["S", 250, "年間練習日数 250日"],
-  ["SS", 300, "年間練習日数 300日"],
+  ["D", 50, "今年の練習日数 50日"],
+  ["C", 100, "今年の練習日数 100日"],
+  ["B", 150, "今年の練習日数 150日"],
+  ["A", 200, "今年の練習日数 200日"],
+  ["S", 225, "今年の練習日数 225日"],
+  ["SS", 250, "今年の練習日数 250日"],
 ].map(([rarity, target, name]) => makeThresholdBadge({
   id: `yearly-days-${target}`,
   label: name,
   name,
-  description: `年間の練習日数が${target}日以上`,
-  conditionText: `年間練習${target}日`,
+  description: `今年の練習日数が${target}日以上`,
+  conditionText: `今年練習${target}日`,
   rarity,
   category: "calendar",
   period: RANGE_YEAR,
@@ -504,26 +514,8 @@ const YEARLY_DAYS_BADGE_DEFINITIONS = [
   target,
   type: "unique",
 }));
-const PERSONAL_BEST_BADGE_DEFINITIONS = [
-  ["D", 300, "自己ベスト 300", "自己ベストが300点以上に到達"],
-  ["C", 450, "自己ベスト 450", "自己ベストが450点以上に到達"],
-  ["B", 600, "自己ベスト 600", "自己ベストが600点以上に到達"],
-  ["A", 750, "自己ベスト 750", "自己ベストが750点以上に到達"],
-  ["S", 900, "自己ベスト 900", "自己ベストが900点以上に到達"],
-].map(([rarity, target, label, description]) => makeThresholdBadge({
-  id: `personal-best-score-${target}`,
-  label,
-  name: label,
-  description,
-  conditionText: `自己ベスト${target}以上`,
-  rarity,
-  category: "trophy",
-  period: "special",
-  metric: "personal-best",
-  target,
-  type: "unique",
-}));
 const ALL_TIME_AVG_BADGE_DEFINITIONS = [
+  ["D", 400],
   ["C", 500],
   ["B", 600],
   ["A", 700],
@@ -536,18 +528,19 @@ const ALL_TIME_AVG_BADGE_DEFINITIONS = [
   description: `過去最高の平均スコアが${target}点以上に到達`,
   conditionText: `平均${target}以上`,
   rarity,
-  category: "average",
+  category: "trophy",
   period: "special",
   metric: "all-time-avg",
   target,
   type: "unique",
 }));
 const ALL_TIME_BEST_BADGE_DEFINITIONS = [
-  ["C", 700],
-  ["B", 800],
-  ["A", 900],
-  ["S", 950],
-  ["SS", 999],
+  ["D", 500],
+  ["C", 600],
+  ["B", 700],
+  ["A", 800],
+  ["S", 850],
+  ["SS", 900],
 ].map(([rarity, target]) => makeThresholdBadge({
   id: `all-time-best-${target}`,
   label: `過去最高ベストスコア ${target}`,
@@ -555,7 +548,7 @@ const ALL_TIME_BEST_BADGE_DEFINITIONS = [
   description: `過去最高のベストスコアが${target}点以上に到達`,
   conditionText: `ベスト${target}以上`,
   rarity,
-  category: "best",
+  category: "trophy",
   period: "special",
   metric: "all-time-best",
   target,
@@ -567,7 +560,6 @@ const BADGE_DEFINITIONS = [
   ...MONTHLY_BADGE_DEFINITIONS,
   ...YEARLY_COUNT_BADGE_DEFINITIONS,
   ...YEARLY_DAYS_BADGE_DEFINITIONS,
-  ...PERSONAL_BEST_BADGE_DEFINITIONS,
   ...ALL_TIME_AVG_BADGE_DEFINITIONS,
   ...ALL_TIME_BEST_BADGE_DEFINITIONS,
 ];
@@ -1312,7 +1304,6 @@ function badgesFor(records, baseDate = todayISO()) {
   const daily = aggregate(records);
   const dailyMap = new Map(daily.map((day) => [day.date, day]));
   const byDate = new Map();
-  let personalBest = 0;
   let allTimeAvgBest = 0;
   let allTimeBestScore = 0;
 
@@ -1325,16 +1316,6 @@ function badgesFor(records, baseDate = todayISO()) {
           addHomeBadge(byDate, day.date, definition.label);
         }
       });
-
-    if (day.best > personalBest) {
-      PERSONAL_BEST_BADGE_DEFINITIONS.forEach((definition) => {
-        if (day.best >= definition.target && personalBest < definition.target) {
-          addHomeBadge(byDate, day.date, definition.label);
-        }
-      });
-    }
-
-    personalBest = Math.max(personalBest, day.best || 0);
 
     if ((day.avg || 0) > allTimeAvgBest) {
       ALL_TIME_AVG_BADGE_DEFINITIONS.forEach((definition) => {
@@ -1774,7 +1755,7 @@ function AchievementCompactCard({ card, onSelect }) {
           <small>あと{card.info.remaining.toLocaleString("ja-JP")}！</small>
         </>
       ) : (
-        <small>自己ベスト更新中！</small>
+        <small>過去最高更新中！</small>
       )}
     </button>
   );
@@ -3786,10 +3767,6 @@ function ChallengeRangeTabs({ activeRange, onChange }) {
   );
 }
 
-function personalBestForRecords(records) {
-  return aggregate(records).reduce((best, day) => Math.max(best, day.best || 0), 0);
-}
-
 function highestMetricForRecords(records, metric) {
   return aggregate(records).reduce((best, day) => {
     const value = Number(day[metric] || 0);
@@ -3804,7 +3781,6 @@ function GrowthView({ allForName, activeDate = todayISO() }) {
   const yearSummary = useMemo(() => summaryForRecordsRange(allForName, RANGE_YEAR, activeDate), [allForName, activeDate]);
   const highestAverage = useMemo(() => highestMetricForRecords(allForName, "avg"), [allForName]);
   const highestBest = useMemo(() => highestMetricForRecords(allForName, "best"), [allForName]);
-  const personalBest = highestBest.value;
   const activeDateValue = parseISO(activeDate);
   const weekRangeLabel = `${formatSlashMonthDayWithWeekday(startOfWeek(activeDateValue))}〜${formatSlashMonthDayWithWeekday(endOfWeek(activeDateValue))}`;
   const monthRangeLabel = formatSlashRange(startOfMonth(activeDateValue), endOfMonth(activeDateValue));
@@ -3944,8 +3920,8 @@ function GrowthView({ allForName, activeDate = todayISO() }) {
       <div className="growth-section-stack">
         <GrowthSectionCard icon="count" title="スイング数" rows={countRows} />
         <GrowthSectionCard icon="calendar" title="練習日数" rows={dayRows} />
-        <GrowthSectionCard icon="trophy" title="スコアアップ" rows={scoreGrowthRows} tone="trophy" />
-        <GrowthSectionCard icon="trophy" title="過去最高スコア" rows={allTimeRows} tone="best" />
+        <GrowthSectionCard icon="avg" title="スコアアップ" rows={scoreGrowthRows} tone="trophy" />
+        <GrowthSectionCard icon="trophy" title="過去最高" rows={allTimeRows} tone="best" />
       </div>
     </section>
   );
@@ -3956,34 +3932,85 @@ function GrowthSectionCard({ icon, title, rows, tone = icon }) {
   return (
     <article className={`growth-section-card ${tone}`}>
       <h2 className="growth-heading">
-        {NEW_UI_ASSETS[assetKey] ? (
-          <span className={`growth-heading-orb ${assetKey}`}>
-            <img className="metric-image-icon" src={NEW_UI_ASSETS[assetKey]} width="80" height="80" decoding="async" alt="" aria-hidden="true" />
-          </span>
-        ) : <Icon type={icon} />}
-        {title}
+        <span className="growth-heading-main">
+          {NEW_UI_ASSETS[assetKey] ? (
+            <span className={`growth-heading-orb ${assetKey}`}>
+              <img className="metric-image-icon" src={NEW_UI_ASSETS[assetKey]} width="80" height="80" decoding="async" alt="" aria-hidden="true" />
+            </span>
+          ) : <Icon type={icon} />}
+          <span>{title}</span>
+        </span>
+        <span className="growth-heading-target">
+          {rows.length === 1 && rows[0]?.type === "score-up-panel" ? "" : "次のバッジまで"}
+        </span>
       </h2>
       <div className="growth-progress-list">
-        {rows.map((row, index) => (
-          <Fragment key={`${row.type || row.range}:${row.metric || row.title || index}:${row.label || index}`}>
-            {row.sectionLabel && row.sectionLabel !== rows[index - 1]?.sectionLabel && (
-              <h3 className="growth-subsection-heading">{row.sectionLabel}</h3>
-            )}
-            {row.type === "score-up-panel" ? (
-              <GrowthScoreUpPanel row={row} />
-            ) : row.type === "score-summary" ? (
-              <GrowthScoreSummary row={row} />
-            ) : row.type === "score-highlight" ? (
-              <GrowthScoreHighlight row={row} />
-            ) : row.type === "score-pair" ? (
-              <GrowthScorePair row={row} />
-            ) : (
-              <GrowthProgressRow row={row} />
-            )}
-          </Fragment>
-        ))}
+        {rows.length === 1 && rows[0]?.type === "score-up-panel" ? (
+          <GrowthScoreUpPanel row={rows[0]} />
+        ) : (
+          <GrowthSelectableProgressPanel rows={rows} />
+        )}
       </div>
     </article>
+  );
+}
+
+function rowKey(row, index = 0) {
+  return `${row.range || "row"}:${row.metric || "metric"}:${row.label || index}`;
+}
+
+function GrowthSelectableProgressPanel({ rows }) {
+  const candidates = rows.map((row, index) => {
+    const targetInfo = row.emptyMessage ? null : targetInfoForDailyCard(row);
+    const remaining = targetInfo?.next ? Math.max(0, targetInfo.next.target - Number(row.value || 0)) : 0;
+    return { row, key: rowKey(row, index), targetInfo, remaining };
+  });
+  const defaultKey = candidates
+    .filter((item) => item.targetInfo?.next)
+    .sort((a, b) => a.remaining - b.remaining)[0]?.key || candidates[0]?.key;
+  const [selectedKey, setSelectedKey] = useState(defaultKey);
+  useEffect(() => {
+    setSelectedKey(defaultKey);
+  }, [defaultKey]);
+  const selectedItem = candidates.find((item) => item.key === selectedKey) || candidates[0];
+
+  return (
+    <div className="growth-selectable-panel">
+      <div className="growth-selectable-list">
+        {candidates.map((item) => {
+          const { row, targetInfo } = item;
+          const isSelected = selectedItem?.key === item.key;
+          const remaining = targetInfo?.next ? Math.max(0, targetInfo.next.target - Number(row.value || 0)) : 0;
+          return (
+            <button
+              type="button"
+              className={`growth-selectable-row ${isSelected ? "selected" : ""}`}
+              onClick={() => {
+                if (!isSelected) playEffectSound("switch");
+                setSelectedKey(item.key);
+              }}
+              data-sound-effect="switch"
+              aria-pressed={isSelected}
+              key={item.key}
+            >
+              <span className="growth-selectable-label">
+                {row.label}
+              </span>
+              <strong style={growthValueFontTokens(row.value, 1.86)}>{Number(row.value || 0).toLocaleString("ja-JP")}<small>{row.unit}</small></strong>
+              <span className={row.emptyMessage ? "growth-score-remaining missing" : targetInfo?.next ? "growth-score-remaining" : "growth-score-remaining complete"}>
+                {row.emptyMessage || (targetInfo?.next ? <>あと<strong>{remaining.toLocaleString("ja-JP")}</strong>{row.unit}</> : "コンプリート")}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      {selectedItem?.row && (
+        <section className="growth-score-detail growth-selectable-detail" aria-label={`${selectedItem.row.label}の詳細`}>
+          <span className="growth-score-detail-pointer" aria-hidden="true" />
+          <GrowthProgressRow row={{ ...selectedItem.row, hideRemaining: true }} />
+        </section>
+      )}
+    </div>
   );
 }
 
@@ -3993,7 +4020,7 @@ function GrowthScorePair({ row }) {
       {row.items.map((item) => (
         <div className="growth-score-mini-card" key={item.label}>
           <span>{item.label}</span>
-          <strong>{Number(item.value || 0).toLocaleString("ja-JP")}<small>{item.unit}</small></strong>
+          <strong style={growthValueFontTokens(item.value, 2)}>{Number(item.value || 0).toLocaleString("ja-JP")}<small>{item.unit}</small></strong>
         </div>
       ))}
     </div>
@@ -4023,7 +4050,10 @@ function GrowthScoreUpPanel({ row }) {
     <div className="growth-score-up-panel">
       {row.sections.map((section) => (
         <section className="growth-score-summary" key={section.title}>
-          <h3>{section.title}</h3>
+          <h3>
+            <span>{section.title}</span>
+            {section.title === "平均スコア" && <small>次のバッジまで</small>}
+          </h3>
           <div className="growth-score-summary-list">
             {section.rows.map((item) => {
               const targetInfo = item.emptyMessage ? null : targetInfoForDailyCard(item.row);
@@ -4033,18 +4063,22 @@ function GrowthScoreUpPanel({ row }) {
                 <button
                   type="button"
                   className={`growth-score-summary-row ${isSelected ? "selected" : ""}`}
-                  onClick={() => setSelectedKey(item.key)}
-                  data-sound-effect="tab"
+                  onClick={() => {
+                    if (!isSelected) playEffectSound("switch");
+                    setSelectedKey(item.key);
+                  }}
+                  data-sound-effect="switch"
                   aria-pressed={isSelected}
                   key={`${section.title}:${item.period}`}
                 >
                   <span className="growth-score-period">{item.period}</span>
-                  <strong>{Number(item.score || 0).toLocaleString("ja-JP")}<small>点</small></strong>
+                  <strong style={growthValueFontTokens(item.score, 1.72)}>{Number(item.score || 0).toLocaleString("ja-JP")}<small>点</small></strong>
                   <span className={`growth-score-diff ${Number(item.diff || 0) >= 0 ? "positive" : "negative"}`}>
-                    {item.comparisonLabel} {item.diff === null ? "-" : formatSignedScore(item.diff)}
+                    <b>{item.comparisonLabel}</b>
+                    <em>{item.diff === null ? "-" : formatSignedScore(item.diff)}</em>
                   </span>
-                  <span className={targetInfo?.next ? "growth-score-remaining" : "growth-score-remaining complete"}>
-                    {item.emptyMessage || (targetInfo?.next ? `あと${remaining.toLocaleString("ja-JP")}点` : "達成")}
+                  <span className={item.emptyMessage ? "growth-score-remaining missing" : targetInfo?.next ? "growth-score-remaining" : "growth-score-remaining complete"}>
+                    {item.emptyMessage || (targetInfo?.next ? <>あと<strong>{remaining.toLocaleString("ja-JP")}</strong>点</> : "コンプリート")}
                   </span>
                 </button>
               );
@@ -4053,9 +4087,9 @@ function GrowthScoreUpPanel({ row }) {
         </section>
       ))}
       {selectedRow && (
-        <section className="growth-score-detail" aria-label={`${selectedItem.targetLabel}の詳細`}>
+        <section className="growth-score-detail growth-score-up-detail" aria-label={`${selectedItem.targetLabel}の詳細`}>
           <span className="growth-score-detail-pointer" aria-hidden="true" />
-          <GrowthProgressRow row={selectedRow} />
+          <GrowthProgressRow row={{ ...selectedRow, hideRemaining: true }} />
         </section>
       )}
     </div>
@@ -4073,12 +4107,13 @@ function GrowthScoreSummary({ row }) {
           return (
             <div className="growth-score-summary-row" key={`${row.title}:${item.period}`}>
               <span className="growth-score-period">{item.period}</span>
-              <strong>{Number(item.score || 0).toLocaleString("ja-JP")}<small>点</small></strong>
+              <strong style={growthValueFontTokens(item.score, 1.72)}>{Number(item.score || 0).toLocaleString("ja-JP")}<small>点</small></strong>
               <span className={`growth-score-diff ${Number(item.diff || 0) >= 0 ? "positive" : "negative"}`}>
-                {item.comparisonLabel} {item.diff === null ? "-" : formatSignedScore(item.diff)}
+                <b>{item.comparisonLabel}</b>
+                <em>{item.diff === null ? "-" : formatSignedScore(item.diff)}</em>
               </span>
-              <span className={targetInfo?.next ? "growth-score-remaining" : "growth-score-remaining complete"}>
-                {item.emptyMessage || (targetInfo?.next ? `あと${remaining.toLocaleString("ja-JP")}点` : "達成")}
+              <span className={item.emptyMessage ? "growth-score-remaining missing" : targetInfo?.next ? "growth-score-remaining" : "growth-score-remaining complete"}>
+                {item.emptyMessage || (targetInfo?.next ? <>あと<strong>{remaining.toLocaleString("ja-JP")}</strong>点</> : "コンプリート")}
               </span>
             </div>
           );
@@ -4092,7 +4127,7 @@ function GrowthScoreHighlight({ row }) {
   return (
     <section className="growth-score-highlight">
       <h3>{row.title}</h3>
-      <GrowthProgressRow row={row.row} />
+          <GrowthProgressRow row={{ ...row.row, hideRemaining: true }} />
     </section>
   );
 }
@@ -4161,7 +4196,7 @@ function GrowthProgressRow({ row }) {
     <div className={`growth-progress-row ${row.metric}`}>
       <div className="growth-progress-main">
         <span>{row.label}{row.subLabel && <small>{row.subLabel}</small>}</span>
-        <strong>
+        <strong style={growthValueFontTokens(displayNumber, 2.22)}>
           {displayValue !== null ? displayPrefix : ""}
           {displayValue === null ? "-" : Number(displayNumber || 0).toLocaleString("ja-JP")}
           <small>{row.unit}</small>
@@ -4216,6 +4251,9 @@ function GrowthProgressRow({ row }) {
                 const iconGradientWidthPx = useZeroAnchoredIconFill ? visualDotSize : Math.max(1, milestoneTrackWidth);
                 const iconGradientBgX = useZeroAnchoredIconFill ? 0 : -dotLeftPx;
                 const definition = makeBadgeDefinition(canonicalBadgeLabel(milestone.label), { description: milestone.description || `${milestone.label}をゲット` });
+                const showAbsoluteTarget = Number.isFinite(referenceValue)
+                  && typeof milestone.displayTarget === "string"
+                  && milestone.displayTarget.startsWith("+");
                 return (
                   <Fragment key={milestone.label}>
                     <span
@@ -4247,7 +4285,10 @@ function GrowthProgressRow({ row }) {
                       aria-label={`${definition.label}の詳細`}
                     >
                       <RarityIcon rarity={rarityForBadge(milestone.label)} />
-                      <span>{milestone.displayTarget ?? milestone.target}</span>
+                      <span className={`milestone-target-label ${showAbsoluteTarget ? "with-absolute" : ""}`}>
+                        <b>{milestone.displayTarget ?? milestone.target}</b>
+                        {showAbsoluteTarget && <em>{targetValue.toLocaleString("ja-JP")}</em>}
+                      </span>
                     </button>
                   </Fragment>
                 );
@@ -4255,11 +4296,13 @@ function GrowthProgressRow({ row }) {
             </div>
           </div>
           <div
-            className="growth-progress-meta"
+            className={`growth-progress-meta ${row.hideRemaining ? "hidden" : ""}`}
             style={remainingPositionStyle}
           >
             <span aria-hidden="true" />
-            <small className={targetInfo?.next ? "" : "complete"}>{targetInfo?.next ? `あと${remaining.toLocaleString("ja-JP")}${row.unit}` : "達成"}</small>
+            {!row.hideRemaining && (
+              <small className={targetInfo?.next ? "" : "complete"}>{targetInfo?.next ? `あと${remaining.toLocaleString("ja-JP")}${row.unit}` : "コンプリート"}</small>
+            )}
           </div>
         </>
       )}
@@ -4480,11 +4523,11 @@ function badgeSortKey(label) {
   }[badgePeriod(label)] || 9;
   const categoryValue = {
     count: 0,
-    average: 1,
-    best: 2,
-    calendar: 3,
-    flag: 4,
-    trophy: 5,
+    calendar: 1,
+    trophy: 2,
+    average: 3,
+    best: 4,
+    flag: 5,
   }[definition?.category || "trophy"] || 9;
   return [periodValue, categoryValue, badgeValue(label) || 9999, label];
 }
@@ -4525,6 +4568,32 @@ function settingsChipTextSize(text) {
   return "0.66rem";
 }
 
+function badgePeriodShortLabel(period) {
+  if (period === RANGE_TODAY) return "今日";
+  if (period === RANGE_WEEK) return "今週";
+  if (period === RANGE_MONTH) return "今月";
+  if (period === RANGE_YEAR) return "今年";
+  return "過去最高";
+}
+
+function badgeShortNameLines(definition) {
+  const target = Number(definition?.target);
+  const targetLabel = Number.isFinite(target) ? target.toLocaleString("ja-JP") : "";
+  const period = badgePeriodShortLabel(definition?.period);
+  const metric = definition?.metric;
+
+  if (metric === "count") return [`${period} スイング`, `${targetLabel}回`];
+  if (metric === "days") return [`${period} 練習日数`, `${targetLabel}日`];
+  if (metric === "avg-growth") return [`${period} 平均`, `+${targetLabel}`];
+  if (metric === "best-growth") return [`${period} ベスト`, `+${targetLabel}`];
+  if (metric === "all-time-avg") return ["過去最高 平均", `${targetLabel}点`];
+  if (metric === "all-time-best") return ["過去最高 ベスト", `${targetLabel}点`];
+  if (metric === "avg") return [`${period} 平均`, `${targetLabel}点`];
+  if (metric === "best") return [`${period} ベスト`, `${targetLabel}点`];
+
+  return String(definition?.name || definition?.label || "").split(/\s+/).filter(Boolean).slice(0, 2);
+}
+
 function canonicalBadgeLabel(label) {
   return label;
 }
@@ -4542,8 +4611,11 @@ function rarityColorFor(rarity) {
 }
 
 function collectionCategoryKeyFor(definition) {
-  if (definition?.category === "average" || definition?.category === "best") return "growth";
-  if (definition?.category === "trophy") return "growth";
+  if (definition?.metric === "avg-growth" || definition?.metric === "best-growth") return "score-up";
+  if (definition?.period === RANGE_TODAY && (definition?.category === "average" || definition?.category === "best")) return "score-up";
+  if (definition?.category === "average" || definition?.category === "best") return "high-score";
+  if (definition?.metric === "all-time-avg" || definition?.metric === "all-time-best") return "high-score";
+  if (definition?.category === "trophy") return "high-score";
   return definition?.category || "other";
 }
 
@@ -4564,6 +4636,9 @@ function makeBadgeDefinition(label, options = {}) {
     type,
     rarity: options.rarity || base?.rarity || rarityForBadge(label),
     category: options.category || base?.category || "trophy",
+    period: options.period || base?.period || null,
+    metric: options.metric || base?.metric || null,
+    target: options.target ?? base?.target ?? null,
     conditionText: options.conditionText || base?.conditionText || "",
     secret: Boolean(options.secret || base?.secret),
     description: options.description || base?.description || badgeDescriptionFor(label, type),
@@ -4628,6 +4703,7 @@ function BadgeDetailPopover({ badge, onClose }) {
         </button>
         <div className="badge-popup-card" style={{ "--badge-rarity-color": rarityColorFor(badge.rarity) }}>
           <img className="badge-popup-card-bg" src={RARITY_CARD_URLS[badge.rarity]} alt="" aria-hidden="true" />
+          <span className="badge-popup-card-points">{RARITY_POINTS[badge.rarity]}pt</span>
           <div className={`badge-popup-card-medal category-${badge.category}`} aria-hidden="true">
             <img src={CATEGORY_ICON_URLS[badge.category]} alt="" />
           </div>
@@ -4678,6 +4754,7 @@ function FirstGetBadgeShowcase({ badges, onAdvance }) {
         </button>
         <div className="badge-popup-card" style={{ "--badge-rarity-color": rarityColorFor(badge.rarity) }}>
           <img className="badge-popup-card-bg" src={RARITY_CARD_URLS[badge.rarity]} alt="" aria-hidden="true" />
+          <span className="badge-popup-card-points">{RARITY_POINTS[badge.rarity]}pt</span>
           <div className={`badge-popup-card-medal category-${badge.category}`} aria-hidden="true">
             <img src={CATEGORY_ICON_URLS[badge.category]} alt="" />
           </div>
@@ -4697,6 +4774,8 @@ function BadgeChip({ label, count = 1, description = null, lockedSecret = false 
   const canonicalLabel = canonicalBadgeLabel(label);
   const definition = makeBadgeDefinition(canonicalLabel, description ? { description } : {});
   const isLocked = count === 0;
+  const shortNameLines = lockedSecret ? ["???"] : badgeShortNameLines(definition);
+  const shortNameText = shortNameLines.join("");
   return (
     <>
       <span className={`badge-chip-wrap ${isLocked ? "locked" : ""}`}>
@@ -4705,7 +4784,7 @@ function BadgeChip({ label, count = 1, description = null, lockedSecret = false 
           type="button"
           data-sound-effect="popup"
           style={{
-            "--badge-chip-font-size": badgeChipFontSize(lockedSecret ? "???" : definition.label),
+            "--badge-chip-font-size": badgeChipFontSize(shortNameText),
             "--badge-rarity-color": rarityColorFor(definition.rarity),
             backgroundImage: `url("${RARITY_NAMEPLATE_URLS[definition.rarity]}")`,
           }}
@@ -4714,7 +4793,9 @@ function BadgeChip({ label, count = 1, description = null, lockedSecret = false 
           <span className={`badge-chip-icon category-${definition.category}`} aria-hidden="true">
             <img src={CATEGORY_ICON_URLS[definition.category]} alt="" />
           </span>
-          <span className="badge-label">{lockedSecret ? "???" : definition.name || definition.label}</span>
+          <span className="badge-label">
+            {shortNameLines.map((line, index) => <span key={`${line}-${index}`}>{line}</span>)}
+          </span>
         </button>
         <b>{count > 1 ? `x${count}` : ""}</b>
       </span>
@@ -4787,7 +4868,7 @@ function BadgeCollectionView({ allForName, activeDate = todayISO(), db = default
         sum + (item.earnedCount * RARITY_POINTS[item.definition.rarity])
       ), 0);
       return { ...filter, items, earnedTotal, pointTotal };
-    }).filter((summary) => summary.items.length);
+    });
   }, [badgeStats.items]);
   const activeCategorySummary = useMemo(() => (
     collectionCategorySummaries.find((summary) => summary.key === selectedCategory) || collectionCategorySummaries[0]
@@ -4977,15 +5058,15 @@ function graphRangeLabel(range) {
 function DataView({ db, allForName, activeDate = todayISO() }) {
   const [activeTab, setActiveTab] = useState("daily");
   const tabs = [
-    ["daily", "週間"],
-    ["weekly", "月間"],
-    ["monthly", "年間"],
+    ["daily", "毎日"],
+    ["weekly", "毎週"],
+    ["monthly", "毎月"],
   ];
   const activeConfig = {
-    daily: { graphRange: RANGE_TODAY, titlePrefix: "今週", maxBuckets: 365 },
-    weekly: { graphRange: RANGE_WEEK, titlePrefix: "今月", maxBuckets: 52 },
-    monthly: { graphRange: RANGE_MONTH, titlePrefix: "今年", maxBuckets: 12 },
-  }[activeTab] || { graphRange: RANGE_TODAY, titlePrefix: "今週", maxBuckets: 365 };
+    daily: { graphRange: RANGE_TODAY, titlePrefix: "毎日", maxBuckets: 365 },
+    weekly: { graphRange: RANGE_WEEK, titlePrefix: "毎週", maxBuckets: 52 },
+    monthly: { graphRange: RANGE_MONTH, titlePrefix: "毎月", maxBuckets: 12 },
+  }[activeTab] || { graphRange: RANGE_TODAY, titlePrefix: "毎日", maxBuckets: 365 };
 
   return (
     <div className="challenge-view data-view">
@@ -5124,9 +5205,9 @@ function SwingForm({ bats, defaultBat, onSubmit, submitLabel, defaultValues = nu
     >
       <h3 className="swing-form-title"><img className="form-pen-icon" src={NEW_UI_ASSETS.recordPen} alt="" aria-hidden="true" />記録入力</h3>
       <BatSelect value={selectedBat} onChange={setSelectedBat} bats={bats} batColors={batColors} name="bat" required className="home-form-bat-controls" />
-      <label className="field-label"><span className="field-title">回数</span><span className="paper-input-cell"><input name="count" type="number" inputMode="numeric" min="1" max="999" step="1" required value={countValue} onChange={(event) => setCountValue(event.target.value)} aria-label="回数" /><span aria-hidden="true">回</span></span></label>
-      <label className="field-label"><span className="field-title">平均</span><span className="paper-input-cell"><input name="avg" type="number" inputMode="numeric" min="0" max="999" step="1" required value={avgValue} onChange={(event) => setAvgValue(event.target.value)} aria-label="平均" /><span aria-hidden="true">点</span></span></label>
-      <label className="field-label"><span className="field-title">ベスト</span><span className="paper-input-cell"><input name="best" type="number" inputMode="numeric" min="0" max="999" step="1" required value={bestValue} onChange={(event) => setBestValue(event.target.value)} aria-label="ベスト" /><span aria-hidden="true">点</span></span></label>
+      <label className="field-label"><span className="field-title">回数</span><span className="paper-input-cell"><input name="count" type="number" inputMode="numeric" min="1" max="999" step="1" required placeholder="-" value={countValue} onChange={(event) => setCountValue(event.target.value)} aria-label="回数" /><span aria-hidden="true">回</span></span></label>
+      <label className="field-label"><span className="field-title">平均</span><span className="paper-input-cell"><input name="avg" type="number" inputMode="numeric" min="0" max="999" step="1" required placeholder="-" value={avgValue} onChange={(event) => setAvgValue(event.target.value)} aria-label="平均" /><span aria-hidden="true">点</span></span></label>
+      <label className="field-label"><span className="field-title">ベスト</span><span className="paper-input-cell"><input name="best" type="number" inputMode="numeric" min="0" max="999" step="1" required placeholder="-" value={bestValue} onChange={(event) => setBestValue(event.target.value)} aria-label="ベスト" /><span aria-hidden="true">点</span></span></label>
       <span className="home-ok-slot">
         {testAction && <button className="standard-ok-button settings-ok-button test-seed-button" type="button" onClick={handleTestAction} disabled={submitDisabled}>テスト</button>}
         <button className="standard-ok-button settings-ok-button" type="submit" aria-label={submitLabel} disabled={submitDisabled} data-sound-effect="score">OK</button>
@@ -5221,10 +5302,7 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
   const [openBatPalette, setOpenBatPalette] = useState(null);
   const [palettePosition, setPalettePosition] = useState(null);
   const hasNames = draft.names.length > 0;
-  const nameColorEntries = draft.names.map((name) => [name, nameColorFor(draft, name)]);
   const batColorEntries = draft.bats.map((bat) => [bat, batColorFor(draft, bat)]);
-  const usedNameColors = new Set(nameColorEntries.map(([, color]) => color));
-  const usedBatColors = new Set(batColorEntries.map(([, color]) => color));
   useEffect(() => {
     setDraft(db);
     setOpenBatPalette(null);
@@ -5438,7 +5516,7 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
                     {BAT_COLOR_PALETTE.map((color) => {
                       const normalizedColor = normalizeHexColor(color);
                       const currentColor = batColorFor(draft, bat);
-                      const usedElsewhere = usedNameColors.has(normalizedColor) || batColorEntries.some(([otherBat, otherColor]) => otherBat !== bat && otherColor === normalizedColor);
+                      const usedElsewhere = batColorEntries.some(([otherBat, otherColor]) => otherBat !== bat && otherColor === normalizedColor);
                       const disabled = usedElsewhere && normalizedColor !== currentColor;
                       return (
                         <button
@@ -5513,11 +5591,14 @@ function BottomNav({ tab, setTab }) {
 
 function DeleteDialog({ pending, onCancel, onConfirm }) {
   const label = pending.type === "name" ? "名前" : pending.type === "bat" ? "バット" : "データ";
+  const message = pending.type === "all"
+    ? "すべての記録データを削除します。"
+    : `${label}「${pending.value}」を削除します。関連する記録データも削除されます。`;
   return (
     <div className="dialog-backdrop" role="dialog" aria-modal="true">
       <div className="dialog">
-        <h2>削除しますか？</h2>
-        <p>{label}「{pending.value}」と関連する記録データを削除します。</p>
+        <h2>本当に削除しますか？</h2>
+        <p>{message}</p>
         <div className="dialog-actions">
           <button type="button" className="ghost" onClick={onCancel}>キャンセル</button>
           <button type="button" className="danger" onClick={onConfirm}>削除する</button>

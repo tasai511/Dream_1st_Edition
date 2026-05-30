@@ -4240,7 +4240,7 @@ input::placeholder {
 
 .collection-category-filters {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   grid-auto-rows: 42px;
   gap: 8px;
   border: 3px solid #ffffff;
@@ -4265,7 +4265,7 @@ input::placeholder {
   min-height: 0;
   border: 0;
   border-radius: 10px;
-  padding: 3px 2px 4px;
+  padding: 3px 1px 4px;
   color: rgba(255, 255, 255, 0.9);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(0, 0, 0, 0.06));
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
@@ -4286,16 +4286,16 @@ input::placeholder {
 .collection-category-filter-icon {
   display: grid;
   place-items: center;
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   min-width: 0;
   color: #ffffff;
 }
 
 .collection-category-filter-icon img,
 .collection-category-filter-icon svg {
-  width: 23px;
-  height: 23px;
+  width: 27px;
+  height: 27px;
   object-fit: contain;
 }
 
@@ -4303,6 +4303,11 @@ input::placeholder {
 .collection-category-filter-icon.category-average img,
 .collection-category-filter-icon.category-best img,
 .collection-category-filter-icon.category-calendar img {
+  width: 30px;
+  height: 30px;
+}
+
+.collection-category-filter-icon.category-trophy img {
   width: 26px;
   height: 26px;
 }
@@ -4326,6 +4331,7 @@ input::placeholder {
 .collection-category-filter-copy {
   display: block;
   min-width: 0;
+  width: 100%;
 }
 
 .collection-category-filter-copy b {
@@ -4337,7 +4343,7 @@ input::placeholder {
 
 .collection-category-filter-copy b {
   color: inherit;
-  font-size: 0.45rem;
+  font-size: clamp(0.31rem, 1.62vw, 0.43rem);
   font-weight: 900;
   line-height: 1;
   text-shadow: inherit;
@@ -4384,7 +4390,7 @@ input::placeholder {
 .collection-rarity-section.rarity-b { --badge-rarity-heading-color: #126bc8; }
 .collection-rarity-section.rarity-a { --badge-rarity-heading-color: #c44722; }
 .collection-rarity-section.rarity-s { --badge-rarity-heading-color: #586271; }
-.collection-rarity-section.rarity-ss { --badge-rarity-heading-color: #b07300; }
+.collection-rarity-section.rarity-ss { --badge-rarity-heading-color: #e0a300; }
 
 .collection-badge-list {
   padding-top: 2px;
@@ -6675,11 +6681,12 @@ select:focus,
 }
 
 .settings-view .palette-open .bat-color-palette {
-  position: fixed !important;
-  top: var(--palette-top, 0) !important;
-  left: var(--palette-left, 50vw) !important;
+  position: absolute !important;
+  top: calc(100% + 8px) !important;
+  right: -2px !important;
+  left: auto !important;
   z-index: 9999 !important;
-  transform: translateX(-50%) !important;
+  transform: none !important;
 }
 
 /* Final color authority. */
@@ -11039,7 +11046,7 @@ body .app .phone-shell .challenge-period-panel > .daily-result-grid > .daily-res
 body .app .phone-shell .home-score-input-grid .daily-result-card.no-remaining > .milestone-track {
   left: 26px !important;
   right: 24px !important;
-  bottom: 26px !important;
+  bottom: 22px !important;
 }
 
 body .app .phone-shell .home-score-input-grid .daily-result-card.no-remaining {
@@ -11049,15 +11056,15 @@ body .app .phone-shell .home-score-input-grid .daily-result-card.no-remaining {
 }
 
 body .app .phone-shell .home-score-input-grid .daily-result-card.no-remaining > .metric-label {
-  top: 13px !important;
-  left: 14px !important;
+  top: 12px !important;
+  left: 12px !important;
   width: auto !important;
   min-width: 0 !important;
   height: 34px !important;
   display: flex !important;
   align-items: center !important;
   gap: 8px !important;
-  padding: 0 0 0 48px !important;
+  padding: 0 0 0 40px !important;
   border: 0 !important;
   border-radius: 0 !important;
   color: var(--score-dark) !important;
@@ -11065,7 +11072,7 @@ body .app .phone-shell .home-score-input-grid .daily-result-card.no-remaining > 
   box-shadow: none !important;
   font-size: 1.2rem !important;
   font-weight: 950 !important;
-  line-height: 1 !important;
+  line-height: 34px !important;
   text-shadow:
     1.5px 0 #ffffff,
     -1.5px 0 #ffffff,
@@ -11079,6 +11086,7 @@ body .app .phone-shell .home-score-input-grid .daily-result-card.no-remaining > 
   position: absolute;
   top: 0;
   left: 0;
+  box-sizing: border-box;
   width: 34px;
   height: 34px;
   border: 3px solid #fff;
@@ -11094,20 +11102,20 @@ body .app .phone-shell .home-score-input-grid .daily-result-card.no-remaining > 
 
 body .app .phone-shell .home-score-input-grid .daily-result-card.no-remaining > .metric-label svg,
 body .app .phone-shell .home-score-input-grid .daily-result-card.no-remaining > .metric-label .metric-image-icon {
-  top: 20px !important;
-  left: 20px !important;
+  top: 50% !important;
+  left: 17px !important;
   z-index: 1 !important;
-  width: 26px !important;
-  height: 26px !important;
+  width: 22px !important;
+  height: 22px !important;
   transform: translate(-50%, -50%) !important;
 }
 
 body .app .phone-shell .home-score-input-grid .daily-result-card.avg.no-remaining > .metric-label .metric-image-icon {
-  transform: translate(-56%, -50%) !important;
+  transform: translate(calc(-50% - 1px), -50%) !important;
 }
 
 body .app .phone-shell .home-score-input-grid .daily-result-card.best.no-remaining > .metric-label .metric-image-icon {
-  transform: translate(-50%, -54%) !important;
+  transform: translate(-50%, -50%) !important;
 }
 
 body .app .phone-shell .home-score-input-grid .daily-result-card.no-remaining > .daily-score-row {
@@ -11497,6 +11505,24 @@ body .app .daily-result-card .milestone-dot.locked .rarity-icon svg * {
 
 body .app .daily-result-card .milestone-dot > span:not(.rarity-icon) {
   white-space: nowrap !important;
+}
+
+body .app .daily-result-card .milestone-dot > .milestone-target-label {
+  display: grid !important;
+  justify-items: center !important;
+  gap: 1px !important;
+}
+
+body .app .daily-result-card .milestone-dot > .milestone-target-label b,
+body .app .daily-result-card .milestone-dot > .milestone-target-label em {
+  display: block !important;
+  font: inherit !important;
+  line-height: 0.9 !important;
+  white-space: nowrap !important;
+}
+
+body .app .daily-result-card .milestone-dot > .milestone-target-label em {
+  font-size: 0.54rem !important;
 }
 
 /* Restored polish after accidental file recovery. */
@@ -12074,10 +12100,10 @@ body .app .home-score-input-grid .home-input-panel::before {
   min-width: 0;
   max-width: 124px;
   min-height: 0;
-  aspect-ratio: 1287 / 538;
+  aspect-ratio: 1252 / 460;
   border: 0;
   border-radius: 0;
-  padding: 5px 12px 5px 0;
+  padding: 4px 8px 4px 0;
   color: var(--badge-chip-text, #ffffff);
   background-color: transparent;
   background-position: left center;
@@ -12091,9 +12117,9 @@ body .app .home-score-input-grid .home-input-panel::before {
 .badge.collection-badge .badge-chip-icon {
   display: inline-grid;
   place-items: center;
-  width: 47px;
+  width: 41px;
   height: 100%;
-  flex: 0 0 47px;
+  flex: 0 0 41px;
 }
 
 .badge.collection-badge .badge-chip-icon img {
@@ -12107,7 +12133,7 @@ body .app .home-score-input-grid .home-input-panel::before {
     drop-shadow(0 1px 0 rgba(0, 0, 0, 0.58))
     drop-shadow(0 -1px 0 rgba(0, 0, 0, 0.58))
     drop-shadow(0 1px 2px rgba(0, 0, 0, 0.26));
-  transform: translateX(-3px);
+  transform: translateX(-1px);
 }
 
 .badge.collection-badge .badge-chip-icon:not(.category-trophy) img {
@@ -12122,32 +12148,42 @@ body .app .home-score-input-grid .home-input-panel::before {
 
 .badge.collection-badge .badge-chip-icon.category-average img,
 .badge.collection-badge .badge-chip-icon.category-calendar img {
-  transform: translateX(-6px);
-}
-
-.badge.collection-badge .badge-chip-icon.category-average img {
-  transform: translateX(-5px);
-}
-
-.badge.collection-badge .badge-chip-icon.category-calendar img {
   transform: translateX(-4px);
 }
 
+.badge.collection-badge .badge-chip-icon.category-average img {
+  transform: translateX(-3px);
+}
+
+.badge.collection-badge .badge-chip-icon.category-calendar img {
+  transform: translateX(-2px);
+}
+
 .badge.collection-badge .badge-chip-icon.category-flag img {
-  transform: translateX(-1px);
+  transform: translateX(1px);
 }
 
 .badge.collection-badge .badge-label {
-  display: -webkit-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   flex: 1 1 auto;
   overflow: hidden;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-height: 0.96;
+  min-width: 0;
+  font-weight: 400;
+  line-height: 1.08;
   white-space: normal;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
+  word-break: keep-all;
   transform: translateY(-1px);
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.38);
+}
+
+.badge.collection-badge .badge-label > span {
+  display: block;
+  overflow: hidden;
+  text-overflow: clip;
+  white-space: nowrap;
 }
 
 .badge.collection-badge.rarity-d { --badge-chip-text: #7b3f17; }
@@ -12275,6 +12311,30 @@ body .app .home-score-input-grid .home-input-panel::before {
   display: block;
   width: 100%;
   height: auto;
+}
+
+.badge-popup-card-points {
+  position: absolute;
+  top: 4.6%;
+  right: 16.8%;
+  z-index: 4;
+  padding: 2px 7px 3px;
+  border: 1.5px solid rgba(255, 255, 255, 0.78);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--badge-rarity-color), rgba(255, 255, 255, 0.86) 66%);
+  color: #17305a;
+  font-size: 0.78rem;
+  font-weight: 950;
+  line-height: 1;
+  letter-spacing: 0;
+  text-shadow: none;
+  box-shadow: none;
+}
+
+.collection-popover.locked .badge-popup-card-points {
+  color: #657181;
+  background: rgba(237, 241, 247, 0.9);
+  border-color: rgba(255, 255, 255, 0.6);
 }
 
 .badge-popup-card-medal {
@@ -12597,6 +12657,7 @@ body .app .home-score-input-grid .home-input-panel::before {
 .growth-section-card > .growth-heading {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
   color: var(--growth-color-dark);
   margin: 0;
@@ -12608,6 +12669,36 @@ body .app .home-score-input-grid .home-input-panel::before {
     0 1.5px #ffffff,
     0 -1.5px #ffffff,
     0 3px 0 color-mix(in srgb, var(--growth-color) 30%, transparent);
+}
+
+.growth-heading-main {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  gap: 8px;
+}
+
+.growth-heading-main > span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.growth-heading-target {
+  align-self: flex-end;
+  flex: 0 0 auto;
+  color: color-mix(in srgb, var(--growth-color-dark) 66%, #3b5573);
+  font-size: 0.58rem;
+  font-weight: 950;
+  line-height: 1;
+  padding-bottom: 2px;
+  text-align: right;
+  white-space: nowrap;
+  text-shadow:
+    1px 0 #ffffff,
+    -1px 0 #ffffff,
+    0 1px #ffffff,
+    0 -1px #ffffff;
 }
 
 .growth-heading-orb {
@@ -12706,10 +12797,11 @@ body .app .home-score-input-grid .home-input-panel::before {
 
 .growth-score-mini-card > strong {
   color: var(--growth-color-dark);
-  font-size: 2rem;
+  font-size: var(--growth-value-font-size, 2rem);
   font-weight: 950;
   line-height: 1;
   text-align: right;
+  white-space: nowrap;
   text-shadow:
     2px 0 #ffffff,
     -2px 0 #ffffff,
@@ -12734,8 +12826,108 @@ body .app .home-score-input-grid .home-input-panel::before {
   gap: 9px;
 }
 
+.growth-selectable-panel {
+  display: grid;
+  gap: 9px;
+}
+
+.growth-selectable-list {
+  display: grid;
+  gap: 6px;
+}
+
+.growth-selectable-row {
+  display: grid;
+  grid-template-columns: minmax(3.7rem, 0.66fr) minmax(6.1rem, 1.05fr) minmax(4.8rem, 0.74fr);
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  border: 0;
+  padding: 8px;
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--growth-color) 18%, #ffffff), color-mix(in srgb, var(--growth-color) 22%, #ffffff));
+  box-shadow:
+    inset 0 0 0 1.5px color-mix(in srgb, var(--growth-color) 40%, transparent),
+    inset 0 2px 0 rgba(255, 255, 255, 0.58),
+    0 4px 10px color-mix(in srgb, var(--growth-color-dark) 12%, transparent);
+  font: inherit;
+  text-align: left;
+  transition: transform 120ms ease, box-shadow 120ms ease, filter 120ms ease;
+}
+
+.growth-selectable-row.selected {
+  box-shadow:
+    inset 0 0 0 2.5px #ffffff,
+    inset 0 0 0 5px color-mix(in srgb, var(--growth-color) 86%, var(--growth-color-dark)),
+    inset 0 2px 0 rgba(255, 255, 255, 0.74),
+    0 0 0 2px color-mix(in srgb, var(--growth-color) 34%, transparent),
+    0 6px 12px color-mix(in srgb, var(--growth-color-dark) 20%, transparent);
+  filter: saturate(1.12) brightness(1.03);
+  transform: translateY(-1px);
+}
+
+.growth-selectable-row:active {
+  transform: translateY(1px);
+}
+
+.growth-selectable-label {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  color: color-mix(in srgb, var(--growth-color-dark) 76%, #23344f);
+  font-size: 1.02rem;
+  font-weight: 950;
+  line-height: 1.02;
+  text-shadow:
+    1.2px 0 #ffffff,
+    -1.2px 0 #ffffff,
+    0 1.2px #ffffff,
+    0 -1.2px #ffffff,
+    0 2px 0 color-mix(in srgb, var(--growth-color) 28%, transparent);
+}
+
+.growth-selectable-label small {
+  overflow: hidden;
+  color: color-mix(in srgb, var(--growth-color-dark) 48%, #56708d);
+  font-size: 0.56rem;
+  font-weight: 900;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-shadow:
+    1px 0 #ffffff,
+    -1px 0 #ffffff,
+    0 1px #ffffff,
+    0 -1px #ffffff;
+}
+
+.growth-selectable-row > strong {
+  color: var(--growth-color-dark);
+  font-size: var(--growth-value-font-size, 1.86rem);
+  font-weight: 950;
+  line-height: 1;
+  text-align: right;
+  white-space: nowrap;
+  text-shadow:
+    1.8px 0 #ffffff,
+    -1.8px 0 #ffffff,
+    0 1.8px #ffffff,
+    0 -1.8px #ffffff,
+    0 3px 0 color-mix(in srgb, var(--growth-color) 34%, transparent);
+}
+
+.growth-selectable-row > strong small {
+  margin-left: 2px;
+  font-size: 0.58rem;
+}
+
 .growth-score-summary > h3,
 .growth-score-highlight > h3 {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px;
   margin: 2px 2px 0;
   color: var(--growth-color-dark);
   font-size: 1.08rem;
@@ -12749,6 +12941,22 @@ body .app .home-score-input-grid .home-input-panel::before {
     0 3px 0 color-mix(in srgb, var(--growth-color) 28%, transparent);
 }
 
+.growth-score-summary > h3 small {
+  flex: 0 0 auto;
+  color: color-mix(in srgb, var(--growth-color-dark) 66%, #3b5573);
+  font-size: 0.58rem;
+  font-weight: 950;
+  line-height: 1;
+  padding-bottom: 1px;
+  text-align: right;
+  white-space: nowrap;
+  text-shadow:
+    1px 0 #ffffff,
+    -1px 0 #ffffff,
+    0 1px #ffffff,
+    0 -1px #ffffff;
+}
+
 .growth-score-summary-list {
   display: grid;
   gap: 6px;
@@ -12756,9 +12964,9 @@ body .app .home-score-input-grid .home-input-panel::before {
 
 .growth-score-summary-row {
   display: grid;
-  grid-template-columns: 2.4rem minmax(4.7rem, 1fr) minmax(5.8rem, 1.1fr) minmax(4.8rem, 0.9fr);
+  grid-template-columns: 2.2rem minmax(6.2rem, 1.05fr) minmax(3.4rem, 0.55fr) minmax(5.5rem, 0.86fr);
   align-items: center;
-  gap: 5px;
+  gap: 2px;
   min-width: 0;
   border: 0;
   padding: 7px 8px;
@@ -12802,10 +13010,12 @@ body .app .home-score-input-grid .home-input-panel::before {
 
 .growth-score-summary-row > strong {
   color: var(--growth-color-dark);
-  font-size: 1.72rem;
+  font-size: var(--growth-value-font-size, 1.72rem);
   font-weight: 950;
   line-height: 1;
   text-align: right;
+  transform: translateX(18px);
+  white-space: nowrap;
   text-shadow:
     1.8px 0 #ffffff,
     -1.8px 0 #ffffff,
@@ -12835,7 +13045,25 @@ body .app .home-score-input-grid .home-input-panel::before {
 }
 
 .growth-score-diff {
+  display: grid;
+  justify-items: center;
+  gap: 1px;
   color: color-mix(in srgb, var(--growth-color-dark) 62%, #3b5573);
+  line-height: 0.9;
+  text-align: center;
+  transform: translateX(16px);
+}
+
+.growth-score-diff b,
+.growth-score-diff em {
+  display: block;
+  font: inherit;
+  line-height: 0.9;
+}
+
+.growth-score-diff b {
+  font-size: 0.62rem;
+  font-weight: 400;
 }
 
 .growth-score-diff.positive {
@@ -12849,6 +13077,20 @@ body .app .home-score-input-grid .home-input-panel::before {
 .growth-score-remaining {
   color: color-mix(in srgb, var(--growth-color-dark) 72%, #234160);
   text-align: right;
+}
+
+.growth-score-remaining strong {
+  margin: 0 1px;
+  color: var(--growth-color-dark);
+  font-size: 1.32em;
+  font-weight: 950;
+  line-height: 0.9;
+  text-shadow:
+    1.2px 0 #ffffff,
+    -1.2px 0 #ffffff,
+    0 1.2px #ffffff,
+    0 -1.2px #ffffff,
+    0 2px 0 color-mix(in srgb, var(--growth-color) 30%, transparent);
 }
 
 .growth-score-remaining.complete {
@@ -12879,6 +13121,7 @@ body .app .home-score-input-grid .home-input-panel::before {
 
 .growth-score-detail .growth-progress-row {
   margin-top: -1px;
+  padding-bottom: 6px;
 }
 
 .growth-score-highlight .growth-progress-row {
@@ -12927,6 +13170,10 @@ body .app .home-score-input-grid .home-input-panel::before {
   display: none;
 }
 
+.growth-progress-meta.hidden {
+  visibility: hidden;
+}
+
 .growth-progress-main > span {
   display: flex;
   align-items: baseline;
@@ -12968,8 +13215,9 @@ body .app .home-score-input-grid .home-input-panel::before {
 
 .growth-progress-main strong {
   color: var(--row-color-dark) !important;
-  font-size: 2.22rem;
+  font-size: var(--growth-value-font-size, 2.22rem);
   line-height: 1;
+  white-space: nowrap;
   text-shadow:
     2px 0 #ffffff,
     -2px 0 #ffffff,
@@ -13027,7 +13275,7 @@ body .app .growth-home-meter.daily-result-card .milestone-dot-frame {
     -1px 0 #ffffff,
     0 1px #ffffff,
     0 -1px #ffffff;
-  transform: translateX(-50%);
+  transform: translateX(calc(-50% + 5px));
   pointer-events: none;
 }
 
@@ -13174,4 +13422,552 @@ body .app .growth-home-meter.daily-result-card .milestone-dot-frame {
 .growth-progress-meta > small.complete {
   color: #e73546;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+/* Color-only finish pass: brighter sky-blue, softer white panels, lighter card fills. */
+body .app {
+  --game-blue: #147ff2;
+  --game-blue-dark: #075fc8;
+  --game-blue-deep: #082d86;
+  --badge-count-blue: #147ff2;
+  --badge-count-blue-dark: #075fc8;
+  --game-shadow: rgba(43, 116, 204, 0.18);
+  color: #082d86;
+}
+
+body .app .home-score-input-grid .home-input-panel,
+body .app .dashboard-section,
+body .app .panel,
+body .app .badge-point-card {
+  background:
+    radial-gradient(circle at 92% 72%, rgba(86, 173, 255, 0.06), transparent 24%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(247, 252, 255, 0.88)) !important;
+}
+
+body .app .daily-result-card {
+  background:
+    radial-gradient(circle at 86% 38%, rgba(255, 255, 255, 0.9), transparent 12%),
+    linear-gradient(180deg, color-mix(in srgb, var(--score-color) 10%, #ffffff), color-mix(in srgb, var(--score-color) 4%, #f9fdff)) !important;
+}
+
+body .app .daily-result-card.count,
+body .app .growth-section-card.count {
+  --score-color: #167df2;
+  --score-dark: #0754bf;
+  --growth-color: #167df2;
+  --growth-color-dark: #0754bf;
+}
+
+body .app .daily-result-card.avg,
+body .app .growth-section-card.trophy {
+  --score-color: #2fa647;
+  --score-dark: #12752c;
+  --growth-color: #2fa647;
+  --growth-color-dark: #12752c;
+}
+
+body .app .daily-result-card.best,
+body .app .growth-section-card.best {
+  --score-color: #f4a20b;
+  --score-dark: #d07300;
+  --growth-color: #f4a20b;
+  --growth-color-dark: #d07300;
+}
+
+body .app .growth-section-card.calendar {
+  --growth-color: #e95a62;
+  --growth-color-dark: #b72735;
+  --score-color: #e95a62;
+  --score-dark: #b72735;
+}
+
+body .app .growth-section-card {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--growth-color) 16%, #ffffff), color-mix(in srgb, var(--growth-color) 7%, #f8fcff)) padding-box,
+    radial-gradient(circle at 74% 46%, color-mix(in srgb, var(--growth-color) 9%, transparent), transparent 34%) padding-box,
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--growth-color) 44%, #ffffff) 0%,
+      var(--growth-color) 48%,
+      color-mix(in srgb, var(--growth-color) 76%, var(--growth-color-dark)) 100%) border-box !important;
+}
+
+body .app .growth-progress-row {
+  background: color-mix(in srgb, var(--row-color) 8%, rgba(255, 255, 255, 0.86)) !important;
+}
+
+body .app .bottom-nav {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.68) 0%, rgba(255, 255, 255, 0.08) 18%),
+    linear-gradient(180deg, #2aa0ff 0%, #0a72df 50%, #0550bc 100%) !important;
+}
+
+body .app .bottom-nav button {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0.08) 30%),
+    linear-gradient(180deg, #2386ef 0%, #0b61ca 52%, #0748a8 100%) !important;
+}
+
+body .app .bottom-nav button.active {
+  background:
+    radial-gradient(circle at 50% 15%, rgba(255, 255, 255, 0.86), transparent 25%),
+    linear-gradient(180deg, #58dcff 0%, #0ca8f4 48%, #0873df 100%) !important;
+}
+
+/* Finish correction: home-like challenge cards, white lists, deeper detail panels. */
+body .app .badge-inline-section,
+body .app .home-result-section .badge-inline-section,
+body .app .badge-inline-section .badge-list-window {
+  border-color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+body .app .growth-section-card {
+  border-color: var(--growth-color) !important;
+  background:
+    radial-gradient(circle at 86% 38%, rgba(255, 255, 255, 0.88), transparent 12%),
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--growth-color) 18%, #ffffff),
+      color-mix(in srgb, var(--growth-color) 10%, #f7fcff)) !important;
+  box-shadow:
+    0 0 0 2px #ffffff,
+    inset 0 0 0 2px rgba(255, 255, 255, 0.82),
+    0 7px 16px color-mix(in srgb, var(--growth-color-dark) 18%, transparent) !important;
+}
+
+body .app .growth-selectable-row,
+body .app .growth-score-summary-row {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(250, 253, 255, 0.94)) !important;
+  box-shadow:
+    inset 0 0 0 1.5px color-mix(in srgb, var(--growth-color) 28%, #ffffff),
+    inset 0 2px 0 rgba(255, 255, 255, 0.7),
+    0 3px 8px color-mix(in srgb, var(--growth-color-dark) 10%, transparent) !important;
+}
+
+body .app .growth-selectable-row.selected,
+body .app .growth-score-summary-row.selected {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 1), color-mix(in srgb, var(--growth-color) 7%, #ffffff)) !important;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.74),
+    0 0 0 2px #ffffff,
+    0 0 0 5px color-mix(in srgb, var(--growth-color) 86%, var(--growth-color-dark)),
+    0 6px 12px color-mix(in srgb, var(--growth-color-dark) 18%, transparent) !important;
+}
+
+body .app .growth-score-detail .growth-progress-row {
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--row-color) 30%, #ffffff),
+      color-mix(in srgb, var(--row-color) 22%, #ffffff)) !important;
+  box-shadow:
+    inset 0 0 0 1.8px color-mix(in srgb, var(--row-color) 48%, transparent),
+    inset 0 2px 0 rgba(255, 255, 255, 0.62),
+    0 5px 12px color-mix(in srgb, var(--row-color-dark) 16%, transparent) !important;
+}
+
+body .app .growth-score-remaining.complete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  color: #ff2436;
+  font-size: 0.68rem;
+}
+
+body .app .growth-score-remaining.complete::after {
+  color: inherit;
+  content: "👑";
+  font-size: 0.86em;
+  line-height: 1;
+  text-shadow: none;
+}
+
+body .app .growth-score-remaining.missing {
+  color: #6b7890;
+  font-size: 0.68rem;
+  font-weight: 400;
+  text-shadow: none;
+}
+
+body .app .growth-score-remaining.missing::after {
+  content: none;
+}
+
+/* Final card frame sync: home cards and challenge parent cards share the same frame. */
+body .app .daily-result-card,
+body .app .growth-section-card {
+  border-color: transparent !important;
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--score-color, var(--growth-color)) 30%, #ffffff),
+      color-mix(in srgb, var(--score-color, var(--growth-color)) 22%, #ffffff)) padding-box,
+    radial-gradient(circle at 74% 46%, color-mix(in srgb, var(--score-color, var(--growth-color)) 18%, transparent), transparent 34%) padding-box,
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--score-color, var(--growth-color)) 48%, #ffffff) 0%,
+      var(--score-color, var(--growth-color)) 48%,
+      color-mix(in srgb, var(--score-color, var(--growth-color)) 82%, var(--score-dark, var(--growth-color-dark))) 100%) border-box !important;
+  box-shadow:
+    inset 0 3px 0 rgba(255, 255, 255, 0.78),
+    inset 0 0 0 1.5px rgba(255, 255, 255, 0.82),
+    inset 0 -10px 22px color-mix(in srgb, var(--score-color, var(--growth-color)) 14%, transparent),
+    0 10px 18px rgba(0, 0, 0, 0.16),
+    0 18px 28px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Final input card: clean white entry panel matching the reference. */
+body .app .phone-shell .home-score-input-grid .home-input-panel {
+  width: 100% !important;
+  min-height: 139px !important;
+  border: 0 !important;
+  border-radius: 14px !important;
+  padding: 11px 16px 8px !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(251, 253, 255, 0.94)) !important;
+  box-shadow:
+    0 8px 14px rgba(18, 78, 150, 0.18),
+    0 18px 30px rgba(8, 54, 126, 0.16) !important;
+}
+
+body .app .phone-shell .home-score-input-grid .home-input-panel::before {
+  inset: 0 !important;
+  border-radius: inherit !important;
+  background:
+    linear-gradient(180deg, transparent 0 53px, rgba(114, 150, 194, 0.28) 53px, rgba(114, 150, 194, 0.28) 54px, transparent 54px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.98), rgba(247, 251, 255, 0.94)) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(184, 203, 226, 0.62) !important;
+}
+
+body .app .phone-shell .home-score-input-grid .home-input-panel::after {
+  content: none !important;
+}
+
+body .app .phone-shell .home-score-input-grid .home-input-panel .swing-form {
+  grid-template-columns: 34px repeat(3, minmax(0, 1fr)) !important;
+  grid-template-rows: 32px 24px 32px 42px !important;
+  grid-template-areas:
+    "form-title form-title bat bat"
+    ". count-label avg-label best-label"
+    ". count avg best"
+    "ok ok ok ok" !important;
+  column-gap: 0 !important;
+  row-gap: 0 !important;
+  align-items: center !important;
+}
+
+body .app .phone-shell .home-score-input-grid .home-input-panel .swing-form-title {
+  top: 0 !important;
+  grid-area: form-title !important;
+  color: #073b8f !important;
+  font-size: 1rem !important;
+  text-shadow:
+    1px 0 #ffffff,
+    -1px 0 #ffffff,
+    0 1px #ffffff,
+    0 -1px #ffffff !important;
+}
+
+body .app .phone-shell .home-score-input-grid .home-input-panel .form-pen-icon {
+  width: 22px !important;
+  height: 22px !important;
+}
+
+body .app .phone-shell .home-score-input-grid .home-input-panel .home-form-bat-controls {
+  grid-area: bat !important;
+  align-self: center !important;
+  justify-self: end !important;
+  width: min(142px, 100%) !important;
+  transform: none !important;
+}
+
+body .app .phone-shell .home-score-input-grid .home-input-panel .field-title {
+  height: 22px !important;
+  color: #073b8f !important;
+  font-size: 0.58rem !important;
+  font-weight: 900 !important;
+  transform: none !important;
+  text-shadow: none !important;
+}
+
+body .app .phone-shell .home-score-input-grid .home-input-panel .paper-input-cell {
+  height: 32px !important;
+  border: 1px solid #c8d5e8 !important;
+  border-radius: 0 !important;
+  background: #ffffff !important;
+  box-shadow: inset 0 1px 2px rgba(30, 64, 115, 0.06) !important;
+}
+
+body .app .phone-shell .home-score-input-grid .home-input-panel .swing-form .field-label:nth-of-type(2) > .paper-input-cell {
+  border-radius: 7px 0 0 7px !important;
+}
+
+body .app .phone-shell .home-score-input-grid .home-input-panel .swing-form .field-label:nth-of-type(4) > .paper-input-cell {
+  border-radius: 0 7px 7px 0 !important;
+}
+
+body .app .phone-shell .home-score-input-grid .home-input-panel .swing-form input {
+  height: 30px !important;
+  min-height: 30px !important;
+  padding: 0 18px 0 4px !important;
+  color: #082d61 !important;
+  font-size: 0.92rem !important;
+  line-height: 30px !important;
+  text-align: center !important;
+  text-shadow: none !important;
+}
+
+body .app .phone-shell .home-score-input-grid .home-input-panel .swing-form input::placeholder {
+  color: #082d61 !important;
+  opacity: 1 !important;
+}
+
+body .app .phone-shell .home-score-input-grid .home-input-panel .paper-input-cell > span {
+  right: 6px !important;
+  bottom: 5px !important;
+  color: #082d61 !important;
+  font-size: 0.52rem !important;
+  text-shadow: none !important;
+}
+
+body .app .phone-shell .home-score-input-grid .home-input-panel .home-ok-slot {
+  grid-area: ok !important;
+  align-self: center !important;
+  justify-self: center !important;
+  transform: none !important;
+}
+
+body .app .phone-shell .home-score-input-grid .home-input-panel .home-ok-slot .standard-ok-button.settings-ok-button {
+  width: 158px !important;
+  min-width: 158px !important;
+  height: 34px !important;
+  min-height: 34px !important;
+  border-color: #0059c9 !important;
+  background:
+    linear-gradient(180deg, #35adff 0%, #0878ee 52%, #005fd5 100%) !important;
+}
+
+body .app .phone-shell .home-score-input-grid .home-input-panel .home-ok-slot .test-seed-button {
+  width: 58px !important;
+  min-width: 58px !important;
+  height: 30px !important;
+  min-height: 30px !important;
+  border-color: #69b900 !important;
+  color: #ffffff !important;
+  background:
+    linear-gradient(180deg, #b8f33c 0%, #74ce00 54%, #4aa700 100%) !important;
+}
+
+/* Input-card detail sync: full-width equal score fields and centered OK action. */
+body .app .phone-shell .home-score-input-grid .home-input-panel .swing-form {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  grid-template-rows: 32px 29px 32px 40px !important;
+  grid-template-areas:
+    "form-title form-title bat"
+    "count-label avg-label best-label"
+    "count avg best"
+    "ok ok ok" !important;
+  column-gap: 0 !important;
+}
+
+body .app .phone-shell .home-score-input-grid .home-input-panel .swing-form .field-label:not(.bat-input-label) > .field-title,
+body .app .phone-shell .home-score-input-grid .home-input-panel .field-title {
+  align-items: flex-end !important;
+  justify-content: center !important;
+  color: #073b8f !important;
+  font-weight: 500 !important;
+  transform: translateY(1px) !important;
+}
+
+body .app .phone-shell .home-score-input-grid .home-input-panel .paper-input-cell {
+  width: 100% !important;
+}
+
+body .app .phone-shell .home-score-input-grid .home-input-panel .swing-form .field-label:nth-of-type(3) > .paper-input-cell,
+body .app .phone-shell .home-score-input-grid .home-input-panel .swing-form .field-label:nth-of-type(4) > .paper-input-cell {
+  border-left-width: 0 !important;
+}
+
+body .app .phone-shell .home-score-input-grid .home-input-panel .home-ok-slot {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) !important;
+  width: 100% !important;
+  gap: 8px !important;
+  align-self: end !important;
+  transform: translateY(1px) !important;
+}
+
+body .app .phone-shell .home-score-input-grid .home-input-panel .home-ok-slot .standard-ok-button.settings-ok-button:not(.test-seed-button) {
+  grid-column: 2 !important;
+  justify-self: center !important;
+}
+
+body .app .phone-shell .home-score-input-grid .home-input-panel .home-ok-slot .test-seed-button,
+body .app .phone-shell .home-score-input-grid .home-input-panel .home-ok-slot .standard-ok-button.settings-ok-button.test-seed-button {
+  grid-column: 1 !important;
+  justify-self: end !important;
+  width: 58px !important;
+  min-width: 58px !important;
+  max-width: 58px !important;
+  height: 30px !important;
+  min-height: 30px !important;
+  max-height: 30px !important;
+  border-color: #69b900 !important;
+  color: #ffffff !important;
+  background:
+    linear-gradient(180deg, #b8f33c 0%, #74ce00 54%, #4aa700 100%) !important;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.48),
+    inset 0 -4px 0 rgba(40, 100, 0, 0.24),
+    0 3px 0 #3c8e00 !important;
+  font-size: 0.64rem !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+}
+
+/* Bottom nav matches the collection category tab format. */
+body .app .bottom-nav {
+  gap: 8px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  padding: 5px 6px calc(5px + env(safe-area-inset-bottom)) !important;
+  background:
+    linear-gradient(180deg, #1f78e9 0%, #0b4dae 58%, #07317c 100%) !important;
+  box-shadow:
+    inset 0 3px 0 rgba(255, 255, 255, 0.34),
+    0 5px 10px rgba(4, 43, 118, 0.24) !important;
+}
+
+body .app .bottom-nav button {
+  display: grid !important;
+  grid-template-rows: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  justify-items: center !important;
+  gap: 0 !important;
+  border: 0 !important;
+  border-radius: 10px !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(0, 0, 0, 0.06)) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
+  text-align: center !important;
+  text-shadow: 0 2px 0 rgba(0, 28, 90, 0.45) !important;
+  transform: translateY(2px) !important;
+}
+
+body .app .bottom-nav button.active {
+  color: #ffffff !important;
+  background:
+    linear-gradient(180deg, #2fd0ff 0%, #0b86ef 58%, #0061cf 100%) !important;
+  box-shadow:
+    inset 0 3px 0 rgba(255, 255, 255, 0.48),
+    inset 0 -4px 0 rgba(0, 46, 137, 0.22),
+    0 0 0 2px rgba(255, 255, 255, 0.48) !important;
+}
+
+body .app .bottom-nav .bottom-nav-icon {
+  width: 31px !important;
+  height: 31px !important;
+  object-fit: contain !important;
+}
+
+body .app .bottom-nav button span {
+  color: inherit !important;
+  font-size: clamp(0.38rem, 1.88vw, 0.5rem) !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  text-shadow: inherit !important;
+  white-space: nowrap !important;
+}
+
+body .app .badge-point-card {
+  border: 3px solid var(--game-blue, #147ff2) !important;
+  background:
+    radial-gradient(circle at 92% 72%, rgba(86, 173, 255, 0.06), transparent 24%),
+    linear-gradient(180deg, #ffffff, #f7fcff) !important;
+  box-shadow:
+    0 8px 16px rgba(4, 43, 118, 0.14) !important;
+}
+
+body .app .bottom-nav button::before,
+body .app .bottom-nav button.active::before {
+  content: none !important;
+  display: none !important;
+  background: none !important;
+}
+
+body .app .bottom-nav .bottom-nav-icon,
+body .app .bottom-nav button.active .bottom-nav-icon {
+  filter: none !important;
+}
+
+/* Final alignment: nudge score-bar target numbers slightly lower. */
+body .app .daily-result-card .milestone-dot > span:not(.rarity-icon) {
+  top: calc(100% + 9px) !important;
+}
+
+/* Final card height polish: give home meters a touch more bottom room, and align challenge parent-card height. */
+body .app .phone-shell .home-score-input-grid .daily-result-card.no-remaining {
+  height: 126px !important;
+  min-height: 126px !important;
+  max-height: 126px !important;
+}
+
+body .app .phone-shell .home-score-input-grid > .daily-result-grid.card-count-3 > .daily-result-card.no-remaining {
+  height: 118px !important;
+  min-height: 118px !important;
+  max-height: 118px !important;
+}
+
+body .app .phone-shell .home-score-input-grid > .daily-result-grid.card-count-3 > .daily-result-card.no-remaining > .metric-label {
+  top: 12px !important;
+  left: 18px !important;
+  height: 34px !important;
+  line-height: 34px !important;
+}
+
+body .app .phone-shell .home-score-input-grid > .daily-result-grid.card-count-3 > .daily-result-card.no-remaining > .daily-score-row {
+  top: 11px !important;
+  right: 18px !important;
+  left: 194px !important;
+  text-align: right !important;
+}
+
+body .app .phone-shell .home-score-input-grid > .daily-result-grid.card-count-3 > .daily-result-card.no-remaining > .milestone-track {
+  top: 66px !important;
+  bottom: auto !important;
+  left: 34px !important;
+  right: 34px !important;
+}
+
+body .app .growth-section-card.count,
+body .app .growth-section-card.calendar,
+body .app .growth-section-card.best {
+  min-height: 334px !important;
+}
+
+body .app .growth-selectable-detail {
+  grid-template-rows: 12px minmax(0, 1fr) !important;
+  height: 138px !important;
+  min-height: 138px !important;
+  max-height: 138px !important;
+}
+
+body .app .growth-selectable-detail .growth-progress-row {
+  box-sizing: border-box !important;
+  min-height: 0 !important;
+  height: 122px !important;
+  min-height: 122px !important;
+}
+
+body .app .growth-selectable-detail .growth-home-meter.daily-result-card {
+  margin-top: 9px !important;
+}
+
+/* Final input-card polish: let the bat selector extend left from the right edge. */
+body .app .phone-shell .home-score-input-grid .home-input-panel .home-form-bat-controls {
+  justify-self: end !important;
+  width: 150px !important;
+  max-width: none !important;
 }
