@@ -11324,6 +11324,34 @@ body .app .daily-result-card .milestone-dot.target {
     var(--milestone-dot-bg-x, 0px) 0 !important;
 }
 
+body .app .daily-result-card .milestone-dot.target.empty-target {
+  opacity: 0.72 !important;
+  background:
+    radial-gradient(circle at 32% 22%, rgba(255, 255, 255, 0.78) 0 9%, transparent 22%) padding-box,
+    radial-gradient(circle, #d6dce5, #8f9aaa) padding-box,
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--score-color) 12%, #ffffff),
+      color-mix(in srgb, var(--score-color) 12%, #ffffff)
+    ) border-box !important;
+  background-size:
+    auto,
+    auto,
+    var(--milestone-track-width-px, 100%) 100% !important;
+  background-origin:
+    padding-box,
+    padding-box,
+    border-box !important;
+  background-clip:
+    padding-box,
+    padding-box,
+    border-box !important;
+  background-position:
+    center,
+    center,
+    var(--milestone-dot-bg-x, 0px) 0 !important;
+}
+
 body .app .daily-result-card .milestone-dot-frame {
   position: absolute !important;
   top: 50% !important;
@@ -12562,8 +12590,8 @@ body .app .home-score-input-grid .home-input-panel::before {
 }
 
 .growth-section-card.best {
-  --growth-color: #ff9f1a;
-  --growth-color-dark: #b94400;
+  --growth-color: #ffba26;
+  --growth-color-dark: #e98300;
 }
 
 .growth-section-card > .growth-heading {
@@ -12622,6 +12650,246 @@ body .app .home-score-input-grid .home-input-panel::before {
   gap: 8px;
 }
 
+.growth-subsection-heading {
+  margin: 5px 2px -1px;
+  color: var(--growth-color-dark);
+  font-size: 1rem;
+  font-weight: 950;
+  line-height: 1;
+  text-shadow:
+    1.3px 0 #ffffff,
+    -1.3px 0 #ffffff,
+    0 1.3px #ffffff,
+    0 -1.3px #ffffff,
+    0 3px 0 color-mix(in srgb, var(--growth-color) 28%, transparent);
+}
+
+.growth-subsection-heading:first-child {
+  margin-top: 0;
+}
+
+.growth-score-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.growth-score-mini-card {
+  display: grid;
+  min-width: 0;
+  gap: 5px;
+  padding: 9px 8px;
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--growth-color) 18%, #ffffff), color-mix(in srgb, var(--growth-color) 22%, #ffffff));
+  box-shadow:
+    inset 0 0 0 1.5px color-mix(in srgb, var(--growth-color) 40%, transparent),
+    inset 0 2px 0 rgba(255, 255, 255, 0.58),
+    0 4px 10px color-mix(in srgb, var(--growth-color-dark) 12%, transparent);
+}
+
+.growth-score-mini-card > span {
+  overflow: hidden;
+  color: color-mix(in srgb, var(--growth-color-dark) 76%, #23344f);
+  font-size: 0.92rem;
+  font-weight: 950;
+  line-height: 1.05;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-shadow:
+    1.2px 0 #ffffff,
+    -1.2px 0 #ffffff,
+    0 1.2px #ffffff,
+    0 -1.2px #ffffff,
+    0 2px 0 color-mix(in srgb, var(--growth-color) 28%, transparent);
+}
+
+.growth-score-mini-card > strong {
+  color: var(--growth-color-dark);
+  font-size: 2rem;
+  font-weight: 950;
+  line-height: 1;
+  text-align: right;
+  text-shadow:
+    2px 0 #ffffff,
+    -2px 0 #ffffff,
+    0 2px #ffffff,
+    0 -2px #ffffff,
+    0 4px 0 color-mix(in srgb, var(--growth-color) 38%, transparent);
+}
+
+.growth-score-mini-card > strong small {
+  margin-left: 2px;
+  font-size: 0.66rem;
+}
+
+.growth-score-summary,
+.growth-score-highlight {
+  display: grid;
+  gap: 7px;
+}
+
+.growth-score-up-panel {
+  display: grid;
+  gap: 9px;
+}
+
+.growth-score-summary > h3,
+.growth-score-highlight > h3 {
+  margin: 2px 2px 0;
+  color: var(--growth-color-dark);
+  font-size: 1.08rem;
+  font-weight: 950;
+  line-height: 1;
+  text-shadow:
+    1.3px 0 #ffffff,
+    -1.3px 0 #ffffff,
+    0 1.3px #ffffff,
+    0 -1.3px #ffffff,
+    0 3px 0 color-mix(in srgb, var(--growth-color) 28%, transparent);
+}
+
+.growth-score-summary-list {
+  display: grid;
+  gap: 6px;
+}
+
+.growth-score-summary-row {
+  display: grid;
+  grid-template-columns: 2.4rem minmax(4.7rem, 1fr) minmax(5.8rem, 1.1fr) minmax(4.8rem, 0.9fr);
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  border: 0;
+  padding: 7px 8px;
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--growth-color) 18%, #ffffff), color-mix(in srgb, var(--growth-color) 22%, #ffffff));
+  box-shadow:
+    inset 0 0 0 1.5px color-mix(in srgb, var(--growth-color) 40%, transparent),
+    inset 0 2px 0 rgba(255, 255, 255, 0.58),
+    0 4px 10px color-mix(in srgb, var(--growth-color-dark) 12%, transparent);
+  font: inherit;
+  text-align: left;
+  transition: transform 120ms ease, box-shadow 120ms ease, filter 120ms ease;
+}
+
+.growth-score-summary-row.selected {
+  box-shadow:
+    inset 0 0 0 2.5px #ffffff,
+    inset 0 0 0 5px color-mix(in srgb, var(--growth-color) 86%, var(--growth-color-dark)),
+    inset 0 2px 0 rgba(255, 255, 255, 0.74),
+    0 0 0 2px color-mix(in srgb, var(--growth-color) 34%, transparent),
+    0 6px 12px color-mix(in srgb, var(--growth-color-dark) 20%, transparent);
+  filter: saturate(1.12) brightness(1.03);
+  transform: translateY(-1px);
+}
+
+.growth-score-summary-row:active {
+  transform: translateY(1px);
+}
+
+.growth-score-period {
+  color: color-mix(in srgb, var(--growth-color-dark) 72%, #23344f);
+  font-size: 0.94rem;
+  font-weight: 950;
+  text-shadow:
+    1px 0 #ffffff,
+    -1px 0 #ffffff,
+    0 1px #ffffff,
+    0 -1px #ffffff;
+}
+
+.growth-score-summary-row > strong {
+  color: var(--growth-color-dark);
+  font-size: 1.72rem;
+  font-weight: 950;
+  line-height: 1;
+  text-align: right;
+  text-shadow:
+    1.8px 0 #ffffff,
+    -1.8px 0 #ffffff,
+    0 1.8px #ffffff,
+    0 -1.8px #ffffff,
+    0 3px 0 color-mix(in srgb, var(--growth-color) 34%, transparent);
+}
+
+.growth-score-summary-row > strong small {
+  margin-left: 2px;
+  font-size: 0.58rem;
+}
+
+.growth-score-diff,
+.growth-score-remaining {
+  overflow: hidden;
+  font-size: 0.78rem;
+  font-weight: 950;
+  line-height: 1.05;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-shadow:
+    1px 0 #ffffff,
+    -1px 0 #ffffff,
+    0 1px #ffffff,
+    0 -1px #ffffff;
+}
+
+.growth-score-diff {
+  color: color-mix(in srgb, var(--growth-color-dark) 62%, #3b5573);
+}
+
+.growth-score-diff.positive {
+  color: #0d7f2c;
+}
+
+.growth-score-diff.negative {
+  color: #b93a2c;
+}
+
+.growth-score-remaining {
+  color: color-mix(in srgb, var(--growth-color-dark) 72%, #234160);
+  text-align: right;
+}
+
+.growth-score-remaining.complete {
+  color: #e73546;
+}
+
+.growth-score-highlight {
+  margin-top: 1px;
+}
+
+.growth-score-detail {
+  display: grid;
+  gap: 4px;
+  margin-top: -1px;
+}
+
+.growth-score-detail-pointer {
+  justify-self: center;
+  width: 0;
+  height: 0;
+  border-right: 10px solid transparent;
+  border-left: 10px solid transparent;
+  border-top: 12px solid color-mix(in srgb, var(--growth-color-dark) 78%, #ffffff);
+  filter:
+    drop-shadow(0 1.5px 0 #ffffff)
+    drop-shadow(0 4px 3px color-mix(in srgb, var(--growth-color-dark) 22%, transparent));
+}
+
+.growth-score-detail .growth-progress-row {
+  margin-top: -1px;
+}
+
+.growth-score-highlight .growth-progress-row {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--growth-color) 26%, #ffffff), color-mix(in srgb, var(--growth-color) 32%, #ffffff));
+  box-shadow:
+    inset 0 0 0 1.8px color-mix(in srgb, var(--growth-color) 56%, transparent),
+    inset 0 2px 0 rgba(255, 255, 255, 0.62),
+    0 5px 12px color-mix(in srgb, var(--growth-color-dark) 18%, transparent);
+}
+
 .growth-progress-row {
   --row-color: var(--growth-color);
   --row-color-dark: var(--growth-color-dark);
@@ -12678,6 +12946,24 @@ body .app .home-score-input-grid .home-input-panel::before {
   color: color-mix(in srgb, var(--row-color-dark) 48%, #56708d);
   font-size: 0.62rem;
   font-weight: 900;
+}
+
+.growth-section-card.trophy .growth-progress-main > span small {
+  color: var(--row-color-dark);
+  font-size: 1.02rem;
+  font-weight: 950;
+  text-shadow:
+    1.4px 0 #ffffff,
+    -1.4px 0 #ffffff,
+    0 1.4px #ffffff,
+    0 -1.4px #ffffff,
+    0 3px 0 color-mix(in srgb, var(--row-color) 28%, transparent);
+}
+
+.growth-section-card.trophy .growth-progress-main > span small {
+  margin-left: 0;
+  font-size: 0.58rem;
+  line-height: 1;
 }
 
 .growth-progress-main strong {
@@ -12877,7 +13163,7 @@ body .app .growth-home-meter.daily-result-card .milestone-dot-frame {
   position: absolute;
   top: 4px;
   left: var(--growth-remaining-x, 50%);
-  transform: translateX(-50%);
+  transform: translateX(var(--growth-remaining-translate, -50%));
   color: color-mix(in srgb, var(--row-color-dark) 62%, #56708d);
   font-size: 0.78rem;
   font-weight: 900;

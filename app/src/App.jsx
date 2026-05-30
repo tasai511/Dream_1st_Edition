@@ -485,11 +485,11 @@ const YEARLY_COUNT_BADGE_DEFINITIONS = [
   type: "unique",
 }));
 const YEARLY_DAYS_BADGE_DEFINITIONS = [
-  ["D", 10, "年間練習日数 10日"],
-  ["C", 30, "年間練習日数 30日"],
-  ["B", 50, "年間練習日数 50日"],
-  ["A", 100, "年間練習日数 100日"],
-  ["S", 200, "年間練習日数 200日"],
+  ["D", 50, "年間練習日数 50日"],
+  ["C", 100, "年間練習日数 100日"],
+  ["B", 150, "年間練習日数 150日"],
+  ["A", 200, "年間練習日数 200日"],
+  ["S", 250, "年間練習日数 250日"],
   ["SS", 300, "年間練習日数 300日"],
 ].map(([rarity, target, name]) => makeThresholdBadge({
   id: `yearly-days-${target}`,
@@ -2221,7 +2221,7 @@ function DailyResultCard({ card, showBadges, showRemaining = true, dismissedHome
                   />
                   <button
                     type="button"
-                    className={`milestone-dot ${milestoneState} ${earnedBadge?.label === milestone.label ? "current" : ""}`}
+                    className={`milestone-dot ${milestoneState} ${isTargetMilestone && iconFillRatio <= 0 ? "empty-target" : ""} ${earnedBadge?.label === milestone.label ? "current" : ""}`}
                     data-sound-effect="popup"
                     style={{
                       left: `${dotLeftPx}px`,
@@ -3081,7 +3081,7 @@ export default function App() {
       const visualWidth = viewportWidth;
       const widthScale = visualWidth / kCompactLayoutWidth;
       const scale = Math.max(0.72, widthScale);
-      const fontScale = Math.min(1, 1 / Math.sqrt(scale));
+      const fontScale = 1;
       root.style.setProperty("--app-scale", scale.toFixed(4));
       root.style.setProperty("--app-font-scale", fontScale.toFixed(4));
       root.style.setProperty("--app-layout-width", `${kCompactLayoutWidth}px`);
@@ -3790,16 +3790,21 @@ function personalBestForRecords(records) {
   return aggregate(records).reduce((best, day) => Math.max(best, day.best || 0), 0);
 }
 
-function highestAverageForRecords(records) {
-  return aggregate(records).reduce((best, day) => Math.max(best, day.avg || 0), 0);
+function highestMetricForRecords(records, metric) {
+  return aggregate(records).reduce((best, day) => {
+    const value = Number(day[metric] || 0);
+    if (value > best.value) return { value, date: day.date };
+    return best;
+  }, { value: 0, date: "" });
 }
 
 function GrowthView({ allForName, activeDate = todayISO() }) {
   const weekSummary = useMemo(() => summaryForRecordsRange(allForName, RANGE_WEEK, activeDate), [allForName, activeDate]);
   const monthSummary = useMemo(() => summaryForRecordsRange(allForName, RANGE_MONTH, activeDate), [allForName, activeDate]);
   const yearSummary = useMemo(() => summaryForRecordsRange(allForName, RANGE_YEAR, activeDate), [allForName, activeDate]);
-  const highestAverage = useMemo(() => highestAverageForRecords(allForName), [allForName]);
-  const personalBest = useMemo(() => personalBestForRecords(allForName), [allForName]);
+  const highestAverage = useMemo(() => highestMetricForRecords(allForName, "avg"), [allForName]);
+  const highestBest = useMemo(() => highestMetricForRecords(allForName, "best"), [allForName]);
+  const personalBest = highestBest.value;
   const activeDateValue = parseISO(activeDate);
   const weekRangeLabel = `${formatSlashMonthDayWithWeekday(startOfWeek(activeDateValue))}〜${formatSlashMonthDayWithWeekday(endOfWeek(activeDateValue))}`;
   const monthRangeLabel = formatSlashRange(startOfMonth(activeDateValue), endOfMonth(activeDateValue));
@@ -3815,65 +3820,116 @@ function GrowthView({ allForName, activeDate = todayISO() }) {
     { label: "今月", subLabel: monthRangeLabel, value: monthSummary.days, unit: "日", metric: "days", range: RANGE_MONTH },
     { label: "今年", subLabel: yearRangeLabel, value: yearSummary.days, unit: "日", metric: "days", range: RANGE_YEAR },
   ];
-  const growthRows = [
+  const scoreGrowthSections = [
     {
-      label: "先週の平均より",
-      value: weekSummary.avg || 0,
-      displayValue: weekSummary.avgTarget ? (weekSummary.avg || 0) - weekSummary.avgTarget : null,
-      unit: "点",
-      metric: "avg",
-      range: RANGE_WEEK,
-      badgeDefinitions: weekSummary.avgTarget ? scoreGrowthBadgeDefinitions(RANGE_WEEK, "avg", weekSummary) : [],
-      emptyMessage: weekSummary.avgTarget ? "" : "先週の記録なし",
-      prefix: "signed",
-      referenceValue: weekSummary.avgTarget,
-      referenceLabel: weekSummary.avgTargetPreviousLabel || "先週",
+      title: "平均スコア",
+      rows: [
+        {
+          key: "week-avg",
+          period: "今週",
+          score: weekSummary.avg || 0,
+          comparisonLabel: "先週比",
+          diff: weekSummary.avgTarget ? (weekSummary.avg || 0) - weekSummary.avgTarget : null,
+          targetLabel: "今週の平均",
+          targetValue: weekSummary.avgTarget,
+          emptyMessage: weekSummary.avgTarget ? "" : "先週の記録なし",
+          row: {
+            label: "今週の平均",
+            value: weekSummary.avg || 0,
+            unit: "点",
+            metric: "avg",
+            range: RANGE_WEEK,
+            badgeDefinitions: weekSummary.avgTarget ? scoreGrowthBadgeDefinitions(RANGE_WEEK, "avg", weekSummary) : [],
+            referenceValue: weekSummary.avgTarget,
+            referenceLabel: weekSummary.avgTargetPreviousLabel || "先週",
+          },
+        },
+        {
+          key: "month-avg",
+          period: "今月",
+          score: monthSummary.avg || 0,
+          comparisonLabel: "先月比",
+          diff: monthSummary.avgTarget ? (monthSummary.avg || 0) - monthSummary.avgTarget : null,
+          targetLabel: "今月の平均",
+          targetValue: monthSummary.avgTarget,
+          emptyMessage: monthSummary.avgTarget ? "" : "先月の記録なし",
+          row: {
+            label: "今月の平均",
+            value: monthSummary.avg || 0,
+            unit: "点",
+            metric: "avg",
+            range: RANGE_MONTH,
+            badgeDefinitions: monthSummary.avgTarget ? scoreGrowthBadgeDefinitions(RANGE_MONTH, "avg", monthSummary) : [],
+            referenceValue: monthSummary.avgTarget,
+            referenceLabel: monthSummary.avgTargetPreviousLabel || "先月",
+          },
+        },
+      ],
     },
     {
-      label: "先週のベストより",
-      value: weekSummary.best || 0,
-      displayValue: weekSummary.bestTarget ? (weekSummary.best || 0) - weekSummary.bestTarget : null,
-      unit: "点",
-      metric: "best",
-      meterKind: "avg",
-      range: RANGE_WEEK,
-      badgeDefinitions: weekSummary.bestTarget ? scoreGrowthBadgeDefinitions(RANGE_WEEK, "best", weekSummary) : [],
-      emptyMessage: weekSummary.bestTarget ? "" : "先週の記録なし",
-      prefix: "signed",
-      referenceValue: weekSummary.bestTarget,
-      referenceLabel: weekSummary.bestTargetPreviousLabel || "先週",
-    },
-    {
-      label: "先月の平均より",
-      value: monthSummary.avg || 0,
-      displayValue: monthSummary.avgTarget ? (monthSummary.avg || 0) - monthSummary.avgTarget : null,
-      unit: "点",
-      metric: "avg",
-      range: RANGE_MONTH,
-      badgeDefinitions: monthSummary.avgTarget ? scoreGrowthBadgeDefinitions(RANGE_MONTH, "avg", monthSummary) : [],
-      emptyMessage: monthSummary.avgTarget ? "" : "先月の記録なし",
-      prefix: "signed",
-      referenceValue: monthSummary.avgTarget,
-      referenceLabel: monthSummary.avgTargetPreviousLabel || "先月",
-    },
-    {
-      label: "先月のベストより",
-      value: monthSummary.best || 0,
-      displayValue: monthSummary.bestTarget ? (monthSummary.best || 0) - monthSummary.bestTarget : null,
-      unit: "点",
-      metric: "best",
-      meterKind: "avg",
-      range: RANGE_MONTH,
-      badgeDefinitions: monthSummary.bestTarget ? scoreGrowthBadgeDefinitions(RANGE_MONTH, "best", monthSummary) : [],
-      emptyMessage: monthSummary.bestTarget ? "" : "先月の記録なし",
-      prefix: "signed",
-      referenceValue: monthSummary.bestTarget,
-      referenceLabel: monthSummary.bestTargetPreviousLabel || "先月",
+      title: "ベストスコア",
+      rows: [
+        {
+          key: "week-best",
+          period: "今週",
+          score: weekSummary.best || 0,
+          comparisonLabel: "先週比",
+          diff: weekSummary.bestTarget ? (weekSummary.best || 0) - weekSummary.bestTarget : null,
+          targetLabel: "今週のベスト",
+          targetValue: weekSummary.bestTarget,
+          emptyMessage: weekSummary.bestTarget ? "" : "先週の記録なし",
+          row: {
+            label: "今週のベスト",
+            value: weekSummary.best || 0,
+            unit: "点",
+            metric: "best",
+            meterKind: "avg",
+            range: RANGE_WEEK,
+            badgeDefinitions: weekSummary.bestTarget ? scoreGrowthBadgeDefinitions(RANGE_WEEK, "best", weekSummary) : [],
+            referenceValue: weekSummary.bestTarget,
+            referenceLabel: weekSummary.bestTargetPreviousLabel || "先週",
+          },
+        },
+        {
+          key: "month-best",
+          period: "今月",
+          score: monthSummary.best || 0,
+          comparisonLabel: "先月比",
+          diff: monthSummary.bestTarget ? (monthSummary.best || 0) - monthSummary.bestTarget : null,
+          targetLabel: "今月のベスト",
+          targetValue: monthSummary.bestTarget,
+          emptyMessage: monthSummary.bestTarget ? "" : "先月の記録なし",
+          row: {
+            label: "今月のベスト",
+            value: monthSummary.best || 0,
+            unit: "点",
+            metric: "best",
+            meterKind: "avg",
+            range: RANGE_MONTH,
+            badgeDefinitions: monthSummary.bestTarget ? scoreGrowthBadgeDefinitions(RANGE_MONTH, "best", monthSummary) : [],
+            referenceValue: monthSummary.bestTarget,
+            referenceLabel: monthSummary.bestTargetPreviousLabel || "先月",
+          },
+        },
+      ],
     },
   ];
+  const scoreGrowthCandidates = scoreGrowthSections.flatMap((section) => section.rows.map((item) => {
+    const targetInfo = item.emptyMessage ? null : targetInfoForDailyCard(item.row);
+    const remaining = targetInfo?.next ? Math.max(0, targetInfo.next.target - item.row.value) : 0;
+    return { ...item, targetInfo, remaining };
+  }));
+  const closestScoreGrowth = scoreGrowthCandidates
+    .filter((item) => item.targetInfo?.next)
+    .sort((a, b) => a.remaining - b.remaining)[0] || null;
+  const scoreGrowthRows = [{
+    type: "score-up-panel",
+    sections: scoreGrowthSections,
+    defaultSelectedKey: closestScoreGrowth?.key || "week-avg",
+  }];
   const allTimeRows = [
-    { label: "最高平均", value: highestAverage, unit: "点", metric: "avg", meterKind: "best", range: "special", badgeDefinitions: ALL_TIME_AVG_BADGE_DEFINITIONS },
-    { label: "最高ベスト", value: personalBest, unit: "点", metric: "best", meterKind: "best", range: "special", badgeDefinitions: ALL_TIME_BEST_BADGE_DEFINITIONS },
+    { label: "平均", subLabel: highestAverage.date ? highestAverage.date.replaceAll("-", "/") : "", value: highestAverage.value, unit: "点", metric: "avg", meterKind: "best", range: "special", badgeDefinitions: ALL_TIME_AVG_BADGE_DEFINITIONS },
+    { label: "ベスト", subLabel: highestBest.date ? highestBest.date.replaceAll("-", "/") : "", value: highestBest.value, unit: "点", metric: "best", meterKind: "best", range: "special", badgeDefinitions: ALL_TIME_BEST_BADGE_DEFINITIONS },
   ];
 
   return (
@@ -3887,18 +3943,18 @@ function GrowthView({ allForName, activeDate = todayISO() }) {
       </div>
       <div className="growth-section-stack">
         <GrowthSectionCard icon="count" title="スイング数" rows={countRows} />
-        <GrowthSectionCard icon="calendar" title="練習日" rows={dayRows} />
-        <GrowthSectionCard icon="trophy" title="スコアアップ" rows={growthRows} />
-        <GrowthSectionCard icon="best" title="過去最高" rows={allTimeRows} />
+        <GrowthSectionCard icon="calendar" title="練習日数" rows={dayRows} />
+        <GrowthSectionCard icon="trophy" title="スコアアップ" rows={scoreGrowthRows} tone="trophy" />
+        <GrowthSectionCard icon="trophy" title="過去最高スコア" rows={allTimeRows} tone="best" />
       </div>
     </section>
   );
 }
 
-function GrowthSectionCard({ icon, title, rows }) {
+function GrowthSectionCard({ icon, title, rows, tone = icon }) {
   const assetKey = icon === "calendar" ? "days" : icon;
   return (
-    <article className={`growth-section-card ${icon}`}>
+    <article className={`growth-section-card ${tone}`}>
       <h2 className="growth-heading">
         {NEW_UI_ASSETS[assetKey] ? (
           <span className={`growth-heading-orb ${assetKey}`}>
@@ -3908,9 +3964,136 @@ function GrowthSectionCard({ icon, title, rows }) {
         {title}
       </h2>
       <div className="growth-progress-list">
-        {rows.map((row) => <GrowthProgressRow row={row} key={`${row.range}:${row.metric}:${row.label}`} />)}
+        {rows.map((row, index) => (
+          <Fragment key={`${row.type || row.range}:${row.metric || row.title || index}:${row.label || index}`}>
+            {row.sectionLabel && row.sectionLabel !== rows[index - 1]?.sectionLabel && (
+              <h3 className="growth-subsection-heading">{row.sectionLabel}</h3>
+            )}
+            {row.type === "score-up-panel" ? (
+              <GrowthScoreUpPanel row={row} />
+            ) : row.type === "score-summary" ? (
+              <GrowthScoreSummary row={row} />
+            ) : row.type === "score-highlight" ? (
+              <GrowthScoreHighlight row={row} />
+            ) : row.type === "score-pair" ? (
+              <GrowthScorePair row={row} />
+            ) : (
+              <GrowthProgressRow row={row} />
+            )}
+          </Fragment>
+        ))}
       </div>
     </article>
+  );
+}
+
+function GrowthScorePair({ row }) {
+  return (
+    <div className="growth-score-pair">
+      {row.items.map((item) => (
+        <div className="growth-score-mini-card" key={item.label}>
+          <span>{item.label}</span>
+          <strong>{Number(item.value || 0).toLocaleString("ja-JP")}<small>{item.unit}</small></strong>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function formatSignedScore(value) {
+  if (value === null || value === undefined) return "-";
+  const numericValue = Number(value || 0);
+  const prefix = numericValue < 0 ? "-" : "+";
+  return `${prefix}${Math.abs(numericValue).toLocaleString("ja-JP")}`;
+}
+
+function GrowthScoreUpPanel({ row }) {
+  const flatItems = row.sections.flatMap((section) => section.rows.map((item) => ({ ...item, sectionTitle: section.title })));
+  const defaultKey = flatItems.some((item) => item.key === row.defaultSelectedKey)
+    ? row.defaultSelectedKey
+    : flatItems[0]?.key;
+  const [selectedKey, setSelectedKey] = useState(defaultKey);
+  useEffect(() => {
+    setSelectedKey(defaultKey);
+  }, [defaultKey]);
+  const selectedItem = flatItems.find((item) => item.key === selectedKey) || flatItems[0];
+  const selectedRow = selectedItem ? { ...selectedItem.row, label: selectedItem.targetLabel, emptyMessage: selectedItem.emptyMessage } : null;
+
+  return (
+    <div className="growth-score-up-panel">
+      {row.sections.map((section) => (
+        <section className="growth-score-summary" key={section.title}>
+          <h3>{section.title}</h3>
+          <div className="growth-score-summary-list">
+            {section.rows.map((item) => {
+              const targetInfo = item.emptyMessage ? null : targetInfoForDailyCard(item.row);
+              const remaining = targetInfo?.next ? Math.max(0, targetInfo.next.target - item.row.value) : 0;
+              const isSelected = selectedItem?.key === item.key;
+              return (
+                <button
+                  type="button"
+                  className={`growth-score-summary-row ${isSelected ? "selected" : ""}`}
+                  onClick={() => setSelectedKey(item.key)}
+                  data-sound-effect="tab"
+                  aria-pressed={isSelected}
+                  key={`${section.title}:${item.period}`}
+                >
+                  <span className="growth-score-period">{item.period}</span>
+                  <strong>{Number(item.score || 0).toLocaleString("ja-JP")}<small>点</small></strong>
+                  <span className={`growth-score-diff ${Number(item.diff || 0) >= 0 ? "positive" : "negative"}`}>
+                    {item.comparisonLabel} {item.diff === null ? "-" : formatSignedScore(item.diff)}
+                  </span>
+                  <span className={targetInfo?.next ? "growth-score-remaining" : "growth-score-remaining complete"}>
+                    {item.emptyMessage || (targetInfo?.next ? `あと${remaining.toLocaleString("ja-JP")}点` : "達成")}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      ))}
+      {selectedRow && (
+        <section className="growth-score-detail" aria-label={`${selectedItem.targetLabel}の詳細`}>
+          <span className="growth-score-detail-pointer" aria-hidden="true" />
+          <GrowthProgressRow row={selectedRow} />
+        </section>
+      )}
+    </div>
+  );
+}
+
+function GrowthScoreSummary({ row }) {
+  return (
+    <section className="growth-score-summary">
+      <h3>{row.title}</h3>
+      <div className="growth-score-summary-list">
+        {row.rows.map((item) => {
+          const targetInfo = item.emptyMessage ? null : targetInfoForDailyCard(item.row);
+          const remaining = targetInfo?.next ? Math.max(0, targetInfo.next.target - item.row.value) : 0;
+          return (
+            <div className="growth-score-summary-row" key={`${row.title}:${item.period}`}>
+              <span className="growth-score-period">{item.period}</span>
+              <strong>{Number(item.score || 0).toLocaleString("ja-JP")}<small>点</small></strong>
+              <span className={`growth-score-diff ${Number(item.diff || 0) >= 0 ? "positive" : "negative"}`}>
+                {item.comparisonLabel} {item.diff === null ? "-" : formatSignedScore(item.diff)}
+              </span>
+              <span className={targetInfo?.next ? "growth-score-remaining" : "growth-score-remaining complete"}>
+                {item.emptyMessage || (targetInfo?.next ? `あと${remaining.toLocaleString("ja-JP")}点` : "達成")}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function GrowthScoreHighlight({ row }) {
+  return (
+    <section className="growth-score-highlight">
+      <h3>{row.title}</h3>
+      <GrowthProgressRow row={row.row} />
+    </section>
   );
 }
 
@@ -3954,6 +4137,11 @@ function GrowthProgressRow({ row }) {
   const referencePosition = Number.isFinite(referenceValue) && referenceDomain
     ? clamp(((referenceValue - referenceDomain.start) / Math.max(1, referenceDomain.end - referenceDomain.start)) * 100, 0, 100)
     : null;
+  const remainingPositionStyle = row.alignRemaining === "right"
+    ? { "--growth-remaining-x": "100%", "--growth-remaining-translate": "-100%" }
+    : remainingAnchorPositionPx !== null
+      ? { "--growth-remaining-x": `${remainingAnchorPositionPx}px` }
+      : undefined;
 
   useLayoutEffect(() => {
     const node = milestoneTrackRef.current;
@@ -4041,7 +4229,7 @@ function GrowthProgressRow({ row }) {
                     />
                     <button
                       type="button"
-                      className={`milestone-dot ${milestoneState}`}
+                      className={`milestone-dot ${milestoneState} ${isTargetMilestone && iconFillRatio <= 0 ? "empty-target" : ""}`}
                       data-sound-effect="popup"
                       style={{
                         left: `${dotLeftPx}px`,
@@ -4068,10 +4256,10 @@ function GrowthProgressRow({ row }) {
           </div>
           <div
             className="growth-progress-meta"
-            style={remainingAnchorPositionPx !== null ? { "--growth-remaining-x": `${remainingAnchorPositionPx}px` } : undefined}
+            style={remainingPositionStyle}
           >
             <span aria-hidden="true" />
-            <small className={targetInfo?.next ? "" : "complete"}>{targetInfo?.next ? `あと${remaining.toLocaleString("ja-JP")}${row.unit}` : "コンプリート"}</small>
+            <small className={targetInfo?.next ? "" : "complete"}>{targetInfo?.next ? `あと${remaining.toLocaleString("ja-JP")}${row.unit}` : "達成"}</small>
           </div>
         </>
       )}
