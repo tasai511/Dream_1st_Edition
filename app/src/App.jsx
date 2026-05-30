@@ -252,8 +252,8 @@ const CATEGORY_ICON_URLS = {
 const COLLECTION_CATEGORY_FILTERS = [
   { key: "count", label: "スイング数", icon: "count" },
   { key: "calendar", label: "練習日数", icon: "calendar" },
-  { key: "score-up", label: "スコア", icon: "average" },
-  { key: "high-score", label: "過去最高", icon: "trophy" },
+  { key: "average", label: "平均", icon: "average" },
+  { key: "best", label: "ベスト", icon: "best" },
   { key: "all", label: "すべて", icon: "badge" },
 ];
 const DEFAULT_SEASON_EVENT_SETTINGS = {
@@ -266,7 +266,7 @@ const BADGE_PERIODS = [
   ["weekly", "今週"],
   ["monthly", "今月"],
   ["yearly", "今年"],
-  ["special", "過去最高"],
+  ["special", "初突破"],
 ];
 const WEEKLY_GROWTH_THRESHOLDS = {
   avg: [20, 30, 40, 50, 60],
@@ -339,7 +339,7 @@ const DAILY_BADGE_DEFINITIONS = [
     description: `今日のベストスコアが${target}点以上`,
     conditionText: `ベスト${target}以上`,
     rarity,
-    category: "average",
+    category: "best",
     period: RANGE_TODAY,
     metric: "best",
     target,
@@ -404,7 +404,7 @@ const WEEKLY_BADGE_DEFINITIONS = [
     description: `今週のベストスコアが先週より${target}点以上アップ`,
     conditionText: `先週比 +${target}`,
     rarity: ["D", "C", "B", "A", "S"][index],
-    category: "average",
+    category: "best",
     period: RANGE_WEEK,
     metric: "best-growth",
     target,
@@ -469,7 +469,7 @@ const MONTHLY_BADGE_DEFINITIONS = [
     description: `今月のベストスコアが先月より${target}点以上アップ`,
     conditionText: `先月比 +${target}`,
     rarity: ["D", "C", "B", "A", "S"][index],
-    category: "average",
+    category: "best",
     period: RANGE_MONTH,
     metric: "best-growth",
     target,
@@ -523,12 +523,12 @@ const ALL_TIME_AVG_BADGE_DEFINITIONS = [
   ["SS", 800],
 ].map(([rarity, target]) => makeThresholdBadge({
   id: `all-time-avg-${target}`,
-  label: `過去最高平均スコア ${target}`,
-  name: "過去最高平均スコア",
-  description: `過去最高の平均スコアが${target}点以上に到達`,
+  label: `平均初突破 ${target}`,
+  name: "平均初突破",
+  description: `平均スコアが初めて${target}点以上に到達`,
   conditionText: `平均${target}以上`,
   rarity,
-  category: "trophy",
+  category: "average",
   period: "special",
   metric: "all-time-avg",
   target,
@@ -543,12 +543,12 @@ const ALL_TIME_BEST_BADGE_DEFINITIONS = [
   ["SS", 900],
 ].map(([rarity, target]) => makeThresholdBadge({
   id: `all-time-best-${target}`,
-  label: `過去最高ベストスコア ${target}`,
-  name: "過去最高ベストスコア",
-  description: `過去最高のベストスコアが${target}点以上に到達`,
+  label: `ベスト初突破 ${target}`,
+  name: "ベスト初突破",
+  description: `ベストスコアが初めて${target}点以上に到達`,
   conditionText: `ベスト${target}以上`,
   rarity,
-  category: "trophy",
+  category: "best",
   period: "special",
   metric: "all-time-best",
   target,
@@ -4524,9 +4524,9 @@ function badgeSortKey(label) {
   const categoryValue = {
     count: 0,
     calendar: 1,
-    trophy: 2,
-    average: 3,
-    best: 4,
+    average: 2,
+    best: 3,
+    trophy: 4,
     flag: 5,
   }[definition?.category || "trophy"] || 9;
   return [periodValue, categoryValue, badgeValue(label) || 9999, label];
@@ -4573,7 +4573,7 @@ function badgePeriodShortLabel(period) {
   if (period === RANGE_WEEK) return "今週";
   if (period === RANGE_MONTH) return "今月";
   if (period === RANGE_YEAR) return "今年";
-  return "過去最高";
+  return "初突破";
 }
 
 function badgeShortNameLines(definition) {
@@ -4586,8 +4586,8 @@ function badgeShortNameLines(definition) {
   if (metric === "days") return [`${period} 練習日数`, `${targetLabel}日`];
   if (metric === "avg-growth") return [`${period} 平均`, `+${targetLabel}`];
   if (metric === "best-growth") return [`${period} ベスト`, `+${targetLabel}`];
-  if (metric === "all-time-avg") return ["過去最高 平均", `${targetLabel}点`];
-  if (metric === "all-time-best") return ["過去最高 ベスト", `${targetLabel}点`];
+  if (metric === "all-time-avg") return ["初突破 平均", `${targetLabel}点`];
+  if (metric === "all-time-best") return ["初突破 ベスト", `${targetLabel}点`];
   if (metric === "avg") return [`${period} 平均`, `${targetLabel}点`];
   if (metric === "best") return [`${period} ベスト`, `${targetLabel}点`];
 
@@ -4611,11 +4611,9 @@ function rarityColorFor(rarity) {
 }
 
 function collectionCategoryKeyFor(definition) {
-  if (definition?.metric === "avg-growth" || definition?.metric === "best-growth") return "score-up";
-  if (definition?.period === RANGE_TODAY && (definition?.category === "average" || definition?.category === "best")) return "score-up";
-  if (definition?.category === "average" || definition?.category === "best") return "high-score";
-  if (definition?.metric === "all-time-avg" || definition?.metric === "all-time-best") return "high-score";
-  if (definition?.category === "trophy") return "high-score";
+  if (definition?.metric === "avg-growth" || definition?.metric === "all-time-avg" || definition?.metric === "avg") return "average";
+  if (definition?.metric === "best-growth" || definition?.metric === "all-time-best" || definition?.metric === "best") return "best";
+  if (definition?.category === "average" || definition?.category === "best") return definition.category;
   return definition?.category || "other";
 }
 
