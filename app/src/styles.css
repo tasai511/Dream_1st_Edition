@@ -13777,7 +13777,7 @@ body .app .phone-shell .home-score-input-grid .home-input-panel .field-title {
   justify-content: center !important;
   color: #073b8f !important;
   font-weight: 500 !important;
-  transform: translateY(1px) !important;
+  transform: translateY(-1px) !important;
 }
 
 body .app .phone-shell .home-score-input-grid .home-input-panel .paper-input-cell {
