@@ -523,7 +523,7 @@ const ALL_TIME_AVG_BADGE_DEFINITIONS = [
   ["SS", 800],
 ].map(([rarity, target]) => makeThresholdBadge({
   id: `all-time-avg-${target}`,
-  label: `平均初突破 ${target}`,
+  label: `初突破 平均 ${target}点`,
   name: "平均初突破",
   description: `平均スコアが初めて${target}点以上に到達`,
   conditionText: `平均${target}以上`,
@@ -543,7 +543,7 @@ const ALL_TIME_BEST_BADGE_DEFINITIONS = [
   ["SS", 900],
 ].map(([rarity, target]) => makeThresholdBadge({
   id: `all-time-best-${target}`,
-  label: `ベスト初突破 ${target}`,
+  label: `初突破 ベスト ${target}点`,
   name: "ベスト初突破",
   description: `ベストスコアが初めて${target}点以上に到達`,
   conditionText: `ベスト${target}以上`,
@@ -4706,7 +4706,7 @@ function BadgeDetailPopover({ badge, onClose }) {
             <img src={CATEGORY_ICON_URLS[badge.category]} alt="" />
           </div>
           <div className="badge-popup-card-copy">
-            <strong>{badge.lockedSecret ? "???" : badge.name || badge.label}</strong>
+            <strong>{badge.lockedSecret ? "???" : badge.label || badge.name}</strong>
             <p>{badge.lockedSecret ? "ひみつ" : badge.description}</p>
           </div>
         </div>
@@ -4757,7 +4757,7 @@ function FirstGetBadgeShowcase({ badges, onAdvance }) {
             <img src={CATEGORY_ICON_URLS[badge.category]} alt="" />
           </div>
           <div className="badge-popup-card-copy">
-            <strong>{badge.name || badge.label}</strong>
+            <strong>{badge.label || badge.name}</strong>
             <p>{badge.description}</p>
           </div>
         </div>
