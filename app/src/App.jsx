@@ -590,35 +590,73 @@ const defaultDb = {
   testDate: null,
 };
 
-const TEST_RECORD_VALUE_PRESETS = [
-  { count: 60, avg: 520, best: 640 },
-  { count: 45, avg: 320, best: 420 },
-  { count: 115, avg: 690, best: 760 },
-  { count: 24, avg: 240, best: 360 },
-  { count: 190, avg: 720, best: 880 },
-  { count: 75, avg: 610, best: 910 },
-  { count: 310, avg: 280, best: 450 },
-  { count: 500, avg: 700, best: 999 },
-  { count: 90, avg: 430, best: 580 },
-];
-
-function testRecordValuesForStep(step, hasTodayRecord) {
-  const offset = hasTodayRecord ? Math.max(1, step) : 0;
-  return TEST_RECORD_VALUE_PRESETS[offset % TEST_RECORD_VALUE_PRESETS.length];
+function numericSeed(seed) {
+  const text = String(seed ?? "");
+  let hash = 2166136261;
+  for (let index = 0; index < text.length; index += 1) {
+    hash ^= text.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
 }
 
-function randomTestRecordValues(seed = 1) {
-  const pick = (offset) => {
-    const value = Math.sin((seed + offset) * 12.9898) * 43758.5453;
-    return value - Math.floor(value);
-  };
-  const avg = Math.round(220 + pick(2) * 560);
-  const best = Math.round(clamp(avg + 20 + pick(3) * 260, avg, 999));
-  return {
-    count: Math.round(20 + pick(1) * 560),
-    avg,
-    best,
-  };
+function seededRandom(seed, offset = 0) {
+  const value = Math.sin((numericSeed(seed) + offset) * 12.9898) * 43758.5453;
+  return value - Math.floor(value);
+}
+
+function randomPicker(seed = null) {
+  if (seed === null || seed === undefined) return () => Math.random();
+  return (offset = 0) => seededRandom(seed, offset);
+}
+
+function practiceValuesFromPicker(pick, scoreBias = 0) {
+  const goodDay = pick(1) > 0.78;
+  const count = Math.round(clamp(
+    50 + pick(2) * 34 + (goodDay ? 12 + pick(3) * 14 : 0),
+    50,
+    108,
+  ));
+  const avg = Math.round(clamp(
+    400 + scoreBias + (pick(4) - 0.5) * 72 + (goodDay ? 10 : 0),
+    330,
+    480,
+  ));
+  const best = Math.round(clamp(
+    avg + 90 + pick(5) * 85 + (goodDay ? 16 : 0),
+    avg + 65,
+    650,
+  ));
+  return { count, avg, best };
+}
+
+function randomTestRecordValues(seed = null) {
+  return practiceValuesFromPicker(randomPicker(seed));
+}
+
+function weekPracticeTarget(seed) {
+  const pick = seededRandom(seed, 1);
+  if (pick < 0.14) return 4;
+  if (pick > 0.88) return 6;
+  return 5;
+}
+
+function shouldPracticeOnDate(dateObj, seedPrefix = "demo") {
+  const weekStart = startOfWeek(dateObj);
+  const weekSeed = `${seedPrefix}-${toISO(weekStart)}`;
+  const target = weekPracticeTarget(weekSeed);
+  const dayOffset = Math.round((startOfDay(dateObj) - startOfDay(weekStart)) / 86400000);
+  const skippedWeekday = Math.floor(seededRandom(weekSeed, 2) * 5);
+  const extraWeekend = seededRandom(weekSeed, 3) < 0.52 ? 5 : 6;
+  if (dayOffset >= 0 && dayOffset <= 4) return target !== 4 || dayOffset !== skippedWeekday;
+  if (target === 6) return dayOffset === extraWeekend;
+  return false;
+}
+
+function secondaryBatFor(bats, mainBat, seed) {
+  const alternatives = bats.filter((bat) => bat && bat !== mainBat);
+  if (!alternatives.length) return "";
+  return alternatives[Math.floor(seededRandom(seed, 1) * alternatives.length)] || alternatives[0];
 }
 
 const BAT_COLOR_PALETTE = [
@@ -849,6 +887,10 @@ function addDays(date, days) {
   const next = new Date(date);
   next.setDate(next.getDate() + days);
   return next;
+}
+
+function startOfDay(date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
 
 function startOfMonth(date) {
@@ -2114,7 +2156,7 @@ function DailyResultCard({ card, showBadges, showRemaining = true, dismissedHome
   useLayoutEffect(() => {
     const node = milestoneTrackRef.current;
     if (!node) return undefined;
-    const updateWidth = () => setMilestoneTrackWidth(node.getBoundingClientRect().width || 0);
+    const updateWidth = () => setMilestoneTrackWidth(node.offsetWidth || node.clientWidth || 0);
     updateWidth();
     if (typeof ResizeObserver === "undefined") {
       window.addEventListener("resize", updateWidth);
@@ -2909,9 +2951,8 @@ function demoDb(base = null) {
   const fallbackBats = ["しきバット", "だめバット", "ミニバット"];
   const names = base?.names?.length ? [...base.names] : fallbackNames;
   const bats = base?.bats?.length ? [...base.bats] : fallbackBats;
-  const start = parseISO("2024-01-01");
+  const start = addDays(parseISO(todayISO()), -91);
   const end = addDays(parseISO(todayISO()), -1);
-  const demoDays = Math.max(0, Math.floor((end - start) / 86400000));
   const records = [];
   const fallbackNameColors = {
     "はるた": "#2f86ff",
@@ -2926,70 +2967,36 @@ function demoDb(base = null) {
   const batColors = normalizeBatColors(base?.batColors || fallbackBatColors, bats);
   const activeName = names.includes(base?.activeName) ? base.activeName : names[0];
   const defaultBat = bats.includes(base?.defaultBat) ? base.defaultBat : bats[0];
-  const rand = (seed) => {
-    const value = Math.sin(seed * 12.9898) * 43758.5453;
-    return value - Math.floor(value);
-  };
-  const batFor = (nameIndex, elapsed, progress, pick) => {
-    if (!bats.length) return "";
-    if (bats.length === 1) return bats[0];
-    if (nameIndex === 0) {
-      const miniBias = progress < 0.22 ? 0.24 : 0.12;
-      if (bats[2] && pick < miniBias) return bats[2];
-      if (pick < 0.72) return bats[0];
-      return bats[1] || bats[0];
-    }
-    if (bats[2] && pick < 0.42) return bats[2];
-    if (pick < 0.74) return bats[0];
-    return bats[1] || bats[0];
-  };
 
-  for (let elapsed = 0; elapsed <= demoDays; elapsed += 1) {
-    const dateObj = addDays(start, elapsed);
+  for (let dateObj = start; dateObj <= end; dateObj = addDays(dateObj, 1)) {
     const date = toISO(dateObj);
-    const day = dateObj.getDay();
-    const month = dateObj.getMonth();
-    const progress = elapsed / demoDays;
 
     names.forEach((name, nameIndex) => {
-      const seed = elapsed + nameIndex * 1000;
-      const campBlock = elapsed % 91 >= 8 && elapsed % 91 <= 20;
-      const vacation = month === 7 && elapsed % 17 < 3;
-      const regularDay = nameIndex === 0
-        ? [1, 2, 4, 5, 6].includes(day)
-        : [0, 3, 6].includes(day);
-      const bonusDay = rand(seed + 1) > (nameIndex === 0 ? 0.74 : 0.86);
-      const restDay = !campBlock && (!regularDay || rand(seed + 2) < (nameIndex === 0 ? 0.16 : 0.28) || vacation);
-      if (restDay && !bonusDay) return;
+      const seedPrefix = `demo-${nameIndex}-${name}`;
+      if (!shouldPracticeOnDate(dateObj, seedPrefix)) return;
 
-      const bigDay = campBlock || elapsed % 53 === 0 || rand(seed + 3) > 0.92;
-      const baseCount = nameIndex === 0 ? 58 + progress * 128 : 28 + progress * 66;
-      const countNoise = Math.round(rand(seed + 4) * (nameIndex === 0 ? 88 : 52));
-      const countBoost = bigDay ? (nameIndex === 0 ? 118 + Math.round(rand(seed + 5) * 215) : 55 + Math.round(rand(seed + 5) * 105)) : 0;
-      const totalCount = Math.round(clamp(baseCount + countNoise + countBoost, nameIndex === 0 ? 35 : 18, nameIndex === 0 ? 540 : 260));
-      const seasonal = Math.round(24 * Math.sin(elapsed / 34) + 12 * Math.cos(elapsed / 19));
-      const slump = elapsed % 143 > 126 ? -38 : 0;
-      const avgBase = nameIndex === 0 ? 318 + progress * 330 : 278 + progress * 185;
-      const avg = Math.round(clamp(avgBase + seasonal + slump + rand(seed + 6) * 72, nameIndex === 0 ? 260 : 230, nameIndex === 0 ? 760 : 650));
-      const bestSpike = bigDay ? 95 + rand(seed + 7) * 120 : 54 + rand(seed + 7) * 88;
-      const best = Math.round(clamp(avg + bestSpike, avg + 20, nameIndex === 0 ? 940 : 820));
-      const mainBat = batFor(nameIndex, elapsed, progress, rand(seed + 8));
-      const split = bigDay && totalCount >= (nameIndex === 0 ? 180 : 115);
-      const secondBat = bats.length > 1 ? (mainBat === bats[0] ? bats[1] : bats[0]) : mainBat;
-      const chunks = split
+      const pick = randomPicker(`${seedPrefix}-${date}`);
+      const scoreBias = nameIndex === 0 ? 0 : -18;
+      const values = practiceValuesFromPicker(pick, scoreBias);
+      const mainBat = defaultBat || bats[0] || "";
+      if (!mainBat) return;
+      const secondBat = secondaryBatFor(bats, mainBat, `${seedPrefix}-${date}-bat`);
+      const useSecondBat = Boolean(secondBat && values.count >= 68 && pick(20) > 0.84);
+      let secondaryCount = useSecondBat ? Math.round(values.count * (0.14 + pick(21) * 0.14)) : 0;
+      secondaryCount = useSecondBat ? Math.min(28, Math.max(8, secondaryCount)) : 0;
+      if (useSecondBat && values.count - secondaryCount < 50) secondaryCount = Math.max(0, values.count - 50);
+      const chunks = secondaryCount >= 8
         ? [
-            [mainBat, Math.round(totalCount * (0.62 + rand(seed + 9) * 0.16))],
-            [secondBat, 0],
+            [mainBat, values.count - secondaryCount, 0],
+            [secondBat, secondaryCount, 1],
           ]
-        : [[mainBat, totalCount]];
-      if (split) chunks[1][1] = totalCount - chunks[0][1];
+        : [[mainBat, values.count, 0]];
 
-      chunks.forEach(([bat, count], index) => {
+      chunks.forEach(([bat, count, index]) => {
         if (count <= 0) return;
-        const batIndex = Math.max(0, bats.indexOf(bat));
-        const batOffset = batIndex === 0 ? 12 : batIndex === 1 ? -6 : -18;
-        const recordAvg = Math.round(clamp(avg + batOffset + (rand(seed + 10 + index) - 0.5) * 34, 180, 999));
-        const recordBest = Math.round(clamp(best + batOffset + (rand(seed + 20 + index) - 0.5) * 38, recordAvg, 999));
+        const batOffset = index === 0 ? 3 : -8;
+        const recordAvg = Math.round(clamp(values.avg + batOffset + (pick(30 + index) - 0.5) * 14, 320, 500));
+        const recordBest = Math.round(clamp(values.best + batOffset + (pick(40 + index) - 0.5) * 18, recordAvg + 55, 670));
         records.push({
           id: `demo-${name}-${date}-${bat}-${index}`,
           name,
@@ -3553,9 +3560,11 @@ function HomeView({ db, setDb, currentName, allForName, allForNameRaw = allForNa
       .map((item) => (animatedBatSummary?.bat === item.bat ? { ...item, ...animatedBatSummary } : item))
       .sort((a, b) => (batOrder.get(a.bat) ?? 9999) - (batOrder.get(b.bat) ?? 9999));
   }, [animatedBatSummary, db.bats, todayByBat]);
-  const testRecordValues = db.testInputDefaults && db.testRandomGeneration
-    ? randomTestRecordValues(formResetKey + todayRecords.length * 31)
-    : null;
+  const testRecordValues = useMemo(() => (
+    db.testInputDefaults && db.testRandomGeneration
+      ? randomTestRecordValues()
+      : null
+  ), [activeDate, db.testInputDefaults, db.testRandomGeneration, formResetKey, todayRecords.length]);
   const isHomeHistoryView = !db.testInputDefaults && activeDate !== todayISO();
   const viewWindow = useMemo(() => (
     resultRange === RANGE_TODAY ? null : viewWindowForRange(allFiltered, resultRange, activeDate)
@@ -3583,27 +3592,31 @@ function HomeView({ db, setDb, currentName, allForName, allForNameRaw = allForNa
   };
   const handleTestRecordCreate = (bat) => {
     if (!db.testInputDefaults || !currentName || !bat) return;
+    const values = testRecordValues || randomTestRecordValues();
     const record = {
       id: uid(),
       name: currentName,
       bat,
       date: activeDate,
-      count: 999,
-      avg: 999,
-      best: 999,
+      ...values,
     };
-    const nextRecords = [record];
+    const nextRecords = [...db.records, record];
+    const recordsForNameBefore = db.records.filter((item) => item.name === currentName);
+    const todayRecordsBefore = recordsForNameBefore.filter((item) => item.date === activeDate);
     const recordsForNameAfter = nextRecords.filter((item) => item.name === currentName);
     const todayRecordsAfter = recordsForNameAfter.filter((item) => item.date === activeDate);
-    const fromSummary = emptyDailySummary(activeDate);
+    const fromSummary = aggregate(todayRecordsBefore)[0] || emptyDailySummary(activeDate);
     const toSummary = aggregate(todayRecordsAfter)[0] || emptyDailySummary(activeDate);
-    const fromWeekSummary = summaryForRecordsRange([], RANGE_WEEK, activeDate);
+    const fromWeekSummary = summaryForRecordsRange(recordsForNameBefore, RANGE_WEEK, activeDate);
     const toWeekSummary = summaryForRecordsRange(recordsForNameAfter, RANGE_WEEK, activeDate);
-    const fromBat = { bat, count: 0, avg: 0, best: 0 };
+    const fromBat = aggregateByBat(todayRecordsBefore).find((item) => item.bat === bat) || { bat, count: 0, avg: 0, best: 0 };
     const toBat = aggregateByBat(todayRecordsAfter).find((item) => item.bat === bat) || fromBat;
-    const toWeekBat = aggregateByBat(recordsForViewRange(recordsForNameAfter, RANGE_WEEK, activeDate)).find((item) => item.bat === bat) || fromBat;
-    const firstGetBadgesForRecord = firstEarnedBadgeDefinitions([], recordsForNameAfter, activeDate);
-    setScoreAnimation?.({ id: uid(), bat, fromSummary, toSummary, fromWeekSummary, toWeekSummary, fromBat, toBat, fromWeekBat: fromBat, toWeekBat, playedRanges: [], firstGetBadges: firstGetBadgesForRecord, firstGetShown: false });
+    const weekRecordsBefore = recordsForViewRange(recordsForNameBefore, RANGE_WEEK, activeDate);
+    const weekRecordsAfter = recordsForViewRange(recordsForNameAfter, RANGE_WEEK, activeDate);
+    const fromWeekBat = aggregateByBat(weekRecordsBefore).find((item) => item.bat === bat) || { bat, count: 0, avg: 0, best: 0 };
+    const toWeekBat = aggregateByBat(weekRecordsAfter).find((item) => item.bat === bat) || fromWeekBat;
+    const firstGetBadgesForRecord = firstEarnedBadgeDefinitions(recordsForNameBefore, recordsForNameAfter, activeDate);
+    setScoreAnimation?.({ id: uid(), bat, fromSummary, toSummary, fromWeekSummary, toWeekSummary, fromBat, toBat, fromWeekBat, toWeekBat, playedRanges: [], firstGetBadges: firstGetBadgesForRecord, firstGetShown: false });
     setDb({
       ...db,
       records: nextRecords,
@@ -3640,13 +3653,28 @@ function HomeView({ db, setDb, currentName, allForName, allForNameRaw = allForNa
     const generatedRecords = [];
     for (let date = startDate; date <= endDate; date = addDays(date, 1)) {
       const isoDate = toISO(date);
-      const values = randomTestRecordValues(Number(isoDate.replaceAll("-", "")));
-      generatedRecords.push({
-        id: uid(),
-        name: currentName,
-        bat,
-        date: isoDate,
-        ...values,
+      if (!shouldPracticeOnDate(date, `test-${currentName}`)) continue;
+      const pick = randomPicker(`test-${currentName}-${isoDate}`);
+      const values = practiceValuesFromPicker(pick);
+      const secondBat = secondaryBatFor(db.bats, bat, `test-${currentName}-${isoDate}-bat`);
+      const useSecondBat = Boolean(secondBat && values.count >= 68 && pick(20) > 0.84);
+      let secondaryCount = useSecondBat ? Math.round(values.count * (0.14 + pick(21) * 0.14)) : 0;
+      secondaryCount = useSecondBat ? Math.min(28, Math.max(8, secondaryCount)) : 0;
+      if (useSecondBat && values.count - secondaryCount < 50) secondaryCount = Math.max(0, values.count - 50);
+      const chunks = secondaryCount >= 8
+        ? [[bat, values.count - secondaryCount], [secondBat, secondaryCount]]
+        : [[bat, values.count]];
+      chunks.forEach(([recordBat, count], index) => {
+        const batOffset = index === 0 ? 3 : -8;
+        generatedRecords.push({
+          id: uid(),
+          name: currentName,
+          bat: recordBat,
+          date: isoDate,
+          count,
+          avg: Math.round(clamp(values.avg + batOffset + (pick(30 + index) - 0.5) * 14, 320, 500)),
+          best: Math.round(clamp(values.best + batOffset + (pick(40 + index) - 0.5) * 18, values.avg + 55, 670)),
+        });
       });
     }
     setDb({
@@ -4181,7 +4209,7 @@ function GrowthProgressRow({ row }) {
   useLayoutEffect(() => {
     const node = milestoneTrackRef.current;
     if (!node) return undefined;
-    const updateWidth = () => setMilestoneTrackWidth(node.getBoundingClientRect().width || 0);
+    const updateWidth = () => setMilestoneTrackWidth(node.offsetWidth || node.clientWidth || 0);
     updateWidth();
     if (typeof ResizeObserver === "undefined") {
       window.addEventListener("resize", updateWidth);

@@ -6,6 +6,7 @@
   --app-font-scale: 1;
   --app-layout-width: min(480px, 100%);
   --app-visual-width: 100vw;
+  --app-shell-visual-height: 100vh;
   --app-min-height: 100vh;
   --bg: #111218;
   --panel: rgba(255, 255, 255, 0.055);
@@ -87,7 +88,7 @@ svg text {
 }
 
 .app {
-  min-height: 100svh;
+  min-height: max(100svh, var(--app-shell-visual-height));
   background: var(--app-bg, transparent);
   font-family: var(--app-font-family, "M PLUS Rounded 1c", "Hiragino Maru Gothic ProN", "Hiragino Sans", "YuGothic", "Yu Gothic", "Meiryo", sans-serif);
   font-weight: var(--app-base-weight, 800);
@@ -167,7 +168,8 @@ svg text {
   min-height: var(--app-min-height);
   margin: 0 auto;
   padding: max(14px, env(safe-area-inset-top)) 14px calc(78px + env(safe-area-inset-bottom));
-  zoom: var(--app-scale);
+  transform: scale(var(--app-scale));
+  transform-origin: 50% 0;
 }
 
 .app-header,
@@ -13969,6 +13971,13 @@ body .app .phone-shell .home-score-input-grid .home-input-panel .home-form-bat-c
   justify-self: end !important;
   width: 150px !important;
   max-width: none !important;
+}
+
+body .app .phone-shell {
+  zoom: 1 !important;
+  transform: scale(var(--app-scale)) !important;
+  transform-origin: 50% 0 !important;
+  will-change: transform !important;
 }
 
 /* Tablet text polish: use a real stroke instead of stacked white shadows. */
