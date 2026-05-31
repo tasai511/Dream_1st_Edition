@@ -7958,10 +7958,13 @@ body {
 }
 
 .form-bat-icon {
+  display: block;
   width: 20px;
   height: 20px;
-  object-fit: contain;
-  transform: scaleX(-1);
+  background: var(--bat-filter-color, var(--selected-bat-color, var(--hot)));
+  -webkit-mask: url("./assets/images/bat-icon.svg") center / contain no-repeat;
+  mask: url("./assets/images/bat-icon.svg") center / contain no-repeat;
+  transform: none;
   filter: drop-shadow(0 1px 2px rgba(83, 42, 10, 0.22));
 }
 
@@ -9655,12 +9658,9 @@ body .app .active-player {
 body .app .icon-heading,
 body .app .result-heading h1 {
   color: var(--game-blue-deep) !important;
-  text-shadow:
-    2px 0 #fff,
-    -2px 0 #fff,
-    0 2px #fff,
-    0 -2px #fff,
-    0 4px 0 rgba(5, 41, 116, 0.28) !important;
+  -webkit-text-stroke: 0.08em #ffffff;
+  paint-order: stroke fill;
+  text-shadow: 0 3px 0 rgba(5, 41, 116, 0.28) !important;
 }
 
 body .app .icon-heading .icon {
@@ -9937,12 +9937,11 @@ body .app .bat-select-control .form-bat-icon {
   display: block !important;
   width: 20px !important;
   height: 20px !important;
-  object-fit: contain !important;
   background: var(--bat-filter-color, var(--selected-bat-color, var(--hot))) !important;
   -webkit-mask: url("./assets/images/bat-icon.svg") center / contain no-repeat !important;
   mask: url("./assets/images/bat-icon.svg") center / contain no-repeat !important;
   opacity: 1 !important;
-  transform: scaleX(-1) !important;
+  transform: none !important;
   filter: drop-shadow(0 1px 2px rgba(83, 42, 10, 0.22)) !important;
 }
 
@@ -13971,3 +13970,29 @@ body .app .phone-shell .home-score-input-grid .home-input-panel .home-form-bat-c
   width: 150px !important;
   max-width: none !important;
 }
+
+/* Tablet text polish: use a real stroke instead of stacked white shadows. */
+body .app .icon-heading,
+body .app .result-heading h1,
+body .app .home-score-input-grid .home-input-panel .swing-form-title,
+body .app .daily-result-card .daily-score-row > strong,
+body .app .badge-point-card strong,
+body .app .growth-score-mini-card > strong,
+body .app .growth-progress-main strong {
+  paint-order: stroke fill !important;
+  -webkit-text-stroke: 0.06em #ffffff;
+  text-shadow: 0 0.09em 0 color-mix(in srgb, currentColor 30%, transparent) !important;
+}
+
+body .app .icon-heading,
+body .app .result-heading h1,
+body .app .home-score-input-grid .home-input-panel .swing-form-title {
+  -webkit-text-stroke-width: 0.08em;
+}
+
+body .app .growth-score-mini-card > span {
+  paint-order: stroke fill !important;
+  -webkit-text-stroke: 0.05em #ffffff;
+  text-shadow: 0 0.08em 0 color-mix(in srgb, var(--growth-color) 24%, transparent) !important;
+}
+

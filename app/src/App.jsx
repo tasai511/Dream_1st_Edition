@@ -5155,7 +5155,7 @@ function BatSelect({ value, onChange, bats, batColors = null, allOption = false,
     <label className={`bat-select-control field-label bat-input-label ${className}`.trim()} style={{ "--bat-filter-color": selectedColor }}>
       <span className={`bat-field graph-bat-filter home-bat-filter ${value === ALL ? "all-selected" : ""}`}>
         <span className="select-shell">
-          <span className="select-leading bat-select-leading" aria-hidden="true"><img className="form-bat-icon" src={NEW_UI_ASSETS.bat} alt="" /></span>
+          <span className="select-leading bat-select-leading" aria-hidden="true"><span className="form-bat-icon" /></span>
           <select name={name} required={required} value={value} onChange={(event) => onChange(event.target.value)} aria-label={ariaLabel}>
             {allOption && <option value={ALL} style={{ color: ALL_BAT_FILTER_COLOR }}>全てのバット</option>}
             {bats.map((bat, index) => {
