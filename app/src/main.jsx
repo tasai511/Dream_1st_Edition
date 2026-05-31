@@ -7,7 +7,7 @@ const fallback = document.getElementById("vite-fallback");
 if (fallback) fallback.remove();
 
 const BASE_APP_WIDTH = 480;
-const MAX_APP_WIDTH = 720;
+const MAX_APP_WIDTH = 1024;
 
 const updateAppScale = () => {
   const viewportWidth = window.innerWidth || BASE_APP_WIDTH;
@@ -19,7 +19,16 @@ const updateAppScale = () => {
   document.documentElement.style.setProperty("--app-visual-width", `${visualWidth}px`);
 };
 
+const lockPortraitOrientation = () => {
+  const orientation = window.screen?.orientation;
+  if (!orientation?.lock) return;
+  orientation.lock("portrait-primary").catch(() => {
+    orientation.lock("portrait").catch(() => {});
+  });
+};
+
 updateAppScale();
+lockPortraitOrientation();
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -34,4 +43,11 @@ window.addEventListener("load", () => {
 });
 
 window.addEventListener("resize", updateAppScale);
-window.addEventListener("orientationchange", updateAppScale);
+window.addEventListener("orientationchange", () => {
+  updateAppScale();
+  lockPortraitOrientation();
+});
+window.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") lockPortraitOrientation();
+});
+window.addEventListener("pointerdown", lockPortraitOrientation, { once: true, passive: true });
