@@ -13846,11 +13846,23 @@ body .app .bottom-nav {
   border: 0 !important;
   border-radius: 0 !important;
   padding: 5px 6px calc(5px + env(safe-area-inset-bottom)) !important;
+  overflow: visible !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+body .app .bottom-nav::before {
+  position: absolute;
+  inset: 0 auto 0 50%;
+  z-index: -1;
+  width: 100vw;
   background:
-    linear-gradient(180deg, #1f78e9 0%, #0b4dae 58%, #07317c 100%) !important;
+    linear-gradient(180deg, #1f78e9 0%, #0b4dae 58%, #07317c 100%);
   box-shadow:
     inset 0 3px 0 rgba(255, 255, 255, 0.34),
-    0 5px 10px rgba(4, 43, 118, 0.24) !important;
+    0 5px 10px rgba(4, 43, 118, 0.24);
+  content: "";
+  transform: translateX(-50%);
 }
 
 body .app .bottom-nav button {
