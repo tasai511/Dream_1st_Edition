@@ -1,0 +1,1182 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dream Swing Telemetry Grapher</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #1b2533;
+      --muted: #64748b;
+      --line: #cbd5e1;
+      --grid: #d7dee8;
+      --panel: #ffffff;
+      --page: #eef3f8;
+      --gyro: #1769e0;
+      --accel: #d04a1c;
+      --good: #12805c;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--page);
+      color: var(--ink);
+    }
+
+    main {
+      width: min(1180px, calc(100vw - 28px));
+      margin: 24px auto;
+    }
+
+    h1 {
+      margin: 0 0 4px;
+      font-size: 24px;
+      font-weight: 750;
+      letter-spacing: 0;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(280px, 380px) minmax(0, 1fr);
+      gap: 16px;
+      align-items: start;
+      margin-top: 16px;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: 0 10px 24px rgba(30, 41, 59, 0.08);
+    }
+
+    .input-panel {
+      padding: 14px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 460px;
+      resize: vertical;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 10px;
+      font: 12px/1.45 ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      color: var(--ink);
+      background: #f8fafc;
+      outline: none;
+    }
+
+    textarea:focus {
+      border-color: var(--gyro);
+      box-shadow: 0 0 0 3px rgba(23, 105, 224, 0.14);
+    }
+
+    .status {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .status.ok {
+      color: var(--good);
+    }
+
+    .history-controls {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .history-controls input {
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 8px 10px;
+      color: var(--ink);
+      background: #ffffff;
+      font: 13px/1.2 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      outline: none;
+    }
+
+    .history-controls input:focus {
+      border-color: var(--gyro);
+      box-shadow: 0 0 0 3px rgba(23, 105, 224, 0.14);
+    }
+
+    button {
+      border: 1px solid #bfd0e5;
+      border-radius: 6px;
+      background: #ffffff;
+      color: var(--muted);
+      font: 650 12px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      padding: 8px 10px;
+      cursor: pointer;
+    }
+
+    button.primary {
+      border-color: rgba(23, 105, 224, 0.4);
+      color: var(--gyro);
+    }
+
+    .history {
+      margin-top: 14px;
+      border-top: 1px solid var(--line);
+      padding-top: 12px;
+    }
+
+    .history-heading {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 650;
+      margin-bottom: 8px;
+    }
+
+    .history-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .history-empty {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .history-item {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+      border: 1px solid #d6e0ec;
+      border-radius: 8px;
+      background: #ffffff;
+      padding: 8px;
+    }
+
+    .history-load {
+      border: 0;
+      background: transparent;
+      padding: 0;
+      text-align: left;
+      color: var(--ink);
+      font-weight: 650;
+    }
+
+    .history-meta {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 1.35;
+    }
+
+    .history-delete {
+      color: #b42318;
+      border-color: rgba(180, 35, 24, 0.32);
+    }
+
+    .chart-panel {
+      padding: 16px;
+      min-width: 0;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 0 0 14px;
+    }
+
+    .chip {
+      border: 1px solid #cfd8e3;
+      border-radius: 6px;
+      background: #ffffff;
+      padding: 6px 10px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+
+    .chip.peak-gyro {
+      border-color: rgba(23, 105, 224, 0.34);
+      color: var(--gyro);
+    }
+
+    .chip.peak-accel {
+      border-color: rgba(208, 74, 28, 0.34);
+      color: var(--accel);
+    }
+
+    svg {
+      display: block;
+      width: 100%;
+      height: auto;
+      min-height: 430px;
+    }
+
+    .axis,
+    .tick {
+      stroke: #94a3b8;
+      stroke-width: 1;
+      vector-effect: non-scaling-stroke;
+    }
+
+    .grid {
+      stroke: var(--grid);
+      stroke-width: 1;
+      vector-effect: non-scaling-stroke;
+    }
+
+    .label {
+      fill: var(--muted);
+      font-size: 13px;
+    }
+
+    .title-label {
+      fill: var(--ink);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .line {
+      fill: none;
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      vector-effect: non-scaling-stroke;
+    }
+
+    .gyro-line {
+      stroke: var(--gyro);
+    }
+
+    .accel-line {
+      stroke: var(--accel);
+    }
+
+    .point {
+      stroke: #ffffff;
+      stroke-width: 2;
+      vector-effect: non-scaling-stroke;
+    }
+
+    .accel-score-area {
+      fill: rgba(208, 74, 28, 0.22);
+      stroke: none;
+    }
+
+    .accel-score-baseline {
+      stroke: rgba(208, 74, 28, 0.42);
+      stroke-width: 1;
+      stroke-dasharray: 5 5;
+      vector-effect: non-scaling-stroke;
+    }
+
+    .gyro-score-level {
+      stroke: rgba(23, 105, 224, 0.58);
+      stroke-width: 2;
+      stroke-dasharray: 8 5;
+      vector-effect: non-scaling-stroke;
+    }
+
+    .gyro-score-peak,
+    .gyro-peak {
+      fill: #ffffff;
+      stroke: var(--gyro);
+      stroke-width: 4;
+      vector-effect: non-scaling-stroke;
+    }
+
+    .gyro-score-peak-core,
+    .gyro-peak-core {
+      fill: var(--gyro);
+      stroke: #ffffff;
+      stroke-width: 2;
+      vector-effect: non-scaling-stroke;
+    }
+
+    .accel-peak {
+      fill: #ffffff;
+      stroke: var(--accel);
+      stroke-width: 4;
+      vector-effect: non-scaling-stroke;
+    }
+
+    .accel-peak-core {
+      fill: var(--accel);
+      stroke: #ffffff;
+      stroke-width: 2;
+      vector-effect: non-scaling-stroke;
+    }
+
+    .marker-line {
+      stroke-width: 1.5;
+      stroke-dasharray: 6 5;
+      vector-effect: non-scaling-stroke;
+    }
+
+    .marker-triangle {
+      stroke: #ffffff;
+      stroke-width: 1.5;
+      vector-effect: non-scaling-stroke;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin: 14px 4px 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .swatch {
+      width: 26px;
+      height: 3px;
+      border-radius: 999px;
+      display: inline-block;
+    }
+
+    .swatch.gyro-peak-swatch {
+      width: 10px;
+      height: 10px;
+      border: 3px solid var(--gyro);
+      border-radius: 50%;
+      background: transparent;
+    }
+
+    .empty {
+      fill: var(--muted);
+      font-size: 17px;
+      text-anchor: middle;
+    }
+
+    @media (max-width: 860px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      textarea {
+        min-height: 260px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Dream Swing Telemetry Grapher</h1>
+
+    <div class="layout">
+      <section class="panel input-panel">
+        <label for="logInput">シリアルログ貼り付け</label>
+        <textarea id="logInput" spellcheck="false"></textarea>
+        <div class="history-controls">
+          <input id="historyTitle" type="text" placeholder="保存タイトル">
+          <button id="saveHistory" class="primary" type="button">保存</button>
+        </div>
+        <div id="status" class="status"></div>
+        <div class="history">
+          <div class="history-heading">保存履歴</div>
+          <div id="historyList" class="history-list"></div>
+        </div>
+      </section>
+
+      <section class="panel chart-panel" aria-label="Gyro and acceleration time series chart">
+        <div id="meta" class="meta"></div>
+        <svg id="chart" viewBox="0 0 1040 520" role="img" aria-labelledby="chart-title chart-desc">
+          <title id="chart-title">Gyro angular velocity and dynamic acceleration over time</title>
+          <desc id="chart-desc">Line chart using elapsed milliseconds on the x axis, gyro degrees per second on the left y axis, and dynamic acceleration milligram on the right y axis.</desc>
+        </svg>
+        <div class="legend" aria-hidden="true">
+          <span class="legend-item"><span class="swatch" style="background: var(--gyro)"></span>角速度, dps</span>
+          <span class="legend-item"><span class="swatch" style="background: var(--accel)"></span>動的加速度, mg</span>
+          <span class="legend-item"><span class="swatch" style="background: rgba(208, 74, 28, 0.28)"></span>加速度スコア面積</span>
+          <span class="legend-item"><span class="swatch gyro-peak-swatch"></span>ピーク</span>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const sampleLog = `Dream best swing telemetry
+header_bytes=32 sample_bytes=6 eeprom_bytes=256 sample_capacity=37
+score=648 swing_number=4 average_before=415
+duration_ms=127 sample_total=18 stored_samples=18
+time_origin=start_decision decision_end_ms=128
+pre_samples=0
+pre_ring_count=0 recent_samples=0 recent_max_age_ms=0
+gyro_score=281
+accel_area_mg_ms=220239 accel_score=367
+samples_csv=elapsed_ms,gyro_mag_raw,gyro_dps,dynamic_accel_mg
+0,22745,3184,7748
+8,25035,3504,7447
+16,25830,3616,7326
+28,28116,3936,6637
+36,26943,3772,5047
+44,18057,2527,3159
+52,11451,1603,1290
+56,15,2,973
+60,9541,1335,924
+64,15,2,296
+68,8837,1237,432
+76,8849,1238,319
+84,7835,1096,760
+92,8108,1135,633
+104,8146,1140,430
+112,7771,1087,309
+120,7675,1074,254
+128,7592,1062,219`;
+
+    const input = document.getElementById("logInput");
+    const svg = document.getElementById("chart");
+    const meta = document.getElementById("meta");
+    const status = document.getElementById("status");
+    const historyTitle = document.getElementById("historyTitle");
+    const saveHistoryButton = document.getElementById("saveHistory");
+    const historyList = document.getElementById("historyList");
+    const width = 1040;
+    const height = 520;
+    const margin = { top: 34, right: 92, bottom: 64, left: 74 };
+    const ACCEL_SCORE_OFFSET_MG = 1000;
+    const FIXED_TIME_MIN_MS = -120;
+    const FIXED_TIME_MAX_MS = 140;
+    const FIXED_TIME_TICKS = [-120, -80, -40, 0, 40, 80, 120, 140];
+    const FIXED_GYRO_MAX_DPS = 7000;
+    const FIXED_ACCEL_MAX_MG = 15000;
+    const GYRO_SCORE_MAX = 500;
+    const GYRO_SCORE_FULL_DPS = 7000;
+    const GYRO_SCORE_MISMATCH_DPS = 120;
+    const GYRO_SCORE_DROP_PCT = 85;
+    const GYRO_SCORE_DROP_MIN_DPS = Math.round((900 * 140) / 1000);
+    const PLOT_CLIP_ID = "plot-clip";
+    const HISTORY_STORAGE_KEY = "dreamSwingTelemetryHistoryV1";
+    const plot = {
+      x: margin.left,
+      y: margin.top,
+      w: width - margin.left - margin.right,
+      h: height - margin.top - margin.bottom
+    };
+
+    input.value = sampleLog;
+    input.addEventListener("input", () => renderFromLog(input.value));
+    saveHistoryButton.addEventListener("click", saveCurrentHistory);
+    renderFromLog(input.value);
+    renderHistoryList();
+
+    function renderFromLog(text) {
+      const parsed = parseTelemetryLog(text);
+      clearChart();
+      renderMeta(parsed);
+
+      if (!parsed.data.length) {
+        status.className = "status";
+        status.textContent = parsed.error || "samples_csv= の行から始まるCSVを含むログを貼り付けてください。";
+        drawEmptyState();
+        return;
+      }
+
+      status.className = "status ok";
+      status.textContent = `${parsed.data.length} サンプルを読み込みました。ログを貼り替えると自動で再描画します。`;
+      drawChart(parsed);
+    }
+
+    function saveCurrentHistory() {
+      const log = input.value.trim();
+      const parsed = parseTelemetryLog(log);
+      if (!parsed.data.length) {
+        status.className = "status";
+        status.textContent = parsed.error || "保存できるテレメトリログがありません。";
+        return;
+      }
+
+      const title = historyTitle.value.trim() || defaultHistoryTitle(parsed);
+      const item = {
+        id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        title,
+        savedAt: new Date().toISOString(),
+        log
+      };
+      const items = [item, ...loadHistory()];
+      if (!writeHistory(items)) {
+        return;
+      }
+
+      historyTitle.value = "";
+      renderHistoryList();
+      status.className = "status ok";
+      status.textContent = `保存しました: ${title}`;
+    }
+
+    function defaultHistoryTitle(parsed) {
+      const f = parsed.fields;
+      const parts = [];
+      if (f.score != null) parts.push(`score ${f.score}`);
+      if (f.swing_number != null) parts.push(`swing ${f.swing_number}`);
+      if (f.duration_ms != null) parts.push(`${f.duration_ms} ms`);
+      return parts.length ? parts.join(" / ") : `telemetry ${formatDateTime(new Date())}`;
+    }
+
+    function loadHistory() {
+      try {
+        const raw = localStorage.getItem(HISTORY_STORAGE_KEY);
+        const items = raw ? JSON.parse(raw) : [];
+        return Array.isArray(items) ? items.filter((item) => item && item.id && item.log) : [];
+      } catch (_) {
+        return [];
+      }
+    }
+
+    function writeHistory(items) {
+      try {
+        localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(items));
+        return true;
+      } catch (error) {
+        status.className = "status";
+        status.textContent = `履歴を保存できませんでした: ${error.message || error}`;
+        return false;
+      }
+    }
+
+    function renderHistoryList() {
+      const items = loadHistory();
+      historyList.innerHTML = "";
+      if (!items.length) {
+        const empty = document.createElement("div");
+        empty.className = "history-empty";
+        empty.textContent = "保存履歴はまだありません。";
+        historyList.appendChild(empty);
+        return;
+      }
+
+      for (const item of items) {
+        const row = document.createElement("div");
+        row.className = "history-item";
+
+        const loadButton = document.createElement("button");
+        loadButton.className = "history-load";
+        loadButton.type = "button";
+        loadButton.textContent = item.title || "untitled";
+        const meta = document.createElement("span");
+        meta.className = "history-meta";
+        meta.textContent = historyMetaText(item);
+        loadButton.appendChild(meta);
+        loadButton.addEventListener("click", () => loadHistoryItem(item));
+
+        const deleteButton = document.createElement("button");
+        deleteButton.className = "history-delete";
+        deleteButton.type = "button";
+        deleteButton.textContent = "削除";
+        deleteButton.addEventListener("click", () => deleteHistoryItem(item.id));
+
+        row.appendChild(loadButton);
+        row.appendChild(deleteButton);
+        historyList.appendChild(row);
+      }
+    }
+
+    function historyMetaText(item) {
+      const parsed = parseTelemetryLog(item.log || "");
+      const score = parsed.fields.score != null ? `score ${parsed.fields.score}` : null;
+      const samples = parsed.data.length ? `${parsed.data.length} samples` : null;
+      return [formatDateTime(new Date(item.savedAt)), score, samples]
+        .filter(Boolean)
+        .join(" / ");
+    }
+
+    function loadHistoryItem(item) {
+      input.value = item.log || "";
+      historyTitle.value = item.title || "";
+      renderFromLog(input.value);
+      input.scrollTop = 0;
+      status.className = "status ok";
+      status.textContent = `履歴を読み込みました: ${item.title || "untitled"}`;
+    }
+
+    function deleteHistoryItem(id) {
+      const items = loadHistory();
+      const item = items.find((entry) => entry.id === id);
+      if (!item) return;
+      if (!window.confirm(`「${item.title || "untitled"}」を削除しますか？`)) {
+        return;
+      }
+      writeHistory(items.filter((entry) => entry.id !== id));
+      renderHistoryList();
+      status.className = "status";
+      status.textContent = "履歴を削除しました。";
+    }
+
+    function formatDateTime(date) {
+      if (Number.isNaN(date.getTime())) return "";
+      const pad = (value) => String(value).padStart(2, "0");
+      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    }
+
+    function parseTelemetryLog(text) {
+      const lines = text.replace(/\r/g, "").split("\n").map((line) => line.trim()).filter(Boolean);
+      const csvIndex = lines.findIndex((line) => line.startsWith("samples_csv="));
+      const fields = {};
+      const data = [];
+
+      for (const line of lines) {
+        if (line.startsWith("samples_csv=")) break;
+        for (const match of line.matchAll(/([A-Za-z0-9_]+)=?(-?[0-9]+)/g)) {
+          fields[match[1]] = Number(match[2]);
+        }
+      }
+
+      if (csvIndex < 0) {
+        return { fields, data, error: "samples_csv= の行が見つかりません。" };
+      }
+
+      const headers = lines[csvIndex].slice("samples_csv=".length).split(",").map(normalizeHeader);
+      for (let i = csvIndex + 1; i < lines.length; i += 1) {
+        const values = lines[i].split(",").map((value) => value.trim());
+        if (values.length < 2 || values.some((value) => value === "" || Number.isNaN(Number(value)))) {
+          continue;
+        }
+
+        const row = {};
+        headers.forEach((header, index) => {
+          row[header] = Number(values[index]);
+        });
+
+        const t = row.elapsed_ms ?? row.time_ms ?? row.t;
+        const gyroRaw = row.gyro_mag_raw ?? row.gyro_raw;
+        const gyro = row.gyro_dps ?? (gyroRaw == null ? undefined : Math.round((gyroRaw * 140) / 1000));
+        const accel = row.dynamic_accel_mg ?? row.accel_mg ?? row.acceleration_mg;
+        if ([t, gyro, accel].every((value) => Number.isFinite(value))) {
+          data.push({ t, gyroRaw, gyro, accel, order: data.length });
+        }
+      }
+
+      data.sort((a, b) => (a.t - b.t) || (a.order - b.order));
+      return { fields, data };
+    }
+
+    function normalizeHeader(header) {
+      return header.trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
+    }
+
+    function renderMeta(parsed) {
+      meta.innerHTML = "";
+      const chips = [];
+      const f = parsed.fields;
+      if (f.score != null) chips.push(["score", f.score]);
+      if (f.swing_number != null) chips.push(["swing", f.swing_number]);
+      if (f.average_before != null) chips.push(["average before", f.average_before]);
+      if (f.duration_ms != null) chips.push(["duration", `${f.duration_ms} ms`]);
+      if (f.score_start_ms != null) chips.push(["score start", `${f.score_start_ms} ms`]);
+      if (f.score_end_ms != null) chips.push(["accel score end", `${f.score_end_ms} ms`]);
+      const scoreEndMs = f.score_end_ms ?? f.decision_end_ms ?? f.duration_ms;
+      if (f.score_start_ms != null && scoreEndMs != null) {
+        chips.push(["accel score window", `${f.score_start_ms}..${scoreEndMs} ms`]);
+      }
+      if (f.decision_start_ms != null && f.decision_start_ms !== 0) chips.push(["start judge", `${f.decision_start_ms} ms`]);
+      if (f.decision_start_ms == null || f.decision_start_ms === 0) chips.push(["time origin", "start judge"]);
+      if (f.decision_end_ms != null) chips.push(["end judge", `${f.decision_end_ms} ms`]);
+      if (f.pre_samples != null) chips.push(["pre samples", f.pre_samples]);
+      if (f.pre_ring_count != null) chips.push(["pre ring", f.pre_ring_count]);
+      if (f.recent_samples != null) chips.push(["recent fifo", f.recent_samples]);
+      if (f.sample_total != null && f.stored_samples != null) chips.push(["samples", `${f.stored_samples} / ${f.sample_total}`]);
+      if (f.gyro_score != null) chips.push(["gyro score", f.gyro_score]);
+      const scoredGyroDps = gyroScoreToDps(f.gyro_score);
+      if (Number.isFinite(scoredGyroDps)) chips.push(["gyro score dps", `${scoredGyroDps} dps`]);
+      if (f.accel_area_mg_ms != null) chips.push(["accel area", `${f.accel_area_mg_ms} mg*ms`]);
+      if (f.accel_score != null) chips.push(["accel score", f.accel_score]);
+
+      const scoreStartMs = f.score_start_ms;
+      const gyroScore = gyroScorePeakInfo(parsed.data, scoreStartMs);
+      if (gyroScore?.peak) {
+        const visiblePeakLabel =
+          Number.isFinite(scoredGyroDps) &&
+          Math.abs(gyroScore.peak.gyro - scoredGyroDps) > GYRO_SCORE_MISMATCH_DPS
+            ? "visible gyro peak"
+            : "gyro score peak";
+        chips.push([visiblePeakLabel, `${gyroScore.peak.gyro} dps @ ${gyroScore.peak.t} ms`, "peak-gyro"]);
+        chips.push(["gyro score end", `${gyroScore.endMs} ms`]);
+      }
+      const peaks = peakInfo(parsed.data, scoreStartMs, scoreEndMs);
+      const gyroPeak = peakFor(parsed.data, "gyro");
+      if (gyroPeak) chips.push(["gyro peak", `${gyroPeak.gyro} dps @ ${gyroPeak.t} ms`, "peak-gyro"]);
+      if (peaks.accel) chips.push(["accel score peak", `${peaks.accel.accel} mg @ ${peaks.accel.t} ms`, "peak-accel"]);
+      const accelPeak = peakFor(parsed.data, "accel");
+      if (accelPeak) chips.push(["accel peak", `${accelPeak.accel} mg @ ${accelPeak.t} ms`, "peak-accel"]);
+
+      if (!chips.length) {
+        chips.push(["status", "waiting for telemetry"]);
+      }
+
+      for (const [label, value, extraClass] of chips) {
+        const chip = document.createElement("span");
+        chip.className = `chip${extraClass ? ` ${extraClass}` : ""}`;
+        chip.textContent = `${label} ${value}`;
+        meta.appendChild(chip);
+      }
+    }
+
+    function peakInfo(data, startMs, endMs) {
+      if (!data.length) return {};
+      const scoped = Number.isFinite(startMs) && Number.isFinite(endMs)
+        ? data.filter((row) => row.t >= startMs && row.t <= endMs)
+        : data;
+      const rows = scoped.length ? scoped : data;
+      return {
+        gyro: peakFor(rows, "gyro"),
+        accel: peakFor(rows, "accel")
+      };
+    }
+
+    function peakFor(data, key) {
+      if (!data.length) return null;
+      return data.reduce((best, row) => row[key] > best[key] ? row : best, data[0]);
+    }
+
+    function gyroScoreToDps(score) {
+      if (!Number.isFinite(score)) return undefined;
+      return Math.round((score * GYRO_SCORE_FULL_DPS) / GYRO_SCORE_MAX);
+    }
+
+    function gyroScorePeakInfo(data, startMs) {
+      const rows = Number.isFinite(startMs)
+        ? data.filter((row) => row.t >= startMs)
+        : data.slice();
+      if (!rows.length) return null;
+
+      let peak = rows[0];
+      let previous = rows[0];
+      let endMs = rows[0].t;
+      let dropSeen = false;
+      for (const row of rows) {
+        if (row.gyro > peak.gyro) {
+          peak = row;
+        }
+
+        if (row.t > peak.t && peak.gyro > row.gyro) {
+          const dropDps = peak.gyro - row.gyro;
+          const thresholdDps = Math.max(
+            (peak.gyro * (100 - GYRO_SCORE_DROP_PCT)) / 100,
+            GYRO_SCORE_DROP_MIN_DPS
+          );
+          if (dropDps >= thresholdDps) {
+            endMs = previous.t > peak.t ? previous.t : peak.t;
+            dropSeen = true;
+            break;
+          }
+        }
+
+        endMs = row.t;
+        previous = row;
+      }
+
+      return { peak, endMs, dropSeen };
+    }
+
+    function clearChart() {
+      [...svg.querySelectorAll("*")].forEach((node) => {
+        if (!["chart-title", "chart-desc"].includes(node.id)) node.remove();
+      });
+    }
+
+    function drawEmptyState() {
+      el("text", { class: "empty", x: width / 2, y: height / 2 }, "ログを貼り付けるとグラフが出ます");
+    }
+
+    function drawPlotClip() {
+      const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+      const clipPath = document.createElementNS("http://www.w3.org/2000/svg", "clipPath");
+      const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      clipPath.setAttribute("id", PLOT_CLIP_ID);
+      rect.setAttribute("x", plot.x);
+      rect.setAttribute("y", plot.y);
+      rect.setAttribute("width", plot.w);
+      rect.setAttribute("height", plot.h);
+      clipPath.appendChild(rect);
+      defs.appendChild(clipPath);
+      svg.appendChild(defs);
+    }
+
+    function drawChart(parsed) {
+      const data = parsed.data;
+      const startJudgeMs = parsed.fields.decision_start_ms ?? 0;
+      const scoreStartMs = parsed.fields.score_start_ms;
+      const endJudgeMs = parsed.fields.decision_end_ms ?? parsed.fields.duration_ms;
+      const scoreEndMs =
+        Number.isFinite(parsed.fields.score_end_ms)
+          ? parsed.fields.score_end_ms
+          : Number.isFinite(endJudgeMs)
+            ? endJudgeMs
+            : undefined;
+      const minTime = FIXED_TIME_MIN_MS;
+      const maxTime = FIXED_TIME_MAX_MS;
+      const timeSpan = Math.max(1, maxTime - minTime);
+      const gyroMax = FIXED_GYRO_MAX_DPS;
+      const accelMax = FIXED_ACCEL_MAX_MG;
+
+      const x = (t) => plot.x + ((t - minTime) / timeSpan) * plot.w;
+      const yLeft = (value) => plot.y + plot.h - (value / gyroMax) * plot.h;
+      const yRight = (value) => plot.y + plot.h - (value / accelMax) * plot.h;
+      drawPlotClip();
+
+      for (let i = 0; i <= 5; i += 1) {
+        const gy = plot.y + (plot.h * i) / 5;
+        el("line", { class: "grid", x1: plot.x, y1: gy, x2: plot.x + plot.w, y2: gy });
+        el("text", { class: "label", x: plot.x - 12, y: gy + 4, "text-anchor": "end" }, Math.round(gyroMax - (gyroMax * i) / 5));
+        el("text", { class: "label", x: plot.x + plot.w + 12, y: gy + 4 }, Math.round(accelMax - (accelMax * i) / 5));
+      }
+
+      const xTicks = FIXED_TIME_TICKS;
+      for (const tick of xTicks) {
+        const tx = x(tick);
+        el("line", { class: "grid", x1: tx, y1: plot.y, x2: tx, y2: plot.y + plot.h });
+        el("text", { class: "label", x: tx, y: plot.y + plot.h + 26, "text-anchor": "middle" }, tick);
+      }
+
+      el("text", { class: "title-label", x: width / 2, y: height - 16, "text-anchor": "middle" }, "elapsed time, ms");
+      el("text", { class: "title-label", x: 18, y: plot.y + plot.h / 2, transform: `rotate(-90 18 ${plot.y + plot.h / 2})`, "text-anchor": "middle", fill: "var(--gyro)" }, "角速度, dps");
+      el("text", { class: "title-label", x: width - 18, y: plot.y + plot.h / 2, transform: `rotate(90 ${width - 18} ${plot.y + plot.h / 2})`, "text-anchor": "middle", fill: "var(--accel)" }, "動的加速度, mg");
+
+      if (Number.isFinite(scoreStartMs) && Number.isFinite(scoreEndMs)) {
+        drawAccelScoreArea(data, x, yRight, scoreStartMs, scoreEndMs);
+      }
+
+      el("line", { class: "axis", x1: plot.x, y1: plot.y, x2: plot.x, y2: plot.y + plot.h });
+      el("line", { class: "axis", x1: plot.x + plot.w, y1: plot.y, x2: plot.x + plot.w, y2: plot.y + plot.h });
+      el("line", { class: "axis", x1: plot.x, y1: plot.y + plot.h, x2: plot.x + plot.w, y2: plot.y + plot.h });
+
+      el("path", { class: "line accel-line", d: pathFor(data, "accel", x, yRight), "clip-path": `url(#${PLOT_CLIP_ID})` });
+      el("path", { class: "line gyro-line", d: pathFor(data, "gyro", x, yLeft), "clip-path": `url(#${PLOT_CLIP_ID})` });
+
+      if (Number.isFinite(scoreStartMs)) {
+        drawJudgeMarker(x, scoreStartMs, "score start", "#4f46e5", true);
+      }
+      if (Number.isFinite(scoreEndMs) && scoreEndMs !== endJudgeMs) {
+        drawJudgeMarker(x, scoreEndMs, "accel score end", "#4f46e5", false);
+      }
+      if (Number.isFinite(endJudgeMs)) {
+        drawJudgeMarker(x, endJudgeMs, "end judge", "#8a5a00", false);
+      }
+
+      for (const d of data) {
+        const gyroPoint = el("circle", { class: "point", cx: x(d.t), cy: yLeft(d.gyro), r: 4.2, fill: "var(--gyro)", "clip-path": `url(#${PLOT_CLIP_ID})` });
+        const gyroTitle = document.createElementNS("http://www.w3.org/2000/svg", "title");
+        gyroTitle.textContent = `${d.t} ms, gyro ${d.gyro} dps${d.gyroRaw == null ? "" : `, raw ${d.gyroRaw}`}`;
+        gyroPoint.appendChild(gyroTitle);
+
+        const accelPoint = el("circle", { class: "point", cx: x(d.t), cy: yRight(d.accel), r: 4.2, fill: "var(--accel)", "clip-path": `url(#${PLOT_CLIP_ID})` });
+        const accelTitle = document.createElementNS("http://www.w3.org/2000/svg", "title");
+        accelTitle.textContent = `${d.t} ms, acceleration ${d.accel} mg`;
+        accelPoint.appendChild(accelTitle);
+      }
+
+      const scoredGyroDps = gyroScoreToDps(parsed.fields.gyro_score);
+      if (Number.isFinite(scoredGyroDps)) {
+        drawGyroScoreLevel(x, yLeft, scoredGyroDps);
+      }
+
+      const scorePeak =
+        Number.isFinite(scoreStartMs)
+          ? drawGyroScorePeak(data, x, yLeft, scoreStartMs, scoredGyroDps)
+          : null;
+      drawGyroPeak(data, x, yLeft, scorePeak);
+      drawAccelPeak(data, x, yRight);
+    }
+
+    function drawGyroScoreLevel(x, yLeft, scoredGyroDps) {
+      const cy = yLeft(scoredGyroDps);
+      el("line", {
+        class: "gyro-score-level",
+        x1: plot.x,
+        y1: cy,
+        x2: plot.x + plot.w,
+        y2: cy,
+        "clip-path": `url(#${PLOT_CLIP_ID})`
+      });
+      el("text", {
+        class: "label",
+        x: plot.x + plot.w - 8,
+        y: cy - 7,
+        "text-anchor": "end",
+        fill: "var(--gyro)"
+      }, `gyro score ${scoredGyroDps} dps`);
+    }
+
+    function drawAccelScoreArea(data, x, yRight, startMs, endMs) {
+      const start = Math.min(startMs, endMs);
+      const end = Math.max(startMs, endMs);
+      const baselineY = yRight(ACCEL_SCORE_OFFSET_MG);
+      el("line", {
+        class: "accel-score-baseline",
+        x1: x(start),
+        y1: baselineY,
+        x2: x(end),
+        y2: baselineY,
+        "clip-path": `url(#${PLOT_CLIP_ID})`
+      });
+
+      const points = windowPoints(data, "accel", start, end);
+      let run = [];
+      const flushRun = () => {
+        if (run.length < 2) {
+          run = [];
+          return;
+        }
+        const first = run[0];
+        const last = run[run.length - 1];
+        const d = [
+          `M ${x(first.t).toFixed(1)} ${baselineY.toFixed(1)}`,
+          ...run.map((p) => `L ${x(p.t).toFixed(1)} ${yRight(p.value).toFixed(1)}`),
+          `L ${x(last.t).toFixed(1)} ${baselineY.toFixed(1)}`,
+          "Z"
+        ].join(" ");
+        const area = el("path", { class: "accel-score-area", d, "clip-path": `url(#${PLOT_CLIP_ID})` });
+        const title = document.createElementNS("http://www.w3.org/2000/svg", "title");
+        title.textContent = `accel score area ${startMs} ms to ${endMs} ms, above ${ACCEL_SCORE_OFFSET_MG} mg`;
+        area.appendChild(title);
+        run = [];
+      };
+
+      for (let i = 1; i < points.length; i += 1) {
+        const a = points[i - 1];
+        const b = points[i];
+        if (a.value <= ACCEL_SCORE_OFFSET_MG && b.value <= ACCEL_SCORE_OFFSET_MG) {
+          flushRun();
+          continue;
+        }
+
+        let clippedA = a;
+        let clippedB = b;
+        if (a.value < ACCEL_SCORE_OFFSET_MG && b.value > ACCEL_SCORE_OFFSET_MG) {
+          clippedA = thresholdCrossing(a, b, ACCEL_SCORE_OFFSET_MG);
+        }
+        if (a.value > ACCEL_SCORE_OFFSET_MG && b.value < ACCEL_SCORE_OFFSET_MG) {
+          clippedB = thresholdCrossing(a, b, ACCEL_SCORE_OFFSET_MG);
+        }
+
+        if (!run.length || run[run.length - 1].t !== clippedA.t) {
+          run.push(clippedA);
+        }
+        run.push(clippedB);
+        if (clippedB.value === ACCEL_SCORE_OFFSET_MG && b.value < ACCEL_SCORE_OFFSET_MG) {
+          flushRun();
+        }
+      }
+      flushRun();
+    }
+
+    function drawGyroScorePeak(data, x, yLeft, startMs, scoredGyroDps) {
+      const peak = gyroScorePeakInfo(data, startMs)?.peak;
+      if (!peak) {
+        return null;
+      }
+      if (Number.isFinite(scoredGyroDps) &&
+          Math.abs(peak.gyro - scoredGyroDps) > GYRO_SCORE_MISMATCH_DPS) {
+        return null;
+      }
+      const cx = x(peak.t);
+      const cy = yLeft(peak.gyro);
+      const ring = el("circle", {
+        class: "gyro-score-peak",
+        cx,
+        cy,
+        r: 8,
+        "clip-path": `url(#${PLOT_CLIP_ID})`
+      });
+      const title = document.createElementNS("http://www.w3.org/2000/svg", "title");
+      title.textContent = `gyro score peak ${peak.gyro} dps @ ${peak.t} ms`;
+      ring.appendChild(title);
+      el("circle", {
+        class: "gyro-score-peak-core",
+        cx,
+        cy,
+        r: 4.5,
+        "clip-path": `url(#${PLOT_CLIP_ID})`
+      });
+      el("text", {
+        class: "label",
+        x: cx,
+        y: cy - 14,
+        "text-anchor": "middle",
+        fill: "var(--gyro)"
+      }, "gyro score peak");
+      return peak;
+    }
+
+    function drawGyroPeak(data, x, yLeft, scorePeak) {
+      const peak = peakFor(data, "gyro");
+      if (!peak) {
+        return;
+      }
+      if (scorePeak && scorePeak.t === peak.t && scorePeak.gyro === peak.gyro) {
+        return;
+      }
+      const cx = x(peak.t);
+      const cy = yLeft(peak.gyro);
+      const ring = el("circle", {
+        class: "gyro-peak",
+        cx,
+        cy,
+        r: 8,
+        "clip-path": `url(#${PLOT_CLIP_ID})`
+      });
+      const title = document.createElementNS("http://www.w3.org/2000/svg", "title");
+      title.textContent = `gyro peak ${peak.gyro} dps @ ${peak.t} ms`;
+      ring.appendChild(title);
+      el("circle", {
+        class: "gyro-peak-core",
+        cx,
+        cy,
+        r: 4.5,
+        "clip-path": `url(#${PLOT_CLIP_ID})`
+      });
+    }
+
+    function drawAccelPeak(data, x, yRight) {
+      const peak = peakFor(data, "accel");
+      if (!peak) {
+        return;
+      }
+      const cx = x(peak.t);
+      const cy = yRight(peak.accel);
+      const ring = el("circle", {
+        class: "accel-peak",
+        cx,
+        cy,
+        r: 8,
+        "clip-path": `url(#${PLOT_CLIP_ID})`
+      });
+      const title = document.createElementNS("http://www.w3.org/2000/svg", "title");
+      title.textContent = `accel peak ${peak.accel} mg @ ${peak.t} ms`;
+      ring.appendChild(title);
+      el("circle", {
+        class: "accel-peak-core",
+        cx,
+        cy,
+        r: 4.5,
+        "clip-path": `url(#${PLOT_CLIP_ID})`
+      });
+    }
+
+    function windowPoints(data, key, startMs, endMs) {
+      const start = Math.min(startMs, endMs);
+      const end = Math.max(startMs, endMs);
+      const points = [];
+      const startValue = valueAtTime(data, key, start);
+      if (Number.isFinite(startValue)) {
+        points.push({ t: start, value: startValue });
+      }
+      for (const row of data) {
+        if (row.t > start && row.t < end) {
+          points.push({ t: row.t, value: row[key] });
+        }
+      }
+      const endValue = valueAtTime(data, key, end);
+      if (Number.isFinite(endValue)) {
+        points.push({ t: end, value: endValue });
+      }
+      return points.sort((a, b) => a.t - b.t);
+    }
+
+    function valueAtTime(data, key, timeMs) {
+      if (!data.length) {
+        return NaN;
+      }
+      if (timeMs <= data[0].t) {
+        return data[0][key];
+      }
+      const last = data[data.length - 1];
+      if (timeMs >= last.t) {
+        return last[key];
+      }
+      for (let i = 1; i < data.length; i += 1) {
+        const a = data[i - 1];
+        const b = data[i];
+        if (timeMs === b.t) {
+          return b[key];
+        }
+        if (timeMs > a.t && timeMs < b.t) {
+          const ratio = (timeMs - a.t) / (b.t - a.t);
+          return a[key] + (b[key] - a[key]) * ratio;
+        }
+      }
+      return NaN;
+    }
+
+    function thresholdCrossing(a, b, threshold) {
+      const ratio = (threshold - a.value) / (b.value - a.value);
+      return {
+        t: a.t + (b.t - a.t) * ratio,
+        value: threshold
+      };
+    }
+
+    function drawJudgeMarker(x, timeMs, label, color, isStart) {
+      const tx = x(timeMs);
+      const baseY = plot.y + plot.h;
+      el("line", {
+        class: "marker-line",
+        x1: tx,
+        y1: plot.y,
+        x2: tx,
+        y2: baseY,
+        stroke: color
+      });
+      const points = isStart
+        ? `${tx - 8},${baseY + 18} ${tx + 8},${baseY + 18} ${tx},${baseY + 3}`
+        : `${tx - 8},${baseY + 3} ${tx + 8},${baseY + 3} ${tx},${baseY + 18}`;
+      const triangle = el("polygon", {
+        class: "marker-triangle",
+        points,
+        fill: color
+      });
+      const title = document.createElementNS("http://www.w3.org/2000/svg", "title");
+      title.textContent = `${label} ${timeMs} ms`;
+      triangle.appendChild(title);
+      const labelText = isStart && timeMs === 0 ? label : `${label} ${timeMs}ms`;
+      el("text", {
+        class: "label",
+        x: tx,
+        y: isStart ? plot.y - 10 : plot.y + 14,
+        "text-anchor": "middle",
+        fill: color
+      }, labelText);
+    }
+
+    function pathFor(data, key, x, y) {
+      return data.map((d, i) => `${i === 0 ? "M" : "L"} ${x(d.t).toFixed(1)} ${y(d[key]).toFixed(1)}`).join(" ");
+    }
+
+    function el(name, attrs = {}, text = "") {
+      const node = document.createElementNS("http://www.w3.org/2000/svg", name);
+      Object.entries(attrs).forEach(([key, value]) => node.setAttribute(key, value));
+      if (text) node.textContent = text;
+      svg.appendChild(node);
+      return node;
+    }
+  </script>
+</body>
+</html>

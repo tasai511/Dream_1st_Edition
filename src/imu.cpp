@@ -66,12 +66,20 @@ const uint8_t kFifoModeContinuous = 0x06;
 const uint8_t kFifoEntrySizeBytes = 7;
 const uint8_t kFifoStatus2DiffFifoHighMask = 0x03;
 const uint16_t kFifoDrainMaxEntries = 96;
+const uint16_t kFifoEntryApproxUs = 2083;
 const uint8_t kFifoTagSensorShift = 3;
 const uint8_t kFifoTagGyro = 0x01;
 const uint8_t kFifoTagHighGAccel = 0x1D;
+const uint8_t kRecentMotionSnapshotCapacity = 32;
 
 bool ready = false;
 volatile uint8_t int1Count = 0;
+Imu::MotionSnapshot recentMotionSnapshots[kRecentMotionSnapshotCapacity] = {};
+uint8_t recentMotionSnapshotCountValue = 0;
+uint16_t lastMotionAccelMagnitudeMg = 1000;
+int16_t lastMotionGyroXRaw = 0;
+int16_t lastMotionGyroYRaw = 0;
+int16_t lastMotionGyroZRaw = 0;
 
 SPISettings spiSettings(1000000, MSBFIRST, SPI_MODE3);
 
@@ -192,6 +200,29 @@ void configureFifoInterrupt() {
   writeRegister(kRegInt1Ctrl, kInt1CtrlFifoWatermark);
 }
 
+void rememberMotionSnapshot(
+    uint16_t accelMagnitudeMg,
+    int16_t gyroXRaw,
+    int16_t gyroYRaw,
+    int16_t gyroZRaw,
+    uint16_t ageMs) {
+  if (recentMotionSnapshotCountValue >= kRecentMotionSnapshotCapacity) {
+    for (uint8_t i = 1; i < kRecentMotionSnapshotCapacity; ++i) {
+      recentMotionSnapshots[i - 1] = recentMotionSnapshots[i];
+    }
+    recentMotionSnapshotCountValue = kRecentMotionSnapshotCapacity - 1;
+  }
+
+  recentMotionSnapshots[recentMotionSnapshotCountValue] = {
+      accelMagnitudeMg,
+      gyroXRaw,
+      gyroYRaw,
+      gyroZRaw,
+      ageMs,
+  };
+  ++recentMotionSnapshotCountValue;
+}
+
 }  // namespace
 
 namespace Imu {
@@ -234,6 +265,18 @@ uint8_t consumeInterruptCount() {
   return count;
 }
 
+uint8_t recentMotionSnapshotCount() {
+  return recentMotionSnapshotCountValue;
+}
+
+bool recentMotionSnapshot(uint8_t index, MotionSnapshot& snapshot) {
+  if (index >= recentMotionSnapshotCountValue) {
+    return false;
+  }
+  snapshot = recentMotionSnapshots[index];
+  return true;
+}
+
 void drainFifo() {
   if (!ready) {
     return;
@@ -265,11 +308,12 @@ void readMotionSample(
     int16_t& gyroXRaw,
     int16_t& gyroYRaw,
     int16_t& gyroZRaw) {
-  bool hasAccel = false;
-  uint16_t fifoAccelMagnitudeMg = 1000;
-  gyroXRaw = 0;
-  gyroYRaw = 0;
-  gyroZRaw = 0;
+  bool hasFreshGyroForSnapshot = false;
+  uint16_t fifoAccelMagnitudeMg = lastMotionAccelMagnitudeMg;
+  gyroXRaw = lastMotionGyroXRaw;
+  gyroYRaw = lastMotionGyroYRaw;
+  gyroZRaw = lastMotionGyroZRaw;
+  recentMotionSnapshotCountValue = 0;
 
   if (ready) {
     uint8_t entry[kFifoEntrySizeBytes] = {};
@@ -277,7 +321,6 @@ void readMotionSample(
     if (entries > kFifoDrainMaxEntries) {
       entries = kFifoDrainMaxEntries;
     }
-
     while (entries-- > 0) {
       readRegisters(kRegFifoDataOutTag, entry, sizeof(entry));
       const uint8_t tag = entry[0] >> kFifoTagSensorShift;
@@ -289,17 +332,34 @@ void readMotionSample(
           static_cast<int16_t>((static_cast<uint16_t>(entry[6]) << 8) | entry[5]);
 
       if (tag == kFifoTagGyro) {
+        lastMotionGyroXRaw = x;
+        lastMotionGyroYRaw = y;
+        lastMotionGyroZRaw = z;
         gyroXRaw = x;
         gyroYRaw = y;
         gyroZRaw = z;
+        hasFreshGyroForSnapshot = true;
       } else if (tag == kFifoTagHighGAccel) {
         fifoAccelMagnitudeMg = highGAccelMagnitudeMgFromFifo(x, y, z);
-        hasAccel = true;
+        lastMotionAccelMagnitudeMg = fifoAccelMagnitudeMg;
+      }
+
+      if (tag == kFifoTagHighGAccel && hasFreshGyroForSnapshot) {
+        const uint16_t ageMs = static_cast<uint16_t>(
+            (static_cast<uint32_t>(entries) * kFifoEntryApproxUs + 500UL) /
+            1000UL);
+        rememberMotionSnapshot(
+            fifoAccelMagnitudeMg,
+            gyroXRaw,
+            gyroYRaw,
+            gyroZRaw,
+            ageMs);
+        hasFreshGyroForSnapshot = false;
       }
     }
   }
 
-  accelMagnitudeMg = hasAccel ? fifoAccelMagnitudeMg : 1000;
+  accelMagnitudeMg = fifoAccelMagnitudeMg;
 }
 
 TapEvent readTapEvent() {

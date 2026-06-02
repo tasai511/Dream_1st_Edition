@@ -6,9 +6,19 @@
 
 namespace Imu {
 
+struct MotionSnapshot {
+  uint16_t accelMagnitudeMg;
+  int16_t gyroXRaw;
+  int16_t gyroYRaw;
+  int16_t gyroZRaw;
+  uint16_t ageMs;
+};
+
 void begin();
 bool isReady();
 uint8_t consumeInterruptCount();
+uint8_t recentMotionSnapshotCount();
+bool recentMotionSnapshot(uint8_t index, MotionSnapshot& snapshot);
 void drainFifo();
 TapEvent readTapEvent();
 void enterSleepMode();
