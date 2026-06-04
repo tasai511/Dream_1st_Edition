@@ -446,6 +446,42 @@ const YEARLY_DAYS_BADGE_DEFINITIONS = [
   target,
   type: "unique",
 }));
+const DATE_BADGE_DEFINITIONS = [
+  {
+    id: "date-baseball-day",
+    label: "野球の日",
+    name: "野球の日",
+    description: "8月9日に練習した",
+    conditionText: "8月9日",
+    rarity: "SS",
+    category: "calendar",
+    period: RANGE_TODAY,
+    metric: "date",
+    target: 809,
+    month: 8,
+    day: 9,
+    type: "unique",
+    trigger: "date",
+    secret: true,
+  },
+  {
+    id: "date-christmas-present",
+    label: "クリスマスプレゼント",
+    name: "クリスマスプレゼント",
+    description: "12月25日に練習した",
+    conditionText: "12月25日",
+    rarity: "SS",
+    category: "calendar",
+    period: RANGE_TODAY,
+    metric: "date",
+    target: 1225,
+    month: 12,
+    day: 25,
+    type: "unique",
+    trigger: "date",
+    secret: true,
+  },
+];
 const ALL_TIME_AVG_BADGE_DEFINITIONS = [
   ["D", 400],
   ["C", 500],
@@ -492,6 +528,7 @@ const BADGE_DEFINITIONS = [
   ...MONTHLY_BADGE_DEFINITIONS,
   ...YEARLY_COUNT_BADGE_DEFINITIONS,
   ...YEARLY_DAYS_BADGE_DEFINITIONS,
+  ...DATE_BADGE_DEFINITIONS,
   ...ALL_TIME_AVG_BADGE_DEFINITIONS,
   ...ALL_TIME_BEST_BADGE_DEFINITIONS,
 ];
@@ -502,6 +539,7 @@ const HOME_BADGE_DEFINITIONS = [
   ...MONTHLY_BADGE_DEFINITIONS.filter((definition) => ["count", "days"].includes(definition.metric)),
   ...YEARLY_COUNT_BADGE_DEFINITIONS,
   ...YEARLY_DAYS_BADGE_DEFINITIONS,
+  ...DATE_BADGE_DEFINITIONS,
 ];
 
 const defaultDb = {
@@ -521,6 +559,7 @@ const defaultDb = {
   testRandomGeneration: false,
   testDate: null,
 };
+const DEVELOPER_PIN = "2033";
 
 function numericSeed(seed) {
   const text = String(seed ?? "");
@@ -1223,6 +1262,12 @@ function addHomeBadge(map, date, label) {
 }
 
 function isHomeBadgeEarned(definition, summary) {
+  if (definition.metric === "date") {
+    const date = String(summary.date || "");
+    const month = Number(date.slice(5, 7));
+    const day = Number(date.slice(8, 10));
+    return (summary.count || 0) > 0 && month === definition.month && day === definition.day;
+  }
   const value = homeBadgeMetricValue(definition, summary);
   const target = homeBadgeTarget(definition, summary);
   return definition.trigger === "exact" ? value === target : value >= target;
@@ -2931,7 +2976,7 @@ function demoDb(base = null) {
 }
 
 function animationTestDb() {
-  const names = ["テストプレイヤー"];
+  const names = ["開発プレイヤー"];
   const bats = ["メインバット", "サブバット"];
   return {
     activeName: names[0],
@@ -2963,6 +3008,7 @@ export default function App() {
   const [firstGetBadges, setFirstGetBadges] = useState([]);
   const [homeViewDate, setHomeViewDate] = useState(todayISO);
   const [dismissedHomeBadgesByDate, setDismissedHomeBadgesByDate] = useState({});
+  const [developerUnlocked, setDeveloperUnlocked] = useState(false);
   const headerLogoRef = useRef(null);
   const startupLogoRef = useRef(null);
   const startupTimerRef = useRef(null);
@@ -3001,10 +3047,11 @@ export default function App() {
   };
 
   const currentName = db.activeName || db.names[0] || "";
-  const activeDate = db.testInputDefaults && db.testDate ? db.testDate : todayISO();
+  const developerModeActive = developerUnlocked && db.testInputDefaults;
+  const activeDate = developerModeActive && db.testDate ? db.testDate : todayISO();
   const allForNameRaw = useMemo(() => db.records.filter((record) => record.name === currentName), [db.records, currentName]);
   const allForName = useMemo(() => allForNameRaw.filter((record) => record.date <= activeDate), [allForNameRaw, activeDate]);
-  const homeActiveDate = db.testInputDefaults ? activeDate : homeViewDate;
+  const homeActiveDate = developerModeActive ? activeDate : homeViewDate;
   const homeForName = useMemo(() => allForNameRaw.filter((record) => record.date <= homeActiveDate), [allForNameRaw, homeActiveDate]);
   const badgeMap = useMemo(() => badgesFor(allForName, activeDate), [allForName, activeDate]);
   const homeBadgeMap = useMemo(() => (
@@ -3341,6 +3388,7 @@ export default function App() {
               setScoreAnimation={setScoreAnimation}
               onScoreAnimationComplete={markScoreAnimationPlayed}
               badgeMap={homeBadgeMap}
+              developerModeActive={developerModeActive}
             />
           )}
           {tab === "record" && (
@@ -3367,6 +3415,8 @@ export default function App() {
               importCsv={importCsv}
               loadAnimationTestDb={loadAnimationTestDb}
               setPendingDelete={setPendingDelete}
+              developerUnlocked={developerUnlocked}
+              setDeveloperUnlocked={setDeveloperUnlocked}
             />
           )}
         </main>
@@ -3391,7 +3441,7 @@ export default function App() {
   );
 }
 
-function HomeView({ db, setDb, currentName, allForName, allForNameRaw = allForName, addRecord, activeDate = todayISO(), appActiveDate = todayISO(), setHomeViewDate, dismissedHomeBadgesByDate, setDismissedHomeBadgesByDate, scoreAnimation, setScoreAnimation, onScoreAnimationComplete, resultRange = RANGE_TODAY, onChallengeRangeChange = null, title = "今日の結果", titleIcon = "home", badgeTitle = "今日のバッジ", badgeMap: precomputedBadgeMap = null }) {
+function HomeView({ db, setDb, currentName, allForName, allForNameRaw = allForName, addRecord, activeDate = todayISO(), appActiveDate = todayISO(), setHomeViewDate, dismissedHomeBadgesByDate, setDismissedHomeBadgesByDate, scoreAnimation, setScoreAnimation, onScoreAnimationComplete, resultRange = RANGE_TODAY, onChallengeRangeChange = null, title = "今日の結果", titleIcon = "home", badgeTitle = "今日のバッジ", badgeMap: precomputedBadgeMap = null, developerModeActive = false }) {
   const [formResetKey, setFormResetKey] = useState(0);
   const showHomeEntryTools = resultRange === RANGE_TODAY;
   const scoreAnimationPlayed = Boolean(scoreAnimation?.playedRanges?.includes(resultRange));
@@ -3466,11 +3516,11 @@ function HomeView({ db, setDb, currentName, allForName, allForNameRaw = allForNa
       .sort((a, b) => (batOrder.get(a.bat) ?? 9999) - (batOrder.get(b.bat) ?? 9999));
   }, [animatedBatSummary, db.bats, todayByBat]);
   const testRecordValues = useMemo(() => (
-    db.testInputDefaults && db.testRandomGeneration
+    developerModeActive && db.testRandomGeneration
       ? randomTestRecordValues()
       : null
-  ), [activeDate, db.testInputDefaults, db.testRandomGeneration, formResetKey, todayRecords.length]);
-  const isHomeHistoryView = !db.testInputDefaults && activeDate !== todayISO();
+  ), [activeDate, developerModeActive, db.testRandomGeneration, formResetKey, todayRecords.length]);
+  const isHomeHistoryView = !developerModeActive && activeDate !== todayISO();
   const viewWindow = useMemo(() => (
     resultRange === RANGE_TODAY ? null : viewWindowForRange(allFiltered, resultRange, activeDate)
   ), [allFiltered, resultRange, activeDate]);
@@ -3491,12 +3541,12 @@ function HomeView({ db, setDb, currentName, allForName, allForNameRaw = allForNa
   const markedDates = useMemo(() => new Set(allForNameRaw.map((record) => record.date)), [allForNameRaw]);
   const handleRecordSubmit = (event) => {
     if (addRecord(event, activeDate)) {
-      if (!db.testInputDefaults) event.currentTarget.reset();
+      if (!developerModeActive) event.currentTarget.reset();
       setFormResetKey((value) => value + 1);
     }
   };
   const handleTestRecordCreate = (bat) => {
-    if (!db.testInputDefaults || !currentName || !bat) return;
+    if (!developerModeActive || !currentName || !bat) return;
     const values = testRecordValues || randomTestRecordValues();
     const record = {
       id: uid(),
@@ -3530,7 +3580,7 @@ function HomeView({ db, setDb, currentName, allForName, allForNameRaw = allForNa
     setFormResetKey((value) => value + 1);
   };
   const handleHomeDateSelect = (nextDate) => {
-    if (!db.testInputDefaults) {
+    if (!developerModeActive) {
       setHomeViewDate?.(nextDate || todayISO());
       return;
     }
@@ -3609,7 +3659,7 @@ function HomeView({ db, setDb, currentName, allForName, allForNameRaw = allForNa
               <ChallengeRangeTabs activeRange={resultRange} onChange={onChallengeRangeChange} />
             ) : null}
           />
-          {showHomeEntryTools && db.testInputDefaults && (
+          {showHomeEntryTools && developerModeActive && (
             <div className="home-test-controls">
               <label className="test-auto-switch" aria-label="自動生成">
                 <input
@@ -3626,7 +3676,7 @@ function HomeView({ db, setDb, currentName, allForName, allForNameRaw = allForNa
               value={activeDate}
               markedDates={markedDates}
               minDate={firstRecordDate(allForNameRaw) ? toISO(firstRecordDate(allForNameRaw)) : "2024-01-01"}
-              maxDate={db.testInputDefaults ? null : todayISO()}
+              maxDate={developerModeActive ? null : todayISO()}
               onSelect={handleHomeDateSelect}
             />
           )}
@@ -3644,7 +3694,7 @@ function HomeView({ db, setDb, currentName, allForName, allForNameRaw = allForNa
                   defaultValues={testRecordValues}
                   resetToken={formResetKey}
                   submitDisabled={isScoreAnimating || isHomeHistoryView}
-                  testAction={db.testInputDefaults ? handleTestRecordCreate : null}
+                  testAction={developerModeActive ? handleTestRecordCreate : null}
                   onSubmit={handleRecordSubmit}
                   submitLabel={hasTodayRecord ? "追加する" : "記録する"}
                 />
@@ -4445,8 +4495,8 @@ function BadgeDetailPopover({ badge, onClose }) {
             <img src={CATEGORY_ICON_URLS[badge.category]} alt="" />
           </div>
           <div className="badge-popup-card-copy">
-            <strong>{badge.lockedSecret ? "???" : badge.label || badge.name}</strong>
-            <p>{badge.lockedSecret ? "ひみつ" : badge.description}</p>
+            <strong>{badge.lockedSecret ? "？？？" : badge.label || badge.name}</strong>
+            <p>{badge.lockedSecret ? "シークレット" : badge.description}</p>
           </div>
         </div>
       </aside>
@@ -4511,7 +4561,7 @@ function BadgeChip({ label, count = 1, description = null, lockedSecret = false 
   const canonicalLabel = canonicalBadgeLabel(label);
   const definition = makeBadgeDefinition(canonicalLabel, description ? { description } : {});
   const isLocked = count === 0;
-  const shortNameLines = lockedSecret ? ["???"] : badgeShortNameLines(definition);
+  const shortNameLines = lockedSecret ? ["？？？"] : badgeShortNameLines(definition);
   const shortNameText = shortNameLines.join("");
   return (
     <>
@@ -4946,7 +4996,7 @@ function SwingForm({ bats, defaultBat, onSubmit, submitLabel, defaultValues = nu
       <label className="field-label"><span className="field-title">平均</span><span className="paper-input-cell"><input name="avg" type="number" inputMode="numeric" min="0" max="999" step="1" required placeholder="-" value={avgValue} onChange={(event) => setAvgValue(event.target.value)} aria-label="平均" /><span aria-hidden="true">点</span></span></label>
       <label className="field-label"><span className="field-title">ベスト</span><span className="paper-input-cell"><input name="best" type="number" inputMode="numeric" min="0" max="999" step="1" required placeholder="-" value={bestValue} onChange={(event) => setBestValue(event.target.value)} aria-label="ベスト" /><span aria-hidden="true">点</span></span></label>
       <span className="home-ok-slot">
-        {testAction && <button className="standard-ok-button settings-ok-button test-seed-button" type="button" onClick={handleTestAction} disabled={submitDisabled}>テスト</button>}
+        {testAction && <button className="standard-ok-button settings-ok-button test-seed-button" type="button" onClick={handleTestAction} disabled={submitDisabled}>開発用</button>}
         <button className="standard-ok-button settings-ok-button" type="submit" aria-label={submitLabel} disabled={submitDisabled} data-sound-effect="score">OK</button>
       </span>
     </form>
@@ -5034,10 +5084,12 @@ function HomeBatResultCard({ db, item }) {
   );
 }
 
-function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, importCsv, loadAnimationTestDb, setPendingDelete }) {
+function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, importCsv, loadAnimationTestDb, setPendingDelete, developerUnlocked = false, setDeveloperUnlocked = null }) {
   const [draft, setDraft] = useState(db);
   const [openBatPalette, setOpenBatPalette] = useState(null);
   const [palettePosition, setPalettePosition] = useState(null);
+  const [developerPin, setDeveloperPin] = useState("");
+  const [developerPinError, setDeveloperPinError] = useState("");
   const hasNames = draft.names.length > 0;
   const batColorEntries = draft.bats.map((bat) => [bat, batColorFor(draft, bat)]);
   useEffect(() => {
@@ -5083,6 +5135,19 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
 
   const shouldIgnoreChipSurfaceClick = (event) =>
     event.target.closest?.("button, .bat-color-menu");
+
+  const unlockDeveloperTools = (event) => {
+    event.preventDefault();
+    if (developerPin === DEVELOPER_PIN) {
+      setDeveloperUnlocked?.(true);
+      setDeveloperPin("");
+      setDeveloperPinError("");
+      playEffectSound("switch");
+      return;
+    }
+    setDeveloperPinError("暗証番号が違います。");
+    playEffectSound("error");
+  };
 
   const togglePalette = (id, event) => {
     if (openBatPalette === id) {
@@ -5307,15 +5372,40 @@ function SettingsView({ db, currentName, setDb, addName, addBat, exportCsv, impo
         </div>
         <button type="button" className="danger wide" onClick={() => setPendingDelete({ type: "all", value: "全データ" })}>全データ削除</button>
       </section>
-      <section className="panel">
+      <section className={`panel developer-panel ${developerUnlocked ? "unlocked" : "locked"}`}>
         <div className="section-row">
-          <h2 className="icon-heading">テスト</h2>
-          <p>検証用</p>
+          <h2 className="icon-heading">開発用</h2>
+          <p>{developerUnlocked ? "解除済み" : "暗証番号が必要"}</p>
         </div>
-        <button type="button" className="ghost wide" onClick={() => setDb({ ...demoDb(db), testInputDefaults: db.testInputDefaults, testRandomGeneration: db.testRandomGeneration, testDate: db.testDate || null })}>デモデータ作成</button>
-        <button type="button" className={`ghost wide ${db.testInputDefaults ? "selected" : ""}`} onClick={() => setDb(db.testInputDefaults ? { ...db, testInputDefaults: false, testRandomGeneration: false, testDate: null } : { ...db, testInputDefaults: true, testRandomGeneration: true, testDate: todayISO() })}>
-          テストモード {db.testInputDefaults ? "ON" : "OFF"}
-        </button>
+        {developerUnlocked ? (
+          <>
+            <button type="button" className="ghost wide" onClick={() => setDb({ ...demoDb(db), testInputDefaults: db.testInputDefaults, testRandomGeneration: db.testRandomGeneration, testDate: db.testDate || null })}>デモデータ作成</button>
+            <button type="button" className={`ghost wide ${db.testInputDefaults ? "selected" : ""}`} onClick={() => setDb(db.testInputDefaults ? { ...db, testInputDefaults: false, testRandomGeneration: false, testDate: null } : { ...db, testInputDefaults: true, testRandomGeneration: true, testDate: todayISO() })}>
+              開発用モード {db.testInputDefaults ? "ON" : "OFF"}
+            </button>
+          </>
+        ) : (
+          <form className="developer-unlock-form" onSubmit={unlockDeveloperTools} onInvalidCapture={playFormErrorSound}>
+            <label className="field-label">
+              <span className="field-title">暗証番号</span>
+              <input
+                type="password"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                autoComplete="off"
+                value={developerPin}
+                onChange={(event) => {
+                  setDeveloperPin(event.target.value);
+                  if (developerPinError) setDeveloperPinError("");
+                }}
+                aria-label="開発用の暗証番号"
+                required
+              />
+            </label>
+            <button type="submit" className="ghost wide">解除</button>
+            {developerPinError && <p className="settings-error">{developerPinError}</p>}
+          </form>
+        )}
       </section>
     </div>
   );

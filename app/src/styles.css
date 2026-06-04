@@ -1540,6 +1540,19 @@ p {
   font-weight: 900;
 }
 
+.developer-unlock-form {
+  display: grid;
+  gap: 7px;
+}
+
+.developer-unlock-form .field-label {
+  gap: 5px;
+}
+
+.developer-unlock-form .settings-error {
+  margin-top: 0;
+}
+
 .settings-fieldset {
   display: grid;
   gap: 8px;
