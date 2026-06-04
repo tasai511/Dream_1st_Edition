@@ -3355,7 +3355,7 @@ export default function App() {
     const file = event.target.files?.[0];
     if (!file) return;
     const rows = parseCsv(await file.text()).slice(1);
-    const next = { ...db, names: [...db.names], nameColors: normalizeNameColors(db.nameColors, db.names, db.theme), bats: [...db.bats], batColors: normalizeBatColors(db.batColors, db.bats), records: [...db.records] };
+    const next = { ...db, names: [...db.names], nameColors: normalizeNameColors(db.nameColors, db.names, db.theme), bats: [...db.bats], batColors: normalizeBatColors(db.batColors, db.bats), records: [] };
     rows.forEach(([name, bat, date, count, avg, best]) => {
       if (!name || !bat || !/^\d{4}-\d{2}-\d{2}$/.test(date || "")) return;
       if (!next.names.includes(name)) {
