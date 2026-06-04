@@ -17,390 +17,221 @@ Dream-1 は、正確に測る装置ではなく、良い練習を増やす装置
 
 ---
 
-## 記録アプリ: バッジ / ホームUI 仕様
+## 記録アプリ: Swing Log 現行実装
 
-Dream-1 の記録アプリは、厳密なトレーニング評価ではなく「素振りを続けたくなるメダル収集ゲーム」として設計する。
+Dream-1 の記録アプリは、厳密なトレーニング評価ではなく「素振りを続けたくなる記録とバッジ収集」のための PWA として実装している。
 
 重視すること:
 
 - 毎日少しでも振りたくなる
-- あと少しで取れる感
-- たくさん集めたくなる
-- 自分の成長を感じられる
-- 他人比較ではなく、昨日/先週/先月の自分との比較を重視する
+- あと少しで取れる感を出す
+- 回数、平均、ベスト、練習日数の積み上げを見せる
+- 他人比較ではなく、同じ名前、同じバット、同じ端末内での自己比較を中心にする
+- Dream-1 は厳密フォーム解析機ではなく、素振りを楽しく続けるための道具として扱う
 
-注意:
+### 技術構成
 
-- フォーム評価っぽい名前は使わない
-- 「理想スイング」「完璧フォーム」は避ける
-- Dream-1 は厳密フォーム解析機ではなく、素振りを楽しく続けるための道具
-- ベストだけ追わせすぎない
-- 回数、平均、継続を中心にする
-- 「あと少し」が見える UI を重視する
+- 実装本体は `app/src/App.jsx`
+- React 18 + Vite
+- CSS は `app/src/styles.css`
+- PWA 用に `app/public/manifest.webmanifest` と `app/public/service-worker.js` を使う
+- service worker は静的アセット、画像、音声を cache する
+- データ保存は IndexedDB ではなく `localStorage`
+- storage key は `dream1-swing-tracker-v1`
+- サーバー保存、ログイン、クラウド同期はない
 
-### バッジ種別
+### アプリデータ
 
-バッジは `unique` と `repeatable` の2種類。
-
-```ts
-type BadgeType = "unique" | "repeatable";
-```
-
-`unique` は一度だけ取得する。初記録、初700点、30日連続、累計10000回などの人生イベントや大きな節目に使う。
-
-`repeatable` は条件を満たすたびに取得する。今日100回、日平均500、今週皆勤、月間1000回など、日々の積み上げやメダル収集に使う。表示は `今日100回 x18` のように `x N` を出す。
-
-### レア度
-
-ポケモンカード風のレア度にする。
+`localStorage` に保存する DB は概ね以下。
 
 ```ts
-type BadgeRarity = "C" | "U" | "R" | "RR" | "SR" | "AR" | "SAR" | "UR";
-
-const rarityPoint = {
-  C: 1,
-  U: 2,
-  R: 3,
-  RR: 5,
-  SR: 10,
-  AR: 15,
-  SAR: 30,
-  UR: 50,
+type AppDb = {
+  activeName: string;
+  names: string[];
+  nameColors: Record<string, string>;
+  bats: string[];
+  batColors: Record<string, string>;
+  defaultBat: string;
+  theme: string;
+  fontTheme: string;
+  records: SwingRecord[];
+  seasonEventSettings: SeasonEventSettings;
+  badgeRewardGoal: string;
+  badgeRewardText: string;
+  testInputDefaults: boolean;
+  testRandomGeneration: boolean;
+  testDate: string | null;
 };
-```
 
-repeatable は取得回数分ポイント加算してよい。ポイントは親子のご褒美ルールに使えるようにする。
-
-例:
-
-- 100pt: アイス
-- 300pt: バッティングセンター
-- 1000pt: 新しいグリップ
-
-レア度の意味:
-
-- C: 毎日取れる軽いメダル。今日50回、日平均300など
-- U: 少し頑張るメダル。今日100回、今月5日練習など
-- R: ちゃんと練習したメダル。日平均500、今週500回など
-- RR: かなり頑張ったメダル。今日300回、今週1000回など
-- SR: 長期/高難度。月間2000回、月平均500など
-- AR: 特別感ある記念メダル。初700点、30日連続など
-- SAR: かなり特別な達成。100日連続、月平均600など
-- UR: 超長期/超高難度。累計50000回、365日連続など
-
-### 記録データ
-
-記録データは以下のみ。
-
-```ts
-type Record = {
-  date: string;
-  batId: string;
-  batName: string;
+type SwingRecord = {
+  id: string;
+  name: string;
+  bat: string;
+  date: string;  // YYYY-MM-DD
   count: number;
-  averageScore: number;
-  bestScore: number;
+  avg: number;   // 0..999
+  best: number;  // 0..999
 };
+
+type SeasonEventSettings = Record<
+  "spring" | "summer" | "winter",
+  { startMonth: number; startDay: number; endMonth: number; endDay: number }
+>;
 ```
 
-1日に複数入力可能。
+名前とバットが1件以上ない場合は、設定画面へ誘導する。
+記録は同じ日付、名前、バットでも物理的には結合せず、`records` に追加する。表示時に日付別、バット別へ集計する。
 
-### 集計定義
+### 入力と CSV
+
+ホーム画面から以下を入力する。
+
+- バット
+- 回数
+- 平均スコア
+- ベストスコア
+
+保存時の丸め:
+
+- `count`: 最低 `1`
+- `avg`: `0..999` に clamp
+- `best`: `0..999` に clamp
+
+CSV 出力:
+
+```csv
+name,bat,date,count,avg,best
+```
+
+CSV 読込では、存在しない名前やバットを自動追加し、各行を新しい record として追加する。既存 record との物理的な重複統合はしない。
+
+### 集計
 
 日次集計:
 
 ```ts
-dailyTotalCount = sum(count)
-dailyWeightedAverage = sum(averageScore * count) / sum(count)
-dailyBestScore = max(bestScore)
+dailyCount = sum(record.count)
+dailyAvg = round(sum(record.avg * record.count) / dailyCount)
+dailyBest = max(record.best)
+dailyBats = unique(record.bat)
 ```
 
-週次/月次のホーム表示:
+バット別集計も同じ考え方で、バットごとに回数合計、回数加重平均、ベスト最大値を出す。
 
-```ts
-periodTotalCount = sum(count)
-periodWeightedAverage = sum(averageScore * count) / sum(count)
-periodBestScore = max(bestScore)
-```
+期間集計:
 
-継続日数は、記録が1件以上ある日を「練習日」とする。
+- 今日: 対象日だけ
+- 今週: 月曜始まり、日曜終わり
+- 今月: 暦月
+- チャレンジ画面の今年: 初回記録日を起点にした1年サイクル
+- 年間バッジ判定: 暦年単位
 
-日平均バッジは日次 `dailyWeightedAverage` を使う。
-
-週平均/月平均のバッジ判定だけは別定義にする。通常の weightedAverage だと記録なし日が母数に入らないため。
-
-```ts
-badgePeriodAverage =
-  sum(dailyWeightedAverageOrZero for each day)
-  / numberOfDaysInPeriod
-```
-
-記録なし日と未来日は 0 点として扱う。
-
-取得条件は「残り日を全部0点扱いしても条件を超える」時点で取得。取得後は剥奪しない。
-
-repeatable の重複防止キー:
-
-```ts
-date: "2026-05-12"
-week: "2026-W20"
-month: "2026-05"
-year: "2026"
-```
-
-repeatable は `badgeId + repeatKey` で重複取得を防ぐ。
-
-### データ構造
-
-```ts
-type BadgeDefinition = {
-  id: string;
-  name: string;
-  description: string;
-  conditionText: string;
-  category: BadgeCategory;
-  rarity: BadgeRarity;
-  type: BadgeType;
-  secret?: boolean;
-  point: number;
-};
-
-type EarnedBadge = {
-  badgeId: string;
-  earnedAt: string;
-  repeatKey?: string;
-};
-```
-
-判定タイミングは記録の追加、編集、削除後。流れは、日次集計、週次/月次/全期間集計、BadgeDefinition 順次評価、新規取得分だけ追加。原則剥奪しない。
+期間平均は、期間内 record の `avg * count` を回数で割った加重平均。
+練習日数は、`count > 0` の日数。
 
 ### 画面構成
 
 下部ナビゲーション:
 
 - ホーム
-- 入力
-- カレンダー
+- チャレンジ
 - バッジ
+- データ
 - 設定
 
-既存構成に合わせて調整可。
+ホーム:
 
-### ホーム画面
+- 日付選択
+- スコア入力
+- 今日または選択日の回数、平均、ベスト
+- 取得バッジ
+- バット別の回数、平均、ベスト
+- 記録追加時のスコアアニメーションと初取得バッジポップアップ
 
-ホームは「現在の進捗」と「期間内で取れたタグ」を見せる場所。
+チャレンジ:
 
-ホームタブ:
+- 今週、今月、今年のスイング数
+- 今週、今月、今年の練習日数
+- 選択バットの過去最高平均、過去最高ベスト
 
-- 今日
-- 今週
-- 今月
+バッジ:
 
-今日タブのメーター:
+- バッジポイント
+- 目標ポイントとごほうび入力
+- コレクション一覧
+- カテゴリ filter: スイング数、練習日数、平均、ベスト、すべて
+- レア度ごとの表示
 
-- 回数
-- 平均
-- ベスト
+データ:
 
-今週タブのメーター:
+- 毎日、毎週、毎月のグラフ
+- スイング数グラフ
+- 平均/ベストのスコアグラフ
+- バット filter
 
-- 回数
-- 平均
-- 継続日数
+設定:
 
-今月タブのメーター:
+- 名前の登録、切り替え、削除、色設定
+- バットの登録、削除、色設定、デフォルトバット
+- CSV 出力、CSV 読込
+- 全データ削除
+- デモデータ作成
+- テストモード
 
-- 回数
-- 平均
-- 継続日数
+### バッジ
 
-理由:
+バッジ取得履歴は別テーブルに保存しない。
+`records` から `badgesFor()` で毎回再計算し、`collectBadgeCounts()` でコレクション表示用の個数に変換する。
 
-- ベストは1本のスイングで今日/今週/今月ベストを同時取得しやすく、水増し感が強い
-- そのためベストは今日だけ
-- 今週/今月は継続を見せる
-- UI 構造自体は統一する
+レア度:
 
-各メーターは「次に取れそうなバッジ」を表示する。
+```ts
+type BadgeRarity = "D" | "C" | "B" | "A" | "S" | "SS";
 
-表示例:
+const rarityPoint = {
+  D: 1,
+  C: 2,
+  B: 5,
+  A: 10,
+  S: 25,
+  SS: 100,
+};
+```
 
-- 今日100回まであと12回
-- 日平均500まであと23点
-- 今週皆勤まであと3日
-- 今月20日練習まであと2日
+レア度名:
 
-ホームには、今日/今週/今月の各タブ内に「その期間で取得したタグ」を軽く表示する。詳細なバッジホルダーは表示しない。
+- D: Dream
+- C: Challenge
+- B: Brave
+- A: Ace
+- S: Star
+- SS: Super Star
 
-表示対象:
+実装済みバッジ:
 
-- 今日タブ: 今日取得したタグ
-- 今週タブ: 今週取得したタグ
-- 今月タブ: 今月取得したタグ
+| 種別 | 指標 | 閾値 |
+| --- | --- | --- |
+| 今日 | スイング数 | 25, 50, 75, 100 |
+| 今日 | 平均 | 250, 350, 450, 550, 650, 750 |
+| 今日 | ベスト | 350, 450, 550, 650, 750, 850 |
+| 今週 | スイング数 | 125, 250, 375, 500 |
+| 今週 | 練習日数 | 1, 2, 3, 4, 5 |
+| 今月 | スイング数 | 500, 1000, 1500, 2000 |
+| 今月 | 練習日数 | 4, 8, 12, 16, 20 |
+| 今年 | スイング数 | 6000, 12000, 18000, 24000 |
+| 今年 | 練習日数 | 50, 100, 150, 200, 225, 250 |
+| 初突破 | バット別過去最高平均 | 400, 500, 600, 700, 750, 800 |
+| 初突破 | バット別過去最高ベスト | 500, 600, 700, 800, 850, 900 |
 
-UI はメーター下に横スクロールまたは折り返しチップ表示。タグタップでバッジ詳細表示、必要ならバッジタブの該当バッジへ遷移。
+`unique` はコレクション上で1個まで。
+`repeatable` は取得回数分だけ個数とポイントに加算する。
+初突破系はバットごとの過去最高更新時に、その閾値を初めて超えた日に付与する。
 
-### バッジタブ
+### テスト機能
 
-役割:
-
-- 全バッジ一覧
-- コレクション
-- 未取得表示
-- repeatable の累積枚数
-- ポイント表示
-
-バッジホルダーはカテゴリ別に表示する。
-
-- スタート
-- 回数
-- 今日
-- 継続
-- 平均
-- ベスト
-- 週
-- 月
-- バット
-- 成長
-- シークレット
-
-未取得はグレー表示。タップすると条件を表示。シークレットの未取得時は `???` と `ひみつ` のみ表示する。
-
-### ホーム対象 repeatable バッジ
-
-今日: 回数
-
-- 今日50回
-- 今日100回
-- 今日200回
-- 今日300回
-- 今日500回
-
-今日: 平均
-
-- 日平均300
-- 日平均400
-- 日平均500
-- 日平均600
-- 日平均700
-
-今日: ベスト
-
-- 今日ベスト500
-- 今日ベスト600
-- 今日ベスト700
-- 今日ベスト800
-- 今日ベスト900
-
-今日ベストは1日1回のみ取得。
-
-今週: 回数
-
-- 今週300回
-- 今週500回
-- 今週1000回
-- 今週2000回
-
-今週: 平均
-
-- 週平均300
-- 週平均400
-- 週平均500
-- 週平均600
-
-今週: 継続
-
-- 今週3日練習
-- 今週5日練習
-- 今週皆勤
-
-今月: 回数
-
-- 月間500回
-- 月間1000回
-- 月間2000回
-- 月間3000回
-- 月間5000回
-
-今月: 平均
-
-- 月平均300
-- 月平均400
-- 月平均500
-- 月平均600
-
-今月: 継続
-
-- 今月5日練習
-- 今月10日練習
-- 今月20日練習
-- 今月毎日練習
-
-### unique バッジ
-
-スタート:
-
-- はじめの一歩
-- 初めての50回
-- 初めての100回
-
-初ベスト到達:
-
-- 初500点
-- 初600点
-- 初700点
-- 初800点
-- 初900点
-- 初999点
-
-累計回数:
-
-- 累計100回
-- 累計500回
-- 累計1000回
-- 累計3000回
-- 累計5000回
-- 累計10000回
-- 累計30000回
-- 累計50000回
-- 累計100000回
-
-連続記録:
-
-- 2日連続
-- 3日連続
-- 7日連続
-- 14日連続
-- 30日連続
-- 60日連続
-- 100日連続
-- 365日連続
-
-バット系:
-
-- 相棒100回
-- 相棒1000回
-- 相棒5000回
-- バットコレクター
-- 全バット練習
-
-成長系は repeatable:
-
-- 先週より多く振った
-- 先月より多く振った
-- 先週より平均アップ
-- 先月より平均アップ
-
-### シークレット例
-
-- ラッキー7: UR / unique / bestScore == 777
-- スリーナイン: UR / unique / bestScore >= 999
-- ぴったり500: SAR / repeatable / dailyWeightedAverage == 500
-- 777スイング: SAR / repeatable / dailyTotalCount == 777
-- 七日目の覚醒: UR / unique / 7日連続かつ7日目の best >= 700
-- 大晦日の素振り: AR / repeatable / 12/31 に記録
-- 元日の一振り: AR / repeatable / 1/1 に記録
-- 復活の一振り: SAR / repeatable / 14日以上空いたあとに再記録
+設定画面からデモデータを作成できる。
+テストモードでは任意の日付へ進め、未入力日の練習記録を自動生成できる。
+この機能は UI とバッジ演出の検証用で、本番の記録仕様とは分けて考える。
 
 ---
 
@@ -432,7 +263,7 @@ UI はメーター下に横スクロールまたは折り返しチップ表示�
 - 高得点 = 強く、早く、再現性高くインパクトを作れそうなスイング
 - 低得点 = 遠回り、遅い、ブレる、弱いスイング
 - 大ぶり = 力強いスイングではなく、遠回りで当たりにくそうなスイング
-- 良いスイング = 回転が先に立ち上がり、その後に加速ピークが来る鋭いスイング
+- 良いスイング = 十分な加速エリアの中で角速度も高く出る、鋭く振り切れたスイング
 
 ---
 
@@ -575,8 +406,8 @@ UI はメーター下に横スクロールまたは折り返しチップ表示�
 
 Monitor 中に以下のような意味のある動きが出たら Capturing を開始する。
 
-- `strength >= kCaptureStartStrength`
-- かつ、gyro または accel が開始閾値を超える
+- `strength >= kCaptureStartStrength` (`2400`)
+- かつ、`gyroMagnitudeRaw >= kCaptureStartGyroRaw` (`900`) または `dynamicAccelMg >= kCaptureStartAccelMg` (`1800`)
 
 `strength` は概ね以下の合成値:
 
@@ -588,6 +419,8 @@ gyroMagnitudeRaw + dynamicAccelMg * 4
 
 ### キャプチャ中に記録する値
 
+スイング成立判定とスコア再計算のために、主に以下を記録する。
+
 - `gyroPeakRaw`
 - `accelPeakMg`
 - `firstGyroStrongTimeMs`
@@ -595,26 +428,27 @@ gyroMagnitudeRaw + dynamicAccelMg * 4
 - `swingAccelAreaMgMs`
 - `capturePeakStrength`
 
+スコア計算時は、キャプチャサンプルから `ScoreWindow` を作り直し、その範囲内で `gyroPeakRaw` と `swingAccelAreaMgMs` を再計算する。
+
 ### 終了条件
 
 以下のどちらかでキャプチャを終了する。
 
-- 最大キャプチャ時間に達した
-- 最小キャプチャ時間を超え、strength がピークから十分落ち、その状態が一定時間続いた
+- 最大キャプチャ時間 `kCaptureMaxMs` (`900 ms`) に達した
+- 最小キャプチャ時間 `kCaptureMinMs` (`80 ms`) を超え、`strength` が `capturePeakStrength * kCaptureEndDropPct / 100` (`70%`) 以下になった
 
 ### 無効化
 
 `swingEvidence()` によって、動きがスイングらしいかを確認する。
 
-見ている要素:
+現在の evidence は合計 `6` 点以上でスイング成立。
 
-- capture peak strength の最低ライン
-- スイング時間
-- gyro peak
-- accel peak
-- accel rise 時間
-- 強い gyro が出たか
-- capture peak strength
+- スイング時間: `160 ms` 以上で +2、`80 ms` 以上で +1
+- gyro peak: `gyroPeakRaw >= 900` で +2
+- accel peak: `2000 mg` 以上で +2、`1000 mg` 以上で +1
+- accel rise 時間: `35 ms` 以上で +2、`15 ms` 以上で +1
+- 強い gyro が一度でも出たら +1
+- `capturePeakStrength >= 1800` で +1
 
 `accel rise` はスコアには使わない。  
 加速度が一瞬の衝撃ではなく、ある程度立ち上がった動きかを確認するための evidence 専用指標として使う。
@@ -626,13 +460,13 @@ gyroMagnitudeRaw + dynamicAccelMg * 4
 
 ## スコア計算
 
-現在のスコアは `scoreFromPeaks()` で計算する。
+現在のスコアは `finishCapture()` で `gyroPeakScore()` と `swingAccelAreaScore()` を計算し、`scoreFromComponents()` で合算する。
 
 構成:
 
 ```cpp
-score = gyroPeakScore();          // max 500
-score += swingAccelAreaScore();   // max 500
+score = gyroPeakScore();          // max 400
+score += swingAccelAreaScore();   // max 600
 score = min(score, 999);
 ```
 
@@ -640,18 +474,34 @@ score = min(score, 999);
 
 採点に入る条件:
 
+- `swingEvidence()` が `6` 点以上
 - score が `100` 以上
 
 この条件を満たさない場合は no score。
 
+### ScoreWindow
+
+スコア対象範囲はキャプチャ全体ではなく、キャプチャサンプルから作る `ScoreWindow` で決める。
+一時的な山で閉じないよう、まず `scoreStartMs` 以降の最大加速度ピークを確定し、その後の落ち込みで `scoreEndMs` を決める。
+
+- `scoreStartMs`: `dynamicAccelMg > 1000 mg` になった最初のサンプル
+- `accelPeakMs`: `ScoreWindow` 内での最大加速度サンプル
+- `scoreEndMs`: 加速度ピーク後、ピークから `max(ピークの10%, 1000mg)` 以上落ちた時点の直前サンプル。直前サンプルがピークより前ならピーク時刻にする
+
+つまり、スコア範囲は「1000mg を超えて加速が始まったところ」から「加速度ピーク後に明確に落ち始める直前」まで。
+1000mg を下回るまで待たない。
+
+`scoreStartMs` は pre capture sample を含むため、グラフ上では負の時刻になることがある。
+
 ### gyroPeakScore
 
-角速度ピークを見る。
+`ScoreWindow` 内の角速度ピークを見る。
+グローバルなキャプチャ全体の gyro peak ではなく、加速エリア中の最大 gyro を使う。
 
-- 最大 500 点
+- 最大 400 点
 - gyro full は実測に合わせて `7000 dps`
 - IMU の 4000 dps 設定に合わせて `140 mdps/LSB` として換算する
-- 7000 dps 以上は 500 点に clamp する
+- 7000 dps 以上は 400 点に clamp する
 
 考え方:
 
@@ -659,50 +509,30 @@ score = min(score, 999);
 - MLB 上位選手の平均 bat speed は 80 mph 前後に達する
 - bat speed 80〜85 mph を sweet spot 半径およそ 0.75 m で角速度換算すると約 2700〜2900 dps
 - ただし Dream-1 は単一軸ではなく3軸合成の `gyroMagnitudeRaw` を使うため、単純な角速度換算より大きめに出る
-- 3000〜4500 dps では子供や軽めのスイングでも 500 点に届きやすかったため、Dream-1 の実測レンジに合わせて `7000 dps` を使う
-- 診断時には、7000 dps 満点でも強いスイングで Gyro 側が約400点まで出た
-- この値は実測ベースの仮置き。上手い人で Gyro 側が簡単に 500 点へ張り付く場合はさらに上げる候補がある
+- 3000〜4500 dps では子供や軽めのスイングでも上限に届きやすかったため、Dream-1 の実測レンジに合わせて `7000 dps` を使う
+- この値は実測ベースの仮置き。上手い人で Gyro 側が簡単に 400 点へ張り付く場合はさらに上げる候補がある
 
 ### swingAccelAreaScore
 
-回転を伴うキャプチャ中に乗った dynamic accel の積算を見る。
+`ScoreWindow` 内に乗った dynamic accel の積算を見る。
 
 ```cpp
 area = sum((dynamicAccelMg - offset) * dt)
-score = area / fullArea * 500
+score = area / fullArea * 600
 ```
 
 手首だけの一瞬の入力ではなく、スイング中に加速度が乗って続いたかを見る。  
-当初は「最終 gyro peak 後のみ」を積算する方針だったが、実機では最終 gyro peak 後の加速度がほぼ残らず `0` になりやすかったため、現在はキャプチャ中の offset 超過分を積算する。
+現在は `offset` を初めて超えた時刻から、加速度ピーク後に明確に落ち始める直前までの offset 超過分を積算する。
 
 `offset` は `1000 mg`。  
 小さい揺れ、構え、ぶらぶらを積算しにくくしつつ、普通のスイングが `0` になりにくい値として実測から置いている。
 
-`fullArea` は `300000 mg*ms`。  
+`fullArea` は `800000 mg*ms`。
 これは公開データから直接導いた物理定数ではなく、Dream-1 の実測ベースの仮置き。  
-診断時には、かなり全力のスイングで `swingAccelAreaMgMs / 1000` が約 `216`、つまり約 `216000 mg*ms` 程度だった。  
-そのため、子供や一般ユーザーの強いスイングで飽和しにくく、上手い人なら上限に近づく余白を残す値として `300000 mg*ms` を採用している。
+加速度スコア範囲を広げたことで `600000 mg*ms` では軽いバットの強いスイングが上限に張り付きやすくなったため、飽和を少し抑える値として `800000 mg*ms` を採用している。
+一方で、加速の重要度は高めに残すため、配点は SwingAccel 側を 600 点、Gyro 側を 400 点にしている。
 
-今後、上手い選手や体格の大きいユーザーで簡単に SwingAccel 側が 500 点に張り付く場合は、`fullArea` を `450000〜600000 mg*ms` 程度へ上げる候補がある。
-
-### スコアに使わない評価要素
-
-以下は現在のスコア計算には使わない。
-
-- `gyroRiseScore()`
-- `strengthScore()`
-- `peakDeltaPct()`
-- `peakPositionPct()`
-- `smoothnessPct()`
-- `swingQualityPct()`
-- `accelAreaScore()`
-- `maxGyroHighRunMs`
-- `strongGyroAxisChangeCount`
-- `maxAccelRiseMs`
-- `firstGyroStrongTimeMs`
-- `capturePeakStrength`
-
-ただし、`maxAccelRiseMs`、`firstGyroStrongTimeMs`、`capturePeakStrength` はスイング成立判定の evidence として使う。
+今後、通常のバットでも簡単に SwingAccel 側が 600 点へ張り付く場合は `900000〜1000000 mg*ms` 程度へ上げる候補がある。逆に一般ユーザーで伸びなさすぎる場合は `700000 mg*ms` 程度へ下げる候補がある。
 
 ### accel rise
 
@@ -721,7 +551,7 @@ score = area / fullArea * 500
 
 ## スコア下限
 
-`scoreFromPeaks()` が返すスコアを、そのまま表示、平均、ベスト更新、ブザー判定に使う。
+`scoreFromComponents()` が返すスコアを、そのまま表示、平均、ベスト更新、ブザー判定に使う。
 
 現在の下限:
 
@@ -746,6 +576,13 @@ score = area / fullArea * 500
 
 現在はスコア処理も `main.cpp` 内にある。  
 将来的に大きくなる場合は `score.cpp / score.h` に分けてもよいが、現状では軽量さと見通しを優先する。
+
+### `telemetry_best_swing_graph.html`
+
+- EEPROM に保存した best swing telemetry を可視化する解析用 HTML
+- `score start`、`accel score end`、`accel peak`、`end judge` をグラフに出す
+- `gyro score peak` は `ScoreWindow` 内で実際に見えている最大 gyro sample を表示する
+- C++ 側では best telemetry 保存時に score gyro peak sample を優先して残す
 
 ### `src/imu.cpp` / `include/imu.h`
 
@@ -823,6 +660,8 @@ score = area / fullArea * 500
 - `swingAccelAreaScore()` の offset
 - `gyroPeakScore()` の full dps
 - `swingAccelAreaScore()` の fullArea
+- `kGyroPeakScoreMax` / `kSwingAccelAreaScoreMax` の配点比率
+- `kScoreAccelDropPct` / `kScoreAccelDropMinMg` による score end 判定
 
 チューニング時の注意:
 

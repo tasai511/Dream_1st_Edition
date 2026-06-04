@@ -413,10 +413,10 @@
           <desc id="chart-desc">Line chart using elapsed milliseconds on the x axis, gyro degrees per second on the left y axis, and dynamic acceleration milligram on the right y axis.</desc>
         </svg>
         <div class="legend" aria-hidden="true">
-          <span class="legend-item"><span class="swatch" style="background: var(--gyro)"></span>角速度, dps</span>
-          <span class="legend-item"><span class="swatch" style="background: var(--accel)"></span>動的加速度, mg</span>
-          <span class="legend-item"><span class="swatch" style="background: rgba(208, 74, 28, 0.28)"></span>加速度スコア面積</span>
-          <span class="legend-item"><span class="swatch gyro-peak-swatch"></span>ピーク</span>
+          <span class="legend-item"><span class="swatch" style="background: var(--gyro)"></span>Gyro, dps</span>
+          <span class="legend-item"><span class="swatch" style="background: var(--accel)"></span>Dynamic accel, mg</span>
+          <span class="legend-item"><span class="swatch" style="background: rgba(208, 74, 28, 0.28)"></span>Accel score area</span>
+          <span class="legend-item"><span class="swatch gyro-peak-swatch"></span>Peak</span>
         </div>
       </section>
     </div>
@@ -471,8 +471,6 @@ samples_csv=elapsed_ms,gyro_mag_raw,gyro_dps,dynamic_accel_mg
     const GYRO_SCORE_MAX = 500;
     const GYRO_SCORE_FULL_DPS = 7000;
     const GYRO_SCORE_MISMATCH_DPS = 120;
-    const GYRO_SCORE_DROP_PCT = 85;
-    const GYRO_SCORE_DROP_MIN_DPS = Math.round((900 * 140) / 1000);
     const PLOT_CLIP_ID = "plot-clip";
     const HISTORY_STORAGE_KEY = "dreamSwingTelemetryHistoryV1";
     const plot = {
@@ -692,7 +690,9 @@ samples_csv=elapsed_ms,gyro_mag_raw,gyro_dps,dynamic_accel_mg
       if (f.duration_ms != null) chips.push(["duration", `${f.duration_ms} ms`]);
       if (f.score_start_ms != null) chips.push(["score start", `${f.score_start_ms} ms`]);
       if (f.score_end_ms != null) chips.push(["accel score end", `${f.score_end_ms} ms`]);
+      if (f.accel_peak_ms != null) chips.push(["accel peak time", `${f.accel_peak_ms} ms`]);
       const scoreEndMs = f.score_end_ms ?? f.decision_end_ms ?? f.duration_ms;
+      const accelPeakMs = f.accel_peak_ms ?? scoreEndMs;
       if (f.score_start_ms != null && scoreEndMs != null) {
         chips.push(["accel score window", `${f.score_start_ms}..${scoreEndMs} ms`]);
       }
@@ -710,20 +710,18 @@ samples_csv=elapsed_ms,gyro_mag_raw,gyro_dps,dynamic_accel_mg
       if (f.accel_score != null) chips.push(["accel score", f.accel_score]);
 
       const scoreStartMs = f.score_start_ms;
-      const gyroScore = gyroScorePeakInfo(parsed.data, scoreStartMs);
+      const gyroScore = gyroScorePeakInfo(parsed.data, scoreStartMs, scoreEndMs);
       if (gyroScore?.peak) {
         const visiblePeakLabel =
           Number.isFinite(scoredGyroDps) &&
           Math.abs(gyroScore.peak.gyro - scoredGyroDps) > GYRO_SCORE_MISMATCH_DPS
-            ? "visible gyro peak"
+            ? "visible gyro score peak"
             : "gyro score peak";
         chips.push([visiblePeakLabel, `${gyroScore.peak.gyro} dps @ ${gyroScore.peak.t} ms`, "peak-gyro"]);
-        chips.push(["gyro score end", `${gyroScore.endMs} ms`]);
       }
       const peaks = peakInfo(parsed.data, scoreStartMs, scoreEndMs);
-      const gyroPeak = peakFor(parsed.data, "gyro");
-      if (gyroPeak) chips.push(["gyro peak", `${gyroPeak.gyro} dps @ ${gyroPeak.t} ms`, "peak-gyro"]);
-      if (peaks.accel) chips.push(["accel score peak", `${peaks.accel.accel} mg @ ${peaks.accel.t} ms`, "peak-accel"]);
+      const accelScorePeak = accelPeakAtTime(parsed.data, accelPeakMs) ?? peaks.accel;
+      if (accelScorePeak) chips.push(["accel score peak", `${accelScorePeak.accel} mg @ ${accelScorePeak.t} ms`, "peak-accel"]);
       const accelPeak = peakFor(parsed.data, "accel");
       if (accelPeak) chips.push(["accel peak", `${accelPeak.accel} mg @ ${accelPeak.t} ms`, "peak-accel"]);
 
@@ -761,39 +759,22 @@ samples_csv=elapsed_ms,gyro_mag_raw,gyro_dps,dynamic_accel_mg
       return Math.round((score * GYRO_SCORE_FULL_DPS) / GYRO_SCORE_MAX);
     }
 
-    function gyroScorePeakInfo(data, startMs) {
-      const rows = Number.isFinite(startMs)
-        ? data.filter((row) => row.t >= startMs)
-        : data.slice();
+    function gyroScorePeakInfo(data, startMs, endMs) {
+      if (!data.length) return null;
+      const rows = Number.isFinite(startMs) && Number.isFinite(endMs)
+        ? data.filter((row) => row.t >= startMs && row.t <= endMs)
+        : data;
       if (!rows.length) return null;
+      const peak = peakFor(rows, "gyro");
+      return { peak };
+    }
 
-      let peak = rows[0];
-      let previous = rows[0];
-      let endMs = rows[0].t;
-      let dropSeen = false;
-      for (const row of rows) {
-        if (row.gyro > peak.gyro) {
-          peak = row;
-        }
-
-        if (row.t > peak.t && peak.gyro > row.gyro) {
-          const dropDps = peak.gyro - row.gyro;
-          const thresholdDps = Math.max(
-            (peak.gyro * (100 - GYRO_SCORE_DROP_PCT)) / 100,
-            GYRO_SCORE_DROP_MIN_DPS
-          );
-          if (dropDps >= thresholdDps) {
-            endMs = previous.t > peak.t ? previous.t : peak.t;
-            dropSeen = true;
-            break;
-          }
-        }
-
-        endMs = row.t;
-        previous = row;
-      }
-
-      return { peak, endMs, dropSeen };
+    function accelPeakAtTime(data, accelPeakMs) {
+      if (!data.length || !Number.isFinite(accelPeakMs)) return null;
+      return data.reduce((best, row) =>
+        Math.abs(row.t - accelPeakMs) < Math.abs(best.t - accelPeakMs) ? row : best,
+        data[0]
+      );
     }
 
     function clearChart() {
@@ -831,6 +812,10 @@ samples_csv=elapsed_ms,gyro_mag_raw,gyro_dps,dynamic_accel_mg
           : Number.isFinite(endJudgeMs)
             ? endJudgeMs
             : undefined;
+      const accelPeakMs =
+        Number.isFinite(parsed.fields.accel_peak_ms)
+          ? parsed.fields.accel_peak_ms
+          : scoreEndMs;
       const minTime = FIXED_TIME_MIN_MS;
       const maxTime = FIXED_TIME_MAX_MS;
       const timeSpan = Math.max(1, maxTime - minTime);
@@ -898,11 +883,9 @@ samples_csv=elapsed_ms,gyro_mag_raw,gyro_dps,dynamic_accel_mg
         drawGyroScoreLevel(x, yLeft, scoredGyroDps);
       }
 
-      const scorePeak =
-        Number.isFinite(scoreStartMs)
-          ? drawGyroScorePeak(data, x, yLeft, scoreStartMs, scoredGyroDps)
-          : null;
-      drawGyroPeak(data, x, yLeft, scorePeak);
+      if (Number.isFinite(scoreStartMs) && Number.isFinite(scoreEndMs)) {
+        drawGyroScorePeak(data, x, yLeft, scoreStartMs, scoreEndMs, scoredGyroDps);
+      }
       drawAccelPeak(data, x, yRight);
     }
 
@@ -988,13 +971,9 @@ samples_csv=elapsed_ms,gyro_mag_raw,gyro_dps,dynamic_accel_mg
       flushRun();
     }
 
-    function drawGyroScorePeak(data, x, yLeft, startMs, scoredGyroDps) {
-      const peak = gyroScorePeakInfo(data, startMs)?.peak;
+    function drawGyroScorePeak(data, x, yLeft, startMs, endMs, scoredGyroDps) {
+      const peak = gyroScorePeakInfo(data, startMs, endMs)?.peak;
       if (!peak) {
-        return null;
-      }
-      if (Number.isFinite(scoredGyroDps) &&
-          Math.abs(peak.gyro - scoredGyroDps) > GYRO_SCORE_MISMATCH_DPS) {
         return null;
       }
       const cx = x(peak.t);
@@ -1024,35 +1003,6 @@ samples_csv=elapsed_ms,gyro_mag_raw,gyro_dps,dynamic_accel_mg
         fill: "var(--gyro)"
       }, "gyro score peak");
       return peak;
-    }
-
-    function drawGyroPeak(data, x, yLeft, scorePeak) {
-      const peak = peakFor(data, "gyro");
-      if (!peak) {
-        return;
-      }
-      if (scorePeak && scorePeak.t === peak.t && scorePeak.gyro === peak.gyro) {
-        return;
-      }
-      const cx = x(peak.t);
-      const cy = yLeft(peak.gyro);
-      const ring = el("circle", {
-        class: "gyro-peak",
-        cx,
-        cy,
-        r: 8,
-        "clip-path": `url(#${PLOT_CLIP_ID})`
-      });
-      const title = document.createElementNS("http://www.w3.org/2000/svg", "title");
-      title.textContent = `gyro peak ${peak.gyro} dps @ ${peak.t} ms`;
-      ring.appendChild(title);
-      el("circle", {
-        class: "gyro-peak-core",
-        cx,
-        cy,
-        r: 4.5,
-        "clip-path": `url(#${PLOT_CLIP_ID})`
-      });
     }
 
     function drawAccelPeak(data, x, yRight) {

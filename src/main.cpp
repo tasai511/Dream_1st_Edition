@@ -30,7 +30,6 @@ const uint16_t kCaptureMaxMs = 900;
 const uint16_t kCaptureMinMs = 80;
 const uint16_t kMinAcceptedSwingDurationMs = 160;
 const uint16_t kShortSwingDurationMs = 80;
-const uint16_t kCaptureEndQuietMs = 40;
 const uint16_t kCaptureEndDropPct = 70;
 const uint16_t kCaptureDiscardCooldownMs = 120;
 const uint16_t kTapMuteAfterScoreMs = 250;
@@ -67,22 +66,19 @@ const uint16_t kGyroRiseTooFastMs = 15;
 const uint16_t kGyroRiseGoodMs = 35;
 const uint16_t kGyroMdpsPerLsb = 140;
 const uint16_t kGyroPeakFullDps = 7000;
-const uint16_t kGyroPeakScoreMax = 500;
+const uint16_t kGyroPeakScoreMax = 400;
 const uint16_t kSwingAccelAreaScoreOffsetMg = 1000;
-const uint32_t kSwingAccelAreaFullMgMs = 600000UL;
-const uint16_t kSwingAccelAreaScoreMax = 500;
+const uint32_t kSwingAccelAreaFullMgMs = 800000UL;
+const uint16_t kSwingAccelAreaScoreMax = 600;
 const uint16_t kInternalScoreMax = 999;
 const uint32_t kBestTelemetryMagic = 0x42535747UL;  // "BSWG"
-const uint8_t kBestTelemetryVersion = 16;
+const uint8_t kBestTelemetryVersion = 19;
 const uint8_t kCaptureLogSampleCapacity = 96;
 const uint8_t kPreCaptureLogSampleCapacity = 24;
 const uint16_t kPreCaptureTelemetryMs = 300;
 const uint8_t kTelemetryEepromBytesPerService = 1;
-const uint8_t kScoreAccelDropPct = 80;
+const uint8_t kScoreAccelDropPct = 10;
 const uint16_t kScoreAccelDropMinMg = 1000;
-const uint8_t kScoreGyroDropPct = 85;
-const uint16_t kScoreGyroDropMinRaw = kGyroRiseThresholdRaw;
-
 struct BestSwingSample {
   int16_t elapsedMs;
   uint16_t gyroRaw;
@@ -97,16 +93,9 @@ struct PreCaptureSample {
 
 struct ScoreWindow {
   bool hasSamples;
-  bool accelDropSeen;
-  bool gyroDropSeen;
   int16_t startMs;
-  int16_t gyroPeakMs;
   int16_t accelPeakMs;
   int16_t endMs;
-  int16_t gyroEndMs;
-  int16_t lastSampleMs;
-  int16_t lastGyroSampleMs;
-  uint16_t gyroPeakRaw;
   uint16_t accelPeakMg;
 };
 
@@ -123,6 +112,7 @@ struct BestSwingTelemetryHeader {
   uint16_t endDecisionMs;
   int16_t scoreStartMs;
   int16_t scoreEndMs;
+  int16_t accelPeakMs;
   uint8_t preSampleCount;
   uint8_t preRingCount;
   uint8_t recentSampleCount;
@@ -146,7 +136,6 @@ uint32_t motionCandidateStartedMs = 0;
 uint32_t motionCandidateLastMs = 0;
 uint32_t lastActivityMs = 0;
 uint32_t lastImuInterruptMs = 0;
-uint16_t latestGyroMagnitudeRaw = 0;
 
 int32_t gyroXSum = 0;
 int32_t gyroYSum = 0;
@@ -179,7 +168,6 @@ uint8_t preCaptureRingCountAtStart = 0;
 uint8_t recentSampleCountAtStart = 0;
 uint16_t recentSampleMaxAgeMsAtStart = 0;
 uint16_t capturePeakStrength = 0;
-uint32_t captureQuietStartedMs = 0;
 bool swingStarted = false;
 TapStatsStage tapStatsStage = TapStatsStage::None;
 BestSwingSample captureSamples[kCaptureLogSampleCapacity] = {};
@@ -346,94 +334,10 @@ uint16_t saturateToUint16(uint32_t value) {
 uint16_t scoreAccelDropThresholdMg(uint16_t accelPeakMg) {
   const uint16_t pctThreshold =
       static_cast<uint16_t>(
-          (static_cast<uint32_t>(accelPeakMg) *
-           (100U - kScoreAccelDropPct)) /
-          100UL);
+          (static_cast<uint32_t>(accelPeakMg) * kScoreAccelDropPct) / 100UL);
   return pctThreshold > kScoreAccelDropMinMg
              ? pctThreshold
              : kScoreAccelDropMinMg;
-}
-
-uint16_t scoreGyroDropThresholdRaw(uint16_t gyroPeakRaw) {
-  const uint16_t pctThreshold =
-      static_cast<uint16_t>(
-          (static_cast<uint32_t>(gyroPeakRaw) *
-           (100U - kScoreGyroDropPct)) /
-          100UL);
-  return pctThreshold > kScoreGyroDropMinRaw
-             ? pctThreshold
-             : kScoreGyroDropMinRaw;
-}
-
-void includeScoreWindowSample(ScoreWindow& window, const BestSwingSample& sample) {
-  if (!window.hasSamples) {
-    window.hasSamples = true;
-    window.accelDropSeen = false;
-    window.gyroDropSeen = false;
-    window.startMs = sample.elapsedMs;
-    window.gyroPeakMs = sample.elapsedMs;
-    window.accelPeakMs = sample.elapsedMs;
-    window.endMs = sample.elapsedMs;
-    window.gyroEndMs = sample.elapsedMs;
-    window.lastSampleMs = sample.elapsedMs;
-    window.lastGyroSampleMs = sample.elapsedMs;
-    window.gyroPeakRaw = sample.gyroRaw;
-    window.accelPeakMg = sample.accelMg;
-    return;
-  }
-
-  if (sample.elapsedMs < window.startMs) {
-    window.startMs = sample.elapsedMs;
-  }
-
-  if (!window.accelDropSeen) {
-    const int16_t previousSampleMs = window.lastSampleMs;
-    if (sample.accelMg > window.accelPeakMg) {
-      window.accelPeakMg = sample.accelMg;
-      window.accelPeakMs = sample.elapsedMs;
-    }
-    window.lastSampleMs = sample.elapsedMs;
-
-    if (sample.elapsedMs > window.accelPeakMs &&
-        window.accelPeakMg > kSwingAccelAreaScoreOffsetMg &&
-        window.accelPeakMg > sample.accelMg) {
-      const uint16_t dropMg = window.accelPeakMg - sample.accelMg;
-      if (dropMg >= scoreAccelDropThresholdMg(window.accelPeakMg)) {
-        window.endMs =
-            previousSampleMs > window.accelPeakMs ? previousSampleMs : window.accelPeakMs;
-        window.accelDropSeen = true;
-      } else {
-        window.endMs = sample.elapsedMs;
-      }
-    } else {
-      window.endMs = sample.elapsedMs;
-    }
-  }
-
-  if (!window.gyroDropSeen) {
-    const int16_t previousGyroSampleMs = window.lastGyroSampleMs;
-    if (sample.gyroRaw > window.gyroPeakRaw) {
-      window.gyroPeakRaw = sample.gyroRaw;
-      window.gyroPeakMs = sample.elapsedMs;
-    }
-    window.lastGyroSampleMs = sample.elapsedMs;
-
-    if (sample.elapsedMs > window.gyroPeakMs &&
-        window.gyroPeakRaw > sample.gyroRaw) {
-      const uint16_t dropRaw = window.gyroPeakRaw - sample.gyroRaw;
-      if (dropRaw >= scoreGyroDropThresholdRaw(window.gyroPeakRaw)) {
-        window.gyroEndMs =
-            previousGyroSampleMs > window.gyroPeakMs
-                ? previousGyroSampleMs
-                : window.gyroPeakMs;
-        window.gyroDropSeen = true;
-      } else {
-        window.gyroEndMs = sample.elapsedMs;
-      }
-    } else {
-      window.gyroEndMs = sample.elapsedMs;
-    }
-  }
 }
 
 uint16_t gyroRawToDps(uint16_t gyroRaw) {
@@ -633,6 +537,8 @@ void printBestSwingTelemetryOnBoot() {
   Serial.print(telemetry.scoreStartMs);
   Serial.print(F(" score_end_ms="));
   Serial.print(telemetry.scoreEndMs);
+  Serial.print(F(" accel_peak_ms="));
+  Serial.print(telemetry.accelPeakMs);
   Serial.print(F(" decision_end_ms="));
   Serial.println(telemetry.endDecisionMs);
   Serial.print(F("pre_samples="));
@@ -819,10 +725,66 @@ ScoreWindow scoreWindowFromCaptureSamples() {
     }
 
     telemetrySampleSelected[bestIndex] = 1;
-    includeScoreWindowSample(window, bestSample);
-    if (window.accelDropSeen && window.gyroDropSeen) {
+    if (!window.hasSamples) {
+      if (bestSample.accelMg <= kSwingAccelAreaScoreOffsetMg) {
+        continue;
+      }
+      window.hasSamples = true;
+      window.startMs = bestSample.elapsedMs;
+      window.accelPeakMs = bestSample.elapsedMs;
+      window.endMs = bestSample.elapsedMs;
+      window.accelPeakMg = bestSample.accelMg;
+      continue;
+    }
+
+    window.endMs = bestSample.elapsedMs;
+    if (bestSample.accelMg > window.accelPeakMg) {
+      window.accelPeakMg = bestSample.accelMg;
+      window.accelPeakMs = bestSample.elapsedMs;
+    }
+  }
+  clearTelemetrySampleSelected();
+  if (!window.hasSamples) {
+    return window;
+  }
+
+  const uint16_t dropThresholdMg =
+      scoreAccelDropThresholdMg(window.accelPeakMg);
+  int16_t previousSampleMs = window.accelPeakMs;
+  clearTelemetrySampleSelected();
+  for (uint8_t processed = 0; processed < captureSampleCount; ++processed) {
+    bool found = false;
+    uint8_t bestIndex = 0;
+    BestSwingSample bestSample = {};
+    for (uint8_t i = 0; i < captureSampleCount; ++i) {
+      if (telemetrySampleSelected[i] != 0) {
+        continue;
+      }
+      const BestSwingSample sample = captureSampleAt(i);
+      if (!found || sample.elapsedMs < bestSample.elapsedMs) {
+        found = true;
+        bestIndex = i;
+        bestSample = sample;
+      }
+    }
+    if (!found) {
       break;
     }
+
+    telemetrySampleSelected[bestIndex] = 1;
+    if (bestSample.elapsedMs <= window.accelPeakMs) {
+      continue;
+    }
+
+    if (window.accelPeakMg > bestSample.accelMg &&
+        window.accelPeakMg - bestSample.accelMg >= dropThresholdMg) {
+      window.endMs =
+          previousSampleMs > window.accelPeakMs ? previousSampleMs : window.accelPeakMs;
+      break;
+    }
+
+    window.endMs = bestSample.elapsedMs;
+    previousSampleMs = bestSample.elapsedMs;
   }
   clearTelemetrySampleSelected();
   return window;
@@ -899,6 +861,29 @@ void findPeakCaptureSampleIndexes(
   }
 }
 
+bool findScoreGyroPeakCaptureSampleIndex(uint8_t& scoreGyroPeakIndex) {
+  const ScoreWindow scoreWindow = scoreWindowFromCaptureSamples();
+  if (!scoreWindow.hasSamples) {
+    return false;
+  }
+
+  bool found = false;
+  uint16_t maxGyroRaw = 0;
+  for (uint8_t i = 0; i < captureSampleCount; ++i) {
+    const BestSwingSample sample = captureSampleAt(i);
+    if (sample.elapsedMs < scoreWindow.startMs ||
+        sample.elapsedMs > scoreWindow.endMs) {
+      continue;
+    }
+    if (!found || sample.gyroRaw > maxGyroRaw) {
+      found = true;
+      maxGyroRaw = sample.gyroRaw;
+      scoreGyroPeakIndex = i;
+    }
+  }
+  return found;
+}
+
 void copyTelemetrySamples(uint8_t sampleCount) {
   resetTelemetrySampleSelection();
   if (sampleCount == 0) {
@@ -914,8 +899,14 @@ void copyTelemetrySamples(uint8_t sampleCount) {
   uint8_t gyroPeakIndex = 0;
   uint8_t accelPeakIndex = 0;
   findPeakCaptureSampleIndexes(gyroPeakIndex, accelPeakIndex);
+  uint8_t scoreGyroPeakIndex = 0;
+  const bool hasScoreGyroPeak =
+      findScoreGyroPeakCaptureSampleIndex(scoreGyroPeakIndex);
 
   uint8_t selectedCount = 0;
+  if (hasScoreGyroPeak) {
+    selectTelemetrySourceSample(scoreGyroPeakIndex, sampleCount, selectedCount);
+  }
   selectTelemetrySourceSample(gyroPeakIndex, sampleCount, selectedCount);
   selectTelemetrySourceSample(accelPeakIndex, sampleCount, selectedCount);
   selectTelemetrySourceSample(0, sampleCount, selectedCount);
@@ -1017,7 +1008,6 @@ void resetMeasurement() {
   recentSampleCountAtStart = 0;
   recentSampleMaxAgeMsAtStart = 0;
   capturePeakStrength = 0;
-  captureQuietStartedMs = 0;
   swingStarted = false;
   swingStartedMs = 0;
   motionCandidateStartedMs = 0;
@@ -1046,7 +1036,6 @@ void startCapture(
   lastMeasureSampleMs = nowMs;
   lastSwingMotionMs = nowMs;
   capturePeakStrength = strength;
-  captureQuietStartedMs = 0;
   motionCandidateStartedMs = 0;
   motionCandidateLastMs = 0;
   runMode = RunMode::Capturing;
@@ -1126,6 +1115,8 @@ void queueBestSwingTelemetrySave(
       scoreWindow.hasSamples ? scoreWindow.startMs : 0;
   telemetryHeaderToWrite.scoreEndMs =
       scoreWindow.hasSamples ? scoreWindow.endMs : telemetryHeaderToWrite.scoreStartMs;
+  telemetryHeaderToWrite.accelPeakMs =
+      scoreWindow.hasSamples ? scoreWindow.accelPeakMs : telemetryHeaderToWrite.scoreEndMs;
   telemetryHeaderToWrite.preSampleCount = importedPreCaptureSampleCount;
   telemetryHeaderToWrite.preRingCount = preCaptureRingCountAtStart;
   telemetryHeaderToWrite.recentSampleCount = recentSampleCountAtStart;
@@ -1388,8 +1379,6 @@ void recalculateSwingScoreMetrics() {
   const int16_t scoreStartMs = scoreWindow.hasSamples ? scoreWindow.startMs : 0;
   const int16_t scoreEndMs = scoreWindow.hasSamples ? scoreWindow.endMs : 0;
   const int16_t accelAreaEndMs = scoreEndMs;
-  const int16_t gyroScoreEndMs =
-      scoreWindow.hasSamples ? scoreWindow.gyroEndMs : scoreEndMs;
 
   bool hasPrevious = false;
   uint16_t previousElapsedMs = 0;
@@ -1413,7 +1402,7 @@ void recalculateSwingScoreMetrics() {
     }
 
     telemetrySampleSelected[bestIndex] = 1;
-    const bool includeGyroPeak = bestSample.elapsedMs <= gyroScoreEndMs;
+    const bool includeGyroPeak = bestSample.elapsedMs <= scoreEndMs;
     const bool includeAccelArea = bestSample.elapsedMs <= accelAreaEndMs;
     if (!includeGyroPeak && !includeAccelArea) {
       break;
@@ -1457,15 +1446,7 @@ bool isCaptureFinished(uint16_t strength, uint32_t nowMs) {
 
   const uint32_t endThreshold =
       (static_cast<uint32_t>(capturePeakStrength) * kCaptureEndDropPct) / 100UL;
-  if (strength <= endThreshold) {
-    if (captureQuietStartedMs == 0) {
-      captureQuietStartedMs = nowMs;
-    }
-    return static_cast<uint16_t>(nowMs - captureQuietStartedMs) >= kCaptureEndQuietMs;
-  }
-
-  captureQuietStartedMs = 0;
-  return false;
+  return strength <= endThreshold;
 }
 
 void finishCapture(uint32_t nowMs) {
@@ -1646,7 +1627,6 @@ void loop() {
   const int16_t dynamicGyroZRaw = static_cast<int16_t>(gyroZRaw - gyroBaselineZ);
   const uint16_t gyroMagnitudeRaw =
       magnitudeRaw(dynamicGyroXRaw, dynamicGyroYRaw, dynamicGyroZRaw);
-  latestGyroMagnitudeRaw = gyroMagnitudeRaw;
 
   const uint16_t dynamicAccelMg = absDiff16(accelMagnitudeMg, accelBaselineMg);
   if (dynamicAccelMg < kBaselineTrackDeltaMg) {
