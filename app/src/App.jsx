@@ -4373,6 +4373,7 @@ function badgeShortNameLines(definition) {
   const period = badgePeriodShortLabel(definition?.period);
   const metric = definition?.metric;
 
+  if (definition?.label === "クリスマスプレゼント") return ["クリスマス", "プレゼント"];
   if (metric === "count") return [`${period} スイング`, `${targetLabel}回`];
   if (metric === "days") return [`${period} 練習日数`, `${targetLabel}日`];
   if (metric === "all-time-avg") return ["初突破 平均", `${targetLabel}点`];
