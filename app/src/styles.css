@@ -9558,6 +9558,146 @@ body .app .home-score-input-grid .home-input-panel .swing-form input::placeholde
   min-height: 144px !important;
 }
 
+.record-section .count-chart-frame {
+  position: relative;
+  width: clamp(340px, calc(100% - 24px), 380px);
+  max-width: calc(100% - 12px);
+  margin-inline: auto;
+}
+
+.record-section .count-chart-frame .count-chart-scroll {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-inline: 0 !important;
+}
+
+.all-record-graphs .graph-action-row {
+  display: grid !important;
+  grid-template-columns: minmax(74px, 0.42fr) minmax(0, 1fr) minmax(72px, 0.34fr);
+  align-items: center;
+  gap: 10px;
+  min-height: 34px;
+  padding-inline: 14px;
+}
+
+.all-record-graphs .graph-action-row > div:not(.graph-zoom-buttons) {
+  min-width: 0;
+}
+
+.all-record-graphs .graph-action-row h3 {
+  justify-self: center;
+  overflow: hidden;
+  max-width: 100%;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.graph-gesture-hint {
+  position: relative;
+  display: inline-grid;
+  width: 34px;
+  height: 28px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--active-graph-color, var(--hot)) 30%, rgba(255, 255, 255, 0.48));
+  border-radius: 999px;
+  padding: 0;
+  color: #0d3b78;
+  font-size: 0;
+  font-weight: 950;
+  line-height: 1;
+  background: color-mix(in srgb, var(--active-graph-color, var(--hot)) 15%, rgba(255, 255, 255, 0.82));
+  box-shadow: 0 6px 16px rgba(18, 60, 120, 0.16);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.graph-gesture-hint:active {
+  transform: scale(0.94);
+}
+
+.graph-scroll-button {
+  justify-self: start;
+}
+
+.graph-scroll-buttons {
+  display: inline-grid;
+  grid-auto-flow: column;
+  justify-self: start;
+  gap: 5px;
+}
+
+.graph-scroll-button.right .hint-arrow {
+  transform: translateX(1px) scaleX(-1);
+}
+
+.graph-scroll-button .hint-arrow {
+  width: 0;
+  height: 0;
+  border-top: 6px solid transparent;
+  border-right: 10px solid #0d3b78;
+  border-bottom: 6px solid transparent;
+  background: transparent;
+  transform: translateX(-1px);
+}
+
+.graph-scroll-button .hint-arrow::before {
+  content: none;
+}
+
+.graph-zoom-buttons {
+  display: inline-grid;
+  grid-auto-flow: column;
+  justify-self: end;
+  gap: 5px;
+}
+
+.graph-zoom-button .hint-magnifier {
+  position: relative;
+  width: 13px;
+  height: 13px;
+  border: 2.2px solid #0d3b78;
+  border-radius: 50%;
+}
+
+.graph-zoom-button .hint-magnifier::before,
+.graph-zoom-button .hint-magnifier::after {
+  position: absolute;
+  content: "";
+}
+
+.graph-zoom-button .hint-magnifier::before {
+  top: 50%;
+  left: 50%;
+  width: 7px;
+  height: 2.2px;
+  border-radius: 999px;
+  background: #0d3b78;
+  transform: translate(-50%, -50%);
+}
+
+.graph-zoom-button.zoom-in .hint-magnifier::after {
+  top: 50%;
+  left: 50%;
+  width: 2.2px;
+  height: 7px;
+  border-radius: 999px;
+  background: #0d3b78;
+  transform: translate(-50%, -50%);
+}
+
+.graph-zoom-button::after {
+  position: absolute;
+  right: 7px;
+  bottom: 5px;
+  width: 8px;
+  height: 2.2px;
+  border-radius: 999px;
+  background: #0d3b78;
+  content: "";
+  transform: rotate(45deg);
+}
+
 .record-section .count-chart-item {
   grid-template-rows: 112px 13px 11px !important;
   gap: 2px !important;

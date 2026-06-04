@@ -2402,7 +2402,7 @@ function badgeDomId(label) {
   return label.replace(/[^\w-]/g, (char) => `-${char.codePointAt(0).toString(16)}-`);
 }
 
-function CountBars({ buckets, visibleCount = 7 }) {
+function CountBars({ buckets, visibleCount = 7, title }) {
   const scrollRef = useRef(null);
   const dragRef = useRef({ active: false, pointerId: null, startX: 0, scrollLeft: 0 });
   const counts = buckets.map((bucket) => Number(bucket.count || 0)).filter((count) => count > 0);
@@ -2450,38 +2450,77 @@ function CountBars({ buckets, visibleCount = 7 }) {
       dragRef.current = { active: false, pointerId: null, startX: 0, scrollLeft: 0 };
     }
   };
+  const scrollChartLeft = () => {
+    const node = scrollRef.current;
+    if (!node) return;
+    node.scrollBy({ left: -Math.max(node.clientWidth * 0.75, 120), behavior: "smooth" });
+  };
+  const scrollChartRight = () => {
+    const node = scrollRef.current;
+    if (!node) return;
+    node.scrollBy({ left: Math.max(node.clientWidth * 0.75, 120), behavior: "smooth" });
+  };
 
   return (
-    <div
-      className="count-chart-scroll"
-      ref={scrollRef}
-      style={{ "--count-chart-visible": visibleCount }}
-      onPointerDown={startDragScroll}
-      onPointerMove={moveDragScroll}
-      onPointerUp={endDragScroll}
-      onPointerCancel={endDragScroll}
-      onPointerLeave={endDragScroll}
-    >
-      <div className="count-chart-bars">
-        {buckets.map((bucket) => {
-          const isCurrent = bucket === buckets.at(-1);
-          const clipped = bucket.count > cap;
-          const height = bucket.count > 0 ? Math.max(10, (Math.min(bucket.count, cap) / cap) * 100) : 0;
-          const countLength = Number(bucket.count || 0).toLocaleString("ja-JP").length;
-          const countValueSize = countLength >= 7 ? "0.48rem" : countLength >= 6 ? "0.52rem" : countLength >= 5 ? "0.58rem" : "0.7rem";
-          return (
-            <article className={`count-chart-item ${isCurrent ? "today" : ""} ${clipped ? "clipped" : ""}`} key={bucket.label}>
-              <div className="count-chart-track">
-                <span className="count-chart-fill" style={{ height: `${height}%` }} />
-              </div>
-              <strong style={{ "--count-value-size": countValueSize }}>{Number(bucket.count || 0).toLocaleString("ja-JP")}<small>回</small></strong>
-              <span>{bucket.label}</span>
-              <em>{bucket.rangeLabel}</em>
-            </article>
-          );
-        })}
+    <>
+      <div className="section-row tight graph-title-row graph-action-row">
+        <div className="graph-scroll-buttons" aria-label="スクロール操作">
+          <button
+            type="button"
+            className="graph-gesture-hint graph-scroll-button"
+            aria-label="左にスクロール"
+            title="左にスクロール"
+            onClick={scrollChartLeft}
+          >
+            <span className="hint-arrow" aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            className="graph-gesture-hint graph-scroll-button right"
+            aria-label="右にスクロール"
+            title="右にスクロール"
+            onClick={scrollChartRight}
+          >
+            <span className="hint-arrow" aria-hidden="true" />
+          </button>
+        </div>
+        <div>
+          <h3>{title}</h3>
+        </div>
       </div>
-    </div>
+      <div className="count-chart-frame">
+      <div
+        className="count-chart-scroll"
+        ref={scrollRef}
+        style={{ "--count-chart-visible": visibleCount }}
+        onPointerDown={startDragScroll}
+        onPointerMove={moveDragScroll}
+        onPointerUp={endDragScroll}
+        onPointerCancel={endDragScroll}
+        onPointerLeave={endDragScroll}
+      >
+        <div className="count-chart-bars">
+          {buckets.map((bucket) => {
+            const isCurrent = bucket === buckets.at(-1);
+            const clipped = bucket.count > cap;
+            const height = bucket.count > 0 ? Math.max(10, (Math.min(bucket.count, cap) / cap) * 100) : 0;
+            const countLength = Number(bucket.count || 0).toLocaleString("ja-JP").length;
+            const countValueSize = countLength >= 7 ? "0.48rem" : countLength >= 6 ? "0.52rem" : countLength >= 5 ? "0.58rem" : "0.7rem";
+            return (
+              <article className={`count-chart-item ${isCurrent ? "today" : ""} ${clipped ? "clipped" : ""}`} key={bucket.label}>
+                <div className="count-chart-track">
+                  <span className="count-chart-fill" style={{ height: `${height}%` }} />
+                </div>
+                <strong style={{ "--count-value-size": countValueSize }}>{Number(bucket.count || 0).toLocaleString("ja-JP")}<small>回</small></strong>
+                <span>{bucket.label}</span>
+                <em>{bucket.rangeLabel}</em>
+              </article>
+            );
+          })}
+        </div>
+      </div>
+      </div>
+    </>
   );
 }
 
@@ -2550,7 +2589,7 @@ function ScoreLineBuckets({ buckets }) {
   );
 }
 
-function Chart({ data, initialRange }) {
+function Chart({ data, initialRange, title }) {
   const [hovered, setHovered] = useState(null);
   const [view, setView] = useState({ scale: 1, offset: 0 });
   const [chartSize, setChartSize] = useState({ width: 360, height: 178 });
@@ -2818,23 +2857,91 @@ function Chart({ data, initialRange }) {
       showNearestDay(event.clientX);
     }
   };
+  const zoomChartIn = () => {
+    const nextScale = clamp(chartView.scale * 1.45, minScale, maxScale);
+    const originX = plotW / 2;
+    const baseX = (originX - chartView.offset) / chartView.scale;
+    setView(constrainChartView({
+      scale: nextScale,
+      offset: originX - (baseX * nextScale),
+    }, plotW, minScale, maxScale));
+    setHovered(null);
+  };
+  const zoomChartOut = () => {
+    const nextScale = clamp(chartView.scale / 1.45, minScale, maxScale);
+    const originX = plotW / 2;
+    const baseX = (originX - chartView.offset) / chartView.scale;
+    setView(constrainChartView({
+      scale: nextScale,
+      offset: originX - (baseX * nextScale),
+    }, plotW, minScale, maxScale));
+    setHovered(null);
+  };
+  const scrollChartLeft = () => {
+    setView(constrainChartView({
+      scale: chartView.scale,
+      offset: chartView.offset + (plotW * 0.6),
+    }, plotW, minScale, maxScale));
+    setHovered(null);
+  };
+  const scrollChartRight = () => {
+    setView(constrainChartView({
+      scale: chartView.scale,
+      offset: chartView.offset - (plotW * 0.6),
+    }, plotW, minScale, maxScale));
+    setHovered(null);
+  };
 
   return (
-    <div className="chart-wrap" ref={wrapRef}>
-      <svg
-        ref={svgRef}
-        viewBox={`0 0 ${width} ${height}`}
-        role="img"
-        aria-label="スコア推移"
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerEnd}
-        onPointerCancel={handlePointerEnd}
-        onClick={(event) => showNearestDay(event.clientX)}
-        onPointerLeave={(event) => {
-          if (event.pointerType === "mouse") setHovered(null);
-        }}
-      >
+    <>
+      <div className="section-row tight graph-title-row graph-action-row">
+        <div className="graph-scroll-buttons" aria-label="スクロール操作">
+          <button
+            type="button"
+            className="graph-gesture-hint graph-scroll-button"
+            aria-label="左にスクロール"
+            title="左にスクロール"
+            onClick={scrollChartLeft}
+          >
+            <span className="hint-arrow" aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            className="graph-gesture-hint graph-scroll-button right"
+            aria-label="右にスクロール"
+            title="右にスクロール"
+            onClick={scrollChartRight}
+          >
+            <span className="hint-arrow" aria-hidden="true" />
+          </button>
+        </div>
+        <div>
+          <h3>{title}</h3>
+        </div>
+        <div className="graph-zoom-buttons" aria-label="ズーム操作">
+          <button type="button" className="graph-gesture-hint graph-zoom-button zoom-in" aria-label="ズームイン" title="ズームイン" onClick={zoomChartIn}>
+            <span className="hint-magnifier" aria-hidden="true" />
+          </button>
+          <button type="button" className="graph-gesture-hint graph-zoom-button zoom-out" aria-label="ズームアウト" title="ズームアウト" onClick={zoomChartOut}>
+            <span className="hint-magnifier" aria-hidden="true" />
+          </button>
+        </div>
+      </div>
+      <div className="chart-wrap" ref={wrapRef}>
+        <svg
+          ref={svgRef}
+          viewBox={`0 0 ${width} ${height}`}
+          role="img"
+          aria-label="スコア推移"
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerEnd}
+          onPointerCancel={handlePointerEnd}
+          onClick={(event) => showNearestDay(event.clientX)}
+          onPointerLeave={(event) => {
+            if (event.pointerType === "mouse") setHovered(null);
+          }}
+        >
         <defs>
           <linearGradient id="avgFill" x1="0" x2="0" y1="0" y2="1">
             <stop offset="0%" stopColor="var(--active-graph-color, var(--graph-color, var(--hot)))" stopOpacity=".25" />
@@ -2886,14 +2993,15 @@ function Chart({ data, initialRange }) {
           </g>
         )}
       </svg>
-      {hoveredInPlot && (
-        <div className="chart-tooltip-card" style={{ "--tooltip-x": tooltipLeft, "--tooltip-y": tooltipTop }}>
-          <strong>{hovered.item.label}</strong>
-          <span>ベスト: {Number(hovered.item.best || 0).toLocaleString("ja-JP")}点</span>
-          <span>平均: {Number(hovered.item.avg || 0).toLocaleString("ja-JP")}点</span>
-        </div>
-      )}
-    </div>
+        {hoveredInPlot && (
+          <div className="chart-tooltip-card" style={{ "--tooltip-x": tooltipLeft, "--tooltip-y": tooltipTop }}>
+            <strong>{hovered.item.label}</strong>
+            <span>ベスト: {Number(hovered.item.best || 0).toLocaleString("ja-JP")}点</span>
+            <span>平均: {Number(hovered.item.avg || 0).toLocaleString("ja-JP")}点</span>
+          </div>
+        )}
+      </div>
+    </>
   );
 }
 
@@ -4916,20 +5024,10 @@ function DataGraphs({ db, records, graphRange, titlePrefix, maxBuckets, activeDa
         {controls}
       </div>
       <section className="dashboard-section record-section graph-card">
-        <div className="section-row tight graph-title-row">
-          <div>
-            <h3>{titlePrefix}のスイング数</h3>
-          </div>
-        </div>
-        <CountBars buckets={buckets} visibleCount={6} />
+        <CountBars buckets={buckets} visibleCount={6} title={`${titlePrefix}のスイング数`} />
       </section>
       <section className="dashboard-section record-section graph-card">
-        <div className="section-row tight graph-title-row">
-          <div>
-            <h3>{titlePrefix}のスコア</h3>
-          </div>
-        </div>
-        <Chart data={chartData} initialRange={initialRange} />
+        <Chart data={chartData} initialRange={initialRange} title={`${titlePrefix}のスコア`} />
       </section>
     </div>
   );
