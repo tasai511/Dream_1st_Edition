@@ -465,8 +465,8 @@ gyroMagnitudeRaw + dynamicAccelMg * 4
 構成:
 
 ```cpp
-score = gyroPeakScore();          // max 400
-score += swingAccelAreaScore();   // max 600
+score = gyroPeakScore();          // max 500
+score += swingAccelAreaScore();   // max 500
 score = min(score, 999);
 ```
 
@@ -498,10 +498,10 @@ score = min(score, 999);
 `ScoreWindow` 内の角速度ピークを見る。
 グローバルなキャプチャ全体の gyro peak ではなく、加速エリア中の最大 gyro を使う。
 
-- 最大 400 点
+- 最大 500 点
 - gyro full は実測に合わせて `7000 dps`
 - IMU の 4000 dps 設定に合わせて `140 mdps/LSB` として換算する
-- 7000 dps 以上は 400 点に clamp する
+- 7000 dps 以上は 500 点に clamp する
 
 考え方:
 
@@ -510,7 +510,7 @@ score = min(score, 999);
 - bat speed 80〜85 mph を sweet spot 半径およそ 0.75 m で角速度換算すると約 2700〜2900 dps
 - ただし Dream-1 は単一軸ではなく3軸合成の `gyroMagnitudeRaw` を使うため、単純な角速度換算より大きめに出る
 - 3000〜4500 dps では子供や軽めのスイングでも上限に届きやすかったため、Dream-1 の実測レンジに合わせて `7000 dps` を使う
-- この値は実測ベースの仮置き。上手い人で Gyro 側が簡単に 400 点へ張り付く場合はさらに上げる候補がある
+- この値は実測ベースの仮置き。上手い人で Gyro 側が簡単に 500 点へ張り付く場合はさらに上げる候補がある
 
 ### swingAccelAreaScore
 
@@ -518,7 +518,7 @@ score = min(score, 999);
 
 ```cpp
 area = sum((dynamicAccelMg - offset) * dt)
-score = area / fullArea * 600
+score = area / fullArea * 500
 ```
 
 手首だけの一瞬の入力ではなく、スイング中に加速度が乗って続いたかを見る。  
@@ -530,9 +530,9 @@ score = area / fullArea * 600
 `fullArea` は `800000 mg*ms`。
 これは公開データから直接導いた物理定数ではなく、Dream-1 の実測ベースの仮置き。  
 加速度スコア範囲を広げたことで `600000 mg*ms` では軽いバットの強いスイングが上限に張り付きやすくなったため、飽和を少し抑える値として `800000 mg*ms` を採用している。
-一方で、加速の重要度は高めに残すため、配点は SwingAccel 側を 600 点、Gyro 側を 400 点にしている。
+配点は SwingAccel 側を 500 点、Gyro 側を 500 点にしている。
 
-今後、通常のバットでも簡単に SwingAccel 側が 600 点へ張り付く場合は `900000〜1000000 mg*ms` 程度へ上げる候補がある。逆に一般ユーザーで伸びなさすぎる場合は `700000 mg*ms` 程度へ下げる候補がある。
+今後、通常のバットでも簡単に SwingAccel 側が 500 点へ張り付く場合は `900000〜1000000 mg*ms` 程度へ上げる候補がある。逆に一般ユーザーで伸びなさすぎる場合は `700000 mg*ms` 程度へ下げる候補がある。
 
 ### accel rise
 
